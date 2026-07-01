@@ -14,6 +14,7 @@ import os
 import sys
 
 from fastmcp import FastMCP
+from starlette.responses import JSONResponse
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from concept_gate_v7 import (  # noqa: E402
@@ -30,6 +31,56 @@ from concept_gate_v7 import (  # noqa: E402
 from cg_graph_export import GraphExporter  # noqa: E402
 
 mcp = FastMCP("ConceptGate")
+
+
+# ═══════════════════════════════════════════════════════
+# Bearer Token 인증 미들웨어 (Render 배포용)
+# ═══════════════════════════════════════════════════════
+
+from fastmcp.server.middleware import Middleware  # noqa: E402
+from fastmcp.server.dependencies import get_http_headers  # noqa: E402
+from fastmcp.exceptions import ToolError  # noqa: E402
+
+
+class BearerTokenAuth(Middleware):
+    """MCP_API_TOKEN이 설정되어 있으면 Bearer token을 검증.
+    설정 안 되어 있으면 (로컬 개발) 인증 없이 통과."""
+
+    async def on_call_tool(self, context, call_next):
+        self._check_token()
+        return await call_next(context)
+
+    async def on_read_resource(self, context, call_next):
+        self._check_token()
+        return await call_next(context)
+
+    async def on_get_prompt(self, context, call_next):
+        self._check_token()
+        return await call_next(context)
+
+    def _check_token(self):
+        expected = os.environ.get("MCP_API_TOKEN")
+        if not expected:
+            return  # 토큰 미설정 → 인증 안 함 (로컬 개발)
+        try:
+            headers = get_http_headers(include_all=True)
+        except Exception:
+            return  # stdio transport에서는 헤더 없음 → 통과
+        auth = headers.get("authorization", "")
+        if not auth.startswith("Bearer "):
+            raise ToolError("Unauthorized: missing Bearer token")
+        token = auth.removeprefix("Bearer ").strip()
+        if token != expected:
+            raise ToolError("Unauthorized: invalid token")
+
+
+mcp.add_middleware(BearerTokenAuth())
+
+
+# Health check (Render 서비스 상태 확인)
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request):
+    return JSONResponse({"status": "healthy", "service": "conceptgate-mcp"})
 
 
 # ═══════════════════════════════════════════════════════
@@ -284,7 +335,12 @@ def expansion_prompt(
 # ═══════════════════════════════════════════════════════
 
 def main():
-    mcp.run()
+    transport = os.environ.get("MCP_TRANSPORT", "stdio")
+    if transport == "http":
+        port = int(os.environ.get("PORT", 8000))
+        mcp.run(transport="http", host="0.0.0.0", port=port)
+    else:
+        mcp.run()  # stdio (로컬 개발, Codex CLI, Claude Desktop 직접 연결)
 
 
 if __name__ == "__main__":
