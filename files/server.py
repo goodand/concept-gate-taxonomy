@@ -30,6 +30,42 @@ from concept_gate_v7 import (  # noqa: E402
 )
 from cg_graph_export import GraphExporter  # noqa: E402
 
+# ═══════════════════════════════════════════════════════
+# 입력 크기 제한 (DoS 방어)
+# ═══════════════════════════════════════════════════════
+MAX_CONCEPTS = 200          # 개념 개수 상한 (O(n²) sibling 비교 방어)
+MAX_FEATURES_PER_CONCEPT = 50
+MAX_EVIDENCE_LEN = 2000     # evidence 문자열 길이 상한 (메모리 방어)
+MAX_NAME_LEN = 200
+
+
+def _validate_input_size(concepts_json):
+    """크기 제한 검사. 초과 시 에러 dict 반환, 정상이면 None."""
+    if not isinstance(concepts_json, list):
+        return {"status": "FAIL", "errors": [{"gate": "SizeGuard", "message": "concepts must be a list"}]}
+    if len(concepts_json) > MAX_CONCEPTS:
+        return {"status": "FAIL", "errors": [{"gate": "SizeGuard",
+                "message": f"too many concepts: {len(concepts_json)} > {MAX_CONCEPTS}"}]}
+    for c in concepts_json:
+        if not isinstance(c, dict):
+            continue  # ParseGate가 처리
+        name = c.get("name", "")
+        if isinstance(name, str) and len(name) > MAX_NAME_LEN:
+            return {"status": "FAIL", "errors": [{"gate": "SizeGuard",
+                    "message": f"concept name too long (>{MAX_NAME_LEN})"}]}
+        feats = c.get("features", [])
+        if isinstance(feats, list):
+            if len(feats) > MAX_FEATURES_PER_CONCEPT:
+                return {"status": "FAIL", "errors": [{"gate": "SizeGuard",
+                        "message": f"too many features on '{name}': {len(feats)} > {MAX_FEATURES_PER_CONCEPT}"}]}
+            for f in feats:
+                if isinstance(f, dict):
+                    ev = f.get("evidence", "")
+                    if isinstance(ev, str) and len(ev) > MAX_EVIDENCE_LEN:
+                        return {"status": "FAIL", "errors": [{"gate": "SizeGuard",
+                                "message": f"evidence too long on '{name}' (>{MAX_EVIDENCE_LEN})"}]}
+    return None
+
 mcp = FastMCP("ConceptGate")
 
 
@@ -40,11 +76,18 @@ mcp = FastMCP("ConceptGate")
 from fastmcp.server.middleware import Middleware  # noqa: E402
 from fastmcp.server.dependencies import get_http_headers  # noqa: E402
 from fastmcp.exceptions import ToolError  # noqa: E402
+import secrets  # noqa: E402
 
 
 class BearerTokenAuth(Middleware):
     """MCP_API_TOKEN이 설정되어 있으면 Bearer token을 검증.
-    설정 안 되어 있으면 (로컬 개발) 인증 없이 통과."""
+    설정 안 되어 있으면 (로컬 개발) 인증 없이 통과.
+
+    보안 원칙:
+    - list/call/read/get 전부 보호 (도구 목록도 노출 안 함)
+    - fail-closed: HTTP 요청인데 헤더를 못 읽으면 거부
+    - constant-time 비교 (타이밍 공격 방어)
+    """
 
     async def on_call_tool(self, context, call_next):
         self._check_token()
@@ -58,19 +101,39 @@ class BearerTokenAuth(Middleware):
         self._check_token()
         return await call_next(context)
 
+    async def on_list_tools(self, context, call_next):
+        self._check_token()
+        return await call_next(context)
+
+    async def on_list_resources(self, context, call_next):
+        self._check_token()
+        return await call_next(context)
+
+    async def on_list_prompts(self, context, call_next):
+        self._check_token()
+        return await call_next(context)
+
     def _check_token(self):
         expected = os.environ.get("MCP_API_TOKEN")
         if not expected:
-            return  # 토큰 미설정 → 인증 안 함 (로컬 개발)
+            return  # 토큰 미설정 → 인증 안 함 (로컬 stdio 개발)
+
+        # HTTP 요청이면 헤더 검증. 헤더를 못 읽으면:
+        #   - stdio transport → 예외 → 로컬이므로 통과
+        #   - HTTP transport인데 실패 → fail-closed로 거부
         try:
             headers = get_http_headers(include_all=True)
         except Exception:
-            return  # stdio transport에서는 헤더 없음 → 통과
+            # stdio에서는 HTTP 컨텍스트가 없어 정상적으로 예외.
+            # HTTP 배포에서는 이 경로로 오지 않음.
+            return
+
         auth = headers.get("authorization", "")
         if not auth.startswith("Bearer "):
             raise ToolError("Unauthorized: missing Bearer token")
         token = auth.removeprefix("Bearer ").strip()
-        if token != expected:
+        # constant-time 비교 (타이밍 공격 방어)
+        if not secrets.compare_digest(token, expected):
             raise ToolError("Unauthorized: invalid token")
 
 
@@ -178,6 +241,9 @@ def run_pipeline(concepts: list[dict]) -> dict:
     If status is PASS_WITH_WARNING or NEEDS_CORRECTION, inspect
     expansion_actions and call expand with new differentia to refine the DAG.
     """
+    size_err = _validate_input_size(concepts)
+    if size_err:
+        return size_err
     parsed, err = _parse_concepts_or_error(concepts)
     if err:
         return err
@@ -197,6 +263,9 @@ def expand(original_concepts: list[dict], expansions: list[dict]) -> dict:
     Returns the same structure as run_pipeline, or a PARSE_FAIL with
     structured errors if the expansions don't conform to the schema.
     """
+    size_err = _validate_input_size(original_concepts)
+    if size_err:
+        return size_err
     originals, err = _parse_concepts_or_error(original_concepts)
     if err:
         return err
@@ -223,6 +292,9 @@ def classify_parents(concepts: list[dict]) -> dict:
     ancestors are removed). Returns multi-label results: a concept can have
     multiple parents when it is a meet (e.g. 정사각형 -> [마름모, 직사각형]).
     """
+    size_err = _validate_input_size(concepts)
+    if size_err:
+        return size_err
     parsed, err = _parse_concepts_or_error(concepts)
     if err:
         return err
@@ -243,6 +315,9 @@ def export_graph(concepts: list[dict], format: str = "mermaid") -> dict:
     format: one of mermaid, json, graphml, summary.
     Runs the pipeline internally — no cached state required.
     """
+    size_err = _validate_input_size(concepts)
+    if size_err:
+        return size_err
     parsed, err = _parse_concepts_or_error(concepts)
     if err:
         return err
