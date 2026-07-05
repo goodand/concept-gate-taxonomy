@@ -477,6 +477,323 @@ if _ge_avail:
     R.check("H4 summary: edge=4, meet=1, max_level=2",
             gs["edge_count"] == 4 and gs["meet_count"] == 1 and gs["max_level"] == 2)
 
+# ═════════════════════════════════════════════
+# PART I. v7 Phase B — has-a/STRUCTURAL + relation_hint (obo-relations 조립)
+# ═════════════════════════════════════════════
+print("\n[PART I] Phase B: STRUCTURAL + relation_hint")
+
+# I1. STRUCTURAL은 비-essential (DAG 간선 미형성)
+R.check("I1 STRUCTURAL 비-essential",
+        cg.FeatureType.STRUCTURAL not in cg.ISA_ALLOWED_TYPES)
+
+# I2. LLM이 structural_composition을 직접 출력 → STRUCTURAL로 파싱
+import json as _json
+raw = _json.dumps({"expansions": [{"concept": "자동차", "new_features": [
+    {"feature": "엔진", "type": "structural_composition",
+     "evidence": "자동차는 엔진을 가진다", "relation_hint": "component_of"},
+]}]}, ensure_ascii=False)
+cs, _ = cg.parse_expansion_response(raw, [NC("자동차", [])])
+eng = next(f for f in cs[0].features if f.feature == "엔진")
+R.check("I2 structural_composition 직접 출력 → STRUCTURAL", eng.type == cg.FeatureType.STRUCTURAL)
+
+# I3. relation_hint=is_a + essential → essential 유지 (교정 없이 통과)
+raw2 = _json.dumps({"expansions": [{"concept": "고양이", "new_features": [
+    {"feature": "포유류", "type": "essential_feature",
+     "evidence": "분류학상 포유강", "relation_hint": "is_a"},
+]}]}, ensure_ascii=False)
+cs2, _ = cg.parse_expansion_response(raw2, [NC("고양이", [])])
+mam = next(f for f in cs2[0].features if f.feature == "포유류")
+R.check("I3 is_a + essential → ESSENTIAL 유지", mam.type == cg.FeatureType.ESSENTIAL)
+
+# I4. SemanticTypeInference 구조 마커
+r_struct = cg.SemanticTypeInference.infer("구성요소", "", "")
+R.check("I4 구성요소 → STRUCTURAL", r_struct.inferred_type == cg.FeatureType.STRUCTURAL)
+
+# I5. obo-relations subtree 조립 (core.obo 로드, fallback 아님)
+import cg_partwhole as _pw
+_rels = _pw.load_obo_partwhole()
+R.check("I5 obo part_of/has_part 로드",
+        "BFO:0000050" in _rels and "BFO:0000051" in _rels and _rels["BFO:0000050"]["transitive"])
+
+# I6. composition_view: STRUCTURAL만 구성 그래프에, DAG(is-a)와 분리
+ST = cg.FeatureType.STRUCTURAL
+_cs = [
+    NC("자동차", [feat("탈것", "이동수단"), NF("엔진", ST, "엔진을 가진다", "엔진을 가진다")]),
+    NC("보트",   [feat("탈것", "이동수단"), NF("엔진", ST, "엔진을 가진다", "엔진을 가진다")]),
+]
+_dr = cg.DAGReasoner(_cs)
+_out = _dr.finalize()
+comp = _out["composition"]
+R.check("I6 composition edges에 STRUCTURAL만",
+        ("자동차", "엔진") in comp["edges"] and ("보트", "엔진") in comp["edges"]
+        and all(p != "탈것" for _, p in comp["edges"]))
+
+# I7. shared_parts: 엔진이 자동차·보트 양쪽에 → UFO shareable 감지
+R.check("I7 shared_parts 엔진 공유 감지",
+        comp["shared_parts"].get("엔진") == ["보트", "자동차"])
+
+# ═════════════════════════════════════════════
+# PART J. v7 Phase C1/C2 — CompositionGate + UFO Anti-Pattern
+# ═════════════════════════════════════════════
+print("\n[PART J] Phase C1/C2: CompositionGate + UFO Anti-Pattern")
+
+def _st(name, ev="ev"):
+    return NF(name, ST, ev, ev)
+
+# J1. 반대칭: A has B + B has A → ERROR
+_ja = NC("A", [feat("x", "ev"), _st("B", "A는 B를 부분으로")])
+_jb = NC("B", [feat("y", "ev"), _st("A", "B는 A를 부분으로")])
+_jrep, _jiss = cg.CompositionGate.detect(cg.DAGReasoner([_ja, _jb]))
+R.check("J1 반대칭 → ERROR + antisymmetry issue",
+        any(i["kind"] == "antisymmetry" for i in _jiss)
+        and any(g.severity == GS.ERROR and not g.passed for g in _jrep.results))
+
+# J2. 순환: 가→나→다→가 추이 폐쇄 → ERROR
+_c1 = NC("가", [_st("나", "가는 나를 부분으로")])
+_c2 = NC("나", [_st("다", "나는 다를 부분으로")])
+_c3 = NC("다", [_st("가", "다는 가를 부분으로")])
+_j2rep, _j2iss = cg.CompositionGate.detect(cg.DAGReasoner([_c1, _c2, _c3]))
+R.check("J2 순환 → ERROR + cycle issue",
+        any(i["kind"] == "cycle" for i in _j2iss)
+        and any(g.severity == GS.ERROR and not g.passed for g in _j2rep.results))
+
+# J3. is-a/has-a 배타: 부모가 자식을 part로 선언 → NEEDS_CORRECTION
+_jp = NC("동물", [feat("생물", "생명체"), _st("개", "동물은 개를 부분으로")])
+_jc = NC("개", [feat("생물", "생명체"), feat("충성", "충성스러움")])
+_r3 = cg.DAGReasoner([_jp, _jc])
+_r3.add_edge("동물", "개")
+_j3rep, _j3iss = cg.CompositionGate.detect(_r3)
+R.check("J3 is-a/has-a 배타 → NEEDS_CORRECTION + conflict issue",
+        any(i["kind"] == "isa_hasa_conflict" for i in _j3iss)
+        and any(g.severity == GS.NEEDS_CORRECTION for g in _j3rep.results))
+
+# J7. 무위반 입력 → passed + 빈 issues + run() 키 노출
+_jx = NC("자동차", [feat("탈것", "이동수단"), _st("엔진", "엔진을 가진다")])
+_jy = NC("보트", [feat("탈것", "이동수단"), _st("엔진", "엔진을 가진다")])
+_j7rep, _j7iss = cg.CompositionGate.detect(cg.DAGReasoner([_jx, _jy]))
+R.check("J7 무위반 → passed + 빈 issues", _j7rep.passed and _j7iss == [])
+_out_j = cg.ConceptPipeline().run([[_jx, _jy]])
+R.check("J7 run() composition_issues 키 노출 (빈 리스트)",
+        "composition_issues" in _out_j and _out_j["composition_issues"] == [])
+
+# J4. MixRig — 같은 feature가 ESSENTIAL / 비-ESSENTIAL 혼용 → WARNING + issue
+_j_mix = [
+    NC("스마트폰", [feat("배터리", "필수 전원부"), feat("통신", "무선 통신 기능")]),
+    NC("노트북",   [feat("컴퓨팅", "연산 장치"),
+                    NF("배터리", ST, "배터리를 부품으로 가진다", "배터리를 부품으로 가진다")]),
+]
+_j_dr_mix = cg.DAGReasoner(_j_mix)
+_j_rep4, _j_iss4 = cg.UFOAntiPatternGate.detect(_j_dr_mix, _j_mix)
+_j_mixrig = [i for i in _j_iss4 if i["pattern"] == "MixRig"]
+R.check("J4 MixRig 감지 (배터리 E/비E 혼용, WARNING)",
+        len(_j_mixrig) == 1 and _j_mixrig[0]["subject"] == "배터리"
+        and sorted(_j_mixrig[0]["involved"]) == ["노트북", "스마트폰"]
+        and _j_rep4.max_severity == GS.WARNING and _j_rep4.passed,
+        f"got {_j_iss4}")
+
+# J5. PartOver — 조상·자손이 같은 part 공유 → WARNING
+_j_po = [
+    NC("포유류", [feat("젖샘", "포유 특징"),
+                  NF("심장", ST, "심장을 가진다", "심장을 가진다")]),
+    NC("개",     [feat("젖샘", "포유 특징"), feat("짖음", "짖는다"),
+                  NF("심장", ST, "심장을 가진다", "심장을 가진다")]),
+]
+_j_dr_po = cg.DAGReasoner(_j_po)
+_j_dr_po.add_edge("포유류", "개")
+_j_rep5, _j_iss5 = cg.UFOAntiPatternGate.detect(_j_dr_po, _j_po)
+_j_partover = [i for i in _j_iss5 if i["pattern"] == "PartOver"]
+R.check("J5 PartOver 감지 (심장이 포유류·개 중복, WARNING)",
+        len(_j_partover) == 1 and _j_partover[0]["subject"] == "심장"
+        and sorted(_j_partover[0]["involved"]) == ["개", "포유류"]
+        and _j_rep5.max_severity == GS.WARNING,
+        f"got {_j_iss5}")
+
+# J6. WholeOver — 한 개념이 part와 그 특수화 동시 보유 → WARNING
+_j_wo = [
+    NC("자동차", [feat("탈것", "이동수단"),
+                  NF("바퀴", ST, "바퀴를 가진다", "바퀴를 가진다"),
+                  NF("앞바퀴", ST, "앞바퀴를 가진다", "앞바퀴를 가진다")]),
+]
+_j_dr_wo = cg.DAGReasoner(_j_wo)
+_j_dr_wo.add_edge("바퀴", "앞바퀴")
+_j_rep6, _j_iss6 = cg.UFOAntiPatternGate.detect(_j_dr_wo, _j_wo)
+_j_wholeover = [i for i in _j_iss6 if i["pattern"] == "WholeOver"]
+R.check("J6 WholeOver 감지 (바퀴·앞바퀴 동시 보유, WARNING)",
+        len(_j_wholeover) == 1 and _j_wholeover[0]["subject"] == "자동차"
+        and sorted(_j_wholeover[0]["involved"]) == ["바퀴", "앞바퀴"]
+        and _j_rep6.max_severity == GS.WARNING,
+        f"got {_j_iss6}")
+
+# J6b. 무위반 입력 → issues 빈 리스트 + 게이트 passed
+_j_clean = [NC("A2", [feat("x", "속성 x")]), NC("B2", [feat("y", "속성 y")])]
+_j_dr_cl = cg.DAGReasoner(_j_clean)
+_j_repc, _j_issc = cg.UFOAntiPatternGate.detect(_j_dr_cl, _j_clean)
+R.check("J6b 무위반 → anti_patterns 빈 리스트 + passed",
+        _j_issc == [] and _j_repc.passed and _j_repc.max_severity == GS.INFO)
+
+# J6c. ExpansionPlanner: MixRig → CORRECTION action, PartOver/WholeOver는 무변환
+_j_ap = [
+    {"pattern": "MixRig", "subject": "배터리", "detail": "혼합", "involved": ["노트북", "스마트폰"]},
+    {"pattern": "PartOver", "subject": "심장", "detail": "중복", "involved": ["개", "포유류"]},
+]
+_j_actions = cg.ExpansionPlanner.plan([], None, _j_ap)
+_j_corr = [a for a in _j_actions if a.action_type == cg.ExpansionType.CORRECTION]
+R.check("J6c MixRig → CORRECTION action (PartOver 무변환)",
+        len(_j_corr) == 1 and "배터리" in _j_corr[0].shared_attrs
+        and sorted(_j_corr[0].target_concepts) == ["노트북", "스마트폰"])
+
+# ═════════════════════════════════════════════
+# PART K. v7 Phase C3 — RCA relational scaling
+# ═════════════════════════════════════════════
+print("\n[PART K] Phase C3: relational_scaling")
+
+ST_K = cg.FeatureType.STRUCTURAL
+
+# K1. STRUCTURAL 부분이 개념으로 존재 → ∃has_part.X ESSENTIAL 파생 (원본 유지 + 마커 + 순수성)
+k_src = [
+    NC("자동차", [feat("탈것", "이동을 위한 수단"), NF("엔진", ST_K, "엔진을 가진다", "엔진을 가진다")]),
+    NC("엔진",   [feat("동력장치", "동력을 만드는 장치")]),
+]
+k_out = cg.relational_scaling(k_src)
+k_car = next(c for c in k_out if c.name == "자동차")
+k_der = [ft for ft in k_car.features if ft.feature == "∃has_part.엔진"]
+R.check("K1 STRUCTURAL 부분(개념 존재) → ∃has_part 파생 E + rca_scaling 마커 + 원본 S 유지",
+        len(k_der) == 1 and k_der[0].type == E
+        and "rca_scaling" in k_der[0].evidence
+        and any(ft.feature == "엔진" and ft.type == ST_K for ft in k_car.features)
+        and len(k_src[0].features) == 2,
+        f"got {[(ft.feature, ft.type.value) for ft in k_car.features]}")
+
+# K2. 멱등성 — 두 번 적용해도 파생 피처 1개
+k_twice = cg.relational_scaling(cg.relational_scaling(k_src))
+k_car2 = next(c for c in k_twice if c.name == "자동차")
+R.check("K2 멱등성: 2회 적용에도 ∃has_part.엔진 1개",
+        sum(1 for ft in k_car2.features if ft.feature == "∃has_part.엔진") == 1)
+
+# K3. 비개념 부분("엔진"이 개념 아님) → 파생 없음, 원본 불변
+k_src3 = [NC("자동차", [feat("탈것", "이동을 위한 수단"), NF("엔진", ST_K, "엔진을 가진다", "엔진을 가진다")])]
+k_out3 = cg.relational_scaling(k_src3)
+R.check("K3 비개념 부분 → 파생 없음 + 원본 불변",
+        all(not ft.feature.startswith("∃has_part.") for ft in k_out3[0].features)
+        and len(k_out3[0].features) == 2 and len(k_src3[0].features) == 2)
+
+# K4. run_with_expansion 배선 — 기본 off 무변경, opt-in이면 파생이 DAG 간선 종차로
+import inspect as _inspect
+_sig_k = _inspect.signature(cg.ConceptPipeline.run_with_expansion)
+k_wire = [
+    NC("탈것",   [feat("이동수단", "이동을 위한 수단")]),
+    NC("자동차", [feat("이동수단", "이동을 위한 수단"), NF("엔진", ST_K, "엔진을 가진다", "엔진을 가진다")]),
+    NC("엔진",   [feat("동력장치", "동력을 만드는 장치")]),
+]
+out_k_off = pipe.run_with_expansion(k_wire, generator=None)
+out_k_on = pipe.run_with_expansion(k_wire, generator=None, rca_scaling=True)
+d_k = out_k_on["result"]["definitions"].get("자동차", {})
+R.check("K4 rca_scaling 배선: 기본 False 무변경 + True면 탈것→자동차 간선(종차 ∃has_part.엔진)",
+        _sig_k.parameters["rca_scaling"].default is False
+        and "∃has_part.엔진" not in str(out_k_off["result"]["definitions"])
+        and d_k.get("parents") == ["탈것"] and "∃has_part.엔진" in d_k.get("delta", []),
+        f"off_defs={out_k_off['result']['definitions']}, on_car={d_k}")
+
+
+# ═════════════════════════════════════════════
+# PART L. 구성(composition) vs 구조(structure) 혼동 시나리오
+# ═════════════════════════════════════════════
+# 실 도메인(Transformer/Attention)에서 흔히 일어나는 모델링 오류 4가지.
+# "어텐션에 정형화된 구조가 있다고 착각" — 메커니즘을 부품으로 취급하는 실수.
+print("\n[PART L] 구성 vs 구조 혼동 시나리오 (Transformer/Attention)")
+
+# L1. MixRig — 메커니즘을 구성요소로 착각
+# "어텐션"이 한 곳에서는 essential(분류 기준), 다른 곳에서는 structural(부품) → rigidity 혼합.
+# 실수: 어텐션은 메커니즘(계산 방법)이지 분리 가능한 부품이 아닌데, 한쪽에서 has-a로 분류.
+_l1 = [
+    NC("신경망",     [feat("어텐션", "어텐션 메커니즘을 사용하는 모델"), feat("학습", "역전파 학습")]),
+    NC("트랜스포머", [feat("학습", "역전파 학습"),
+                      NF("어텐션", ST, "어텐션을 핵심 구성요소로 가진다", "어텐션을 핵심 구성요소로 가진다")]),
+]
+_l1_dr = cg.DAGReasoner(_l1)
+_l1_rep, _l1_iss = cg.UFOAntiPatternGate.detect(_l1_dr, _l1)
+_l1_mr = [i for i in _l1_iss if i["pattern"] == "MixRig"]
+R.check("L1 MixRig: 어텐션이 E(신경망)과 S(트랜스포머)로 혼용 → WARNING",
+        len(_l1_mr) == 1 and _l1_mr[0]["subject"] == "어텐션"
+        and sorted(_l1_mr[0]["involved"]) == ["신경망", "트랜스포머"],
+        f"got {_l1_iss}")
+
+# L2. WholeOver — 개념 패밀리를 단일 부품으로 + 그 특수화도 부품으로
+# "트랜스포머 has 어텐션" + "트랜스포머 has 셀프어텐션"인데
+# 어텐션 is-a 셀프어텐션(또는 반대) → 부분과 그 특수화 동시 보유.
+# 실수: "어텐션"이 정형화된 단일 구조라고 착각하면서, 그 변형도 따로 달아놓음.
+_l2 = [
+    NC("어텐션",     [feat("가중합", "입력의 가중 합산")]),
+    NC("셀프어텐션", [feat("가중합", "입력의 가중 합산"), feat("자기참조", "Q=K=V 동일 시퀀스")]),
+    NC("트랜스포머", [feat("시퀀스모델", "시퀀스 변환 모델"),
+                      NF("어텐션", ST, "어텐션을 가진다", "어텐션을 가진다"),
+                      NF("셀프어텐션", ST, "셀프어텐션을 가진다", "셀프어텐션을 가진다")]),
+]
+_l2_dr = cg.DAGReasoner(_l2)
+_l2_dr.add_edge("어텐션", "셀프어텐션")
+_l2_rep, _l2_iss = cg.UFOAntiPatternGate.detect(_l2_dr, _l2)
+_l2_wo = [i for i in _l2_iss if i["pattern"] == "WholeOver"]
+R.check("L2 WholeOver: 트랜스포머가 어텐션과 셀프어텐션(특수화) 동시 보유 → WARNING",
+        len(_l2_wo) == 1 and _l2_wo[0]["subject"] == "트랜스포머"
+        and sorted(_l2_wo[0]["involved"]) == ["셀프어텐션", "어텐션"],
+        f"got {_l2_iss}")
+
+# L3. PartOver — 상속 부분 중복 선언
+# "트랜스포머 has 어텐션" + "인코더(is-a 트랜스포머) has 어텐션"
+# → 자식이 부모에게서 상속받을 부분을 중복 선언.
+# 실수: 인코더가 트랜스포머의 일종이면, 어텐션은 자동으로 상속됨 — 중복은 모델 오류.
+_l3 = [
+    NC("트랜스포머", [feat("시퀀스모델", "시퀀스 변환 모델"),
+                      NF("어텐션", ST, "어텐션을 가진다", "어텐션을 가진다")]),
+    NC("인코더",     [feat("시퀀스모델", "시퀀스 변환 모델"), feat("양방향", "양방향 문맥 참조"),
+                      NF("어텐션", ST, "어텐션을 가진다", "어텐션을 가진다")]),
+]
+_l3_dr = cg.DAGReasoner(_l3)
+_l3_dr.add_edge("트랜스포머", "인코더")
+_l3_rep, _l3_iss = cg.UFOAntiPatternGate.detect(_l3_dr, _l3)
+_l3_po = [i for i in _l3_iss if i["pattern"] == "PartOver"]
+R.check("L3 PartOver: 어텐션이 트랜스포머·인코더(조상-자손)에 중복 → WARNING",
+        len(_l3_po) == 1 and _l3_po[0]["subject"] == "어텐션"
+        and sorted(_l3_po[0]["involved"]) == ["인코더", "트랜스포머"],
+        f"got {_l3_iss}")
+
+# L4. is-a/has-a 배타 — is-a 관계인 개념을 has-a로도 선언
+# "트랜스포머 is-a 시퀀스모델"인데 "트랜스포머 has 시퀀스모델" (S)로도 선언.
+# 실수: "트랜스포머는 시퀀스모델의 일종"이면서 동시에 "시퀀스모델을 부품으로 가진다"는 모순.
+_l4 = [
+    NC("시퀀스모델", [feat("시퀀스처리", "시퀀스 입력을 처리")]),
+    NC("트랜스포머", [feat("시퀀스처리", "시퀀스 입력을 처리"), feat("병렬화", "어텐션으로 병렬 처리"),
+                      NF("시퀀스모델", ST, "시퀀스모델을 구조로 가진다", "시퀀스모델을 구조로 가진다")]),
+]
+_l4_dr = cg.DAGReasoner(_l4)
+_l4_dr.add_edge("시퀀스모델", "트랜스포머")
+_l4_rep, _l4_iss = cg.CompositionGate.detect(_l4_dr)
+_l4_conf = [i for i in _l4_iss if i["kind"] == "isa_hasa_conflict"]
+R.check("L4 is-a/has-a 배타: 트랜스포머 is-a 시퀀스모델인데 has-a로도 선언 → NEEDS_CORRECTION",
+        len(_l4_conf) == 1 and _l4_conf[0]["whole"] == "트랜스포머"
+        and _l4_conf[0]["part"] == "시퀀스모델",
+        f"got {_l4_iss}")
+
+# L5. 복합 시나리오 — end-to-end pipeline 통과
+# 올바른 모델링: 메커니즘은 functional, 실제 모듈은 structural, 분류는 essential.
+# 게이트 위반 없이 is-a DAG + composition 그래프 모두 정상 생성되어야 한다.
+_l5 = [
+    NC("시퀀스모델", [feat("시퀀스처리", "시퀀스 입력을 처리")]),
+    NC("트랜스포머", [feat("시퀀스처리", "시퀀스 입력을 처리"), feat("병렬화", "어텐션으로 병렬 처리"),
+                      NF("인코더블록", ST, "인코더 블록을 쌓아 구성", "인코더 블록을 쌓아 구성"),
+                      NF("디코더블록", ST, "디코더 블록을 쌓아 구성", "디코더 블록을 쌓아 구성")]),
+]
+_l5_out = cg.ConceptPipeline().run([_l5])
+_l5_comp = _l5_out["result"].get("composition", {})
+R.check("L5 올바른 모델링: PASS + 트랜스포머 is-a 시퀀스모델 + composition에 인코더/디코더블록",
+        _l5_out["status"] in ("PASS", "PASS_WITH_REPAIR")
+        and "시퀀스모델" in dict(_l5_out["result"]["dag"])
+        and ("트랜스포머", "인코더블록") in _l5_comp.get("edges", [])
+        and ("트랜스포머", "디코더블록") in _l5_comp.get("edges", [])
+        and _l5_out.get("composition_issues", []) == []
+        and _l5_out.get("anti_patterns", []) == [],
+        f"status={_l5_out['status']}, dag={dict(_l5_out['result']['dag'])}, comp={_l5_comp}")
+
 # ─────────────────────────────────────────────
 # 요약
 # ─────────────────────────────────────────────

@@ -74,7 +74,14 @@ class FeatureType(Enum):
     LOCATIONAL = "locational"
     FUNCTIONAL = "functional"
     SOCIAL     = "social_treatment"
+    # DL에서 concept axiom(C ⊑ D, is-a)과 role axiom(∃R.C, has-a)은 별개의 공리.
+    # STRUCTURAL은 role axiom에 해당하며 DAG(is-a 격자)에 참여하지 않는다.
+    # 대신 composition_view()로 별도 부분-전체 그래프를 구성한다.
+    # 근거: UFO(Guizzardi 2005) componentOf/memberOf + OBO RO part_of(BFO:0000050).
+    STRUCTURAL = "structural_composition"
 
+# is-a DAG 간선을 형성하는 유일한 타입. STRUCTURAL 등 나머지는 aux_graph/composition_view로 분리.
+# 이 집합을 확장하면 has-a 속성이 분류 계층에 혼입되므로 변경하지 않는다.
 ISA_ALLOWED_TYPES: Set[FeatureType] = {FeatureType.ESSENTIAL}
 
 class FeatureVerdict(Enum):
@@ -175,19 +182,35 @@ class SemanticTypeInference:
         (frozenset({"용도", "사용"}), FeatureType.FUNCTIONAL),
         (frozenset({"서식", "환경"}), FeatureType.LOCATIONAL),
         (frozenset({"서식", "장소"}), FeatureType.LOCATIONAL),
+        # 한국어 피처명에서 has-a(부분-전체) 관계를 감지하는 마커.
+        # 매칭 시 STRUCTURAL로 분류 → DAG에서 제외, composition_view로 이동.
+        # _EXACT_MATCH에 등록된 마커는 정확 일치만 허용 (부분 문자열 오탐 방지).
+        (frozenset({"구성", "부품"}), FeatureType.STRUCTURAL),
+        (frozenset({"구성", "요소"}), FeatureType.STRUCTURAL),
+        (frozenset({"부분", "전체"}), FeatureType.STRUCTURAL),
     ]
     SINGLE_STRONG = {
         "서식지": FeatureType.LOCATIONAL, "수중생활": FeatureType.LOCATIONAL,
         "해양생활": FeatureType.LOCATIONAL, "착용용도": FeatureType.FUNCTIONAL,
+        "구성요소": FeatureType.STRUCTURAL, "부품": FeatureType.STRUCTURAL,
+        "구성부품": FeatureType.STRUCTURAL,
     }
     ESSENTIAL_EXCEPTIONS = {
         "분류학", "생물학적 분류", "계통분류", "계통적 분류", "형태학적", "해부학적",
     }
 
+    # 한국어는 공백 단어 경계가 없어 substring 매칭("부품" in "일부품목")이 오탐.
+    # 이 집합의 마커는 피처명 전체가 마커와 일치할 때만 STRUCTURAL로 판정.
+    # ponytail: 정규식/형태소 분석 대신 정확 일치로 충분 (마커가 3개뿐)
+    _EXACT_MATCH = frozenset({"구성요소", "부품", "구성부품"})
+
     @classmethod
     def _scan(cls, text):
         for m, ft in cls.SINGLE_STRONG.items():
-            if m in text: return ft, [m]
+            if m in cls._EXACT_MATCH:
+                if text == m: return ft, [m]
+            elif m in text:
+                return ft, [m]
         for combo, ft in cls.COMBOS:
             if all(m in text for m in combo): return ft, sorted(combo)
         return None, []
@@ -303,8 +326,16 @@ class ConceptGate:
         return result, judgments, repairs, warnings
 
     def anti_context_gate(self, parent, child):
+        """부모에만 있는 비-essential 피처가 자식에 없으면 is-a 간선 차단.
+
+        의도: "잘못 분류된 가능성이 있는" 피처를 잡는 gate.
+        STRUCTURAL은 의도적 비-essential(has-a)이므로 제외한다 —
+        "자동차 has 엔진"이 "전기차 is-a 자동차"를 차단해서는 안 된다.
+        """
         pu = parent.all_attrs - child.all_attrs
-        cx = {f.feature for f in parent.features if f.type not in ISA_ALLOWED_TYPES and f.feature in pu}
+        cx = {f.feature for f in parent.features
+              if f.type not in ISA_ALLOWED_TYPES and f.type != FeatureType.STRUCTURAL
+              and f.feature in pu}
         if cx:
             return GateResult("Anti-Context Gate", False, f'비-essential: {sorted(cx)}',
                               severity=GateSeverity.ERROR)
@@ -692,11 +723,30 @@ class DAGReasoner:
             for f in c.contextual_features:
                 self.aux_graph[(c.name, f.feature)] = f.type.value
 
+    def composition_view(self):
+        """DAG(is-a)와 독립적인 부분-전체(has-a) 그래프.
+
+        is-a 격자는 ESSENTIAL 피처로 구성되고, 이 뷰는 STRUCTURAL 피처로 구성된다.
+        두 그래프를 분리함으로써 "분류"와 "구성"을 독립적으로 추론할 수 있다.
+        CompositionGate가 이 뷰에 mereology 공리(반대칭, 비순환)를 적용한다.
+
+        edges: (전체 개념, 부분) 쌍.
+        shared_parts: 같은 부분이 여러 전체에 속함 — UFO shareable 메타속성.
+        """
+        edges = [(c.name, f.feature) for c in self.concepts
+                 for f in c.contextual_features if f.type == FeatureType.STRUCTURAL]
+        holders = defaultdict(list)
+        for whole, part in edges:
+            holders[part].append(whole)
+        return {"edges": edges,
+                "shared_parts": {p: sorted(ws) for p, ws in holders.items() if len(ws) > 1}}
+
     def finalize(self):
         lv = self.topo_sort(); defs = self.definitions(); self.collect_aux()
         conn = {n for (p, c) in self.edge_meta for n in (p, c)}
         return {"dag": dict(self.dag), "levels": lv, "definitions": defs,
                 "aux_relations": dict(self.aux_graph),
+                "composition": self.composition_view(),
                 "isolated": [c.name for c in self.concepts if c.name not in conn]}
 
 
@@ -774,7 +824,7 @@ class ExpansionPlanner:
     LLM을 호출하지 않음. "무엇을 해야 하는가"만 결정."""
 
     @staticmethod
-    def plan(pre_dag_issues, post_dag_issues=None) -> List[ExpansionAction]:
+    def plan(pre_dag_issues, post_dag_issues=None, ap_iss=None) -> List[ExpansionAction]:
         actions = []
 
         for iss in pre_dag_issues:
@@ -811,6 +861,15 @@ class ExpansionPlanner:
                     parent_name=iss.get("shared_parent"),
                     reason="DAG sibling 종차 부족"))
 
+        # [Phase C2] MixRig → CORRECTION (feature type 교정). PartOver/WholeOver는 정보만.
+        for iss in (ap_iss or []):
+            if iss.get("pattern") == "MixRig":
+                actions.append(ExpansionAction(
+                    action_type=ExpansionType.CORRECTION,
+                    target_concepts=list(iss.get("involved", [])),
+                    shared_attrs=[iss["subject"]] if iss.get("subject") else [],
+                    reason=iss.get("detail", "rigidity 혼합 → feature type 교정 필요")))
+
         return ExpansionPlanner._dedup(actions)
 
     @staticmethod
@@ -831,6 +890,10 @@ class ExpansionPlanner:
 # Expansion 스키마 + 프롬프트 + 파서 (v7 Phase 3)
 # ═══════════════════════════════════════════════════════
 
+# LLM 확장 응답의 JSON schema. type에 enum을 명시하여 LLM이 올바른 타입만 출력하도록 강제.
+# structural_composition을 직접 출력하게 하는 것이 핵심 설계 결정:
+# 초기에는 LLM에게 functional로 쓰게 하고 후처리로 교정했으나, 프롬프트와 교정 로직이
+# 모순되어 STRUCTURAL이 도달 불가했음. 현재는 LLM이 직접 올바른 타입을 선택한다.
 EXPANSION_OUTPUT_SCHEMA = {
     "type": "object",
     "required": ["expansions"],
@@ -849,8 +912,17 @@ EXPANSION_OUTPUT_SCHEMA = {
                             "required": ["feature", "type", "evidence"],
                             "properties": {
                                 "feature": {"type": "string"},
-                                "type": {"type": "string"},
+                                "type": {"type": "string",
+                                         "enum": ["essential_feature", "structural_composition",
+                                                  "functional", "contextual_usage",
+                                                  "locational", "social_treatment"]},
                                 "evidence": {"type": "string", "minLength": 4},
+                                "relation_hint": {
+                                    "type": "string",
+                                    "enum": ["is_a", "component_of", "member_of",
+                                             "subcollection_of", "subquantity_of",
+                                             "material_of", "phase_of", "located_in"]
+                                },
                             }
                         }
                     },
@@ -860,6 +932,68 @@ EXPANSION_OUTPUT_SCHEMA = {
         }
     }
 }
+
+
+def _ufo_discrimination_guide(mode: ExpansionType) -> str:
+    """LLM에게 is-a와 has-a를 구분하는 방법을 가르치는 프롬프트 삽입물.
+
+    이론적 근거:
+    - Section A: Winston(1987) meronymy 3차원 (기능적 의존성, 동질성, 분리가능성)
+    - Section B: UFO(Guizzardi 2005) 엔티티 스테레오타입 → FeatureType 매핑
+    - Section C: Winston 6유형 부분-전체 패턴 → structural_composition 직접 지시
+
+    핵심 설계 의도: LLM이 has-a 관계를 structural_composition으로 직접 출력하게 한다.
+    이전에는 functional로 쓰게 하고 relation_hint로 후교정했으나, 프롬프트-교정 모순으로
+    STRUCTURAL 타입이 도달 불가했음. 현재는 교정 없이 단일 경로로 동작한다.
+
+    DEPTH: A+B+C, WIDTH: A+B, CORRECTION: B+C.
+    """
+    section_a = (
+        "<is_a_vs_has_a_test>\n"
+        "후보 속성을 추가하기 전에, 다음 3가지 질문으로 is-a(본질) vs has-a(부분) 관계를 판별하세요:\n"
+        "(1) 기능적 의존성: 전체의 기능이 이 부분에 의존하는가?\n"
+        "    예 → 부분-전체(has-a) 가능성 높음 / 아니오 → 속성·종차(is-a) 가능성 높음\n"
+        "(2) 동질성(homeomerous): 부분이 전체와 같은 종류인가?\n"
+        "    예 → 물질·수량 관계 / 아니오 → 구성요소-통합체 또는 멤버-집합\n"
+        "(3) 분리가능성: 부분을 제거해도 전체의 정체성이 유지되는가?\n"
+        "    예 → 비본질적 부분 / 아니오 → 본질적 부분이지만 여전히 has-a\n"
+        "핵심 원칙: \"X는 Y의 일종이다\"(is-a)만 essential_feature로. "
+        "\"X는 Y를 가진다/포함한다\"(has-a)는 structural_composition으로.\n"
+        "</is_a_vs_has_a_test>\n"
+    )
+    section_b = (
+        "<ufo_type_mapping>\n"
+        "속성 유형 판별 가이드:\n"
+        "essential_feature (is-a 계층): 정체성 원리를 제공, 모든 인스턴스가 필연적으로 가짐. "
+        "예: 척추동물→척추, 포유류→젖샘·체온조절\n"
+        "structural_composition (has-a 구성): 부분-전체 관계. 구성요소·멤버·부분. "
+        "예: 자동차→엔진, 숲→나무, 컴퓨터→CPU\n"
+        "functional: 용도·역할·기능에 의한 분류(맥락 의존). 예: 사냥개→사냥용도, 식용식물→식용가능\n"
+        "contextual_usage: 인간의 분류 관행·시장·요리 맥락. 예: 채소→요리에서의 분류\n"
+        "locational: 서식지·분포·생태적 위치. 예: 담수어→민물 서식\n"
+        "social_treatment: 법적 지위·사회적 관행. 예: 멸종위기종→법적 보호 대상\n"
+        "</ufo_type_mapping>\n"
+    )
+    section_c = (
+        "<part_whole_patterns>\n"
+        "has-a로 분류해야 하는 부분-전체 패턴 6가지:\n"
+        "(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → structural_composition\n"
+        "(2) 멤버-집합: 나무는 숲의 구성원 → structural_composition\n"
+        "(3) 부분-질량: 조각은 파이의 부분 → structural_composition\n"
+        "(4) 재료-대상: 철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\n"
+        "(5) 단계-과정: 유충은 변태의 단계 → contextual_usage\n"
+        "(6) 장소-영역: 오아시스는 사막의 부분 → locational\n"
+        "주의: 재료-대상(4)만 essential_feature 가능. (1)~(3)은 structural_composition, "
+        "(5)는 contextual_usage, (6)은 locational을 사용하세요.\n"
+        "</part_whole_patterns>\n"
+    )
+    if mode == ExpansionType.DEPTH:
+        inner = section_a + section_b + section_c
+    elif mode == ExpansionType.WIDTH:
+        inner = section_a + section_b
+    else:  # CORRECTION
+        inner = section_b + section_c
+    return f"\n<discrimination_guide>\n{inner}</discrimination_guide>\n"
 
 
 def build_expansion_prompt(action: ExpansionAction) -> str:
@@ -876,7 +1010,10 @@ def build_expansion_prompt(action: ExpansionAction) -> str:
             "다음 개념들이 동일한 essential 속성을 갖고 있어 구분되지 않습니다.\n"
             "각 개념을 구분하는 종차(differentia)를 추가하세요.\n"
             "종차는 다른 개념에는 없고 해당 개념에만 있는 본질적 속성입니다.\n"
+            "중요: 종차는 반드시 is-a(분류적) 속성이어야 합니다.\n"
+            "부분-전체(has-a), 기능, 장소, 사회적 속성은 해당 type으로 표기하세요.\n"
             "</instruction>"
+            + _ufo_discrimination_guide(ExpansionType.DEPTH)
         )
     elif action.action_type == ExpansionType.WIDTH:
         body = (
@@ -885,7 +1022,10 @@ def build_expansion_prompt(action: ExpansionAction) -> str:
             f"<existing_children>{targets}</existing_children>\n"
             "<instruction>\n"
             "이 부모 아래에서 아직 다루어지지 않은 새 하위 개념을 제안하세요.\n"
+            "새 개념은 부모와 is-a 관계여야 합니다 (부모의 일종).\n"
+            "부모의 부분(has-a)이나 기능적 역할은 하위 개념이 아닙니다.\n"
             "</instruction>"
+            + _ufo_discrimination_guide(ExpansionType.WIDTH)
         )
     else:  # CORRECTION
         body = (
@@ -893,7 +1033,10 @@ def build_expansion_prompt(action: ExpansionAction) -> str:
             f"<target_concepts>{targets}</target_concepts>\n"
             "<instruction>\n"
             "이 개념들은 essential 속성이 없거나 충돌합니다. 수정하세요.\n"
+            "기존 속성 중 has-a(부분-전체) 관계가 essential로 잘못 분류된 것이\n"
+            "있을 수 있습니다. 아래 가이드를 참고하여 type을 교정하세요.\n"
             "</instruction>"
+            + _ufo_discrimination_guide(ExpansionType.CORRECTION)
         )
 
     schema_hint = (
@@ -903,12 +1046,21 @@ def build_expansion_prompt(action: ExpansionAction) -> str:
         '    {\n'
         '      "concept": "개념명",\n'
         '      "new_features": [\n'
-        '        {"feature": "종차명", "type": "essential_feature", "evidence": "근거 텍스트"}\n'
+        '        {\n'
+        '          "feature": "종차명",\n'
+        '          "type": "essential_feature",\n'
+        '          "evidence": "근거 텍스트",\n'
+        '          "relation_hint": "is_a"\n'
+        '        }\n'
         '      ],\n'
         '      "reason": "추가 이유"\n'
         '    }\n'
         '  ]\n'
-        '}'
+        '}\n'
+        'type 선택지: essential_feature, structural_composition, '
+        'functional, contextual_usage, locational, social_treatment\n'
+        'relation_hint 선택지: is_a, component_of, member_of, '
+        'subcollection_of, subquantity_of, material_of, phase_of, located_in'
     )
     return body + schema_hint
 
@@ -1225,6 +1377,240 @@ class ExpansionHistoryAnalyzer:
 
 
 # ═══════════════════════════════════════════════════════
+# CompositionGate (v7 Phase C1)
+# ═══════════════════════════════════════════════════════
+
+class CompositionGate:
+    """composition_view()(부분-전체 그래프)에 mereology 공리를 적용하는 gate.
+
+    DAG(is-a)와 별도로, has-a 그래프가 온톨로지적으로 건전한지 검증한다.
+    공리 출처: OBO Relation Ontology(vendor/obo-relations) core.obo — BFO:0000050(part_of)/51(has_part).
+
+    검사 4종:
+    - 반대칭: A⊃B이면서 B⊃A는 불가 (proper parthood, OBO core.obo)
+    - 비순환: 추이 폐쇄에서 자기 도달 = 순환 (OBO is_transitive + 반대칭에서 도출)
+    - is-a/has-a 배타: DAG 조상-자손 사이에 has_part 간선 → 두 관계의 혼동
+    - 자기 부분: (A, A) — 고전 mereology는 반사 허용이나 모델링에선 의심
+    """
+
+    @staticmethod
+    def _reachable(graph: Dict[str, List[str]], start: str) -> Set[str]:
+        # graph[a] = [자손...]; start에서 도달 가능한 노드 집합 (순환 시 start 재포함)
+        seen: Set[str] = set()
+        stack = list(graph.get(start, []))
+        while stack:
+            n = stack.pop()
+            if n in seen: continue
+            seen.add(n)
+            stack.extend(graph.get(n, []))
+        return seen
+
+    @staticmethod
+    def _is_ancestor(dag: Dict[str, List[str]], a: str, b: str) -> bool:
+        # DAG에서 a→...→b 도달 = a가 b의 is-a 조상
+        return b in CompositionGate._reachable(dag, a)
+
+    @staticmethod
+    def detect(reasoner: "DAGReasoner") -> Tuple[GateReport, List[Dict]]:
+        report = GateReport(target="[CompositionGate]")
+        issues: List[Dict] = []
+        comp = reasoner.composition_view()
+        edges = comp["edges"]                        # (전체, 부분) 쌍
+        edge_set = set(edges)
+        names = {c.name for c in reasoner.concepts}  # 개념명 집합
+        dag = dict(reasoner.dag)
+
+        # 검사 1: 반대칭 — (A,B)와 (B,A) 동시 (ERROR)
+        anti_seen: Set[Tuple[str, str]] = set()
+        for (w, p) in edges:
+            if w != p and (p, w) in edge_set:
+                key = tuple(sorted((w, p)))
+                if key in anti_seen: continue
+                anti_seen.add(key)
+                issues.append({"kind": "antisymmetry", "whole": w, "part": p,
+                    "detail": f"{w}⊃{p} 와 {p}⊃{w} 동시 — proper parthood 반대칭 위반"})
+        report.results.append(GateResult(
+            "Composition Gate: 반대칭", not anti_seen,
+            f"반대칭 위반 {len(anti_seen)}건" if anti_seen else "ok",
+            {"pairs": sorted(anti_seen)},
+            GateSeverity.ERROR if anti_seen else GateSeverity.INFO))
+
+        # 검사 2: 비순환 — 부분명이 개념명인 간선만 추이 폐쇄 (ERROR)
+        cyc_graph: Dict[str, List[str]] = defaultdict(list)
+        for (w, p) in edges:
+            if p in names and p != w:      # 자기루프는 검사 4에서 처리
+                cyc_graph[w].append(p)
+        cyc_graph = dict(cyc_graph)
+        cyc_nodes = sorted(n for n in names
+                           if n in CompositionGate._reachable(cyc_graph, n))
+        for n in cyc_nodes:
+            issues.append({"kind": "cycle", "whole": n, "part": n,
+                "detail": f"{n}이(가) 구성 추이폐쇄에서 자기 자신에 도달 — 순환"})
+        report.results.append(GateResult(
+            "Composition Gate: 비순환", not cyc_nodes,
+            f"순환 노드 {cyc_nodes}" if cyc_nodes else "ok",
+            {"cycle_nodes": cyc_nodes},
+            GateSeverity.ERROR if cyc_nodes else GateSeverity.INFO))
+
+        # 검사 3: is-a/has-a 배타 — 조상-자손 개념 쌍에 has_part 간선 (NEEDS_CORRECTION)
+        conflicts: List[Tuple[str, str]] = []
+        for (w, p) in edges:
+            if w == p or p not in names: continue
+            if CompositionGate._is_ancestor(dag, w, p) or CompositionGate._is_ancestor(dag, p, w):
+                if (w, p) in conflicts: continue
+                conflicts.append((w, p))
+                issues.append({"kind": "isa_hasa_conflict", "whole": w, "part": p,
+                    "detail": f"{w}와 {p}는 is-a 조상-자손인데 has_part 간선도 존재 — is-a/has-a 혼동"})
+        report.results.append(GateResult(
+            "Composition Gate: is-a/has-a 배타", not conflicts,
+            f"배타 위반 {conflicts}" if conflicts else "ok",
+            {"conflicts": conflicts},
+            GateSeverity.NEEDS_CORRECTION if conflicts else GateSeverity.INFO))
+
+        # 검사 4: 자기 부분 — (A,A) 간선 (WARNING, 차단하지 않음)
+        self_parts = sorted({w for (w, p) in edges if w == p})
+        for n in self_parts:
+            issues.append({"kind": "self_part", "whole": n, "part": n,
+                "detail": f"{n}이(가) 자기 자신을 부분으로 가짐 — 모델링 의심"})
+        report.results.append(GateResult(
+            "Composition Gate: 자기부분", True,
+            f"자기부분 {self_parts}" if self_parts else "ok",
+            {"self_parts": self_parts},
+            GateSeverity.WARNING if self_parts else GateSeverity.INFO))
+
+        return report, issues
+
+
+# ═══════════════════════════════════════════════════════
+# UFOAntiPatternGate (v7 Phase C2)
+# ═══════════════════════════════════════════════════════
+
+class UFOAntiPatternGate:
+    """UFO/OntoUML 카탈로그(Guizzardi 2021)에서 데이터로 판별 가능한 안티패턴 3종 감지.
+
+    전부 WARNING — 파이프라인을 차단하지 않고 모델링 개선을 위한 정보를 제공한다.
+    MixRig만 ExpansionPlanner가 CORRECTION action으로 변환한다.
+
+    - MixRig (rigidity 혼합): 같은 feature명이 ESSENTIAL(rigid, 정체성 제공)과
+      비-ESSENTIAL(anti-rigid, 맥락 의존)로 혼용 → 분류 기준이 오염됨
+    - PartOver (부분 중복): shared_parts의 한 부분이 is-a 조상-자손인 두 전체에
+      모두 소속 → 자식이 상속받을 부분을 중복 선언 (예: 포유류 has 심장 + 개 has 심장)
+    - WholeOver (전체 중복): 한 개념이 STRUCTURAL 부분과 그 특수화를 동시 보유
+      → 일반 부분과 구체 부분이 공존 (예: 차 has 바퀴 + has 앞바퀴)
+    """
+
+    @staticmethod
+    def _is_ancestor(reasoner, a, b) -> bool:
+        """reasoner.dag에서 a→...→b 도달 가능 여부. CompositionGate._reachable 재사용."""
+        if a == b:
+            return False
+        return b in CompositionGate._reachable(dict(reasoner.dag), a)
+
+    @staticmethod
+    def detect(reasoner, concepts) -> Tuple[GateReport, List[Dict]]:
+        report = GateReport(target="[UFOAntiPatternGate]")
+        issues = []
+
+        # MixRig — feature명별 type 집합에 ESSENTIAL과 비-ESSENTIAL 공존
+        feature_types = defaultdict(set)   # feature명 → {FeatureType,...}
+        for c in concepts:
+            for f in c.features:
+                feature_types[f.feature].add(f.type)
+        for feat_name, types in feature_types.items():
+            if FeatureType.ESSENTIAL in types and any(t != FeatureType.ESSENTIAL for t in types):
+                involved = sorted({c.name for c in concepts
+                                   for f in c.features if f.feature == feat_name})
+                iss = {"pattern": "MixRig", "subject": feat_name,
+                       "detail": f'"{feat_name}" rigidity 혼합: {sorted(t.value for t in types)}',
+                       "involved": involved}
+                issues.append(iss)
+                report.results.append(GateResult(
+                    "UFO Anti-Pattern Gate", True, f"MixRig: {feat_name}",
+                    iss, GateSeverity.WARNING))
+
+        # PartOver — shared_parts의 부분을 소유한 전체들 중 조상-자손 쌍 존재
+        for part, wholes in reasoner.composition_view()["shared_parts"].items():
+            for w1, w2 in combinations(wholes, 2):
+                if (UFOAntiPatternGate._is_ancestor(reasoner, w1, w2)
+                        or UFOAntiPatternGate._is_ancestor(reasoner, w2, w1)):
+                    iss = {"pattern": "PartOver", "subject": part,
+                           "detail": f'부분 "{part}"가 조상-자손 관계인 {[w1, w2]}에 중복 소속',
+                           "involved": [w1, w2]}
+                    issues.append(iss)
+                    report.results.append(GateResult(
+                        "UFO Anti-Pattern Gate", True, f"PartOver: {part}",
+                        iss, GateSeverity.WARNING))
+
+        # WholeOver — 한 개념의 STRUCTURAL 부분 두 개가 조상-자손 관계
+        for c in concepts:
+            parts = [f.feature for f in c.contextual_features
+                     if f.type == FeatureType.STRUCTURAL]
+            for p1, p2 in combinations(parts, 2):
+                if (UFOAntiPatternGate._is_ancestor(reasoner, p1, p2)
+                        or UFOAntiPatternGate._is_ancestor(reasoner, p2, p1)):
+                    iss = {"pattern": "WholeOver", "subject": c.name,
+                           "detail": f'{c.name}가 부분과 그 특수화 {[p1, p2]}를 동시 보유',
+                           "involved": [p1, p2]}
+                    issues.append(iss)
+                    report.results.append(GateResult(
+                        "UFO Anti-Pattern Gate", True, f"WholeOver: {c.name}",
+                        iss, GateSeverity.WARNING))
+
+        if not issues:
+            report.results.append(GateResult(
+                "UFO Anti-Pattern Gate", True, "ok",
+                severity=GateSeverity.INFO))
+        return report, issues
+
+
+# ═══════════════════════════════════════════════════════
+# RCA 관계 스케일링 (Phase C3)
+# ═══════════════════════════════════════════════════════
+
+RCA_SCALING_MARKER = "rca_scaling"
+RCA_SCALING_PREFIX = "∃has_part."
+
+def relational_scaling(concepts: List[NormalizedConcept]) -> List[NormalizedConcept]:
+    """has-a 관계를 is-a 격자에 반영하는 RCA existential scaling.
+
+    RCA(Relational Concept Analysis, Rouane-Hacene 2013)의 핵심 아이디어:
+    객체 간 관계(has_part)를 관계 속성(∃has_part.C)으로 변환하여 FCA 문맥에 주입하면,
+    구성이 비슷한 개념들이 is-a 격자에서 자연스럽게 묶인다.
+
+    예: 자동차{엔진(S)} + 전기차{엔진(S)} → 둘 다 ∃has_part.엔진(E) 획득
+        → 격자에서 "엔진 보유 탈것" 노드로 묶임.
+
+    제약:
+    - 부분 이름이 개념명과 일치하는 STRUCTURAL 피처만 대상 (비개념 부분은 leaf)
+    - 파생 피처는 ESSENTIAL → DAG 간선에 기여. 원본 STRUCTURAL은 유지 → composition_view 동작
+    - 멱등: 같은 파생 피처가 있으면 추가 안 함 (run_with_expansion 재진입 루프에서 안전)
+    - 순수 함수: 원본 리스트 불변
+
+    ponytail: 완전한 RCA 고정점(다중 격자 반복 수렴)은 과함. 1-pass만 적용하되,
+    run_with_expansion 루프가 이미 재진입 구조이므로 "확장 루프 ≈ RCA 수렴"의 실용적 근사.
+    leaf로 취급 — 파생 없음.
+    """
+    names = {c.name for c in concepts}
+    scaled = []
+    for c in concepts:
+        feats = list(c.features)              # 얕은 사본 — 원본 리스트 불변
+        present = {ft.feature for ft in feats}
+        for ft in c.features:
+            if ft.type != FeatureType.STRUCTURAL or ft.feature not in names:
+                continue
+            derived = f"{RCA_SCALING_PREFIX}{ft.feature}"
+            if derived in present:
+                continue                      # 멱등
+            ev = f"{RCA_SCALING_MARKER}: {c.name} has_part {ft.feature}"
+            feats.append(NormalizedFeature(derived, FeatureType.ESSENTIAL,
+                                           ev, ev, ft.confidence))
+            present.add(derived)
+        scaled.append(NormalizedConcept(name=c.name, features=feats))
+    return scaled
+
+
+
+# ═══════════════════════════════════════════════════════
 # ConceptPipeline
 # ═══════════════════════════════════════════════════════
 
@@ -1253,7 +1639,11 @@ class ConceptPipeline:
         all_reps.append(sig_rep)
         reasoner = DAGReasoner(cleaned)
         if len(cleaned) < 2:
-            return all_reps, all_repairs, all_warnings, reasoner, sig_iss, []
+            comp_rep, comp_iss = CompositionGate.detect(reasoner)
+            all_reps.append(comp_rep)
+            ap_rep, ap_iss = UFOAntiPatternGate.detect(reasoner, cleaned)
+            all_reps.append(ap_rep)
+            return all_reps, all_repairs, all_warnings, reasoner, sig_iss, [], comp_iss, ap_iss
         cmap = {c.name: c for c in cleaned}
         sched = GateScheduler(self.gate, cmap)
         aa = reasoner.collect_ancestors(); prop = reasoner.direct_parents(aa)
@@ -1276,38 +1666,51 @@ class ConceptPipeline:
         post_rep, post_iss = PostDAGSiblingGate.detect(reasoner, cleaned)
         all_reps.append(post_rep)
 
-        return all_reps, all_repairs, all_warnings, reasoner, sig_iss, post_iss
+        # [v7 Phase C1] CompositionGate: has-a 그래프 mereology 공리 검증
+        comp_rep, comp_iss = CompositionGate.detect(reasoner)
+        all_reps.append(comp_rep)
+
+        # [v7 Phase C2] UFOAntiPatternGate: MixRig/PartOver/WholeOver (전부 WARNING)
+        ap_rep, ap_iss = UFOAntiPatternGate.detect(reasoner, cleaned)
+        all_reps.append(ap_rep)
+
+        return all_reps, all_repairs, all_warnings, reasoner, sig_iss, post_iss, comp_iss, ap_iss
 
     def run(self, cands_per_round):
         hist, prompts = [], []
         reasoner = None
         for ri, cands in enumerate(cands_per_round):
             if ri >= self.max_rounds: break
-            reps, repairs, warnings, reasoner, sig_iss, post_iss = self.validate_hierarchy(cands)
+            reps, repairs, warnings, reasoner, sig_iss, post_iss, comp_iss, ap_iss = self.validate_hierarchy(cands)
             hist.append(reps); result = reasoner.finalize()
             status = ResultClassifier.classify(reps, repairs, warnings, sig_iss, bool(result["dag"]))
 
             # [v7] expansion planning
-            exp_actions = ExpansionPlanner.plan(sig_iss, post_iss)
+            exp_actions = ExpansionPlanner.plan(sig_iss, post_iss, ap_iss)
 
             if status != PipelineStatus.FAIL:
                 return {"result": result, "status": status.value, "rounds_used": ri+1,
                         "all_reports": hist, "repairs": repairs, "warnings": warnings,
                         "signature_issues": sig_iss, "post_dag_issues": post_iss,
+                        "composition_issues": comp_iss, "anti_patterns": ap_iss,
                         "expansion_actions": exp_actions, "correction_prompts": prompts}
             prompts.append(CorrectionPromptGenerator.generate_standalone(reps))
-        result = reasoner.finalize() if reasoner else {"dag":{},"levels":{},"definitions":{},"aux_relations":{},"isolated":[]}
+        result = reasoner.finalize() if reasoner else {"dag":{},"levels":{},"definitions":{},"aux_relations":{},"composition":{"edges":[],"shared_parts":{}},"isolated":[]}
         return {"result": result, "status": "FAIL", "rounds_used": len(cands_per_round),
                 "all_reports": hist, "repairs": [], "warnings": [],
                 "signature_issues": [], "post_dag_issues": [],
+                "composition_issues": [], "anti_patterns": [],
                 "expansion_actions": [], "correction_prompts": prompts}
 
-    def run_with_expansion(self, initial_concepts, generator=None, max_expansion_rounds=2):
+    def run_with_expansion(self, initial_concepts, generator=None, max_expansion_rounds=2,
+                           rca_scaling=False):
         """확장 루프: 초기 검증 → expansion action → generator → 재진입.
 
         generator: MockExpansionGenerator 또는 실제 LLM generator (.generate(action) → raw JSON).
         generator=None이면 확장 없이 run()과 동일.
         """
+        if rca_scaling:
+            initial_concepts = relational_scaling(initial_concepts)
         out = self.run([initial_concepts])
         history = [{"round": 0, "status": out["status"],
                     "n_concepts": len(initial_concepts),
