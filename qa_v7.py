@@ -21,6 +21,7 @@ QA 검증 스크립트 — concept_gate_v7 계약 검증
   PART K. Phase C3 — relational_scaling 파생·멱등성
   PART L. 구성 vs 구조 혼동 — Transformer/Attention 실 도메인 시나리오
   PART M. OntoCleanMetaGate — rigidity/identity/unity/dependence/category edge 검증
+  PART N. Scior/gUFO adapter — subtree rule metadata 재사용
 
 각 PART는 독립이며, 하나가 실패해도 나머지는 계속 실행됩니다.
 종료 코드: 모두 통과 0, 하나라도 실패 1.
@@ -504,6 +505,7 @@ raw = _json.dumps({"expansions": [{"concept": "자동차", "new_features": [
 cs, _ = cg.parse_expansion_response(raw, [NC("자동차", [])])
 eng = next(f for f in cs[0].features if f.feature == "엔진")
 R.check("I2 structural_composition 직접 출력 → STRUCTURAL", eng.type == cg.FeatureType.STRUCTURAL)
+R.check("I2 relation_hint 보존", eng.relation_hint == "component_of")
 
 # I3. relation_hint=is_a + essential → essential 유지 (교정 없이 통과)
 raw2 = _json.dumps({"expansions": [{"concept": "고양이", "new_features": [
@@ -540,6 +542,28 @@ R.check("I6 composition edges에 STRUCTURAL만",
 # I7. shared_parts: 엔진이 자동차·보트 양쪽에 → UFO shareable 감지
 R.check("I7 shared_parts 엔진 공유 감지",
         comp["shared_parts"].get("엔진") == ["보트", "자동차"])
+
+# I8. relation_hint/type 모순: has-a hint를 essential로 넣으면 DAG 전에 격리
+_i8 = [
+    NC("자동차", [NF("엔진", E, "자동차는 엔진을 가진다", "엔진을 가진다", relation_hint="component_of")]),
+    NC("엔진차", [NF("엔진", E, "자동차는 엔진을 가진다", "엔진을 가진다", relation_hint="component_of"),
+                  feat("차량", "차량 근거")]),
+]
+_i8_out = cg.ConceptPipeline().run([_i8])
+_i8_failures = [g for r in _i8_out["all_reports"][0] for g in getattr(r, "failures", [])]
+R.check("I8 essential + component_of → Relation Discrimination Gate NEEDS_CORRECTION",
+        _i8_out["status"] == "NEEDS_CORRECTION"
+        and _i8_out["result"]["dag"] == {}
+        and any(g.gate_name == "Relation Discrimination Gate" for g in _i8_failures),
+        f"status={_i8_out['status']}, dag={_i8_out['result']['dag']}")
+
+# I9. relation_hint/type 모순: is_a hint를 structural로 넣어도 correction
+_i9 = [NC("고양이", [NF("포유류", ST, "고양이는 포유류의 한 종류", "포유류의 한 종류", relation_hint="is_a")])]
+_i9_out = cg.ConceptPipeline().run([_i9])
+_i9_failures = [g for r in _i9_out["all_reports"][0] for g in getattr(r, "failures", [])]
+R.check("I9 structural + is_a → Relation Discrimination Gate NEEDS_CORRECTION",
+        _i9_out["status"] == "NEEDS_CORRECTION"
+        and any(g.gate_name == "Relation Discrimination Gate" for g in _i9_failures))
 
 # ═════════════════════════════════════════════
 # PART J. v7 Phase C1/C2 — CompositionGate + UFO Anti-Pattern
@@ -871,6 +895,31 @@ _m5_raw = _json.dumps({"concepts": [{
 _, _m5_rep = cg.ParseGate.parse(_m5_raw)
 R.check("M5 unknown ontoclean 값 → ParseGate ERROR",
         not _m5_rep.passed and any("ontoclean.rigidity unknown value" in g.message for g in _m5_rep.failures))
+
+# ═════════════════════════════════════════════
+# PART N. Scior/gUFO adapter — subtree rule metadata 재사용
+# ═════════════════════════════════════════════
+print("\n[PART N] Scior/gUFO adapter")
+
+import cg_gufo as _gufo
+
+_rules = _gufo.load_scior_rules()
+R.check("N1 Scior TSV에서 RA02 로드",
+        "RA02" in _rules and _rules["RA02"].base_rule == "R22")
+R.check("N2 Scior RA02/R22 logic 확인",
+        "RigidType" in _rules["RA02"].logic and "AntiRigidType" in _rules["RA02"].logic)
+_selected = _gufo.selected_rule_summary()
+R.check("N3 selected_rule_summary에 RA02/RA03/RU01 포함",
+        [r["implementation_rule"] for r in _selected] == ["RA02", "RA03", "RU01"])
+
+_m3_rule_details = [
+    g.details.get("scior_rules", [])
+    for g in _m3_failures
+    if g.gate_name == "OntoClean Meta Gate"
+]
+R.check("N4 OntoCleanMetaGate rigidity failure에 Scior rule ref 포함",
+        _m3_rule_details and _m3_rule_details[0][0]["base_rule"] == "R22"
+        and _m3_rule_details[0][0]["implementation_rule"] == "RA02")
 
 # ─────────────────────────────────────────────
 # 요약

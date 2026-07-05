@@ -27,6 +27,7 @@ cd concept-gate-taxonomy/files
 - `concept_gate_v7.py`
 - `cg_graph_export.py`
 - `cg_partwhole.py`
+- `cg_gufo.py`
 - `test_server.py`
 - `requirements.txt`
 

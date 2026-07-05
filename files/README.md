@@ -20,6 +20,7 @@ conceptgate-mcp/
 ├── server.py              MCP 서버 (FastMCP)
 ├── concept_gate_v7.py     ConceptGate 코어 (수정 없음, import만)
 ├── cg_partwhole.py        part-whole 어휘 어댑터 (참조용 배포 복사본)
+├── cg_gufo.py             Scior/gUFO rule metadata 어댑터 (fallback 포함)
 ├── cg_graph_export.py     GraphExporter (수정 없음, import만)
 ├── test_server.py         단위 테스트 (직접 호출 19 + MCP 프로토콜 11)
 ├── pyproject.toml
@@ -42,6 +43,7 @@ conceptgate-mcp/
 ├── server.py              ← 반드시 concept_gate_v7.py와 같은 디렉토리
 ├── concept_gate_v7.py
 ├── cg_partwhole.py
+├── cg_gufo.py
 ├── cg_graph_export.py
 ├── test_server.py
 ├── pyproject.toml
@@ -144,6 +146,11 @@ dependence, category 위반을 검사한다. 값이 없으면 기존 FCA feature
 is_a, component_of, member_of, subcollection_of, subquantity_of,
 material_of, phase_of, located_in.
 
+`relation_hint`와 `type`이 모순되면 Relation Discrimination Gate가
+DAG 생성 전에 `NEEDS_CORRECTION`으로 차단한다. 예를 들어
+`type: essential_feature`와 `relation_hint: component_of` 조합은 is-a가 아니라
+has-a 후보이므로 수정이 필요하다.
+
 ```json
 {"feature": "엔진", "type": "structural_composition",
  "evidence": "자동차는 엔진을 동력원으로 가진다", "relation_hint": "component_of"}
@@ -157,6 +164,10 @@ material_of, phase_of, located_in.
   - **MixRig**: 같은 feature가 essential과 비-essential로 혼용
   - **PartOver**: is-a 조상-자손이 같은 부분을 중복 선언
   - **WholeOver**: 한 개념이 부분과 그 특수화를 동시 보유
+
+OntoClean rigidity 위반은 Scior/gUFO의 R22/RA02 rule reference를 함께 보존한다.
+`files/` 단독 설치에는 `vendor/scior`가 없으므로 `cg_gufo.py`의 내장 fallback
+metadata를 사용한다.
 
 ## 연결
 

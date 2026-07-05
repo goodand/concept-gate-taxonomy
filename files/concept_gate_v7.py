@@ -126,6 +126,7 @@ class OntoCleanMeta:
 class NormalizedFeature:
     feature: str; type: FeatureType; evidence: str = ""
     claim: str = ""; confidence: float = 1.0
+    relation_hint: Optional[str] = None
 
 @dataclass
 class NormalizedConcept:
@@ -316,6 +317,48 @@ class ConceptGate:
                                   {"contradictions": found}, GateSeverity.ERROR)
         return GateResult("Contradiction Gate", True, "ok", severity=GateSeverity.INFO)
 
+    def relation_discrimination_gate(self, concept):
+        """Detect type/relation_hint contradictions before DAG construction.
+
+        LLM output is a candidate. If it says a feature is essential while its
+        UFO/OBO relation_hint is has-a, the feature must not enter the is-a DAG
+        until corrected.
+        """
+        try:
+            from cg_partwhole import hint_to_feature_type
+        except Exception:
+            hint_to_feature_type = None
+
+        conflicts = []
+        for f in concept.features:
+            hint = (f.relation_hint or "").strip().lower()
+            if not hint:
+                continue
+            expected_value = hint_to_feature_type(hint) if hint_to_feature_type else None
+            expected = next((ft for ft in FeatureType if ft.value == expected_value), None)
+            if expected is None:
+                continue
+            if f.type != expected:
+                conflicts.append({
+                    "feature": f.feature,
+                    "relation_hint": hint,
+                    "actual_type": f.type.value,
+                    "expected_type": expected.value,
+                })
+
+        if conflicts:
+            labels = [
+                f'{c["feature"]}: {c["actual_type"]} vs {c["relation_hint"]}->{c["expected_type"]}'
+                for c in conflicts
+            ]
+            return GateResult(
+                "Relation Discrimination Gate", False,
+                "; ".join(labels),
+                {"conflicts": conflicts},
+                GateSeverity.NEEDS_CORRECTION)
+        return GateResult("Relation Discrimination Gate", True, "ok",
+                          severity=GateSeverity.INFO)
+
     def semantic_type_gate(self, concept) -> Tuple[GateResult, List[FeatureJudgment], List[RepairAction], List[WarningAction]]:
         judgments, repairs, warnings = [], [], []
         demotions, ambiguous, weak_warns = [], [], []
@@ -398,8 +441,15 @@ class ConceptGate:
                               {"missing": missing}, GateSeverity.WARNING)
 
         violations = []
+        rule_refs = []
         if pm.rigidity == OntoCleanRigidity.ANTI_RIGID and cm.rigidity == OntoCleanRigidity.RIGID:
             violations.append("rigidity: anti-rigid parent cannot subsume rigid child")
+            try:
+                from cg_gufo import rule_ref
+                ref = rule_ref("RA02")
+                rule_refs.append({"base_rule": ref.base_rule, "implementation_rule": ref.implementation_rule})
+            except Exception:
+                rule_refs.append({"base_rule": "R22", "implementation_rule": "RA02"})
 
         if (pm.identity == OntoCleanIdentity.DOES_NOT_SUPPLY
                 and cm.identity == OntoCleanIdentity.SUPPLIES_IDENTITY):
@@ -418,7 +468,7 @@ class ConceptGate:
         if violations:
             return GateResult("OntoClean Meta Gate", False,
                               "; ".join(violations),
-                              {"violations": violations},
+                              {"violations": violations, "scior_rules": rule_refs},
                               GateSeverity.NEEDS_CORRECTION)
         return GateResult("OntoClean Meta Gate", True, "ok",
                           severity=GateSeverity.INFO)
@@ -625,7 +675,8 @@ class ParseGate:
                     conf = 1.0
                 features.append(NormalizedFeature(
                     feature=fname, type=ftype, evidence=raw_ev,
-                    claim=raw_claim, confidence=conf))
+                    claim=raw_claim, confidence=conf,
+                    relation_hint=rf.get("relation_hint") if isinstance(rf.get("relation_hint"), str) else None))
             meta = _parse_ontoclean_meta(rc.get("ontoclean") or rc.get("ontoclean_meta"),
                                          name, errors)
             concepts.append(NormalizedConcept(name=name, features=features, ontoclean=meta))
@@ -751,7 +802,8 @@ def apply_judgments(concept, judgments):
         if j.verdict == FeatureVerdict.REJECT_FEATURE: continue
         if j.verdict == FeatureVerdict.DEMOTE_TO_AUX:
             new.append(NormalizedFeature(j.feature.feature, j.inferred_type,
-                                         j.feature.evidence, j.feature.claim, j.feature.confidence))
+                                         j.feature.evidence, j.feature.claim,
+                                         j.feature.confidence, j.feature.relation_hint))
         else: new.append(j.feature)
     return NormalizedConcept(name=concept.name, features=new, ontoclean=concept.ontoclean)
 
@@ -1248,7 +1300,9 @@ def parse_expansion_response(raw: str, original_concepts: List[NormalizedConcept
             ev = rf.get("evidence", "")
             if not isinstance(ev, str):
                 ev = str(ev)
-            target.features.append(NormalizedFeature(fname, ftype, ev, ev))
+            target.features.append(NormalizedFeature(
+                fname, ftype, ev, ev,
+                relation_hint=rf.get("relation_hint") if isinstance(rf.get("relation_hint"), str) else None))
 
     report.results.extend(errors)
     if not errors:
@@ -1741,6 +1795,7 @@ class ConceptPipeline:
     def validate_hierarchy(self, concepts):
         all_reps, all_repairs, all_warnings, cleaned = [], [], [], []
         for c in concepts:
+            rel_r = self.gate.relation_discrimination_gate(c)
             sem_r, judg, reps, warns = self.gate.semantic_type_gate(c)
             all_repairs.extend(reps)
             all_warnings.extend(warns)
@@ -1749,10 +1804,14 @@ class ConceptPipeline:
             report.results.append(self.gate.type_gate(cc))
             report.results.append(self.gate.evidence_gate(cc))
             report.results.append(self.gate.contradiction_gate(cc))
+            report.results.append(rel_r)
             report.results.append(sem_r)
             all_reps.append(report)
             hard = [r for r in report.results if not r.passed and r.severity == GateSeverity.ERROR]
-            if not hard: cleaned.append(cc)
+            blocked = [r for r in report.results
+                       if not r.passed and r.gate_name == "Relation Discrimination Gate"]
+            if not hard and not blocked:
+                cleaned.append(cc)
 
         # [v7] PreDAG: essential signature 중복 탐지 (기존 위치)
         sig_rep, sig_iss = PreDAGSignatureGate.detect(cleaned)
