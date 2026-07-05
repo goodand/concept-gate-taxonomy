@@ -280,10 +280,10 @@ def run_pipeline(concepts: list[dict]) -> dict:
       "X는 Y이다") creates NO edge. Concept names NEVER create edges.
     - Keep each label short and atomic (a noun-like tag, not a sentence),
       so it can be reused verbatim across concepts.
-    - Worked example: parent {"query-key-value mapping"} and child
-      {"query-key-value mapping", "sqrt(dk) scaled dot product"} produce
-      the edge parent -> child. If concepts share zero labels, the DAG is
-      empty and every concept is isolated, even when status is PASS.
+    - Worked example (any domain): parent {"four-sided polygon"} and child
+      {"four-sided polygon", "right angles"} produce the edge
+      parent -> child. If concepts share zero labels, the DAG is empty and
+      every concept is isolated, even when status is PASS.
 
     essential_feature participates in the is-a DAG.
     structural_composition creates has-a composition edges (part-whole graph),
@@ -299,6 +299,13 @@ def run_pipeline(concepts: list[dict]) -> dict:
 
     If status is PASS_WITH_WARNING or NEEDS_CORRECTION, inspect
     expansion_actions and call expand with new differentia to refine the DAG.
+
+    The response may include a lint field (same shape as lint_concepts
+    output). If lint.issues is non-empty — especially
+    NO_SHARED_ESSENTIAL_LABELS or ISA_CLAIM_FEATURE — repair the input
+    per each issue's suggestion and call run_pipeline again, even when
+    status is PASS: PASS with an empty dag usually means the input
+    violated the edge contract above.
     """
     size_err = _validate_input_size(concepts)
     if size_err:
@@ -308,7 +315,24 @@ def run_pipeline(concepts: list[dict]) -> dict:
         return err
     pipe = ConceptPipeline()
     out = pipe.run([parsed])
-    return _serialize_pipeline_output(out)
+    return _attach_lint(_serialize_pipeline_output(out), concepts)
+
+
+def _attach_lint(result: dict, concepts) -> dict:
+    """lint 결과를 파이프라인 응답에 주입.
+
+    클라이언트가 lint_concepts를 건너뛰어도 입력 품질 경고가 반드시
+    도달하게 한다. 특히 NO_SHARED_ESSENTIAL_LABELS는 "PASS인데 DAG가
+    비어 있는" 상황이 입력 문제임을 클라이언트에게 직접 알려준다.
+    이슈가 없으면 응답을 오염시키지 않도록 아무것도 붙이지 않는다.
+    """
+    try:
+        lint = run_input_linter(concepts)
+    except Exception:  # lint 실패가 파이프라인 응답을 막으면 안 됨
+        return result
+    if lint.get("issues"):
+        result["lint"] = lint
+    return result
 
 
 @mcp.tool

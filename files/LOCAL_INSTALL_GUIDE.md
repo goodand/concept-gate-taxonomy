@@ -80,7 +80,7 @@ Windows:
 .venv\Scripts\python.exe test_server.py
 ```
 
-`통과: 40/40`이 나오면 정상입니다.
+`통과: 43/43`이 나오면 정상입니다.
 
 ### 4. 현재 절대 경로 확인
 

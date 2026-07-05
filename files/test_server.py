@@ -215,6 +215,27 @@ def test_direct():
           not any(i["code"] in cross_codes for i in lint_shared["issues"]),
           f"got {[i['code'] for i in lint_shared['issues']]}")
 
+    # 1-28. run_pipeline — lint 자동 주입 (클라이언트가 lint_concepts를 건너뛴 경우)
+    disjoint_input = [
+        {"name": "어텐션", "features": [
+            {"feature": "쿼리키값매핑함수", "type": "essential_feature",
+             "evidence": "maps a query and key-value pairs to an output"}]},
+        {"name": "멀티헤드어텐션", "features": [
+            {"feature": "병렬어텐션수행", "type": "essential_feature",
+             "evidence": "we perform the attention function in parallel"}]},
+    ]
+    injected = server.run_pipeline(disjoint_input)
+    check("1-28 run_pipeline PASS + 빈 DAG → lint 주입됨",
+          injected["status"] == "PASS"
+          and not injected["dag"]
+          and "lint" in injected
+          and any(i["code"] == "NO_SHARED_ESSENTIAL_LABELS" for i in injected["lint"]["issues"]))
+
+    # 1-29. run_pipeline — 깨끗한 입력에는 lint 필드를 붙이지 않음
+    clean_out = server.run_pipeline(DOG_CAT)
+    check("1-29 run_pipeline 깨끗한 입력 → lint 필드 없음",
+          "lint" not in clean_out, f"got keys {sorted(clean_out.keys())}")
+
 
 def _json_ok(obj):
     try:
@@ -324,6 +345,23 @@ async def test_mcp_protocol():
         check("2-13 lint_concepts 프로토콜 호출 → LINT_ERROR",
               lint_result.data["status"] == "LINT_ERROR"
               and lint_result.data["issues"][0]["code"] == "MISSING_FEATURES")
+
+        # 2-14. run_pipeline 프로토콜 응답에 lint 자동 주입
+        inject_result = await client.call_tool("run_pipeline", {
+            "concepts": [
+                {"name": "어텐션", "features": [
+                    {"feature": "쿼리키값매핑함수", "type": "essential_feature",
+                     "evidence": "maps a query and key-value pairs to an output"}]},
+                {"name": "멀티헤드어텐션", "features": [
+                    {"feature": "병렬어텐션수행", "type": "essential_feature",
+                     "evidence": "we perform the attention function in parallel"}]},
+            ],
+        })
+        check("2-14 run_pipeline 프로토콜 → lint 주입",
+              inject_result.data["status"] == "PASS"
+              and "lint" in inject_result.data
+              and any(i["code"] == "NO_SHARED_ESSENTIAL_LABELS"
+                      for i in inject_result.data["lint"]["issues"]))
 
 
 # ═══════════════════════════════════════════════════════

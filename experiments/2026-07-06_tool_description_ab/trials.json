@@ -1,0 +1,1011 @@
+{
+  "n": 10,
+  "results": [
+    {
+      "arm": "A",
+      "trial": 1,
+      "concepts": [
+        {
+          "name": "어텐션",
+          "features": [
+            {
+              "feature": "쿼리와 키-값 쌍 집합을 출력으로 매핑하는 함수",
+              "type": "essential_feature",
+              "evidence": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "쿼리, 키, 값, 출력 벡터를 구성 요소로 가짐",
+              "type": "structural_composition",
+              "evidence": "the query, keys, values, and output are all vectors",
+              "relation_hint": "component_of"
+            },
+            {
+              "feature": "출력은 값들의 가중합으로 계산되며, 가중치는 쿼리와 키의 호환성 함수로 계산됨",
+              "type": "functional",
+              "evidence": "The output is computed as a weighted sum of the values, where the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            }
+          ]
+        },
+        {
+          "name": "스케일드 닷프로덕트 어텐션",
+          "features": [
+            {
+              "feature": "어텐션의 한 종류 (특정 어텐션 함수)",
+              "type": "essential_feature",
+              "evidence": "We call our particular attention 'Scaled Dot-Product Attention'.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "쿼리와 모든 키의 닷프로덕트를 sqrt(dk)로 나누고 softmax를 적용해 값에 대한 가중치를 얻음",
+              "type": "functional",
+              "evidence": "We compute the dot products of the query with all keys, divide each by sqrt(dk), and apply a softmax function to obtain the weights on the values."
+            },
+            {
+              "feature": "sqrt(dk) 스케일링과 softmax 단계를 구성 요소로 포함",
+              "type": "structural_composition",
+              "evidence": "divide each by sqrt(dk), and apply a softmax function",
+              "relation_hint": "component_of"
+            }
+          ]
+        },
+        {
+          "name": "셀프 어텐션",
+          "features": [
+            {
+              "feature": "단일 시퀀스 내 서로 다른 위치들을 관련짓는 어텐션 메커니즘",
+              "type": "essential_feature",
+              "evidence": "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "키, 값, 쿼리가 모두 같은 곳(인코더의 이전 레이어 출력)에서 옴",
+              "type": "contextual_usage",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place — the output of the previous layer in the encoder."
+            },
+            {
+              "feature": "인코더의 이전 레이어 출력에 위치한 입력을 사용",
+              "type": "locational",
+              "evidence": "the output of the previous layer in the encoder",
+              "relation_hint": "located_in"
+            }
+          ]
+        },
+        {
+          "name": "멀티헤드 어텐션",
+          "features": [
+            {
+              "feature": "어텐션 함수를 병렬로 수행하는 어텐션의 한 종류",
+              "type": "essential_feature",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "병렬로 수행되는 여러 어텐션 헤드를 구성 요소로 가지며 결과가 연결·투영됨",
+              "type": "structural_composition",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected.",
+              "relation_hint": "component_of"
+            },
+            {
+              "feature": "서로 다른 표현 부분공간의 정보에 동시에 주목할 수 있게 함",
+              "type": "functional",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "trial": 2,
+      "concepts": [
+        {
+          "name": "어텐션",
+          "features": [
+            {
+              "feature": "쿼리와 키-값 쌍 집합을 출력으로 매핑하는 함수",
+              "type": "essential_feature",
+              "evidence": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "출력은 값들의 가중합으로 계산됨",
+              "type": "functional",
+              "evidence": "The output is computed as a weighted sum of the values."
+            },
+            {
+              "feature": "가중치는 쿼리와 해당 키의 호환성 함수로 계산됨",
+              "type": "functional",
+              "evidence": "the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            }
+          ]
+        },
+        {
+          "name": "스케일드 닷프로덕트 어텐션",
+          "features": [
+            {
+              "feature": "어텐션",
+              "type": "essential_feature",
+              "evidence": "We call our particular attention 'Scaled Dot-Product Attention'.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "쿼리와 모든 키의 닷프로덕트를 sqrt(dk)로 나누어 스케일링",
+              "type": "functional",
+              "evidence": "We compute the dot products of the query with all keys, divide each by sqrt(dk)."
+            },
+            {
+              "feature": "softmax로 값에 대한 가중치를 얻음",
+              "type": "functional",
+              "evidence": "apply a softmax function to obtain the weights on the values."
+            }
+          ]
+        },
+        {
+          "name": "셀프 어텐션",
+          "features": [
+            {
+              "feature": "어텐션",
+              "type": "essential_feature",
+              "evidence": "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "단일 시퀀스 내 서로 다른 위치들을 관계짓는 메커니즘",
+              "type": "functional",
+              "evidence": "an attention mechanism relating different positions of a single sequence."
+            },
+            {
+              "feature": "키, 값, 쿼리가 모두 같은 곳(인코더 이전 레이어 출력)에서 나옴",
+              "type": "contextual_usage",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place — the output of the previous layer in the encoder."
+            }
+          ]
+        },
+        {
+          "name": "멀티헤드 어텐션",
+          "features": [
+            {
+              "feature": "어텐션",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "병렬로 수행되는 어텐션 함수들",
+              "type": "structural_composition",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected.",
+              "relation_hint": "component_of"
+            },
+            {
+              "feature": "서로 다른 표현 부분공간의 정보에 동시에 주의를 기울이게 함",
+              "type": "functional",
+              "evidence": "allows the model to jointly attend to information from different representation subspaces."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "trial": 3,
+      "concepts": [
+        {
+          "name": "어텐션",
+          "features": [
+            {
+              "feature": "쿼리와 키-값 쌍 집합을 출력으로 사상하는 함수이며, 쿼리·키·값·출력은 모두 벡터이다",
+              "type": "essential_feature",
+              "evidence": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "출력은 값들의 가중합으로 계산되며, 각 값의 가중치는 쿼리와 해당 키의 호환성 함수로 계산된다",
+              "type": "functional",
+              "evidence": "The output is computed as a weighted sum of the values, where the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            }
+          ]
+        },
+        {
+          "name": "스케일드 닷프로덕트 어텐션",
+          "features": [
+            {
+              "feature": "어텐션의 일종으로, 특정한 어텐션 방식이다",
+              "type": "essential_feature",
+              "evidence": "We call our particular attention 'Scaled Dot-Product Attention'.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "쿼리와 모든 키의 닷프로덕트를 계산하고 sqrt(dk)로 나눈 뒤 softmax를 적용하여 값에 대한 가중치를 얻는다",
+              "type": "functional",
+              "evidence": "We compute the dot products of the query with all keys, divide each by sqrt(dk), and apply a softmax function to obtain the weights on the values."
+            }
+          ]
+        },
+        {
+          "name": "셀프 어텐션",
+          "features": [
+            {
+              "feature": "단일 시퀀스 내 서로 다른 위치들을 관련짓는 어텐션 메커니즘이다",
+              "type": "essential_feature",
+              "evidence": "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "키·값·쿼리가 모두 같은 곳(인코더의 이전 레이어 출력)에서 나온다",
+              "type": "contextual_usage",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place — the output of the previous layer in the encoder."
+            }
+          ]
+        },
+        {
+          "name": "멀티헤드 어텐션",
+          "features": [
+            {
+              "feature": "서로 다른 표현 부분공간의 정보를 동시에 주목할 수 있게 하는 어텐션이다",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "병렬로 수행되는 어텐션 함수들을 구성요소로 가지며, 그 출력들이 연결(concatenate)되고 다시 투영된다",
+              "type": "structural_composition",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected.",
+              "relation_hint": "component_of"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "trial": 4,
+      "concepts": [
+        {
+          "name": "어텐션",
+          "features": [
+            {
+              "feature": "쿼리와 키-값 쌍 집합을 출력으로 매핑하는 함수",
+              "type": "essential_feature",
+              "evidence": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors."
+            },
+            {
+              "feature": "쿼리, 키, 값, 출력이 모두 벡터",
+              "type": "structural_composition",
+              "evidence": "the query, keys, values, and output are all vectors",
+              "relation_hint": "component_of"
+            },
+            {
+              "feature": "출력은 값들의 가중합으로 계산됨",
+              "type": "functional",
+              "evidence": "The output is computed as a weighted sum of the values"
+            },
+            {
+              "feature": "가중치는 쿼리와 해당 키의 호환성 함수로 계산됨",
+              "type": "functional",
+              "evidence": "the weight assigned to each value is computed by a compatibility function of the query with the corresponding key"
+            }
+          ]
+        },
+        {
+          "name": "스케일드 닷프로덕트 어텐션",
+          "features": [
+            {
+              "feature": "특정한 형태의 어텐션 함수",
+              "type": "essential_feature",
+              "evidence": "We call our particular attention 'Scaled Dot-Product Attention'.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "쿼리와 모든 키의 닷프로덕트를 계산",
+              "type": "functional",
+              "evidence": "We compute the dot products of the query with all keys"
+            },
+            {
+              "feature": "각 닷프로덕트를 sqrt(dk)로 나누어 스케일링",
+              "type": "functional",
+              "evidence": "divide each by sqrt(dk)"
+            },
+            {
+              "feature": "softmax 함수를 적용하여 값에 대한 가중치를 얻음",
+              "type": "functional",
+              "evidence": "apply a softmax function to obtain the weights on the values"
+            }
+          ]
+        },
+        {
+          "name": "셀프 어텐션",
+          "features": [
+            {
+              "feature": "단일 시퀀스의 서로 다른 위치들을 관련짓는 어텐션 메커니즘",
+              "type": "essential_feature",
+              "evidence": "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "키, 값, 쿼리가 모두 같은 곳(인코더 이전 레이어 출력)에서 나옴",
+              "type": "structural_composition",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place — the output of the previous layer in the encoder.",
+              "relation_hint": "component_of"
+            },
+            {
+              "feature": "인코더의 셀프 어텐션 레이어 내에서 사용됨",
+              "type": "contextual_usage",
+              "evidence": "the output of the previous layer in the encoder"
+            }
+          ]
+        },
+        {
+          "name": "멀티헤드 어텐션",
+          "features": [
+            {
+              "feature": "어텐션 함수를 병렬로 수행하는 어텐션의 확장 형태",
+              "type": "essential_feature",
+              "evidence": "We perform the attention function in parallel.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "병렬로 수행된 어텐션 결과들이 연결(concatenate)되고 다시 투영됨",
+              "type": "structural_composition",
+              "evidence": "These are concatenated and once again projected.",
+              "relation_hint": "component_of"
+            },
+            {
+              "feature": "서로 다른 표현 부분공간의 정보에 공동으로 주목 가능하게 함",
+              "type": "functional",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "A",
+      "trial": 5,
+      "concepts": [
+        {
+          "name": "어텐션",
+          "features": [
+            {
+              "feature": "쿼리와 키-값 쌍 집합을 출력으로 매핑하는 함수",
+              "type": "essential_feature",
+              "evidence": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "출력은 값(value)들의 가중합으로 계산됨",
+              "type": "functional",
+              "evidence": "The output is computed as a weighted sum of the values."
+            },
+            {
+              "feature": "가중치는 쿼리와 해당 키의 호환성 함수(compatibility function)로 계산됨",
+              "type": "functional",
+              "evidence": "the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            },
+            {
+              "feature": "쿼리, 키, 값, 출력을 구성 요소 벡터로 가짐",
+              "type": "structural_composition",
+              "evidence": "the query, keys, values, and output are all vectors.",
+              "relation_hint": "component_of"
+            }
+          ]
+        },
+        {
+          "name": "스케일드 닷프로덕트 어텐션",
+          "features": [
+            {
+              "feature": "어텐션의 한 종류 (특정 어텐션 함수)",
+              "type": "essential_feature",
+              "evidence": "We call our particular attention 'Scaled Dot-Product Attention'.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "쿼리와 모든 키의 닷프로덕트를 계산하고 각각을 sqrt(dk)로 나눔",
+              "type": "functional",
+              "evidence": "We compute the dot products of the query with all keys, divide each by sqrt(dk)."
+            },
+            {
+              "feature": "softmax 함수를 적용해 값에 대한 가중치를 얻음",
+              "type": "functional",
+              "evidence": "apply a softmax function to obtain the weights on the values."
+            }
+          ]
+        },
+        {
+          "name": "셀프 어텐션",
+          "features": [
+            {
+              "feature": "단일 시퀀스의 서로 다른 위치들을 연관시키는 어텐션 메커니즘",
+              "type": "essential_feature",
+              "evidence": "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "키, 값, 쿼리가 모두 같은 곳(인코더의 이전 레이어 출력)에서 나옴",
+              "type": "contextual_usage",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place — the output of the previous layer in the encoder."
+            },
+            {
+              "feature": "인코더의 이전 레이어 출력에 위치함",
+              "type": "locational",
+              "evidence": "the output of the previous layer in the encoder.",
+              "relation_hint": "located_in"
+            }
+          ]
+        },
+        {
+          "name": "멀티헤드 어텐션",
+          "features": [
+            {
+              "feature": "어텐션 함수를 병렬로 수행하는 어텐션",
+              "type": "essential_feature",
+              "evidence": "We perform the attention function in parallel.",
+              "relation_hint": "is_a"
+            },
+            {
+              "feature": "병렬로 수행되는 어텐션 함수(헤드)들을 구성 요소로 가지며 이들이 연결(concatenate)되고 다시 투영됨",
+              "type": "structural_composition",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected.",
+              "relation_hint": "component_of"
+            },
+            {
+              "feature": "서로 다른 표현 부분공간의 정보에 공동으로 주의를 기울일 수 있게 함",
+              "type": "functional",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "trial": 1,
+      "concepts": [
+        {
+          "name": "어텐션",
+          "features": [
+            {
+              "feature": "query-key-value to output mapping",
+              "type": "essential_feature",
+              "evidence": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "The output is computed as a weighted sum of the values."
+            },
+            {
+              "feature": "compatibility function of query with key",
+              "type": "essential_feature",
+              "evidence": "the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            }
+          ]
+        },
+        {
+          "name": "스케일드 닷프로덕트 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value to output mapping",
+              "type": "essential_feature",
+              "evidence": "We call our particular attention 'Scaled Dot-Product Attention'. We compute the dot products of the query with all keys."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "apply a softmax function to obtain the weights on the values."
+            },
+            {
+              "feature": "compatibility function of query with key",
+              "type": "essential_feature",
+              "evidence": "We compute the dot products of the query with all keys."
+            },
+            {
+              "feature": "sqrt(dk) scaled dot product",
+              "type": "essential_feature",
+              "evidence": "We compute the dot products of the query with all keys, divide each by sqrt(dk)."
+            },
+            {
+              "feature": "softmax weighting",
+              "type": "essential_feature",
+              "evidence": "apply a softmax function to obtain the weights on the values."
+            }
+          ]
+        },
+        {
+          "name": "셀프 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value to output mapping",
+              "type": "essential_feature",
+              "evidence": "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "Self-attention is an attention mechanism; the output is computed as a weighted sum of the values."
+            },
+            {
+              "feature": "compatibility function of query with key",
+              "type": "essential_feature",
+              "evidence": "the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            },
+            {
+              "feature": "queries keys values from same sequence",
+              "type": "essential_feature",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place — the output of the previous layer in the encoder."
+            },
+            {
+              "feature": "relates positions of a single sequence",
+              "type": "essential_feature",
+              "evidence": "an attention mechanism relating different positions of a single sequence."
+            }
+          ]
+        },
+        {
+          "name": "멀티헤드 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value to output mapping",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces. We perform the attention function in parallel."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "We perform the attention function in parallel; the output is computed as a weighted sum of the values."
+            },
+            {
+              "feature": "compatibility function of query with key",
+              "type": "essential_feature",
+              "evidence": "the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            },
+            {
+              "feature": "parallel attention heads",
+              "type": "essential_feature",
+              "evidence": "We perform the attention function in parallel."
+            },
+            {
+              "feature": "joint attention over representation subspaces",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces."
+            },
+            {
+              "feature": "attention head",
+              "type": "structural_composition",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected.",
+              "relation_hint": "has_part"
+            },
+            {
+              "feature": "concatenation and projection",
+              "type": "structural_composition",
+              "evidence": "These are concatenated and once again projected.",
+              "relation_hint": "has_part"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "trial": 2,
+      "concepts": [
+        {
+          "name": "어텐션",
+          "features": [
+            {
+              "feature": "query-key-value to output mapping",
+              "type": "essential_feature",
+              "evidence": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "The output is computed as a weighted sum of the values, where the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            },
+            {
+              "feature": "compatibility function of query with key",
+              "type": "functional",
+              "evidence": "the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            }
+          ]
+        },
+        {
+          "name": "스케일드 닷프로덕트 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value to output mapping",
+              "type": "essential_feature",
+              "evidence": "We call our particular attention 'Scaled Dot-Product Attention'. We compute the dot products of the query with all keys."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "apply a softmax function to obtain the weights on the values."
+            },
+            {
+              "feature": "sqrt(dk) scaled dot product",
+              "type": "essential_feature",
+              "evidence": "We compute the dot products of the query with all keys, divide each by sqrt(dk)."
+            },
+            {
+              "feature": "softmax weighting",
+              "type": "essential_feature",
+              "evidence": "apply a softmax function to obtain the weights on the values."
+            }
+          ]
+        },
+        {
+          "name": "셀프 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value to output mapping",
+              "type": "essential_feature",
+              "evidence": "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "Self-attention ... is an attention mechanism relating different positions of a single sequence."
+            },
+            {
+              "feature": "queries keys values from same source",
+              "type": "essential_feature",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place — the output of the previous layer in the encoder."
+            },
+            {
+              "feature": "encoder previous layer output",
+              "type": "locational",
+              "evidence": "all of the keys, values and queries come from the same place — the output of the previous layer in the encoder."
+            }
+          ]
+        },
+        {
+          "name": "멀티헤드 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value to output mapping",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces. We perform the attention function in parallel."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected."
+            },
+            {
+              "feature": "parallel attention heads",
+              "type": "essential_feature",
+              "evidence": "We perform the attention function in parallel."
+            },
+            {
+              "feature": "jointly attend to different representation subspaces",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces."
+            },
+            {
+              "feature": "attention head",
+              "type": "structural_composition",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected.",
+              "relation_hint": "has_part"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "trial": 3,
+      "concepts": [
+        {
+          "name": "어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "The output is computed as a weighted sum of the values, where the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            }
+          ]
+        },
+        {
+          "name": "스케일드 닷프로덕트 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "We call our particular attention 'Scaled Dot-Product Attention'. We compute the dot products of the query with all keys."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "apply a softmax function to obtain the weights on the values."
+            },
+            {
+              "feature": "sqrt(dk) scaled dot product",
+              "type": "essential_feature",
+              "evidence": "We compute the dot products of the query with all keys, divide each by sqrt(dk)."
+            },
+            {
+              "feature": "softmax weighting",
+              "type": "essential_feature",
+              "evidence": "apply a softmax function to obtain the weights on the values."
+            }
+          ]
+        },
+        {
+          "name": "셀프 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence."
+            },
+            {
+              "feature": "queries keys values from same sequence",
+              "type": "essential_feature",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place — the output of the previous layer in the encoder."
+            },
+            {
+              "feature": "relates positions within a single sequence",
+              "type": "essential_feature",
+              "evidence": "an attention mechanism relating different positions of a single sequence."
+            }
+          ]
+        },
+        {
+          "name": "멀티헤드 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "We perform the attention function in parallel."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces."
+            },
+            {
+              "feature": "parallel attention heads",
+              "type": "essential_feature",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected."
+            },
+            {
+              "feature": "multiple representation subspaces",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces."
+            },
+            {
+              "feature": "attention head",
+              "type": "structural_composition",
+              "relation_hint": "has_part",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected."
+            },
+            {
+              "feature": "concatenation and output projection",
+              "type": "structural_composition",
+              "relation_hint": "has_part",
+              "evidence": "These are concatenated and once again projected."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "trial": 4,
+      "concepts": [
+        {
+          "name": "어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "The output is computed as a weighted sum of the values, where the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            },
+            {
+              "feature": "compatibility function",
+              "type": "structural_composition",
+              "relation_hint": "has_part",
+              "evidence": "the weight assigned to each value is computed by a compatibility function of the query with the corresponding key."
+            }
+          ]
+        },
+        {
+          "name": "스케일드 닷프로덕트 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "We call our particular attention 'Scaled Dot-Product Attention'. We compute the dot products of the query with all keys."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "apply a softmax function to obtain the weights on the values."
+            },
+            {
+              "feature": "sqrt(dk) scaled dot product",
+              "type": "essential_feature",
+              "evidence": "We compute the dot products of the query with all keys, divide each by sqrt(dk), and apply a softmax function to obtain the weights on the values."
+            },
+            {
+              "feature": "softmax weighting",
+              "type": "structural_composition",
+              "relation_hint": "has_part",
+              "evidence": "apply a softmax function to obtain the weights on the values."
+            }
+          ]
+        },
+        {
+          "name": "셀프 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "The output is computed as a weighted sum of the values (attention mechanism, per Section 3.2)."
+            },
+            {
+              "feature": "single-sequence Q=K=V source",
+              "type": "essential_feature",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place — the output of the previous layer in the encoder."
+            },
+            {
+              "feature": "encoder previous layer output",
+              "type": "contextual_usage",
+              "evidence": "all of the keys, values and queries come from the same place — the output of the previous layer in the encoder."
+            }
+          ]
+        },
+        {
+          "name": "멀티헤드 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces. We perform the attention function in parallel."
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "The output is computed as a weighted sum of the values (attention function, per Section 3.2)."
+            },
+            {
+              "feature": "parallel heads over subspaces",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces. We perform the attention function in parallel."
+            },
+            {
+              "feature": "concatenation and projection",
+              "type": "structural_composition",
+              "relation_hint": "has_part",
+              "evidence": "These are concatenated and once again projected."
+            },
+            {
+              "feature": "parallel attention head",
+              "type": "structural_composition",
+              "relation_hint": "has_part",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "arm": "B",
+      "trial": 5,
+      "concepts": [
+        {
+          "name": "어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "An attention function can be described as mapping a query and a set of key-value pairs to an output, where the query, keys, values, and output are all vectors. (Vaswani et al., Section 3.2)"
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "The output is computed as a weighted sum of the values, where the weight assigned to each value is computed by a compatibility function of the query with the corresponding key. (Vaswani et al., Section 3.2)"
+            }
+          ]
+        },
+        {
+          "name": "스케일드 닷프로덕트 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "We compute the dot products of the query with all keys ... to obtain the weights on the values. (Vaswani et al., Section 3.2)"
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "apply a softmax function to obtain the weights on the values. (Vaswani et al., Section 3.2)"
+            },
+            {
+              "feature": "sqrt(dk) scaled dot product",
+              "type": "essential_feature",
+              "evidence": "We compute the dot products of the query with all keys, divide each by sqrt(dk), and apply a softmax function to obtain the weights on the values. (Vaswani et al., Section 3.2)"
+            }
+          ]
+        },
+        {
+          "name": "셀프 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place. (Vaswani et al., Section 3.2)"
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "Self-attention ... is an attention mechanism relating different positions of a single sequence; as an attention function its output is a weighted sum of the values. (Vaswani et al., Section 3.2)"
+            },
+            {
+              "feature": "queries keys values from same sequence",
+              "type": "essential_feature",
+              "evidence": "In a self-attention layer all of the keys, values and queries come from the same place — the output of the previous layer in the encoder. (Vaswani et al., Section 3.2)"
+            },
+            {
+              "feature": "relates positions within single sequence",
+              "type": "essential_feature",
+              "evidence": "Self-attention, sometimes called intra-attention, is an attention mechanism relating different positions of a single sequence. (Vaswani et al., Section 3.2)"
+            }
+          ]
+        },
+        {
+          "name": "멀티헤드 어텐션",
+          "features": [
+            {
+              "feature": "query-key-value mapping",
+              "type": "essential_feature",
+              "evidence": "We perform the attention function in parallel — each head is an attention function over queries, keys and values. (Vaswani et al., Section 3.2)"
+            },
+            {
+              "feature": "weighted sum of values",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention performs the attention function, whose output is a weighted sum of the values, in parallel. (Vaswani et al., Section 3.2)"
+            },
+            {
+              "feature": "parallel attention heads",
+              "type": "essential_feature",
+              "evidence": "Multi-head attention allows the model to jointly attend to information from different representation subspaces. We perform the attention function in parallel. (Vaswani et al., Section 3.2)"
+            },
+            {
+              "feature": "concatenate and project head outputs",
+              "type": "essential_feature",
+              "evidence": "These are concatenated and once again projected. (Vaswani et al., Section 3.2)"
+            },
+            {
+              "feature": "attention head",
+              "type": "structural_composition",
+              "relation_hint": "has_part",
+              "evidence": "We perform the attention function in parallel. These are concatenated and once again projected. (Vaswani et al., Section 3.2)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

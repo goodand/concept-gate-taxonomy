@@ -50,12 +50,14 @@ PARTWHOLE_HINTS = frozenset({
     "subquantity_of",
 })
 
+# 도메인 중립 placeholder 탐지: 실제 도메인 라벨에는 "feature"라는 단어
+# 자체가 등장하지 않는다. 라벨이 메타 어휘(feature/features)를 담고 있으면
+# "X features"류 상속 placeholder일 가능성이 높다.
 PLACEHOLDER_PATTERNS = (
     "parent features",
     "same as above",
     "same features",
-    "attention_function features",
-    "self_attention features",
+    " features",       # "<concept> features" 상속 placeholder (도메인 무관)
     "features from",
     "상위 feature",
     "상위 특징",
@@ -80,13 +82,15 @@ WEAK_STRUCTURAL_MARKERS = (
     "연관",
 )
 
-# is-a를 문장으로 주장할 때 나타나는 표지 (개념명 참조와 결합해서만 사용)
+# is-a를 문장으로 주장할 때 나타나는 표지 (개념명 참조와 결합해서만 사용).
+# 도메인 중립 유지: 단독으로 정당한 라벨에 흔한 단어("형태" 등)는 조사 결합형
+# ("형태의")만 쓴다.
 ISA_CLAIM_MARKERS = (
     "이다",
     "입니다",
     "일종",
     "종류",
-    "형태",
+    "형태의",
     "의 하나",
     " is a",
     " is an",

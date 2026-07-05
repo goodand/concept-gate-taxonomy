@@ -1,0 +1,954 @@
+{
+  "n": 12,
+  "results": [
+    {
+      "domain": "biology",
+      "trial": 1,
+      "concepts": [
+        {
+          "name": "포유류",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "포유류는 새끼를 젖으로 키우는 동물이다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "포유류는 체온을 일정하게 유지하는 온혈동물이다."
+            }
+          ]
+        },
+        {
+          "name": "고래",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "고래는 새끼에게 젖을 먹여 키우는 포유류다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "고래는 체온을 유지하는 온혈동물이다."
+            },
+            {
+              "feature": "수중 생활",
+              "type": "essential_feature",
+              "evidence": "고래는 바다에서 헤엄치며 사는 수생 포유류다."
+            }
+          ]
+        },
+        {
+          "name": "박쥐",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "박쥐는 새끼에게 젖을 먹이는 포유류다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "박쥐는 체온을 유지하는 온혈동물이다."
+            },
+            {
+              "feature": "비행 능력",
+              "type": "essential_feature",
+              "evidence": "박쥐는 날개막으로 하늘을 나는 유일한 비행 포유류다."
+            }
+          ]
+        },
+        {
+          "name": "사자",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "사자는 새끼에게 젖을 먹여 키우는 포유류다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "사자는 체온을 유지하는 온혈동물이다."
+            },
+            {
+              "feature": "육상 포식",
+              "type": "essential_feature",
+              "evidence": "사자는 육지에서 사냥하는 대형 육식 포식자다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "biology",
+      "trial": 2,
+      "concepts": [
+        {
+          "name": "포유류",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "포유류는 새끼에게 젖을 먹여 기르는 동물이다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "포유류는 스스로 체온을 일정하게 유지하는 온혈 동물이다."
+            }
+          ]
+        },
+        {
+          "name": "고래",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "고래는 새끼에게 젖을 먹여 기른다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "고래는 체온을 일정하게 유지하는 온혈 동물이다."
+            },
+            {
+              "feature": "수중 생활",
+              "type": "essential_feature",
+              "evidence": "고래는 바다에서 헤엄치며 살아가는 수중 포유류이다."
+            }
+          ]
+        },
+        {
+          "name": "박쥐",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "박쥐는 새끼에게 젖을 먹여 기른다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "박쥐는 체온을 일정하게 유지하는 온혈 동물이다."
+            },
+            {
+              "feature": "비막 비행",
+              "type": "essential_feature",
+              "evidence": "박쥐는 앞다리와 몸통 사이의 비막으로 하늘을 나는 포유류이다."
+            }
+          ]
+        },
+        {
+          "name": "사자",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "사자는 새끼에게 젖을 먹여 기른다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "사자는 체온을 일정하게 유지하는 온혈 동물이다."
+            },
+            {
+              "feature": "육식 사냥",
+              "type": "essential_feature",
+              "evidence": "사자는 초원에서 먹이를 사냥해 잡아먹는 육식 포유류이다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "biology",
+      "trial": 3,
+      "concepts": [
+        {
+          "name": "포유류",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "포유류는 새끼에게 젖을 먹여 기르는 동물이다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "포유류는 체온을 스스로 일정하게 유지하는 온혈 동물이다."
+            }
+          ]
+        },
+        {
+          "name": "고래",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "고래는 새끼에게 젖을 먹여 기르는 포유류이다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "고래는 체온을 일정하게 유지하는 온혈 동물이다."
+            },
+            {
+              "feature": "수중 생활",
+              "type": "essential_feature",
+              "evidence": "고래는 평생을 바다에서 헤엄치며 사는 수생 포유류이다."
+            }
+          ]
+        },
+        {
+          "name": "박쥐",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "박쥐는 새끼에게 젖을 먹여 기르는 포유류이다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "박쥐는 체온을 유지하는 온혈 동물이다."
+            },
+            {
+              "feature": "비막 비행",
+              "type": "essential_feature",
+              "evidence": "박쥐는 앞다리의 비막을 이용해 날 수 있는 유일한 포유류이다."
+            }
+          ]
+        },
+        {
+          "name": "사자",
+          "features": [
+            {
+              "feature": "젖 분비",
+              "type": "essential_feature",
+              "evidence": "사자는 새끼에게 젖을 먹여 기르는 포유류이다."
+            },
+            {
+              "feature": "온혈",
+              "type": "essential_feature",
+              "evidence": "사자는 체온을 유지하는 온혈 동물이다."
+            },
+            {
+              "feature": "육식 포식",
+              "type": "essential_feature",
+              "evidence": "사자는 다른 동물을 사냥해 먹는 대형 육식 포식자이다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "geometry",
+      "trial": 1,
+      "concepts": [
+        {
+          "name": "사각형",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "사각형은 네 개의 변으로 이루어진 다각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "사각형은 네 개의 내각을 가진다."
+            }
+          ]
+        },
+        {
+          "name": "직사각형",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "직사각형은 네 개의 변을 가진 사각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "직사각형은 네 개의 내각을 가진다."
+            },
+            {
+              "feature": "직각",
+              "type": "essential_feature",
+              "evidence": "직사각형은 네 내각이 모두 직각(90도)인 사각형이다."
+            }
+          ]
+        },
+        {
+          "name": "마름모",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "마름모는 네 개의 변을 가진 사각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "마름모는 네 개의 내각을 가진다."
+            },
+            {
+              "feature": "등변",
+              "type": "essential_feature",
+              "evidence": "마름모는 네 변의 길이가 모두 같은 사각형이다."
+            }
+          ]
+        },
+        {
+          "name": "정사각형",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "정사각형은 네 개의 변을 가진 사각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "정사각형은 네 개의 내각을 가진다."
+            },
+            {
+              "feature": "직각",
+              "type": "essential_feature",
+              "evidence": "정사각형은 네 내각이 모두 직각인 사각형이다."
+            },
+            {
+              "feature": "등변",
+              "type": "essential_feature",
+              "evidence": "정사각형은 네 변의 길이가 모두 같은 사각형이다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "geometry",
+      "trial": 2,
+      "concepts": [
+        {
+          "name": "사각형",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "사각형은 네 개의 변으로 이루어진 다각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "사각형은 네 개의 내각을 가진다."
+            }
+          ]
+        },
+        {
+          "name": "직사각형",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "직사각형도 네 개의 변을 가진 사각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "직사각형도 네 개의 내각을 가진다."
+            },
+            {
+              "feature": "네 직각",
+              "type": "essential_feature",
+              "evidence": "직사각형은 네 내각이 모두 직각인 사각형이다."
+            }
+          ]
+        },
+        {
+          "name": "마름모",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "마름모도 네 개의 변을 가진 사각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "마름모도 네 개의 내각을 가진다."
+            },
+            {
+              "feature": "네 등변",
+              "type": "essential_feature",
+              "evidence": "마름모는 네 변의 길이가 모두 같은 사각형이다."
+            }
+          ]
+        },
+        {
+          "name": "정사각형",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "정사각형도 네 개의 변을 가진 사각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "정사각형도 네 개의 내각을 가진다."
+            },
+            {
+              "feature": "네 직각",
+              "type": "essential_feature",
+              "evidence": "정사각형은 네 내각이 모두 직각이다(직사각형의 성질)."
+            },
+            {
+              "feature": "네 등변",
+              "type": "essential_feature",
+              "evidence": "정사각형은 네 변의 길이가 모두 같다(마름모의 성질)."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "geometry",
+      "trial": 3,
+      "concepts": [
+        {
+          "name": "사각형",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "사각형은 네 개의 변으로 이루어진 다각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "사각형은 네 개의 내각을 가진다."
+            }
+          ]
+        },
+        {
+          "name": "직사각형",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "직사각형도 네 개의 변으로 이루어진 다각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "직사각형도 네 개의 내각을 가진다."
+            },
+            {
+              "feature": "네 직각",
+              "type": "essential_feature",
+              "evidence": "직사각형은 네 내각이 모두 직각(90도)인 사각형이다."
+            }
+          ]
+        },
+        {
+          "name": "마름모",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "마름모도 네 개의 변으로 이루어진 다각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "마름모도 네 개의 내각을 가진다."
+            },
+            {
+              "feature": "네 등변",
+              "type": "essential_feature",
+              "evidence": "마름모는 네 변의 길이가 모두 같은 사각형이다."
+            }
+          ]
+        },
+        {
+          "name": "정사각형",
+          "features": [
+            {
+              "feature": "네 변",
+              "type": "essential_feature",
+              "evidence": "정사각형도 네 개의 변으로 이루어진 다각형이다."
+            },
+            {
+              "feature": "네 각",
+              "type": "essential_feature",
+              "evidence": "정사각형도 네 개의 내각을 가진다."
+            },
+            {
+              "feature": "네 직각",
+              "type": "essential_feature",
+              "evidence": "정사각형은 네 내각이 모두 직각인 사각형이다."
+            },
+            {
+              "feature": "네 등변",
+              "type": "essential_feature",
+              "evidence": "정사각형은 네 변의 길이가 모두 같은 사각형이다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "law",
+      "trial": 1,
+      "concepts": [
+        {
+          "name": "계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "계약은 둘 이상의 당사자가 청약과 승낙으로 의사표시가 합치할 때 성립한다."
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "성립한 계약은 당사자를 법적으로 구속하며 불이행 시 법적 책임이 따른다."
+            }
+          ]
+        },
+        {
+          "name": "매매계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "매도인과 매수인의 의사표시 합치로 매매계약이 성립한다.",
+              "relation_hint": "계약의 당사자 합의를 그대로 상속"
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "매매계약은 당사자를 구속하여 이행의무를 발생시킨다.",
+              "relation_hint": "계약의 법적 구속력을 그대로 상속"
+            },
+            {
+              "feature": "재산권 이전 대가 지급",
+              "type": "essential_feature",
+              "evidence": "매매는 매도인이 재산권을 이전하고 매수인이 대금을 지급하는 유상 종차를 갖는다.",
+              "relation_hint": "매매계약의 종차(differentia)"
+            }
+          ]
+        },
+        {
+          "name": "임대차계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "임대인과 임차인의 의사표시 합치로 임대차계약이 성립한다.",
+              "relation_hint": "계약의 당사자 합의를 그대로 상속"
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "임대차계약은 당사자를 구속하여 사용·수익 제공 및 차임 지급 의무를 발생시킨다.",
+              "relation_hint": "계약의 법적 구속력을 그대로 상속"
+            },
+            {
+              "feature": "목적물 사용수익 차임 지급",
+              "type": "essential_feature",
+              "evidence": "임대차는 목적물을 사용·수익하게 하고 차임을 지급받는 종차를 갖는다.",
+              "relation_hint": "임대차계약의 종차(differentia)"
+            }
+          ]
+        },
+        {
+          "name": "증여계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "증여자와 수증자의 의사표시 합치로 증여계약이 성립한다.",
+              "relation_hint": "계약의 당사자 합의를 그대로 상속"
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "증여계약도 성립하면 당사자를 구속하는 법적 효력을 가진다.",
+              "relation_hint": "계약의 법적 구속력을 그대로 상속"
+            },
+            {
+              "feature": "무상 재산 이전",
+              "type": "essential_feature",
+              "evidence": "증여는 대가 없이 무상으로 재산을 이전하는 종차를 갖는다.",
+              "relation_hint": "증여계약의 종차(differentia)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "law",
+      "trial": 2,
+      "concepts": [
+        {
+          "name": "계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "계약은 둘 이상의 당사자의 의사표시 합치로 성립한다."
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "계약은 당사자에게 법적으로 이행 의무를 발생시킨다."
+            }
+          ]
+        },
+        {
+          "name": "매매계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "매매도 매도인과 매수인의 의사 합치로 성립한다.",
+              "relation_hint": "parent 계약의 essential_feature 라벨을 그대로 반복"
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "매매계약은 대금지급·소유권이전의 법적 의무를 발생시킨다.",
+              "relation_hint": "parent 계약의 essential_feature 라벨을 그대로 반복"
+            },
+            {
+              "feature": "유상 재산권 이전",
+              "type": "essential_feature",
+              "evidence": "매매는 대가를 받고 재산권을 이전하는 종차를 갖는다."
+            }
+          ]
+        },
+        {
+          "name": "임대차계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "임대차도 임대인과 임차인의 의사 합치로 성립한다.",
+              "relation_hint": "parent 계약의 essential_feature 라벨을 그대로 반복"
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "임대차계약은 목적물 인도·차임 지급의 법적 의무를 발생시킨다.",
+              "relation_hint": "parent 계약의 essential_feature 라벨을 그대로 반복"
+            },
+            {
+              "feature": "목적물 사용수익 대가",
+              "type": "essential_feature",
+              "evidence": "임대차는 차임을 받고 목적물의 사용·수익을 제공하는 종차를 갖는다."
+            }
+          ]
+        },
+        {
+          "name": "증여계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "증여도 증여자와 수증자의 의사 합치로 성립한다.",
+              "relation_hint": "parent 계약의 essential_feature 라벨을 그대로 반복"
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "증여계약은 재산 무상 이전의 법적 의무를 발생시킨다.",
+              "relation_hint": "parent 계약의 essential_feature 라벨을 그대로 반복"
+            },
+            {
+              "feature": "무상 재산 이전",
+              "type": "essential_feature",
+              "evidence": "증여는 대가 없이 재산을 이전하는 종차를 갖는다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "law",
+      "trial": 3,
+      "concepts": [
+        {
+          "name": "계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "계약은 둘 이상의 당사자가 서로 의사표시를 합치시켜 성립한다."
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "계약은 성립하면 당사자를 법적으로 구속하여 이행 의무를 발생시킨다."
+            }
+          ]
+        },
+        {
+          "name": "매매계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "매매계약도 매도인과 매수인의 의사표시 합치로 성립한다."
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "매매계약은 성립하면 당사자에게 이행 의무를 지우는 법적 구속력을 가진다."
+            },
+            {
+              "feature": "재산권 이전과 대금 지급",
+              "type": "essential_feature",
+              "evidence": "매매계약은 매도인이 재산권을 이전하고 매수인이 대금을 지급하기로 하는 유상계약이다."
+            }
+          ]
+        },
+        {
+          "name": "임대차계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "임대차계약도 임대인과 임차인의 의사표시 합치로 성립한다."
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "임대차계약은 성립하면 당사자에게 이행 의무를 지우는 법적 구속력을 가진다."
+            },
+            {
+              "feature": "목적물 사용수익과 차임 지급",
+              "type": "essential_feature",
+              "evidence": "임대차계약은 임대인이 목적물을 사용수익하게 하고 임차인이 차임을 지급하기로 하는 계약이다."
+            }
+          ]
+        },
+        {
+          "name": "증여계약",
+          "features": [
+            {
+              "feature": "당사자 합의",
+              "type": "essential_feature",
+              "evidence": "증여계약도 증여자와 수증자의 의사표시 합치로 성립한다."
+            },
+            {
+              "feature": "법적 구속력",
+              "type": "essential_feature",
+              "evidence": "증여계약은 성립하면 당사자에게 이행 의무를 지우는 법적 구속력을 가진다."
+            },
+            {
+              "feature": "무상 재산 이전",
+              "type": "essential_feature",
+              "evidence": "증여계약은 증여자가 대가 없이 무상으로 재산을 수증자에게 이전하는 계약이다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "cooking",
+      "trial": 1,
+      "concepts": [
+        {
+          "name": "발효식품",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "미생물(세균·효모·곰팡이)의 발효 작용으로 만들어진 식품이라는 본질 속성"
+            }
+          ]
+        },
+        {
+          "name": "김치",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "유산균 발효로 숙성되는 식품이므로 발효식품의 본질 속성을 물려받음"
+            },
+            {
+              "feature": "채소 주재료",
+              "type": "essential_feature",
+              "evidence": "배추·무 등 채소를 소금에 절여 만드는 것이 김치의 종차"
+            }
+          ]
+        },
+        {
+          "name": "요구르트",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "유산균 발효로 만들어지므로 발효식품의 본질 속성을 물려받음"
+            },
+            {
+              "feature": "우유 유산균 발효",
+              "type": "essential_feature",
+              "evidence": "우유를 유산균으로 발효시켜 응고시킨 것이 요구르트의 종차"
+            }
+          ]
+        },
+        {
+          "name": "치즈",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "미생물과 효소 작용으로 숙성되므로 발효식품의 본질 속성을 물려받음"
+            },
+            {
+              "feature": "우유 응고 숙성",
+              "type": "essential_feature",
+              "evidence": "우유 단백질을 응고시켜 숙성한 것이 치즈의 종차"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "cooking",
+      "trial": 2,
+      "concepts": [
+        {
+          "name": "발효식품",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "발효식품은 세균, 효모 등 미생물의 발효 작용으로 만들어진 식품이다."
+            }
+          ]
+        },
+        {
+          "name": "김치",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "김치는 유산균 발효로 만들어지는 미생물 발효 산물이다."
+            },
+            {
+              "feature": "채소 주재료",
+              "type": "essential_feature",
+              "evidence": "김치는 배추, 무 등 채소를 주재료로 절여 담근다."
+            }
+          ]
+        },
+        {
+          "name": "요구르트",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "요구르트는 유산균 발효로 만들어지는 미생물 발효 산물이다."
+            },
+            {
+              "feature": "우유 주재료",
+              "type": "essential_feature",
+              "evidence": "요구르트는 우유를 유산균으로 발효시켜 만든다."
+            }
+          ]
+        },
+        {
+          "name": "치즈",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "치즈는 미생물과 효소 작용으로 우유를 응고, 숙성시킨 미생물 발효 산물이다."
+            },
+            {
+              "feature": "응고 유단백",
+              "type": "essential_feature",
+              "evidence": "치즈는 우유 단백질(카제인)을 응고시켜 만든 고형 유제품이다."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "cooking",
+      "trial": 3,
+      "concepts": [
+        {
+          "name": "발효식품",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "발효식품은 미생물(세균·효모·곰팡이)의 발효 작용으로 만들어진 식품이다.",
+              "relation_hint": "부모 본질 속성"
+            }
+          ]
+        },
+        {
+          "name": "김치",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "김치는 유산균 발효로 숙성되는 미생물 발효 산물이다.",
+              "relation_hint": "부모 발효식품에서 상속"
+            },
+            {
+              "feature": "채소 주재료",
+              "type": "essential_feature",
+              "evidence": "김치는 배추·무 등 채소를 주재료로 하는 종차를 가진다.",
+              "relation_hint": "differentia"
+            }
+          ]
+        },
+        {
+          "name": "요구르트",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "요구르트는 유산균 발효로 만들어지는 미생물 발효 산물이다.",
+              "relation_hint": "부모 발효식품에서 상속"
+            },
+            {
+              "feature": "우유 주재료",
+              "type": "essential_feature",
+              "evidence": "요구르트는 우유를 주재료로 발효시킨 종차를 가진다.",
+              "relation_hint": "differentia"
+            }
+          ]
+        },
+        {
+          "name": "치즈",
+          "features": [
+            {
+              "feature": "미생물 발효 산물",
+              "type": "essential_feature",
+              "evidence": "치즈는 젖산균 등 미생물 발효를 거친 미생물 발효 산물이다.",
+              "relation_hint": "부모 발효식품에서 상속"
+            },
+            {
+              "feature": "응유 주재료",
+              "type": "essential_feature",
+              "evidence": "치즈는 우유를 응고시킨 응유(커드)를 주재료로 하는 종차를 가진다.",
+              "relation_hint": "differentia"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

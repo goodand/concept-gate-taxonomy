@@ -23,7 +23,7 @@ conceptgate-mcp/
 ├── cg_gufo.py             Scior/gUFO rule metadata 어댑터 (fallback 포함)
 ├── cg_input_linter.py     입력 JSON 사전 점검 linter (stdlib)
 ├── cg_graph_export.py     GraphExporter (수정 없음, import만)
-├── test_server.py         단위 테스트 (직접 호출 27 + MCP 프로토콜 13)
+├── test_server.py         단위 테스트 (직접 호출 29 + MCP 프로토콜 14)
 ├── pyproject.toml
 ├── README.md
 ├── codex_config.toml      Codex CLI MCP 설정 예시
@@ -75,7 +75,7 @@ uv pip install -e .
 .venv/bin/python test_server.py
 ```
 
-40/40 통과해야 정상. PART 1은 함수 직접 호출, PART 2는 FastMCP Client
+43/43 통과해야 정상. PART 1은 함수 직접 호출, PART 2는 FastMCP Client
 in-memory로 실제 MCP 프로토콜(tools/resources/prompts)을 검증한다.
 
 ## 도구 (Tools)
