@@ -249,6 +249,10 @@ def run_pipeline(concepts: list[dict]) -> dict:
     structural_composition creates has-a composition edges (part-whole graph),
     returned separately in the composition field.
 
+    Each concept may also include optional ontoclean metadata:
+    category, rigidity, identity, unity, dependence. When present,
+    OntoCleanMetaGate validates proposed is-a edges before commit.
+
     Optional relation_hint (str) provides UFO vocabulary context:
     is_a, component_of, member_of, subcollection_of, subquantity_of,
     material_of, phase_of, located_in.

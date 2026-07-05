@@ -20,6 +20,7 @@ QA 검증 스크립트 — concept_gate_v7 계약 검증
   PART J. Phase C1/C2 — CompositionGate 공리 + UFO 안티패턴
   PART K. Phase C3 — relational_scaling 파생·멱등성
   PART L. 구성 vs 구조 혼동 — Transformer/Attention 실 도메인 시나리오
+  PART M. OntoCleanMetaGate — rigidity/identity/unity/dependence/category edge 검증
 
 각 PART는 독립이며, 하나가 실패해도 나머지는 계속 실행됩니다.
 종료 코드: 모두 통과 0, 하나라도 실패 1.
@@ -47,6 +48,10 @@ NF = cg.NormalizedFeature
 GS = cg.GateSeverity
 PS = cg.PipelineStatus
 FV = cg.FeatureVerdict
+OR = cg.OntoCleanRigidity
+OI = cg.OntoCleanIdentity
+OU = cg.OntoCleanUnity
+OD = cg.OntoCleanDependence
 
 def feat(name, ev, ftype=None):
     return NF(name, ftype or E, ev, ev)
@@ -797,6 +802,75 @@ R.check("L5 올바른 모델링: PASS + 트랜스포머 is-a 시퀀스모델 + c
         and _l5_out.get("composition_issues", []) == []
         and _l5_out.get("anti_patterns", []) == [],
         f"status={_l5_out['status']}, dag={dict(_l5_out['result']['dag'])}, comp={_l5_comp}")
+
+# ═════════════════════════════════════════════
+# PART M. OntoCleanMetaGate — 형식적 is-a 메타속성 검증
+# ═════════════════════════════════════════════
+print("\n[PART M] OntoCleanMetaGate")
+
+def om(category=None, rigidity=None, identity=None, unity=None, dependence=None):
+    return cg.OntoCleanMeta(category, rigidity, identity, unity, dependence)
+
+# M1. ParseGate가 ontoclean 메타를 구조화해서 보존
+_m_raw = _json.dumps({"concepts": [{
+    "name": "트랜스포머",
+    "ontoclean": {
+        "category": "model_architecture",
+        "rigidity": "rigid",
+        "identity": "supplies_identity",
+        "unity": "unified_whole",
+        "dependence": "independent",
+    },
+    "features": [{"feature": "시퀀스처리", "type": "essential_feature", "evidence": "시퀀스 입력을 처리한다"}],
+}]}, ensure_ascii=False)
+_m_concepts, _m_rep = cg.ParseGate.parse(_m_raw)
+R.check("M1 ParseGate ontoclean 메타 파싱",
+        _m_rep.passed and _m_concepts[0].ontoclean.category == "model_architecture"
+        and _m_concepts[0].ontoclean.rigidity == OR.RIGID)
+
+# M2. category mismatch: 어텐션 is-a 트랜스포머 오판을 edge 단계에서 차단
+_m2 = [
+    NC("트랜스포머", [feat("모델", "모델 아키텍처")],
+       om("model_architecture", OR.RIGID, OI.SUPPLIES_IDENTITY, OU.UNIFIED_WHOLE, OD.INDEPENDENT)),
+    NC("어텐션", [feat("모델", "모델 아키텍처"), feat("계산방법", "가중합 계산 메커니즘")],
+       om("mechanism", OR.NON_RIGID, OI.DOES_NOT_SUPPLY, OU.NON_UNITY, OD.DEPENDENT)),
+]
+_m2_out = cg.ConceptPipeline().run([_m2])
+_m2_failures = [g for r in _m2_out["all_reports"][0] for g in getattr(r, "failures", [])]
+R.check("M2 category mismatch → NEEDS_CORRECTION, edge 미생성",
+        _m2_out["status"] == "NEEDS_CORRECTION"
+        and _m2_out["result"]["dag"] == {}
+        and any(g.gate_name == "OntoClean Meta Gate" and "category:" in g.message for g in _m2_failures),
+        f"status={_m2_out['status']}, dag={_m2_out['result']['dag']}")
+
+# M3. rigidity: anti-rigid parent는 rigid child를 subsume할 수 없음
+_m3 = [
+    NC("학생", [feat("사람", "제도적 역할")],
+       om("person_role", OR.ANTI_RIGID, OI.DOES_NOT_SUPPLY, OU.NON_UNITY, OD.DEPENDENT)),
+    NC("사람", [feat("사람", "인간 개체"), feat("생물", "생명체 근거")],
+       om("person_role", OR.RIGID, OI.SUPPLIES_IDENTITY, OU.UNIFIED_WHOLE, OD.INDEPENDENT)),
+]
+_m3_out = cg.ConceptPipeline().run([_m3])
+_m3_failures = [g for r in _m3_out["all_reports"][0] for g in getattr(r, "failures", [])]
+R.check("M3 anti-rigid parent → rigid child 차단",
+        _m3_out["status"] == "NEEDS_CORRECTION"
+        and any(g.gate_name == "OntoClean Meta Gate" and "rigidity:" in g.message for g in _m3_failures))
+
+# M4. 메타가 없으면 기존 FCA feature-subsumption 동작 유지
+_m4 = [NC("A", [feat("x", "근거 텍스트")]), NC("B", [feat("x", "근거 텍스트"), feat("y", "근거 텍스트")])]
+_m4_out = cg.ConceptPipeline().run([_m4])
+R.check("M4 ontoclean 미제공 → 기존 edge 생성 유지",
+        _m4_out["status"] == "PASS" and dict(_m4_out["result"]["dag"]) == {"A": ["B"]})
+
+# M5. unknown meta 값은 ParseGate에서 거부
+_m5_raw = _json.dumps({"concepts": [{
+    "name": "X",
+    "ontoclean": {"rigidity": "sometimes_rigid"},
+    "features": [{"feature": "x", "type": "essential_feature", "evidence": "근거 텍스트"}],
+}]}, ensure_ascii=False)
+_, _m5_rep = cg.ParseGate.parse(_m5_raw)
+R.check("M5 unknown ontoclean 값 → ParseGate ERROR",
+        not _m5_rep.passed and any("ontoclean.rigidity unknown value" in g.message for g in _m5_rep.failures))
 
 # ─────────────────────────────────────────────
 # 요약

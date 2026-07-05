@@ -113,6 +113,27 @@ locational / functional / social_treatment 중 하나. evidence는 최소 4자.
 입력은 반드시 ParseGate를 경유하므로 잘못된 형식은
 `{"status": "FAIL", "errors": [...]}`로 거부된다.
 
+concept에는 선택적으로 `ontoclean` 메타속성을 넣을 수 있다. 이 값이 있으면
+`is-a` edge를 만들기 전에 OntoCleanMetaGate가 rigidity, identity, unity,
+dependence, category 위반을 검사한다. 값이 없으면 기존 FCA feature-subsumption
+동작을 유지한다.
+
+```json
+{
+  "name": "트랜스포머",
+  "ontoclean": {
+    "category": "model_architecture",
+    "rigidity": "rigid",
+    "identity": "supplies_identity",
+    "unity": "unified_whole",
+    "dependence": "independent"
+  },
+  "features": [
+    {"feature": "시퀀스처리", "type": "essential_feature", "evidence": "시퀀스 입력을 처리한다"}
+  ]
+}
+```
+
 ### is-a vs has-a
 
 - `essential_feature` → is-a DAG 간선 (분류 계층). `dag`/`definitions`로 반환.

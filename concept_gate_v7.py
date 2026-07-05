@@ -90,6 +90,38 @@ class FeatureVerdict(Enum):
     REJECT_FEATURE = "reject_feature"
     REJECT_CONCEPT = "reject_concept"
 
+class OntoCleanRigidity(Enum):
+    RIGID      = "rigid"
+    NON_RIGID  = "non_rigid"
+    ANTI_RIGID = "anti_rigid"
+
+class OntoCleanIdentity(Enum):
+    SUPPLIES_IDENTITY     = "supplies_identity"
+    CARRIES_IDENTITY      = "carries_identity"
+    DOES_NOT_SUPPLY       = "does_not_supply_identity"
+
+class OntoCleanUnity(Enum):
+    UNIFIED_WHOLE = "unified_whole"
+    NON_UNITY     = "non_unity"
+    ANTI_UNITY    = "anti_unity"
+
+class OntoCleanDependence(Enum):
+    INDEPENDENT = "independent"
+    DEPENDENT   = "dependent"
+
+@dataclass
+class OntoCleanMeta:
+    """Optional OntoClean-style metaproperties for formal is-a edge validation.
+
+    category is intentionally a coarse ontological category, not a taxonomy label.
+    Example: mechanism, model_architecture, process, object, role.
+    """
+    category: Optional[str] = None
+    rigidity: Optional[OntoCleanRigidity] = None
+    identity: Optional[OntoCleanIdentity] = None
+    unity: Optional[OntoCleanUnity] = None
+    dependence: Optional[OntoCleanDependence] = None
+
 @dataclass
 class NormalizedFeature:
     feature: str; type: FeatureType; evidence: str = ""
@@ -98,6 +130,7 @@ class NormalizedFeature:
 @dataclass
 class NormalizedConcept:
     name: str; features: List[NormalizedFeature] = field(default_factory=list)
+    ontoclean: Optional[OntoCleanMeta] = None
     @property
     def essential_attrs(self) -> Set[str]:
         return {f.feature for f in self.features if f.type in ISA_ALLOWED_TYPES}
@@ -348,6 +381,48 @@ class ConceptGate:
                               GateSeverity.ERROR)
         return GateResult("Subsumption Gate", True, "ok", severity=GateSeverity.INFO)
 
+    def ontoclean_meta_gate(self, parent, child):
+        """OntoClean metaproperty sanity check for proposed is-a edges.
+
+        This gate is opt-in. If neither concept carries OntoClean metadata, it is
+        silent to preserve the existing FCA feature-subsumption behavior.
+        """
+        pm, cm = parent.ontoclean, child.ontoclean
+        if pm is None and cm is None:
+            return GateResult("OntoClean Meta Gate", True, "not provided",
+                              severity=GateSeverity.INFO)
+        if pm is None or cm is None:
+            missing = parent.name if pm is None else child.name
+            return GateResult("OntoClean Meta Gate", True,
+                              f'metadata missing: "{missing}"',
+                              {"missing": missing}, GateSeverity.WARNING)
+
+        violations = []
+        if pm.rigidity == OntoCleanRigidity.ANTI_RIGID and cm.rigidity == OntoCleanRigidity.RIGID:
+            violations.append("rigidity: anti-rigid parent cannot subsume rigid child")
+
+        if (pm.identity == OntoCleanIdentity.DOES_NOT_SUPPLY
+                and cm.identity == OntoCleanIdentity.SUPPLIES_IDENTITY):
+            violations.append("identity: non-identity-supplying parent cannot subsume identity supplier")
+
+        if pm.unity == OntoCleanUnity.ANTI_UNITY and cm.unity == OntoCleanUnity.UNIFIED_WHOLE:
+            violations.append("unity: anti-unity parent cannot subsume unified whole")
+
+        if (pm.dependence == OntoCleanDependence.DEPENDENT
+                and cm.dependence == OntoCleanDependence.INDEPENDENT):
+            violations.append("dependence: dependent parent cannot subsume independent child")
+
+        if pm.category and cm.category and pm.category != cm.category:
+            violations.append(f'category: {pm.category} parent vs {cm.category} child')
+
+        if violations:
+            return GateResult("OntoClean Meta Gate", False,
+                              "; ".join(violations),
+                              {"violations": violations},
+                              GateSeverity.NEEDS_CORRECTION)
+        return GateResult("OntoClean Meta Gate", True, "ok",
+                          severity=GateSeverity.INFO)
+
     def meet_gate(self, parents, child):
         if len(parents) < 2: return GateResult("Meet Gate", True, "단일", severity=GateSeverity.INFO)
         for i, j in combinations(range(len(parents)), 2):
@@ -395,6 +470,47 @@ def extract_json_block(raw):
     s, e = clean.find('{'), clean.rfind('}')
     if s < 0 or e < 0: raise ValueError("JSON 블록 없음")
     return clean[s:e+1]
+
+def _parse_enum_value(enum_cls, value, field_name, concept_name, errors):
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        errors.append(GateResult("Parse Gate", False,
+            f'"{concept_name}".ontoclean.{field_name} 비문자열: {value!r}',
+            severity=GateSeverity.ERROR))
+        return None
+    found = next((e for e in enum_cls if value in (e.value, e.name)), None)
+    if found is None:
+        errors.append(GateResult("Parse Gate", False,
+            f'"{concept_name}".ontoclean.{field_name} unknown value "{value}"',
+            {"allowed": [e.value for e in enum_cls]}, GateSeverity.ERROR))
+    return found
+
+def _parse_ontoclean_meta(raw_meta, concept_name, errors):
+    if raw_meta is None:
+        return None
+    if not isinstance(raw_meta, dict):
+        errors.append(GateResult("Parse Gate", False,
+            f'"{concept_name}": ontoclean이 dict 아님',
+            severity=GateSeverity.ERROR))
+        return None
+    category = raw_meta.get("category")
+    if category is not None and not isinstance(category, str):
+        errors.append(GateResult("Parse Gate", False,
+            f'"{concept_name}".ontoclean.category 비문자열: {category!r}',
+            severity=GateSeverity.ERROR))
+        category = None
+    return OntoCleanMeta(
+        category=category,
+        rigidity=_parse_enum_value(OntoCleanRigidity, raw_meta.get("rigidity"),
+                                   "rigidity", concept_name, errors),
+        identity=_parse_enum_value(OntoCleanIdentity, raw_meta.get("identity"),
+                                   "identity", concept_name, errors),
+        unity=_parse_enum_value(OntoCleanUnity, raw_meta.get("unity"),
+                                "unity", concept_name, errors),
+        dependence=_parse_enum_value(OntoCleanDependence, raw_meta.get("dependence"),
+                                     "dependence", concept_name, errors),
+    )
 
 class ParseGate:
     @staticmethod
@@ -510,7 +626,9 @@ class ParseGate:
                 features.append(NormalizedFeature(
                     feature=fname, type=ftype, evidence=raw_ev,
                     claim=raw_claim, confidence=conf))
-            concepts.append(NormalizedConcept(name=name, features=features))
+            meta = _parse_ontoclean_meta(rc.get("ontoclean") or rc.get("ontoclean_meta"),
+                                         name, errors)
+            concepts.append(NormalizedConcept(name=name, features=features, ontoclean=meta))
 
         report.results.extend(errors)
         if not errors:
@@ -635,7 +753,7 @@ def apply_judgments(concept, judgments):
             new.append(NormalizedFeature(j.feature.feature, j.inferred_type,
                                          j.feature.evidence, j.feature.claim, j.feature.confidence))
         else: new.append(j.feature)
-    return NormalizedConcept(name=concept.name, features=new)
+    return NormalizedConcept(name=concept.name, features=new, ontoclean=concept.ontoclean)
 
 @dataclass
 class EdgeBuffer:
@@ -760,6 +878,7 @@ class GateScheduler:
         r = GateReport(target=f"{p.name} → {c.name}")
         r.results.append(self.gate.anti_context_gate(p, c))
         r.results.append(self.gate.subsumption_gate(p, c))
+        r.results.append(self.gate.ontoclean_meta_gate(p, c))
         r.results.append(self.gate.transitive_gate(anc, p))
         r.results.append(self.gate.cycle_gate(dag, (p.name, c.name)))
         return r
@@ -1089,7 +1208,8 @@ def parse_expansion_response(raw: str, original_concepts: List[NormalizedConcept
         return original_concepts, report
 
     # 기존 개념 복사 (이름 → NormalizedConcept)
-    cmap = {c.name: NormalizedConcept(c.name, list(c.features)) for c in original_concepts}
+    cmap = {c.name: NormalizedConcept(c.name, list(c.features), c.ontoclean)
+            for c in original_concepts}
     errors = []
 
     for exp in parsed["expansions"]:
@@ -1605,7 +1725,7 @@ def relational_scaling(concepts: List[NormalizedConcept]) -> List[NormalizedConc
             feats.append(NormalizedFeature(derived, FeatureType.ESSENTIAL,
                                            ev, ev, ft.confidence))
             present.add(derived)
-        scaled.append(NormalizedConcept(name=c.name, features=feats))
+        scaled.append(NormalizedConcept(name=c.name, features=feats, ontoclean=c.ontoclean))
     return scaled
 
 
