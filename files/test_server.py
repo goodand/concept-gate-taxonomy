@@ -174,6 +174,47 @@ def test_direct():
           lint_conflict["status"] == "LINT_ERROR"
           and any(i["code"] == "RELATION_HINT_TYPE_CONFLICT" for i in lint_conflict["issues"]))
 
+    # 1-25. lint_concepts — 모든 개념 쌍이 essential 라벨 비공유 → edge 0 예고
+    lint_disjoint = server.lint_concepts([
+        {"name": "어텐션", "features": [
+            {"feature": "쿼리키값매핑함수", "type": "essential_feature",
+             "evidence": "maps a query and key-value pairs to an output"}]},
+        {"name": "멀티헤드어텐션", "features": [
+            {"feature": "병렬어텐션수행", "type": "essential_feature",
+             "evidence": "we perform the attention function in parallel"}]},
+    ])
+    check("1-25 lint_concepts 라벨 비공유 → NO_SHARED_ESSENTIAL_LABELS",
+          lint_disjoint["status"] == "LINT_WARNING"
+          and any(i["code"] == "NO_SHARED_ESSENTIAL_LABELS" for i in lint_disjoint["issues"]))
+
+    # 1-26. lint_concepts — is-a 주장을 feature 문장으로 선언 (다른 개념명 참조)
+    lint_isa_claim = server.lint_concepts([
+        {"name": "어텐션", "features": [
+            {"feature": "쿼리키값매핑함수", "type": "essential_feature",
+             "evidence": "maps a query and key-value pairs to an output"}]},
+        {"name": "스케일드닷프로덕트어텐션", "features": [
+            {"feature": "어텐션이다", "type": "essential_feature",
+             "evidence": "we call our particular attention Scaled Dot-Product Attention"}]},
+    ])
+    check("1-26 lint_concepts is-a 주장 feature → ISA_CLAIM_FEATURE",
+          any(i["code"] == "ISA_CLAIM_FEATURE" for i in lint_isa_claim["issues"]))
+
+    # 1-27. lint_concepts — 계약 준수 입력(라벨 verbatim 반복)은 교차 경고 없음
+    lint_shared = server.lint_concepts([
+        {"name": "어텐션", "features": [
+            {"feature": "쿼리키값매핑", "type": "essential_feature",
+             "evidence": "maps a query and key-value pairs to an output"}]},
+        {"name": "셀프어텐션전용변형", "features": [
+            {"feature": "쿼리키값매핑", "type": "essential_feature",
+             "evidence": "maps a query and key-value pairs (inherited)"},
+            {"feature": "동일시퀀스출처", "type": "essential_feature",
+             "evidence": "keys, values and queries come from the same place"}]},
+    ])
+    cross_codes = {"NO_SHARED_ESSENTIAL_LABELS", "ISA_CLAIM_FEATURE"}
+    check("1-27 lint_concepts 계약 준수 입력 → 교차 경고 없음",
+          not any(i["code"] in cross_codes for i in lint_shared["issues"]),
+          f"got {[i['code'] for i in lint_shared['issues']]}")
+
 
 def _json_ok(obj):
     try:

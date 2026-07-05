@@ -80,6 +80,21 @@ WEAK_STRUCTURAL_MARKERS = (
     "연관",
 )
 
+# is-a를 문장으로 주장할 때 나타나는 표지 (개념명 참조와 결합해서만 사용)
+ISA_CLAIM_MARKERS = (
+    "이다",
+    "입니다",
+    "일종",
+    "종류",
+    "형태",
+    "의 하나",
+    " is a",
+    " is an",
+    "kind of",
+    "type of",
+    "variant of",
+)
+
 STRONG_STRUCTURAL_MARKERS = (
     "include",
     "includes",
@@ -234,7 +249,87 @@ def lint_concepts(concepts: Any) -> Dict[str, Any]:
                 continue
             _lint_feature(concept_name, raw_feature, issues)
 
+    _lint_cross_concept(concepts, issues)
+
     return _finish(issues)
+
+
+def _essential_labels(concepts: Any) -> Dict[str, set]:
+    """개념별 essential feature 라벨 집합. malformed 항목은 건너뜀."""
+    out: Dict[str, set] = {}
+    for concept in concepts:
+        if not isinstance(concept, dict):
+            continue
+        name = concept.get("name")
+        features = concept.get("features")
+        if not isinstance(name, str) or not name.strip() or not isinstance(features, list):
+            continue
+        labels = {
+            f["feature"].strip()
+            for f in features
+            if isinstance(f, dict)
+            and f.get("type") == "essential_feature"
+            and isinstance(f.get("feature"), str)
+            and f["feature"].strip()
+        }
+        if labels:
+            out[name.strip()] = labels
+    return out
+
+
+def _lint_cross_concept(concepts: Any, issues: List[Dict[str, Any]]) -> None:
+    """개념 간 검사. is-a DAG는 essential 라벨의 '문자열 그대로' 부분집합
+    포함으로만 만들어지므로, 라벨 공유가 없으면 edge는 수학적으로 불가능하다.
+    """
+    labels_by_concept = _essential_labels(concepts)
+    names = list(labels_by_concept.keys())
+
+    # 1) 다른 개념명을 참조하는 is-a 주장형 feature
+    #    예: 개념 "스케일드닷프로덕트어텐션"의 feature "트랜스포머의 어텐션이다"
+    #    — 문장으로 is-a를 선언해도 edge는 생기지 않는다.
+    #    오탐 방지: 개념명 포함 + (주장 표지 or 라벨==개념명)일 때만 발화.
+    for name, labels in labels_by_concept.items():
+        for label in labels:
+            for other in names:
+                if other == name or len(other) < 2:
+                    continue
+                if other not in label:
+                    continue
+                if label == other or _has_any(label, ISA_CLAIM_MARKERS):
+                    issues.append(_issue(
+                        "warning",
+                        "ISA_CLAIM_FEATURE",
+                        f"essential feature states an is-a claim about concept "
+                        f"'{other}'. A claim sentence creates no DAG edge.",
+                        concept=name,
+                        feature=label,
+                        suggestion=(
+                            f"Remove this label and instead repeat ALL of '{other}' "
+                            "essential feature labels verbatim, then add differentia."
+                        ),
+                    ))
+                    break
+
+    # 2) 모든 개념 쌍이 essential 라벨을 하나도 공유하지 않음 → edge 0 확정
+    if len(names) >= 2:
+        any_shared = any(
+            labels_by_concept[a] & labels_by_concept[b]
+            for i, a in enumerate(names)
+            for b in names[i + 1:]
+        )
+        if not any_shared:
+            issues.append(_issue(
+                "warning",
+                "NO_SHARED_ESSENTIAL_LABELS",
+                "no pair of concepts shares any essential feature label, so the "
+                "is-a DAG will be empty and every concept will be isolated.",
+                suggestion=(
+                    "If a hierarchy is intended: give the parent a small set of "
+                    "atomic essential labels, and make each child repeat ALL parent "
+                    "labels verbatim (character-identical) plus at least one new "
+                    "differentia label."
+                ),
+            ))
 
 
 def _lint_feature(concept_name: str, raw_feature: Dict[str, Any], issues: List[Dict[str, Any]]) -> None:

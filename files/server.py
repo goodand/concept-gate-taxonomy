@@ -246,6 +246,13 @@ def lint_concepts(concepts: list[dict]) -> dict:
     structural evidence, missing relation_hint on structural_composition, and
     relation_hint/type conflicts.
 
+    It also runs cross-concept checks against the is-a edge contract:
+    - NO_SHARED_ESSENTIAL_LABELS: no pair of concepts shares any essential
+      feature label, so the is-a DAG is guaranteed to be empty. If a
+      hierarchy is intended, children must repeat parent labels verbatim.
+    - ISA_CLAIM_FEATURE: an essential feature references another concept's
+      name (an is-a claim written as a sentence), which creates no edge.
+
     Recommended client flow:
       lint_concepts -> fix errors/warnings -> run_pipeline.
     """
@@ -261,7 +268,24 @@ def run_pipeline(concepts: list[dict]) -> dict:
     contextual_usage, locational, functional, social_treatment),
     and evidence (str, min 4 chars).
 
-    essential_feature creates is-a DAG edges (classification hierarchy).
+    EDGE CONTRACT — how is-a edges are actually computed (critical):
+    Edges come ONLY from exact feature-label set inclusion. Concept P becomes
+    a parent of concept C iff the set of P's essential_feature labels is a
+    strict subset of C's essential_feature labels, compared as exact strings.
+    - To express "C is-a P": C must repeat ALL of P's essential_feature
+      labels VERBATIM (character-identical strings), keep their type as
+      essential_feature in C too, then add at least one extra
+      essential_feature of its own (the differentia).
+    - Writing an is-a sentence as a feature (e.g. "X is a kind of Y",
+      "X는 Y이다") creates NO edge. Concept names NEVER create edges.
+    - Keep each label short and atomic (a noun-like tag, not a sentence),
+      so it can be reused verbatim across concepts.
+    - Worked example: parent {"query-key-value mapping"} and child
+      {"query-key-value mapping", "sqrt(dk) scaled dot product"} produce
+      the edge parent -> child. If concepts share zero labels, the DAG is
+      empty and every concept is isolated, even when status is PASS.
+
+    essential_feature participates in the is-a DAG.
     structural_composition creates has-a composition edges (part-whole graph),
     returned separately in the composition field.
 
@@ -465,9 +489,12 @@ def client_guide() -> dict:
                 "ConceptGate creates is-a DAG edges from exact essential "
                 "feature inclusion.",
                 "A child must explicitly repeat the parent's essential feature "
-                "labels and add differentia. Do not write placeholders such as "
-                "'parent features' or 'same as above'.",
-            "Do not merge different classification axes into one hierarchy.",
+                "labels verbatim (character-identical), keep them typed as "
+                "essential_feature, and add differentia. Do not write "
+                "placeholders such as 'parent features' or 'same as above'.",
+                "Stating is-a as a sentence feature ('X is a Y', 'X는 Y이다') "
+                "creates no edge; concept names never create edges.",
+                "Do not merge different classification axes into one hierarchy.",
             ],
         },
         "recommended_flow": [
