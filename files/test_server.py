@@ -158,8 +158,12 @@ async def test_mcp_protocol():
         # 2-2. 리소스 목록
         resources = await client.list_resources()
         res_uris = {str(r.uri) for r in resources}
-        check("2-2 리소스 2개 등록",
-              {"conceptgate://expansion-schema", "conceptgate://pipeline-status-codes"} <= res_uris,
+        check("2-2 리소스 3개 등록",
+              {
+                  "conceptgate://expansion-schema",
+                  "conceptgate://pipeline-status-codes",
+                  "conceptgate://client-guide",
+              } <= res_uris,
               f"got {res_uris}")
 
         # 2-3. 프롬프트 목록
@@ -203,6 +207,15 @@ async def test_mcp_protocol():
         check("2-9 pipeline-status-codes 리소스 읽기",
               "PASS_WITH_WARNING" in status_res[0].text)
 
+        guide_res = await client.read_resource("conceptgate://client-guide")
+        guide_text = guide_res[0].text
+        check("2-10 client-guide 리소스 읽기",
+              "source-grounded" in guide_text
+              and "missing features" in guide_text
+              and "diagnostic only" in guide_text
+              and "structural_composition" in guide_text
+              and "based on" in guide_text)
+
         # 2-10. 프롬프트 호출
         prompt_result = await client.get_prompt("expansion_prompt", {
             "action_type": "depth",
@@ -210,14 +223,14 @@ async def test_mcp_protocol():
             "shared_attrs": "동물",
         })
         prompt_text = prompt_result.messages[0].content.text
-        check("2-10 expansion_prompt 호출",
+        check("2-11 expansion_prompt 호출",
               "개" in prompt_text and "고양이" in prompt_text)
 
         # 2-11. 비정상 입력도 프로토콜 통해 FAIL 반환 (예외 아님)
         bad_result = await client.call_tool("run_pipeline", {
             "concepts": [{"name": "x", "features": [{"feature": "a", "type": "essential_feature", "evidence": 999}]}],
         })
-        check("2-11 비정상 입력 → FAIL (예외 없이)",
+        check("2-12 비정상 입력 → FAIL (예외 없이)",
               bad_result.data["status"] == "FAIL")
 
 

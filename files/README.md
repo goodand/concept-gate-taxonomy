@@ -22,7 +22,7 @@ conceptgate-mcp/
 ├── cg_partwhole.py        part-whole 어휘 어댑터 (참조용 배포 복사본)
 ├── cg_gufo.py             Scior/gUFO rule metadata 어댑터 (fallback 포함)
 ├── cg_graph_export.py     GraphExporter (수정 없음, import만)
-├── test_server.py         단위 테스트 (직접 호출 19 + MCP 프로토콜 11)
+├── test_server.py         단위 테스트 (직접 호출 19 + MCP 프로토콜 12)
 ├── pyproject.toml
 ├── README.md
 ├── codex_config.toml      Codex CLI MCP 설정 예시
@@ -73,7 +73,7 @@ uv pip install -e .
 .venv/bin/python test_server.py
 ```
 
-30/30 통과해야 정상. PART 1은 함수 직접 호출, PART 2는 FastMCP Client
+31/31 통과해야 정상. PART 1은 함수 직접 호출, PART 2는 FastMCP Client
 in-memory로 실제 MCP 프로토콜(tools/resources/prompts)을 검증한다.
 
 ## 도구 (Tools)
@@ -90,6 +90,7 @@ in-memory로 실제 MCP 프로토콜(tools/resources/prompts)을 검증한다.
 
 - `conceptgate://expansion-schema` — 종차 생성 시 따라야 할 JSON 스키마
 - `conceptgate://pipeline-status-codes` — 5단계 status + 권장 행동
+- `conceptgate://client-guide` — source-grounded feature 정규화와 FAIL 재시도 가이드
 
 ## 프롬프트 (Prompts)
 
@@ -155,6 +156,25 @@ has-a 후보이므로 수정이 필요하다.
 {"feature": "엔진", "type": "structural_composition",
  "evidence": "자동차는 엔진을 동력원으로 가진다", "relation_hint": "component_of"}
 ```
+
+### Source-grounded client guide
+
+MCP client는 `conceptgate://client-guide`를 읽어 source evidence를
+`run_pipeline` 입력으로 정규화하는 규칙을 확인할 수 있다.
+
+핵심 원칙:
+
+- 개념명만으로 is-a/has-a 결론을 내리지 않는다.
+- feature가 없거나 비어 있어 `Parse Gate`가 실패하면, 출처 기반 feature discovery를
+  수행하고 atomic feature로 정규화한 뒤 `run_pipeline`을 재호출한다.
+- `status: FAIL`이면 반환된 `dag`, `composition`, `isolated`는 진단 부산물이며
+  확정 결과로 보고하지 않는다.
+- `structural_composition`은 whole이 part/module/layer/component 등을 구조적으로
+  포함한다고 evidence가 말할 때만 사용한다.
+- `based on`, `uses`, `relies on`, `computed by`, `follows architecture` 같은 약한
+  표현만으로는 has-a를 만들지 않는다.
+- 상속 feature는 `"parent features"` 같은 placeholder로 쓰지 말고, parent의
+  essential feature label을 자식에 명시적으로 반복한다.
 
 ### 검증 출력 (Phase C)
 

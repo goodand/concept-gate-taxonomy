@@ -369,7 +369,7 @@ def analyze_expansion(history: list[dict]) -> dict:
 
 
 # ═══════════════════════════════════════════════════════
-# Resources (2개)
+# Resources (3개)
 # ═══════════════════════════════════════════════════════
 
 @mcp.resource("conceptgate://expansion-schema")
@@ -397,6 +397,91 @@ def pipeline_status_codes() -> dict:
             "Execute CORRECTION expansion_actions."
         ),
         "FAIL": "Hard error. Fix input data.",
+    }
+
+
+@mcp.resource("conceptgate://client-guide")
+def client_guide() -> dict:
+    """Client-side guidance for source-grounded ConceptGate usage.
+
+    This guide is intentionally domain-neutral. It tells clients how to
+    normalize source evidence into run_pipeline input and how to handle
+    FAIL/empty-feature cases without inventing unsupported relations.
+    """
+    return {
+        "purpose": (
+            "Guide MCP clients from source evidence to normalized ConceptGate "
+            "input. The server validates normalized data; it does not fetch "
+            "sources or infer concept meanings from names alone."
+        ),
+        "source_grounded_feature_discovery": [
+            "Do not conclude is-a or has-a before calling run_pipeline.",
+            "If the user provides only concept names, call run_pipeline once to "
+            "confirm Parse Gate errors, then gather source-backed features.",
+            "Every feature must have explicit evidence from user input or a "
+            "trusted source. Do not use unstated background knowledge.",
+            "Normalize source sentences into atomic features before calling "
+            "run_pipeline; do not paste full prose as feature labels.",
+        ],
+        "feature_normalization": {
+            "essential_feature": [
+                "Use for definition-level conditions required for a concept to "
+                "be that concept.",
+                "Do not use for mere location, usage, social treatment, or "
+                "contextual association.",
+                "Weak phrases such as based on, uses, relies on, applies, or "
+                "computed by are not structural evidence by themselves.",
+            ],
+            "structural_composition": [
+                "Use only when evidence says a whole includes, contains, "
+                "consists of, is composed of, has a component, part, module, "
+                "layer, sublayer, member, or other structural unit.",
+                "Normalize the feature to a noun-like part label, not a full "
+                "sentence or verb phrase.",
+                "Add relation_hint='has_part' or a more specific part-whole "
+                "hint when the evidence supports it.",
+                "Do not infer structural composition from weak phrases alone: "
+                "based on, uses, relies on, applies, computed by, implemented "
+                "with, follows architecture, or associated with.",
+            ],
+            "is_a": [
+                "ConceptGate creates is-a DAG edges from exact essential "
+                "feature inclusion.",
+                "A child must explicitly repeat the parent's essential feature "
+                "labels and add differentia. Do not write placeholders such as "
+                "'parent features' or 'same as above'.",
+                "Do not merge different classification axes into one hierarchy.",
+            ],
+        },
+        "retry_loop": [
+            "If run_pipeline returns FAIL for missing features, empty features, "
+            "or malformed feature objects, do not treat returned graph fields as "
+            "final results.",
+            "Repair the input with source-grounded atomic features and call "
+            "run_pipeline again.",
+            "If status is FAIL, any dag/composition/isolated fields are "
+            "diagnostic only. They must not be reported as confirmed is-a or "
+            "has-a results.",
+            "If status is PASS_WITH_WARNING, inspect expansion_actions and use "
+            "expand or source-backed differentia to refine the input.",
+            "If status is NEEDS_CORRECTION, fix rejected fields first. Do not "
+            "override run_pipeline with classify_parents.",
+        ],
+        "stop_conditions": [
+            "Stop and report input 부족 when no source-backed feature can be found.",
+            "Stop when the same gate error repeats after repair.",
+            "Use a small max retry limit, typically 3 rounds.",
+            "Each retry should add or repair at least one source-backed atomic "
+            "feature; otherwise stop.",
+        ],
+        "output_discipline": [
+            "Separate MCP output from model interpretation.",
+            "Use run_pipeline as the final authority. classify_parents is a "
+            "helper and must not override a failing run_pipeline result.",
+            "Report is-a DAG and has-a composition only from non-FAIL "
+            "run_pipeline output.",
+            "For FAIL, report errors, attempted repairs, and remaining input gaps.",
+        ],
     }
 
 
