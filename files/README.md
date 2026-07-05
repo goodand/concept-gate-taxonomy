@@ -31,6 +31,10 @@ conceptgate-mcp/
 
 ## 설치
 
+Codex CLI에서 로컬 stdio MCP로 설치하려면
+[`LOCAL_INSTALL_GUIDE.md`](LOCAL_INSTALL_GUIDE.md)를 먼저 보세요.
+clone, 가상환경, 테스트, `config.toml` 등록까지 실패 지점 중심으로 정리되어 있습니다.
+
 파일을 다운로드한 뒤 디렉토리 구조를 유지해야 합니다:
 
 ```
