@@ -28,6 +28,7 @@ cd concept-gate-taxonomy/files
 - `cg_graph_export.py`
 - `cg_partwhole.py`
 - `cg_gufo.py`
+- `cg_input_linter.py`
 - `test_server.py`
 - `requirements.txt`
 
@@ -79,7 +80,7 @@ Windows:
 .venv\Scripts\python.exe test_server.py
 ```
 
-`통과: 30/30`이 나오면 정상입니다.
+`통과: 37/37`이 나오면 정상입니다.
 
 ### 4. 현재 절대 경로 확인
 
@@ -132,8 +133,9 @@ args = ["C:\\Users\\name\\concept-gate-taxonomy\\files\\server.py"]
 
 ## 사용
 
-Codex CLI를 재시작하면 ConceptGate 도구 5개가 인식됩니다.
+Codex CLI를 재시작하면 ConceptGate 도구 6개가 인식됩니다.
 
+- `lint_concepts`
 - `run_pipeline`
 - `expand`
 - `classify_parents`
@@ -148,6 +150,8 @@ conceptgate의 run_pipeline으로 개, 고양이, 말을 분류해줘.
 PASS_WITH_WARNING이 나오면 expansion_actions를 보고 종차를 만들어
 expand로 재실행해줘.
 ```
+
+입력 품질까지 점검하려면 먼저 `lint_concepts`를 호출하세요.
 
 ## 자주 겪는 문제
 

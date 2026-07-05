@@ -131,6 +131,49 @@ def test_direct():
     ])
     check("1-19 analyze → converged", an["verdict"] == "converged")
 
+    # 1-20. lint_concepts — 정상 입력
+    lint_ok = server.lint_concepts(DOG_CAT)
+    check("1-20 lint_concepts 정상 입력 → LINT_PASS",
+          lint_ok["status"] == "LINT_PASS", f"got {lint_ok['status']}")
+
+    # 1-21. lint_concepts — features 누락
+    lint_missing = server.lint_concepts([{"name": "어텐션"}])
+    check("1-21 lint_concepts features 누락 → LINT_ERROR",
+          lint_missing["status"] == "LINT_ERROR"
+          and any(i["code"] == "MISSING_FEATURES" for i in lint_missing["issues"]))
+
+    # 1-22. lint_concepts — 약한 structural evidence
+    lint_weak = server.lint_concepts([{"name": "트랜스포머", "features": [
+        {"feature": "attention mechanisms",
+         "type": "structural_composition",
+         "evidence": "Transformer is based on attention mechanisms.",
+         "relation_hint": "has_part"}
+    ]}])
+    check("1-22 lint_concepts weak structural evidence → LINT_WARNING",
+          lint_weak["status"] == "LINT_WARNING"
+          and any(i["code"] == "WEAK_STRUCTURAL_EVIDENCE" for i in lint_weak["issues"]))
+
+    # 1-23. lint_concepts — 상속 placeholder 금지
+    lint_placeholder = server.lint_concepts([{"name": "scaled_dot_product_attention", "features": [
+        {"feature": "attention_function features",
+         "type": "essential_feature",
+         "evidence": "same as above"}
+    ]}])
+    check("1-23 lint_concepts placeholder feature → LINT_ERROR",
+          lint_placeholder["status"] == "LINT_ERROR"
+          and any(i["code"] == "PLACEHOLDER_FEATURE" for i in lint_placeholder["issues"]))
+
+    # 1-24. lint_concepts — relation_hint/type 충돌
+    lint_conflict = server.lint_concepts([{"name": "자동차", "features": [
+        {"feature": "엔진",
+         "type": "essential_feature",
+         "evidence": "자동차는 엔진을 구성요소로 포함한다",
+         "relation_hint": "component_of"}
+    ]}])
+    check("1-24 lint_concepts relation_hint/type 충돌 → LINT_ERROR",
+          lint_conflict["status"] == "LINT_ERROR"
+          and any(i["code"] == "RELATION_HINT_TYPE_CONFLICT" for i in lint_conflict["issues"]))
+
 
 def _json_ok(obj):
     try:
@@ -151,8 +194,8 @@ async def test_mcp_protocol():
         # 2-1. 도구 목록
         tools = await client.list_tools()
         tool_names = {t.name for t in tools}
-        check("2-1 도구 5개 등록",
-              {"run_pipeline", "expand", "classify_parents", "export_graph", "analyze_expansion"} <= tool_names,
+        check("2-1 도구 6개 등록",
+              {"lint_concepts", "run_pipeline", "expand", "classify_parents", "export_graph", "analyze_expansion"} <= tool_names,
               f"got {tool_names}")
 
         # 2-2. 리소스 목록
@@ -232,6 +275,14 @@ async def test_mcp_protocol():
         })
         check("2-12 비정상 입력 → FAIL (예외 없이)",
               bad_result.data["status"] == "FAIL")
+
+        # 2-13. lint_concepts 호출
+        lint_result = await client.call_tool("lint_concepts", {
+            "concepts": [{"name": "x"}],
+        })
+        check("2-13 lint_concepts 프로토콜 호출 → LINT_ERROR",
+              lint_result.data["status"] == "LINT_ERROR"
+              and lint_result.data["issues"][0]["code"] == "MISSING_FEATURES")
 
 
 # ═══════════════════════════════════════════════════════

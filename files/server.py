@@ -29,6 +29,7 @@ from concept_gate_v7 import (  # noqa: E402
     EXPANSION_OUTPUT_SCHEMA,
 )
 from cg_graph_export import GraphExporter  # noqa: E402
+from cg_input_linter import lint_concepts as run_input_linter  # noqa: E402
 
 # ═══════════════════════════════════════════════════════
 # 입력 크기 제한 (DoS 방어)
@@ -233,8 +234,23 @@ def _serialize_pipeline_output(out):
 
 
 # ═══════════════════════════════════════════════════════
-# Tools (5개)
+# Tools (6개)
 # ═══════════════════════════════════════════════════════
+
+@mcp.tool
+def lint_concepts(concepts: list[dict]) -> dict:
+    """Preflight-lint concept JSON before run_pipeline.
+
+    This is a client guidance tool, not a replacement for ConceptGate gates.
+    It catches missing/empty features, placeholder inherited features, weak
+    structural evidence, missing relation_hint on structural_composition, and
+    relation_hint/type conflicts.
+
+    Recommended client flow:
+      lint_concepts -> fix errors/warnings -> run_pipeline.
+    """
+    return run_input_linter(concepts)
+
 
 @mcp.tool
 def run_pipeline(concepts: list[dict]) -> dict:
@@ -415,9 +431,10 @@ def client_guide() -> dict:
             "sources or infer concept meanings from names alone."
         ),
         "source_grounded_feature_discovery": [
-            "Do not conclude is-a or has-a before calling run_pipeline.",
-            "If the user provides only concept names, call run_pipeline once to "
-            "confirm Parse Gate errors, then gather source-backed features.",
+            "Do not conclude is-a or has-a before lint_concepts and run_pipeline.",
+            "If the user provides only concept names, call lint_concepts first. "
+            "For missing or empty features, gather source-backed features before "
+            "calling run_pipeline.",
             "Every feature must have explicit evidence from user input or a "
             "trusted source. Do not use unstated background knowledge.",
             "Normalize source sentences into atomic features before calling "
@@ -450,9 +467,17 @@ def client_guide() -> dict:
                 "A child must explicitly repeat the parent's essential feature "
                 "labels and add differentia. Do not write placeholders such as "
                 "'parent features' or 'same as above'.",
-                "Do not merge different classification axes into one hierarchy.",
+            "Do not merge different classification axes into one hierarchy.",
             ],
         },
+        "recommended_flow": [
+            "1. Build source-backed atomic feature candidates.",
+            "2. Call lint_concepts on the candidate JSON.",
+            "3. Fix LINT_ERROR issues before run_pipeline.",
+            "4. Treat LINT_WARNING issues as quality warnings; repair when possible.",
+            "5. Call run_pipeline only after linting.",
+            "6. Use expand for PASS_WITH_WARNING differentia refinement.",
+        ],
         "retry_loop": [
             "If run_pipeline returns FAIL for missing features, empty features, "
             "or malformed feature objects, do not treat returned graph fields as "

@@ -21,8 +21,9 @@ conceptgate-mcp/
 ├── concept_gate_v7.py     ConceptGate 코어 (수정 없음, import만)
 ├── cg_partwhole.py        part-whole 어휘 어댑터 (참조용 배포 복사본)
 ├── cg_gufo.py             Scior/gUFO rule metadata 어댑터 (fallback 포함)
+├── cg_input_linter.py     입력 JSON 사전 점검 linter (stdlib)
 ├── cg_graph_export.py     GraphExporter (수정 없음, import만)
-├── test_server.py         단위 테스트 (직접 호출 19 + MCP 프로토콜 12)
+├── test_server.py         단위 테스트 (직접 호출 24 + MCP 프로토콜 13)
 ├── pyproject.toml
 ├── README.md
 ├── codex_config.toml      Codex CLI MCP 설정 예시
@@ -44,6 +45,7 @@ conceptgate-mcp/
 ├── concept_gate_v7.py
 ├── cg_partwhole.py
 ├── cg_gufo.py
+├── cg_input_linter.py
 ├── cg_graph_export.py
 ├── test_server.py
 ├── pyproject.toml
@@ -73,13 +75,14 @@ uv pip install -e .
 .venv/bin/python test_server.py
 ```
 
-31/31 통과해야 정상. PART 1은 함수 직접 호출, PART 2는 FastMCP Client
+37/37 통과해야 정상. PART 1은 함수 직접 호출, PART 2는 FastMCP Client
 in-memory로 실제 MCP 프로토콜(tools/resources/prompts)을 검증한다.
 
 ## 도구 (Tools)
 
 | 도구 | 역할 |
 |---|---|
+| `lint_concepts` | `run_pipeline` 전 입력 JSON 품질 점검. 누락 feature, placeholder, 약한 structural evidence, relation_hint/type 충돌 감지 |
 | `run_pipeline` | 개념 리스트 → DAG 생성 + 검증. 핵심 엔트리포인트 |
 | `expand` | 기존 개념에 종차 병합 + 재실행. client가 종차 생성 후 호출 |
 | `classify_parents` | 개념별 부모 후보 multi-label 판정 (meet 지원) |
@@ -162,9 +165,16 @@ has-a 후보이므로 수정이 필요하다.
 MCP client는 `conceptgate://client-guide`를 읽어 source evidence를
 `run_pipeline` 입력으로 정규화하는 규칙을 확인할 수 있다.
 
+권장 호출 순서:
+
+```text
+source evidence → atomic features → lint_concepts → run_pipeline
+```
+
 핵심 원칙:
 
 - 개념명만으로 is-a/has-a 결론을 내리지 않는다.
+- `run_pipeline` 전에 `lint_concepts`를 호출해 입력 품질을 점검한다.
 - feature가 없거나 비어 있어 `Parse Gate`가 실패하면, 출처 기반 feature discovery를
   수행하고 atomic feature로 정규화한 뒤 `run_pipeline`을 재호출한다.
 - `status: FAIL`이면 반환된 `dag`, `composition`, `isolated`는 진단 부산물이며
