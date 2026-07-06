@@ -16,6 +16,8 @@ import time
 
 from fastmcp import FastMCP
 from starlette.responses import JSONResponse
+from starlette.routing import Route
+import uvicorn
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from concept_gate_v7 import (  # noqa: E402
@@ -643,7 +645,19 @@ def main():
     transport = os.environ.get("MCP_TRANSPORT", "stdio")
     if transport == "http":
         port = int(os.environ.get("PORT", 8000))
-        mcp.run(transport="http", host="0.0.0.0", port=port)
+        # Render health checks can use host headers that trigger MCP
+        # streamable-http DNS rebinding protection. Put /health before the
+        # MCP transport route so health checks never enter the MCP transport.
+        app = mcp.http_app(path="/mcp", transport="http")
+        app.router.routes.insert(0, Route("/health", endpoint=health_check, methods=["GET"]))
+        uvicorn.run(
+            app,
+            host="0.0.0.0",
+            port=port,
+            lifespan="on",
+            ws="websockets-sansio",
+            timeout_graceful_shutdown=2,
+        )
     else:
         mcp.run()  # stdio (로컬 개발, Codex CLI, Claude Desktop 직접 연결)
 

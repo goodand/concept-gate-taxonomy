@@ -13,6 +13,8 @@ import sys
 
 import server
 from fastmcp import Client
+from starlette.routing import Route
+from starlette.testclient import TestClient
 
 
 passed = 0
@@ -253,6 +255,13 @@ def test_direct():
     lint_large = server.lint_concepts(large_input)
     check("1-30 lint_concepts 큰 pairwise 입력 → LARGE_PAIRWISE_INPUT",
           any(i["code"] == "LARGE_PAIRWISE_INPUT" for i in lint_large["issues"]))
+
+    # 1-31. Render health route는 MCP transport security보다 먼저 처리되어야 함
+    http_app = server.mcp.http_app(path="/mcp", transport="http")
+    http_app.router.routes.insert(0, Route("/health", endpoint=server.health_check, methods=["GET"]))
+    health = TestClient(http_app).get("/health", headers={"host": "10.209.26.203:10000"})
+    check("1-31 /health 우선 라우트 → Host 무관 200",
+          health.status_code == 200 and health.json()["status"] == "healthy")
 
 
 def _json_ok(obj):
