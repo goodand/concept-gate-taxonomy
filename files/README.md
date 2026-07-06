@@ -75,7 +75,7 @@ uv pip install -e .
 .venv/bin/python test_server.py
 ```
 
-43/43 통과해야 정상. PART 1은 함수 직접 호출, PART 2는 FastMCP Client
+47/47 통과해야 정상. PART 1은 함수 직접 호출, PART 2는 FastMCP Client
 in-memory로 실제 MCP 프로토콜(tools/resources/prompts)을 검증한다.
 
 ## 도구 (Tools)
@@ -185,6 +185,32 @@ source evidence → atomic features → lint_concepts → run_pipeline
   표현만으로는 has-a를 만들지 않는다.
 - 상속 feature는 `"parent features"` 같은 placeholder로 쓰지 말고, parent의
   essential feature label을 자식에 명시적으로 반복한다.
+
+### Hosted timeout / Render 운영
+
+`run_pipeline`과 `lint_concepts` 응답에는 원인 분리용 `server_meta`가 포함된다.
+
+```json
+{
+  "server_meta": {
+    "timing_ms": 12.345,
+    "input_stats": {
+      "concept_count": 10,
+      "feature_count": 42,
+      "pairwise_comparisons": 45
+    }
+  }
+}
+```
+
+운영 권장:
+
+- Render cold start가 의심되면 먼저 `GET /health`로 깨운 뒤 재시도한다.
+- 큰 taxonomy는 `lint_concepts`를 먼저 호출한다. `LARGE_PAIRWISE_INPUT` 경고가
+  나오면 topic/root별 chunk로 나눠 검증한다.
+- hosted client는 2-3회 retry/backoff를 둔다.
+- `server_meta.timing_ms`가 낮은데 client timeout이면 cold start/네트워크 문제,
+  높으면 입력 크기/서버 처리시간 문제로 본다.
 
 ### 검증 출력 (Phase C)
 

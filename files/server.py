@@ -12,6 +12,7 @@ concept_gate_v7.py와 cg_graph_export.py는 import만 하며 수정하지 않는
 import json
 import os
 import sys
+import time
 
 from fastmcp import FastMCP
 from starlette.responses import JSONResponse
@@ -38,6 +39,52 @@ MAX_CONCEPTS = 200          # 개념 개수 상한 (O(n²) sibling 비교 방어
 MAX_FEATURES_PER_CONCEPT = 50
 MAX_EVIDENCE_LEN = 2000     # evidence 문자열 길이 상한 (메모리 방어)
 MAX_NAME_LEN = 200
+
+
+def _input_stats(concepts_json):
+    """Return lightweight input stats for timeout/performance diagnosis."""
+    if not isinstance(concepts_json, list):
+        return {
+            "concept_count": 0,
+            "feature_count": 0,
+            "essential_feature_count": 0,
+            "structural_feature_count": 0,
+            "pairwise_comparisons": 0,
+        }
+    concept_count = len(concepts_json)
+    feature_count = 0
+    essential_count = 0
+    structural_count = 0
+    for c in concepts_json:
+        if not isinstance(c, dict):
+            continue
+        feats = c.get("features", [])
+        if not isinstance(feats, list):
+            continue
+        feature_count += len(feats)
+        for f in feats:
+            if not isinstance(f, dict):
+                continue
+            if f.get("type") == "essential_feature":
+                essential_count += 1
+            elif f.get("type") == "structural_composition":
+                structural_count += 1
+    return {
+        "concept_count": concept_count,
+        "feature_count": feature_count,
+        "essential_feature_count": essential_count,
+        "structural_feature_count": structural_count,
+        "pairwise_comparisons": concept_count * (concept_count - 1) // 2,
+    }
+
+
+def _attach_server_meta(result: dict, concepts_json, started_at: float) -> dict:
+    """Attach timing and input-size metadata without changing core output."""
+    result["server_meta"] = {
+        "timing_ms": round((time.perf_counter() - started_at) * 1000, 3),
+        "input_stats": _input_stats(concepts_json),
+    }
+    return result
 
 
 def _validate_input_size(concepts_json):
@@ -256,7 +303,8 @@ def lint_concepts(concepts: list[dict]) -> dict:
     Recommended client flow:
       lint_concepts -> fix errors/warnings -> run_pipeline.
     """
-    return run_input_linter(concepts)
+    started = time.perf_counter()
+    return _attach_server_meta(run_input_linter(concepts), concepts, started)
 
 
 @mcp.tool
@@ -307,15 +355,17 @@ def run_pipeline(concepts: list[dict]) -> dict:
     status is PASS: PASS with an empty dag usually means the input
     violated the edge contract above.
     """
+    started = time.perf_counter()
     size_err = _validate_input_size(concepts)
     if size_err:
-        return size_err
+        return _attach_server_meta(size_err, concepts, started)
     parsed, err = _parse_concepts_or_error(concepts)
     if err:
-        return err
+        return _attach_server_meta(err, concepts, started)
     pipe = ConceptPipeline()
     out = pipe.run([parsed])
-    return _attach_lint(_serialize_pipeline_output(out), concepts)
+    result = _attach_lint(_serialize_pipeline_output(out), concepts)
+    return _attach_server_meta(result, concepts, started)
 
 
 def _attach_lint(result: dict, concepts) -> dict:

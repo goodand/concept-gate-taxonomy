@@ -41,6 +41,8 @@ VALID_TYPES = frozenset({
     "social_treatment",
 })
 
+PAIRWISE_WARNING_THRESHOLD = 5000
+
 PARTWHOLE_HINTS = frozenset({
     "has_part",
     "part_of",
@@ -195,6 +197,19 @@ def lint_concepts(concepts: Any) -> Dict[str, Any]:
             "concepts must be a list before calling run_pipeline.",
         ))
         return _finish(issues)
+
+    concept_count = sum(1 for c in concepts if isinstance(c, dict))
+    pair_count = concept_count * (concept_count - 1) // 2
+    if pair_count > PAIRWISE_WARNING_THRESHOLD:
+        issues.append(_issue(
+            "warning",
+            "LARGE_PAIRWISE_INPUT",
+            f"input has {concept_count} concepts ({pair_count} pairwise comparisons). Large taxonomy runs may time out on hosted MCP clients.",
+            suggestion=(
+                "Prefer chunking by local topic/root, run lint_concepts first, "
+                "then merge validated subgraphs. Use retry/backoff for hosted cold starts."
+            ),
+        ))
 
     for idx, concept in enumerate(concepts):
         if not isinstance(concept, dict):

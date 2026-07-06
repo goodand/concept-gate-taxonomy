@@ -80,7 +80,7 @@ Windows:
 .venv\Scripts\python.exe test_server.py
 ```
 
-`통과: 43/43`이 나오면 정상입니다.
+`통과: 47/47`이 나오면 정상입니다.
 
 ### 4. 현재 절대 경로 확인
 
@@ -210,3 +210,12 @@ url = "https://concept-gate-taxonomy.onrender.com/mcp"
 
 공개 서버는 무료 티어라 15분 이상 유휴 후 첫 요청이 지연될 수 있습니다.
 자주 사용할 경우 로컬 설치가 더 빠르고 안정적입니다.
+
+timeout이 발생하면 먼저 아래 health URL로 서버를 깨운 뒤 재시도하세요.
+
+```text
+https://concept-gate-taxonomy.onrender.com/health
+```
+
+큰 taxonomy 입력은 `lint_concepts`를 먼저 실행하고, `LARGE_PAIRWISE_INPUT` 경고가
+나오면 topic/root별로 나눠 `run_pipeline`을 호출하는 것이 안전합니다.

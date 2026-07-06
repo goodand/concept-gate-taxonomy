@@ -135,6 +135,9 @@ def test_direct():
     lint_ok = server.lint_concepts(DOG_CAT)
     check("1-20 lint_concepts 정상 입력 → LINT_PASS",
           lint_ok["status"] == "LINT_PASS", f"got {lint_ok['status']}")
+    check("1-20b lint_concepts server_meta 포함",
+          lint_ok["server_meta"]["input_stats"]["concept_count"] == 2
+          and lint_ok["server_meta"]["timing_ms"] >= 0)
 
     # 1-21. lint_concepts — features 누락
     lint_missing = server.lint_concepts([{"name": "어텐션"}])
@@ -235,6 +238,21 @@ def test_direct():
     clean_out = server.run_pipeline(DOG_CAT)
     check("1-29 run_pipeline 깨끗한 입력 → lint 필드 없음",
           "lint" not in clean_out, f"got keys {sorted(clean_out.keys())}")
+    check("1-29b run_pipeline server_meta 포함",
+          clean_out["server_meta"]["input_stats"]["concept_count"] == 2
+          and clean_out["server_meta"]["input_stats"]["pairwise_comparisons"] == 1
+          and clean_out["server_meta"]["timing_ms"] >= 0)
+
+    # 1-30. lint_concepts — 큰 pairwise 입력은 hosted timeout 위험 경고
+    large_input = [
+        {"name": f"c{i}", "features": [
+            {"feature": f"f{i}", "type": "essential_feature", "evidence": "source backed feature"}
+        ]}
+        for i in range(101)
+    ]
+    lint_large = server.lint_concepts(large_input)
+    check("1-30 lint_concepts 큰 pairwise 입력 → LARGE_PAIRWISE_INPUT",
+          any(i["code"] == "LARGE_PAIRWISE_INPUT" for i in lint_large["issues"]))
 
 
 def _json_ok(obj):
@@ -362,6 +380,10 @@ async def test_mcp_protocol():
               and "lint" in inject_result.data
               and any(i["code"] == "NO_SHARED_ESSENTIAL_LABELS"
                       for i in inject_result.data["lint"]["issues"]))
+        check("2-15 run_pipeline 프로토콜 → server_meta 포함",
+              "server_meta" in inject_result.data
+              and inject_result.data["server_meta"]["input_stats"]["concept_count"] == 2
+              and inject_result.data["server_meta"]["timing_ms"] >= 0)
 
 
 # ═══════════════════════════════════════════════════════
