@@ -16,8 +16,6 @@ import time
 
 from fastmcp import FastMCP
 from starlette.responses import JSONResponse
-from starlette.routing import Route
-import uvicorn
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from concept_gate_v7 import (  # noqa: E402
@@ -194,20 +192,6 @@ mcp.add_middleware(BearerTokenAuth())
 @mcp.custom_route("/health", methods=["GET"])
 async def health_check(request):
     return JSONResponse({"status": "healthy", "service": "conceptgate-mcp"})
-
-
-def create_app():
-    """Create the ASGI app used by hosted HTTP deployments.
-
-    /health is registered before /mcp so Render health checks do not enter the
-    MCP streamable-http transport and cannot be rejected by Host validation.
-    """
-    app = mcp.http_app(path="/mcp", transport="http")
-    app.router.routes.insert(0, Route("/health", endpoint=health_check, methods=["GET"]))
-    return app
-
-
-app = create_app()
 
 
 # ═══════════════════════════════════════════════════════
@@ -659,14 +643,7 @@ def main():
     transport = os.environ.get("MCP_TRANSPORT", "stdio")
     if transport == "http":
         port = int(os.environ.get("PORT", 8000))
-        uvicorn.run(
-            app,
-            host="0.0.0.0",
-            port=port,
-            lifespan="on",
-            ws="websockets-sansio",
-            timeout_graceful_shutdown=2,
-        )
+        mcp.run(transport="http", host="0.0.0.0", port=port)
     else:
         mcp.run()  # stdio (로컬 개발, Codex CLI, Claude Desktop 직접 연결)
 

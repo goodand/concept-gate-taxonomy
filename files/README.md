@@ -75,7 +75,7 @@ uv pip install -e .
 .venv/bin/python test_server.py
 ```
 
-48/48 통과해야 정상. PART 1은 함수 직접 호출, PART 2는 FastMCP Client
+47/47 통과해야 정상. PART 1은 함수 직접 호출, PART 2는 FastMCP Client
 in-memory로 실제 MCP 프로토콜(tools/resources/prompts)을 검증한다.
 
 ## 도구 (Tools)
