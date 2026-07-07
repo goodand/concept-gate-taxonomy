@@ -40,6 +40,36 @@ MAX_FEATURES_PER_CONCEPT = 50
 MAX_EVIDENCE_LEN = 2000     # evidence 문자열 길이 상한 (메모리 방어)
 MAX_NAME_LEN = 200
 
+DEFAULT_ALLOWED_HOSTS = (
+    "127.0.0.1",
+    "localhost",
+    "::1",
+    "0.0.0.0",
+    "*.onrender.com",
+    "concept-gate-taxonomy.onrender.com",
+    "conceptgate-mcp.onrender.com",
+)
+DEFAULT_ALLOWED_ORIGINS = (
+    "https://chatgpt.com",
+    "https://chat.openai.com",
+    "https://platform.openai.com",
+)
+
+
+def _csv_env(name: str, defaults: tuple[str, ...]) -> list[str]:
+    raw = os.environ.get(name)
+    if not raw:
+        return list(defaults)
+    values = [v.strip() for v in raw.split(",") if v.strip()]
+    return values or list(defaults)
+
+
+def _bool_env(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in {"0", "false", "no", "off"}
+
 
 def _input_stats(concepts_json):
     """Return lightweight input stats for timeout/performance diagnosis."""
@@ -643,7 +673,14 @@ def main():
     transport = os.environ.get("MCP_TRANSPORT", "stdio")
     if transport == "http":
         port = int(os.environ.get("PORT", 8000))
-        mcp.run(transport="http", host="0.0.0.0", port=port)
+        mcp.run(
+            transport="http",
+            host="0.0.0.0",
+            port=port,
+            host_origin_protection=_bool_env("MCP_HOST_ORIGIN_PROTECTION", True),
+            allowed_hosts=_csv_env("MCP_ALLOWED_HOSTS", DEFAULT_ALLOWED_HOSTS),
+            allowed_origins=_csv_env("MCP_ALLOWED_ORIGINS", DEFAULT_ALLOWED_ORIGINS),
+        )
     else:
         mcp.run()  # stdio (로컬 개발, Codex CLI, Claude Desktop 직접 연결)
 
