@@ -196,6 +196,20 @@ async def health_check(request):
     return JSONResponse({"status": "healthy", "service": "conceptgate-mcp"})
 
 
+def create_app():
+    """Create the ASGI app used by hosted HTTP deployments.
+
+    /health is registered before /mcp so Render health checks do not enter the
+    MCP streamable-http transport and cannot be rejected by Host validation.
+    """
+    app = mcp.http_app(path="/mcp", transport="http")
+    app.router.routes.insert(0, Route("/health", endpoint=health_check, methods=["GET"]))
+    return app
+
+
+app = create_app()
+
+
 # ═══════════════════════════════════════════════════════
 # 헬퍼: 입력 파싱 (반드시 ParseGate 경유)
 # ═══════════════════════════════════════════════════════
@@ -645,11 +659,6 @@ def main():
     transport = os.environ.get("MCP_TRANSPORT", "stdio")
     if transport == "http":
         port = int(os.environ.get("PORT", 8000))
-        # Render health checks can use host headers that trigger MCP
-        # streamable-http DNS rebinding protection. Put /health before the
-        # MCP transport route so health checks never enter the MCP transport.
-        app = mcp.http_app(path="/mcp", transport="http")
-        app.router.routes.insert(0, Route("/health", endpoint=health_check, methods=["GET"]))
         uvicorn.run(
             app,
             host="0.0.0.0",
