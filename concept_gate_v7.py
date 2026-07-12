@@ -109,6 +109,28 @@ class OntoCleanDependence(Enum):
     INDEPENDENT = "independent"
     DEPENDENT   = "dependent"
 
+# ── UFO stereotype 간 허용 specialization (parent -> 허용 child 집합) ──
+# gUFO 정합: Category는 non-sortal(rigid)로 identity를 제공하지 않으면서 여러 Kind를
+# 포괄한다 (gUFO 공식 예: "PhysicalObject may be considered a gufo:Category,
+# encompassing objects such as cars"). Kind->Role/Phase도 유효한 specialization.
+# category 필드가 이 stereotype 집합 밖의 free-form 문자열(예: mechanism,
+# model_architecture)이면 기존 동작대로 불일치를 위반으로 본다 (M2 계약 유지).
+UFO_SPECIALIZATION_MATRIX: Dict[str, Set[str]] = {
+    "category":   {"category", "kind", "subkind", "role", "phase",
+                   "mixin", "rolemixin", "phasemixin"},
+    "mixin":      {"kind", "subkind", "role", "phase",
+                   "mixin", "rolemixin", "phasemixin"},
+    "rolemixin":  {"role", "rolemixin"},
+    "phasemixin": {"phase", "phasemixin"},
+    "kind":       {"subkind", "role", "phase"},
+    "subkind":    {"subkind", "role", "phase"},
+    "role":       {"role"},
+    "phase":      {"phase"},
+}
+UFO_STEREOTYPES: Set[str] = set(UFO_SPECIALIZATION_MATRIX) | {
+    c for cs in UFO_SPECIALIZATION_MATRIX.values() for c in cs
+}
+
 @dataclass
 class OntoCleanMeta:
     """Optional OntoClean-style metaproperties for formal is-a edge validation.
@@ -451,9 +473,15 @@ class ConceptGate:
             except Exception:
                 rule_refs.append({"base_rule": "R22", "implementation_rule": "RA02"})
 
-        if (pm.identity == OntoCleanIdentity.DOES_NOT_SUPPLY
-                and cm.identity == OntoCleanIdentity.SUPPLIES_IDENTITY):
-            violations.append("identity: non-identity-supplying parent cannot subsume identity supplier")
+        # OntoClean: identity criterion은 하향 상속된다. +I 부모 아래 -I 자식은 모순.
+        # (기존 규칙은 방향이 반대였다 — Category(-I) 부모가 Kind(+I) 자식을 포괄하는
+        #  gUFO 표준 패턴을 잘못 거부했음. gUFO: 비sortal은 identity를 제공하지 않되
+        #  서로 다른 identity 원리를 따르는 것들을 분류한다.)
+        if (pm.identity in (OntoCleanIdentity.SUPPLIES_IDENTITY,
+                            OntoCleanIdentity.CARRIES_IDENTITY)
+                and cm.identity == OntoCleanIdentity.DOES_NOT_SUPPLY):
+            violations.append("identity: identity-carrying parent cannot subsume "
+                              "non-identity child (identity criteria are inherited)")
 
         if pm.unity == OntoCleanUnity.ANTI_UNITY and cm.unity == OntoCleanUnity.UNIFIED_WHOLE:
             violations.append("unity: anti-unity parent cannot subsume unified whole")
@@ -463,7 +491,17 @@ class ConceptGate:
             violations.append("dependence: dependent parent cannot subsume independent child")
 
         if pm.category and cm.category and pm.category != cm.category:
-            violations.append(f'category: {pm.category} parent vs {cm.category} child')
+            p_cat, c_cat = pm.category.strip().lower(), cm.category.strip().lower()
+            if p_cat in UFO_STEREOTYPES and c_cat in UFO_STEREOTYPES:
+                # 둘 다 UFO stereotype이면 허용 행렬로 판정
+                # (Category->Kind, Kind->Role 등 유효한 cross-stereotype 허용)
+                if c_cat not in UFO_SPECIALIZATION_MATRIX.get(p_cat, set()):
+                    violations.append(
+                        f'category: UFO stereotype "{pm.category}" parent cannot '
+                        f'subsume "{cm.category}" child')
+            else:
+                # free-form category(의미 도메인)는 기존대로 불일치를 위반으로 처리
+                violations.append(f'category: {pm.category} parent vs {cm.category} child')
 
         if violations:
             return GateResult("OntoClean Meta Gate", False,
@@ -1151,11 +1189,12 @@ def _ufo_discrimination_guide(mode: ExpansionType) -> str:
         "(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → structural_composition\n"
         "(2) 멤버-집합: 나무는 숲의 구성원 → structural_composition\n"
         "(3) 부분-질량: 조각은 파이의 부분 → structural_composition\n"
-        "(4) 재료-대상: 철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\n"
+        "(4) 재료-대상: 철은 칼의 재료 → structural_composition "
+        "(재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)\n"
         "(5) 단계-과정: 유충은 변태의 단계 → contextual_usage\n"
         "(6) 장소-영역: 오아시스는 사막의 부분 → locational\n"
-        "주의: 재료-대상(4)만 essential_feature 가능. (1)~(3)은 structural_composition, "
-        "(5)는 contextual_usage, (6)은 locational을 사용하세요.\n"
+        "주의: (1)~(4)는 structural_composition, (5)는 contextual_usage, "
+        "(6)은 locational을 사용하세요. essential_feature는 'X는 Y의 일종'(is-a)에만.\n"
         "</part_whole_patterns>\n"
     )
     if mode == ExpansionType.DEPTH:
