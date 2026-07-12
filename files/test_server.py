@@ -277,6 +277,9 @@ async def test_mcp_protocol():
         check("2-1 도구 6개 등록",
               {"lint_concepts", "run_pipeline", "expand", "classify_parents", "export_graph", "analyze_expansion"} <= tool_names,
               f"got {tool_names}")
+        check("2-1b normalizer 도구 3개 등록",
+              {"make_snapshot", "lookup_senses", "assemble_concepts"} <= tool_names,
+              f"got {tool_names}")
 
         # 2-2. 리소스 목록
         resources = await client.list_resources()
@@ -287,6 +290,9 @@ async def test_mcp_protocol():
                   "conceptgate://pipeline-status-codes",
                   "conceptgate://client-guide",
               } <= res_uris,
+              f"got {res_uris}")
+        check("2-2b normalizer 리소스 2개 등록",
+              {"normalizer://protocol/v1", "normalizer://relations/v1"} <= res_uris,
               f"got {res_uris}")
 
         # 2-3. 프롬프트 목록
@@ -386,6 +392,84 @@ async def test_mcp_protocol():
               and inject_result.data["server_meta"]["timing_ms"] >= 0)
 
 
+async def test_normalizer_protocol():
+    print("\n[PART 3] Normalizer surface (자연어 → evidence-carrying concepts)")
+
+    async with Client(server.mcp) as client:
+        # 3-1. protocol resource 읽기
+        proto = await client.read_resource("normalizer://protocol/v1")
+        proto_text = proto[0].text
+        check("3-1 protocol resource에 단계 순서 명시",
+              "make_snapshot" in proto_text and "assemble_concepts" in proto_text)
+
+        # 3-2. relation crosswalk resource — feature_activity는 unmapped
+        rel = await client.read_resource("normalizer://relations/v1")
+        rel_data = json.loads(rel[0].text)
+        check("3-2 crosswalk: feature_activity → unmapped",
+              rel_data["crosswalk"]["feature_activity"]["mapping_status"] == "unmapped")
+        check("3-2b crosswalk: stuff_object → material_of / structural",
+              rel_data["crosswalk"]["stuff_object"]["relation_hint"] == "material_of"
+              and rel_data["crosswalk"]["stuff_object"]["feature_type"]
+              == "structural_composition")
+
+        # 3-3. make_snapshot → 결정론 해시
+        snap = (await client.call_tool(
+            "make_snapshot", {"text": "개는 갯과의 가축화된 동물이다."})).data
+        check("3-3 make_snapshot → sha256 고정", snap["ok"] and
+              len(snap["snapshot"]["sha256"]) == 64)
+
+        # 3-4. lookup_senses → 다의어 후보
+        senses = (await client.call_tool("lookup_senses", {"surface": "개"})).data
+        check("3-4 lookup_senses: 개 → 2 sense 후보", len(senses["candidates"]) == 2)
+
+        # 3-5. assemble_concepts happy-path → lint 통과 concepts
+        t = snap["snapshot"]["text"]
+        j = t.find("가축화된 동물이다")
+        i = t.find("갯과의 가축화된")
+        bundle = {"snapshot": snap["snapshot"], "concepts": [
+            {"name": "동물", "features": [
+                {"label": "동물", "relation": "is_a",
+                 "evidence_span": {"start": j, "end": j + 9}}]},
+            {"name": "개", "features": [
+                {"label": "동물", "relation": "is_a",
+                 "evidence_span": {"start": j, "end": j + 9}},
+                {"label": "갯과", "relation": "is_a",
+                 "evidence_span": {"start": i, "end": i + 8}}]},
+        ]}
+        asm = (await client.call_tool("assemble_concepts", {"bundle": bundle})).data
+        check("3-5 assemble → complete + lint 통과",
+              asm["ok"] and asm["stage"] == "complete", f"got {asm}")
+        check("3-5b 모든 claim이 L1(source_span_verified)",
+              all(c["verification_status"] == "source_span_verified"
+                  for c in asm["claims"]))
+
+        # 3-6. 조립 산출물이 run_pipeline을 통과 (end-to-end via MCP)
+        gate = (await client.call_tool(
+            "run_pipeline",
+            {"concepts": asm["concepts_json"]["concepts"]})).data
+        check("3-6 조립 concepts → run_pipeline PASS + is-a edge",
+              gate["status"] == "PASS"
+              and gate["dag"].get("동물") == ["개"], f"got {gate['status']}, {gate['dag']}")
+
+        # 3-7. 위조된 span은 selection stage에서 거부 (원인 단계 식별)
+        bad = {"snapshot": snap["snapshot"], "concepts": [
+            {"name": "개", "features": [
+                {"label": "동물", "relation": "is_a",
+                 "evidence_span": {"start": 0, "end": 999999}}]}]}
+        bad_res = (await client.call_tool("assemble_concepts", {"bundle": bad})).data
+        check("3-7 위조 span → selection stage 거부",
+              not bad_res["ok"] and bad_res["stage"] == "selection")
+
+        # 3-8. feature_activity 관계는 crosswalk에서 거부
+        fa = {"snapshot": snap["snapshot"], "concepts": [
+            {"name": "쇼핑", "features": [
+                {"label": "지불", "relation": "feature_activity",
+                 "evidence_text": "지불은 쇼핑의 일부 활동이다"}]}]}
+        fa_res = (await client.call_tool("assemble_concepts", {"bundle": fa})).data
+        check("3-8 feature_activity → crosswalk 거부",
+              not fa_res["ok"] and fa_res["stage"] == "crosswalk")
+
+
 # ═══════════════════════════════════════════════════════
 # 실행
 # ═══════════════════════════════════════════════════════
@@ -393,6 +477,7 @@ async def test_mcp_protocol():
 if __name__ == "__main__":
     test_direct()
     asyncio.run(test_mcp_protocol())
+    asyncio.run(test_normalizer_protocol())
 
     total = passed + failed
     print(f"\n{'=' * 57}")
