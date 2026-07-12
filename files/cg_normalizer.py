@@ -58,6 +58,12 @@ def make_snapshot(text: str, uri: str = "local:inline",
     stage = "snapshot"
     if not isinstance(text, str) or not text.strip():
         return _fail(stage, [_err(stage, "EMPTY_TEXT", "빈 원문")])
+    if not isinstance(uri, str) or not uri.strip():
+        return _fail(stage, [_err(stage, "INVALID_URI",
+                                  {"got": type(uri).__name__})])
+    if version is not None and not isinstance(version, str):
+        return _fail(stage, [_err(stage, "INVALID_VERSION",
+                                  {"got": type(version).__name__})])
     if len(text) > MAX_TEXT_CHARS:
         return _fail(stage, [_err(stage, "TEXT_TOO_LARGE",
                                   {"chars": len(text), "max": MAX_TEXT_CHARS})])
@@ -145,8 +151,19 @@ def validate_selection(selection: Dict[str, Any],
                  "quote": str (optional, 있으면 span 내용과 일치해야 함)}
     """
     stage = "selection"
+    # 타입 가드 — 변형 입력은 crash가 아니라 구조화 오류로 (2026-07-13 fuzz 87건)
+    if not isinstance(selection, dict):
+        return _fail(stage, [_err(stage, "SELECTION_NOT_OBJECT",
+                                  {"got": type(selection).__name__})])
+    if not isinstance(snapshot, dict):
+        return _fail(stage, [_err(stage, "SNAPSHOT_NOT_OBJECT",
+                                  {"got": type(snapshot).__name__})])
+    if not isinstance(candidates, list):
+        return _fail(stage, [_err(stage, "CANDIDATES_NOT_LIST",
+                                  {"got": type(candidates).__name__})])
     errors = []
-    ids = {c["sense_id"] for c in candidates}
+    ids = {c["sense_id"] for c in candidates
+           if isinstance(c, dict) and "sense_id" in c}
     sid = selection.get("sense_id")
     if sid not in ids and not str(sid or "").startswith("local:"):
         errors.append(_err(stage, "SENSE_NOT_IN_CANDIDATES",
@@ -154,19 +171,23 @@ def validate_selection(selection: Dict[str, Any],
     span = selection.get("evidence_span")
     text = snapshot.get("text", "")
     if span is not None:
-        s, e = span.get("start"), span.get("end")
-        if not (isinstance(s, int) and isinstance(e, int)
-                and 0 <= s < e <= len(text)):
-            errors.append(_err(stage, "SPAN_OUT_OF_BOUNDS",
-                               {"span": span, "text_chars": len(text)}))
-        elif e - s > MAX_SPAN_CHARS:
-            errors.append(_err(stage, "SPAN_TOO_LONG", {"chars": e - s}))
+        if not isinstance(span, dict):
+            errors.append(_err(stage, "SPAN_NOT_OBJECT",
+                               {"got": type(span).__name__}))
         else:
-            quote = selection.get("quote")
-            if quote is not None and text[s:e] != quote:
-                errors.append(_err(stage, "QUOTE_MISMATCH",
-                                   {"expected": text[s:e][:80],
-                                    "got": str(quote)[:80]}))
+            s, e = span.get("start"), span.get("end")
+            if not (isinstance(s, int) and isinstance(e, int)
+                    and 0 <= s < e <= len(text)):
+                errors.append(_err(stage, "SPAN_OUT_OF_BOUNDS",
+                                   {"span": span, "text_chars": len(text)}))
+            elif e - s > MAX_SPAN_CHARS:
+                errors.append(_err(stage, "SPAN_TOO_LONG", {"chars": e - s}))
+            else:
+                quote = selection.get("quote")
+                if quote is not None and text[s:e] != quote:
+                    errors.append(_err(stage, "QUOTE_MISMATCH",
+                                       {"expected": text[s:e][:80],
+                                        "got": str(quote)[:80]}))
     claimed_hash = selection.get("source_sha256")
     if claimed_hash and claimed_hash != snapshot.get("sha256"):
         errors.append(_err(stage, "SOURCE_HASH_MISMATCH",
@@ -266,12 +287,18 @@ def assemble_concepts(bundle: Dict[str, Any]) -> Dict[str, Any]:
     성공: {"ok", "stage": "complete", "concepts_json", "claims", "lint"}
     실패: 첫 실패 stage의 오류 목록 (원인 단계 명시).
     """
+    # -- assemble stage 검증 --
+    stage = "assemble"
+    if not isinstance(bundle, dict):
+        return _fail(stage, [_err(stage, "BUNDLE_NOT_OBJECT",
+                                  {"got": type(bundle).__name__})])
     snapshot = bundle.get("snapshot") or {}
+    if not isinstance(snapshot, dict):
+        return _fail(stage, [_err(stage, "SNAPSHOT_NOT_OBJECT",
+                                  {"got": type(snapshot).__name__})])
     text = snapshot.get("text", "")
     raw_concepts = bundle.get("concepts")
 
-    # -- assemble stage 검증 --
-    stage = "assemble"
     errors: List[Dict[str, Any]] = []
     if not isinstance(raw_concepts, list) or not raw_concepts:
         return _fail(stage, [_err(stage, "NO_CONCEPTS", "concepts 비어 있음")])
@@ -281,17 +308,32 @@ def assemble_concepts(bundle: Dict[str, Any]) -> Dict[str, Any]:
 
     out_concepts, claims = [], []
     for ci, rc in enumerate(raw_concepts):
+        if not isinstance(rc, dict):
+            # cg_input_linter와 동일 어휘 (CONCEPT_NOT_OBJECT)
+            errors.append(_err(stage, "CONCEPT_NOT_OBJECT",
+                               {"index": ci, "got": type(rc).__name__}))
+            continue
         name = unicodedata.normalize("NFC", str(rc.get("name", "")).strip())
         if not name:
             errors.append(_err(stage, "MISSING_NAME", {"index": ci}))
             continue
         feats_in = rc.get("features") or []
+        if not isinstance(feats_in, list):
+            errors.append(_err(stage, "FEATURES_NOT_LIST",
+                               {"concept": name,
+                                "got": type(feats_in).__name__}))
+            continue
         if len(feats_in) > MAX_FEATURES_PER_CONCEPT:
             errors.append(_err(stage, "TOO_MANY_FEATURES",
                                {"concept": name, "n": len(feats_in)}))
             continue
         feats_out = []
         for fi, f in enumerate(feats_in):
+            if not isinstance(f, dict):
+                errors.append(_err(stage, "FEATURE_NOT_OBJECT",
+                                   {"concept": name, "index": fi,
+                                    "got": type(f).__name__}))
+                continue
             label = unicodedata.normalize("NFC", str(f.get("label", "")).strip())
             if not label:
                 errors.append(_err(stage, "MISSING_LABEL",
@@ -310,6 +352,11 @@ def assemble_concepts(bundle: Dict[str, Any]) -> Dict[str, Any]:
             # evidence 확정 (L1: span이 있으면 원문 대조)
             span = f.get("evidence_span")
             if span is not None:
+                if not isinstance(span, dict):
+                    errors.append(_err("selection", "SPAN_NOT_OBJECT",
+                                       {"concept": name, "label": label,
+                                        "got": type(span).__name__}))
+                    continue
                 s, e_ = span.get("start"), span.get("end")
                 if not (isinstance(s, int) and isinstance(e_, int)
                         and 0 <= s < e_ <= len(text)):
@@ -434,7 +481,13 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
     실패: stage 오류 목록 (owl-map 또는 selection).
     """
     stage = "owl-map"
+    if not isinstance(bundle, dict):
+        return _fail(stage, [_err(stage, "BUNDLE_NOT_OBJECT",
+                                  {"got": type(bundle).__name__})])
     snapshot = bundle.get("snapshot") or {}
+    if not isinstance(snapshot, dict):
+        return _fail(stage, [_err(stage, "SNAPSHOT_NOT_OBJECT",
+                                  {"got": type(snapshot).__name__})])
     text = snapshot.get("text", "")
     raw = bundle.get("concepts")
     if not isinstance(raw, list) or not raw:
@@ -444,7 +497,7 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
                                   {"n": len(raw), "max": MAX_CONCEPTS})])
 
     names = {unicodedata.normalize("NFC", str(c.get("name", "")).strip())
-             for c in raw if c.get("name")}
+             for c in raw if isinstance(c, dict) and c.get("name")}
     errors: List[Dict[str, Any]] = []
     out_concepts, claims = [], []
     obj_props, data_props = set(), set()
@@ -453,6 +506,10 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
     def _evidence(spec, ctx):
         span = spec.get("evidence_span")
         if span is not None:
+            if not isinstance(span, dict):
+                errors.append(_err("selection", "SPAN_NOT_OBJECT",
+                                   {**ctx, "got": type(span).__name__}))
+                return None, None
             s, e = span.get("start"), span.get("end")
             if not (isinstance(s, int) and isinstance(e, int)
                     and 0 <= s < e <= len(text)):
@@ -460,7 +517,8 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
                                    {**ctx, "span": span}))
                 return None, None
             return text[s:e], "source_span_verified"
-        ev = str(spec.get("evidence_text", "")).strip()
+        ev = spec.get("evidence_text")
+        ev = ev.strip() if isinstance(ev, str) else ""
         return (ev or None), "unverified"
 
     for ci, rc in enumerate(raw):
@@ -476,8 +534,11 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
             errors.append(_err(stage, "BAD_DEFINITION_KIND",
                                {"concept": name, "got": dkind}))
             continue
-        if dkind == "defined" and not str(rc.get("kind_rationale", "")).strip():
-            # ≡ 는 강한 주장 — "충분조건" 판단 근거 없이 받지 않는다
+        rationale = rc.get("kind_rationale")
+        if dkind == "defined" and not (isinstance(rationale, str)
+                                       and rationale.strip()):
+            # ≡ 는 강한 주장 — "충분조건" 판단 근거 없이 받지 않는다.
+            # isinstance 검사 필수: str(None)="None"이 통과하는 구멍 방지.
             errors.append(_err(stage, "MISSING_KIND_RATIONALE",
                                {"concept": name,
                                 "hint": "defined(≡)에는 왜 필요충분인지 근거 필수"}))
@@ -491,8 +552,17 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
         for lst_name, src, dst in (("differentia", rc.get("differentia") or [], diff),
                                    ("necessary_only",
                                     rc.get("necessary_only") or [], nec)):
+            if not isinstance(src, list):
+                errors.append(_err(stage, "RESTRICTIONS_NOT_LIST",
+                                   {"concept": name, "list": lst_name,
+                                    "got": type(src).__name__}))
+                continue
             for fi, spec in enumerate(src):
                 ctx = {"concept": name, "list": lst_name, "index": fi}
+                if not isinstance(spec, dict):
+                    errors.append(_err(stage, "RESTRICTION_NOT_OBJECT",
+                                       {**ctx, "got": type(spec).__name__}))
+                    continue
                 _validate_owl_restriction(spec, names, stage, errors, ctx)
                 ev, vstatus = _evidence(spec, ctx)
                 if ev is None:
@@ -526,12 +596,17 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
         if nec:
             oc["necessary_only"] = nec
         out_concepts.append(oc)
-        for other in rc.get("disjoint_with") or []:
-            if other not in names:
-                errors.append(_err(stage, "UNKNOWN_CLASS_REF",
-                                   {"concept": name, "disjoint_with": other}))
-            else:
-                disjoint_groups.append(sorted([name, other]))
+        dw = rc.get("disjoint_with") or []
+        if not isinstance(dw, list):
+            errors.append(_err(stage, "DISJOINT_NOT_LIST",
+                               {"concept": name, "got": type(dw).__name__}))
+        else:
+            for other in dw:
+                if other not in names:
+                    errors.append(_err(stage, "UNKNOWN_CLASS_REF",
+                                       {"concept": name, "disjoint_with": other}))
+                else:
+                    disjoint_groups.append(sorted([name, other]))
 
     if errors:
         return _fail(errors[0]["stage"], errors)
