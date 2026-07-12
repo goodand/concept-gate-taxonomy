@@ -25,6 +25,11 @@ ACCEPTED_ALLOWLIST = {
     "map_owl(differentia=NoneType)",    # 목록 미제공 → 빈 목록
     "map_owl(disjoint_with=NoneType)",  # 목록 미제공 → 빈 목록
     "map_owl(kind_rationale=str)",      # rationale은 원래 str
+    "owl.build(name=str)",              # 유효한 클래스명
+    "owl.build(genus=NoneType)",        # genus 미제공 (primitive 허용)
+    "owl.build(differentia=NoneType)",  # 목록 미제공 → 빈 목록
+    "owl.build(disjoint_groups=NoneType)",  # 목록 미제공 → 빈 목록
+    "owl.build(objprop_item=str)",      # property명은 원래 str
 }
 
 

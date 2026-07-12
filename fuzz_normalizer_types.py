@@ -100,6 +100,83 @@ for b in BAD:
               "differentia": [{"property": "p", "restriction": "value",
                                "filler": True, "evidence_text": "근거근거"}]}]}))
 
+# ── cg_owl.build_ontology (Java 불필요 — build 단계만, reasoner 미실행) ──
+# 배경: classify_owl 경계는 이전 fuzz 범위 밖이었고 concepts=[7] 등이
+# unhandled TypeError로 crash했다 (아키텍처 분석 §7.5).
+try:
+    import cg_owl as OWL
+except ImportError:
+    OWL = None
+    print("[skip] owlready2 미설치 — cg_owl 표면 fuzz 생략", file=sys.stderr)
+
+if OWL is not None:
+    def owlcase(name, fn):
+        """SerializationError → 구조화 오류로 정규화 (서버 계약과 동일)."""
+        def wrapped(fn=fn):
+            try:
+                fn()
+            except OWL.SerializationError as exc:
+                return {"ok": False, "stage": "owl-serialize",
+                        "errors": [{"stage": "owl-serialize",
+                                    "code": "SERIALIZATION_ERROR",
+                                    "detail": str(exc)}]}
+            return {"ok": True}
+        case(name, wrapped)
+
+    def _build(**kw):
+        args = dict(concepts=[], object_properties=[], data_properties=[],
+                    disjoint_groups=[])
+        args.update(kw)
+        return OWL.build_ontology(**args)
+
+    for b in BAD:
+        owlcase(f"owl.build(concepts={type(b).__name__})",
+                lambda b=b: _build(concepts=b))
+        owlcase(f"owl.build(concept_item={type(b).__name__})",
+                lambda b=b: _build(concepts=[b]))
+        owlcase(f"owl.build(name={type(b).__name__})",
+                lambda b=b: _build(concepts=[{"name": b}]))
+        owlcase(f"owl.build(genus={type(b).__name__})",
+                lambda b=b: _build(concepts=[{"name": "X", "genus": b}]))
+        owlcase(f"owl.build(differentia={type(b).__name__})",
+                lambda b=b: _build(concepts=[{"name": "X", "differentia": b}]))
+        owlcase(f"owl.build(diff_item={type(b).__name__})",
+                lambda b=b: _build(concepts=[{"name": "X",
+                                              "differentia": [b]}]))
+        owlcase(f"owl.build(filler={type(b).__name__})",
+                lambda b=b: _build(
+                    concepts=[{"name": "X", "differentia": [
+                        {"property": "p", "restriction": "some",
+                         "filler": b}]}],
+                    object_properties=["p"]))
+        owlcase(f"owl.build(property={type(b).__name__})",
+                lambda b=b: _build(concepts=[{"name": "X", "differentia": [
+                    {"property": b, "restriction": "some", "filler": "X"}]}]))
+        owlcase(f"owl.build(objprop_item={type(b).__name__})",
+                lambda b=b: _build(object_properties=[b]))
+        owlcase(f"owl.build(dataprop_item={type(b).__name__})",
+                lambda b=b: _build(data_properties=[b]))
+        owlcase(f"owl.build(disjoint_groups={type(b).__name__})",
+                lambda b=b: _build(disjoint_groups=b))
+        owlcase(f"owl.build(disjoint_group_item={type(b).__name__})",
+                lambda b=b: _build(disjoint_groups=[b]))
+        owlcase(f"owl.build(disjoint_name={type(b).__name__})",
+                lambda b=b: _build(concepts=[{"name": "X"}],
+                                   disjoint_groups=[[b]]))
+    owlcase("owl.build(value_filler=dict)",
+            lambda: _build(
+                concepts=[{"name": "X", "differentia": [
+                    {"property": "p", "restriction": "value",
+                     "filler": {"a": 1}}]}],
+                data_properties=[{"name": "p"}]))
+    owlcase("owl.build(unknown_disjoint_class)",
+            lambda: _build(concepts=[{"name": "X"}],
+                           disjoint_groups=[["X", "Ghost"]]))
+    owlcase("owl.build(necessary_only=str)",
+            lambda: _build(concepts=[{"name": "X",
+                                      "necessary_only": "문자열"}]))
+
+
 def run():
     crash, structured, accepted = [], [], []
     for name, fn in CASES:

@@ -509,6 +509,26 @@ async def test_normalizer_protocol():
                   cls_res["errors"][0]["code"] in
                   ("REASONER_UNAVAILABLE", "OWLREADY2_UNAVAILABLE"))
 
+        # 3-12. classify_owl 경계 가드 — 변형 payload는 crash가 아니라
+        # 구조화 오류 (아키텍처 분석 §7.5: concepts=[7]이 TypeError였음)
+        g1 = (await client.call_tool("classify_owl",
+                                     {"owl": {"concepts": [7]}})).data
+        check("3-12a classify_owl: concept_item=int → 구조화 오류",
+              not g1["ok"] and g1["stage"] == "owl-serialize",
+              f"got {g1}")
+        g2 = (await client.call_tool(
+            "classify_owl", {"owl": {"data_properties": [7]}})).data
+        check("3-12b classify_owl: data_property=int → 구조화 오류",
+              not g2["ok"] and any(e["code"] == "DATA_PROPERTY_NOT_OBJECT"
+                                   for e in g2["errors"]),
+              f"got {g2}")
+        g3 = (await client.call_tool("classify_owl", {"owl": {
+            "concepts": [{"name": "X", "definition_kind": "defined",
+                          "differentia": [7]}]}})).data
+        check("3-12c classify_owl: diff_item=int → 구조화 오류",
+              not g3["ok"] and g3["stage"] == "owl-serialize",
+              f"got {g3}")
+
 
 # ═══════════════════════════════════════════════════════
 # 실행

@@ -727,12 +727,26 @@ def classify_owl(owl: dict) -> dict:
                 "errors": [{"stage": "owl-classify",
                             "code": "OWLREADY2_UNAVAILABLE",
                             "detail": str(exc)}]}
+    if not isinstance(owl, dict):
+        return {"ok": False, "stage": "owl-serialize",
+                "errors": [{"stage": "owl-serialize",
+                            "code": "OWL_NOT_OBJECT",
+                            "detail": f"owl must be dict, "
+                                      f"got {type(owl).__name__}"}]}
+    raw_dp = owl.get("data_properties") or []
+    if not isinstance(raw_dp, list) or any(
+            not isinstance(d, dict) for d in raw_dp):
+        return {"ok": False, "stage": "owl-serialize",
+                "errors": [{"stage": "owl-serialize",
+                            "code": "DATA_PROPERTY_NOT_OBJECT",
+                            "detail": "data_properties must be a list of "
+                                      "objects"}]}
     try:
         world, onto, _ = cg_owl.build_ontology(
             concepts=owl.get("concepts", []),
             object_properties=owl.get("object_properties", []),
             data_properties=[{**d, "functional": True, "range": bool}
-                             for d in owl.get("data_properties", [])],
+                             for d in raw_dp],
             disjoint_groups=owl.get("disjoint_groups", []))
     except cg_owl.SerializationError as exc:
         return {"ok": False, "stage": "owl-serialize",
