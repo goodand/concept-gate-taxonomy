@@ -698,6 +698,58 @@ def assemble_concepts(bundle: dict) -> dict:
     return cg_normalizer.assemble_concepts(bundle)
 
 
+@mcp.tool
+def map_owl(bundle: dict) -> dict:
+    """typed 개념 제안(definition_kind + differentia)을 OWL 직렬화 입력으로
+    검증·변환한다 (stage: owl-map). docs/owl-serialization-spec.md 참조.
+
+    핵심 계약: definition_kind는 너의 '제안'이다 —
+    primitive(⊑, 자연종)는 is-a를 유도하지 않고, defined(≡, 형식개념)만
+    reasoner가 is-a를 유도한다. defined에는 kind_rationale이 필수.
+    성공 출력의 owl 필드는 classify_owl에 바로 넣을 수 있다.
+    """
+    return cg_normalizer.map_to_owl(bundle)
+
+
+@mcp.tool
+def classify_owl(owl: dict) -> dict:
+    """map_owl 출력을 풀 DL reasoner(HermiT)로 분류한다.
+
+    반환: {ok, hierarchy: {class: [유도된 부모들]}, unsatisfiable: [...]}.
+    subsumption의 소유자는 이 reasoner다 — OWL 2 DL 의미론에 대해
+    건전·완전하다. Java가 없는 환경(예: 기본 Render)에서는
+    REASONER_UNAVAILABLE 오류를 구조화해 반환한다.
+    """
+    try:
+        import cg_owl  # owlready2 필요 (lazy)
+    except ImportError as exc:
+        return {"ok": False, "stage": "owl-classify",
+                "errors": [{"stage": "owl-classify",
+                            "code": "OWLREADY2_UNAVAILABLE",
+                            "detail": str(exc)}]}
+    try:
+        world, onto, _ = cg_owl.build_ontology(
+            concepts=owl.get("concepts", []),
+            object_properties=owl.get("object_properties", []),
+            data_properties=[{**d, "functional": True, "range": bool}
+                             for d in owl.get("data_properties", [])],
+            disjoint_groups=owl.get("disjoint_groups", []))
+    except cg_owl.SerializationError as exc:
+        return {"ok": False, "stage": "owl-serialize",
+                "errors": [{"stage": "owl-serialize",
+                            "code": "SERIALIZATION_ERROR",
+                            "detail": str(exc)}]}
+    try:
+        result = cg_owl.classify(world, onto)
+    except Exception as exc:
+        return {"ok": False, "stage": "owl-classify",
+                "errors": [{"stage": "owl-classify",
+                            "code": "REASONER_UNAVAILABLE",
+                            "detail": f"HermiT 실행 실패 (Java 필요): "
+                                      f"{str(exc)[:200]}"}]}
+    return {"ok": True, "stage": "owl-classify", **result}
+
+
 # ═══════════════════════════════════════════════════════
 # Prompts (1개)
 # ═══════════════════════════════════════════════════════

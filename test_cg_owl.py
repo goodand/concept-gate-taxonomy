@@ -145,3 +145,49 @@ def test_schema_rejects_defined_without_definition():
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+# ── P4: 완전 배선 — 자연어 근거 → map_to_owl → HermiT 분류 ──────────
+
+def test_p4_natural_language_to_reasoner_end_to_end():
+    """자연어 스냅샷의 span 근거로 typed 제안을 만들고, map_to_owl 검증을
+    거쳐 HermiT가 정사각형 ⊑ 직사각형을 스스로 유도한다 — 전 구간 배선."""
+    import cg_normalizer as N
+    text = ("평행사변형은 사각형이다. 직사각형은 네 각이 직각인 평행사변형이다. "
+            "정사각형은 네 변이 같고 네 각이 직각인 평행사변형이다.")
+    snap = N.make_snapshot(text)["snapshot"]
+    t = snap["text"]
+    def sp(p):
+        i = t.find(p); return {"start": i, "end": i + len(p)}
+    bundle = {"snapshot": snap, "concepts": [
+        {"name": "평행사변형", "definition_kind": "primitive"},
+        {"name": "직사각형", "definition_kind": "defined",
+         "kind_rationale": "본문이 '직각인 평행사변형'으로 정의함",
+         "genus": "평행사변형",
+         "differentia": [{"property": "직각성", "restriction": "value",
+                          "filler": True,
+                          "evidence_span": sp("네 각이 직각인 평행사변형")}]},
+        {"name": "정사각형", "definition_kind": "defined",
+         "kind_rationale": "본문이 '네 변이 같고 직각인 평행사변형'으로 정의함",
+         "genus": "평행사변형",
+         "differentia": [
+             {"property": "직각성", "restriction": "value", "filler": True,
+              "evidence_span": sp("네 각이 직각인 평행사변형")},
+             {"property": "등변성", "restriction": "value", "filler": True,
+              "evidence_span": sp("네 변이 같고")}]},
+    ]}
+    m = N.map_to_owl(bundle)
+    assert m["ok"], m.get("errors")
+    world, onto, _ = cg_owl.build_ontology(
+        concepts=m["owl"]["concepts"],
+        object_properties=m["owl"]["object_properties"],
+        data_properties=[{**d, "functional": True, "range": bool}
+                         for d in m["owl"]["data_properties"]],
+        disjoint_groups=m["owl"]["disjoint_groups"])
+    result = cg_owl.classify(world, onto)
+    assert result["unsatisfiable"] == []
+    assert cg_owl.is_subclass_of(onto, "정사각형", "직사각형"), \
+        "HermiT가 정사각형 ⊑ 직사각형을 유도하지 못함"
+    # 근거는 전부 L1
+    assert all(c["verification_status"] == "source_span_verified"
+               for c in m["claims"])

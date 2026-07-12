@@ -207,3 +207,88 @@ def test_assemble_caps_bound_inputs():
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+# ── stage: owl-map (typed 제안 → cg_owl 입력) ────────────
+
+GEO = "평행사변형은 사각형이다. 직사각형은 네 각이 직각인 평행사변형이다. 정사각형은 네 변이 같고 네 각이 직각인 평행사변형이다."
+
+
+def _geo_snap():
+    return N.make_snapshot(GEO)["snapshot"]
+
+
+def _geo_bundle(snap):
+    t = snap["text"]
+    def sp(p):
+        i = t.find(p); return {"start": i, "end": i + len(p)}
+    return {"snapshot": snap, "concepts": [
+        {"name": "평행사변형", "definition_kind": "primitive"},
+        {"name": "직사각형", "definition_kind": "defined",
+         "kind_rationale": "직각 조건이 평행사변형 안에서 필요충분",
+         "genus": "평행사변형",
+         "differentia": [
+             {"property": "직각성", "restriction": "value", "filler": True,
+              "evidence_span": sp("네 각이 직각인 평행사변형")}]},
+        {"name": "정사각형", "definition_kind": "defined",
+         "kind_rationale": "등변+직각이 평행사변형 안에서 필요충분",
+         "genus": "평행사변형",
+         "differentia": [
+             {"property": "직각성", "restriction": "value", "filler": True,
+              "evidence_span": sp("네 각이 직각인 평행사변형")},
+             {"property": "등변성", "restriction": "value", "filler": True,
+              "evidence_span": sp("네 변이 같고")}]},
+    ]}
+
+
+def test_owlmap_happy_path():
+    r = N.map_to_owl(_geo_bundle(_geo_snap()))
+    assert r["ok"], r.get("errors")
+    assert len(r["owl"]["concepts"]) == 3
+    assert {d["name"] for d in r["owl"]["data_properties"]} == {"직각성", "등변성"}
+    assert all(c["verification_status"] == "source_span_verified"
+               for c in r["claims"])
+
+
+def test_owlmap_defined_requires_rationale_and_definition():
+    snap = _geo_snap()
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "defined", "genus": None}]})
+    assert not r["ok"]
+    assert any(e["code"] == "MISSING_KIND_RATIONALE" for e in r["errors"])
+    r2 = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "defined",
+         "kind_rationale": "근거 있음"}]})
+    assert any(e["code"] == "DEFINED_WITHOUT_DEFINITION" for e in r2["errors"])
+
+
+def test_owlmap_rejects_bad_kind_and_unknown_restriction():
+    snap = _geo_snap()
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "vibes"}]})
+    assert any(e["code"] == "BAD_DEFINITION_KIND" for e in r["errors"])
+    r2 = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "primitive",
+         "differentia": [{"property": "p", "restriction": "magic",
+                          "filler": "Y", "evidence_text": "근거근거"}]}]})
+    assert any(e["code"] == "UNKNOWN_OWL_RESTRICTION" for e in r2["errors"])
+
+
+def test_owlmap_forged_span_is_selection_stage():
+    snap = _geo_snap()
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "primitive",
+         "differentia": [{"property": "p", "restriction": "value",
+                          "filler": True,
+                          "evidence_span": {"start": 0, "end": 99999}}]}]})
+    assert not r["ok"] and r["stage"] == "selection"
+
+
+def test_owlmap_vocab_matches_cg_owl():
+    """cg_normalizer의 제한 어휘가 cg_owl과 어긋나면 안 된다 (drift 방지)."""
+    try:
+        import cg_owl
+    except ImportError:
+        import pytest
+        pytest.skip("owlready2 미설치")
+    assert N.OWL_RESTRICTIONS == cg_owl.SUPPORTED_RESTRICTIONS

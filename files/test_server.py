@@ -469,6 +469,46 @@ async def test_normalizer_protocol():
         check("3-8 feature_activity → crosswalk 거부",
               not fa_res["ok"] and fa_res["stage"] == "crosswalk")
 
+        # 3-9. OWL 경로: map_owl — defined에 kind_rationale 필수
+        geo_text = ("평행사변형은 사각형이다. 직사각형은 네 각이 직각인 "
+                    "평행사변형이다.")
+        gsnap = (await client.call_tool(
+            "make_snapshot", {"text": geo_text})).data["snapshot"]
+        gt = gsnap["text"]
+        gi = gt.find("네 각이 직각인 평행사변형")
+        good_owl = {"snapshot": gsnap, "concepts": [
+            {"name": "평행사변형", "definition_kind": "primitive"},
+            {"name": "직사각형", "definition_kind": "defined",
+             "kind_rationale": "본문이 직각인 평행사변형으로 정의",
+             "genus": "평행사변형",
+             "differentia": [{"property": "직각성", "restriction": "value",
+                              "filler": True,
+                              "evidence_span": {"start": gi, "end": gi + 14}}]},
+        ]}
+        m = (await client.call_tool("map_owl", {"bundle": good_owl})).data
+        check("3-9 map_owl → ok + typed 제약 + L1 claims",
+              m["ok"] and m["owl"]["concepts"][1]["definition_kind"] == "defined"
+              and all(c["verification_status"] == "source_span_verified"
+                      for c in m["claims"]), f"got {m}")
+
+        bad_owl = {"snapshot": gsnap, "concepts": [
+            {"name": "X", "definition_kind": "defined", "genus": None}]}
+        mb = (await client.call_tool("map_owl", {"bundle": bad_owl})).data
+        check("3-10 map_owl: 근거 없는 defined(≡) 거부",
+              not mb["ok"] and any(e["code"] == "MISSING_KIND_RATIONALE"
+                                   for e in mb["errors"]))
+
+        # 3-11. classify_owl — reasoner 가용 시 유도, 불가 시 구조화 오류
+        cls_res = (await client.call_tool("classify_owl", {"owl": m["owl"]})).data
+        if cls_res["ok"]:
+            check("3-11 classify_owl: 직사각형 ⊑ 평행사변형 유도",
+                  "평행사변형" in cls_res["hierarchy"].get("직사각형", []),
+                  f"got {cls_res['hierarchy']}")
+        else:
+            check("3-11 classify_owl: 미가용 시 구조화 오류",
+                  cls_res["errors"][0]["code"] in
+                  ("REASONER_UNAVAILABLE", "OWLREADY2_UNAVAILABLE"))
+
 
 # ═══════════════════════════════════════════════════════
 # 실행
