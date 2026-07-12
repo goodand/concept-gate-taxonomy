@@ -16,4 +16,5 @@ build-backend = "hatchling.build"
 # server.py는 cg_input_linter를 필수 import하고, core는 cg_partwhole/cg_gufo를
 # 사용하므로 여섯 모듈 전부 wheel에 포함한다 (2026-07-12 배포 차단 수정).
 include = ["server.py", "concept_gate_v7.py", "cg_graph_export.py",
-           "cg_input_linter.py", "cg_partwhole.py", "cg_gufo.py"]
+           "cg_input_linter.py", "cg_partwhole.py", "cg_gufo.py",
+           "cg_normalizer.py"]
