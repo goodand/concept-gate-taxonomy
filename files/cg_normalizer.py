@@ -48,6 +48,31 @@ def _fail(stage: str, errors: List[Dict[str, Any]]) -> Dict[str, Any]:
     return {"ok": False, "stage": stage, "errors": errors}
 
 
+def _snapshot_integrity_errors(snapshot: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """제출된 snapshot의 text↔sha256 정합을 재계산으로 검증한다.
+
+    L1('span 실존 + 해시 일치')의 후반부 — 재계산하지 않은 caller 제공
+    hash는 증거가 아니다: sha256='deadbeef'로도 source_span_verified가
+    발급됐다 (리뷰 발견 1 / 아키텍처 분석 §7.3).
+    빈 snapshot(미제공)은 허용 — 그 경로는 어차피 unverified만 나온다.
+    """
+    text = snapshot.get("text")
+    claimed = snapshot.get("sha256")
+    if text is None and claimed is None:
+        return []
+    if not isinstance(text, str):
+        return [_err("snapshot", "TEXT_NOT_STRING",
+                     {"got": type(text).__name__})]
+    if not isinstance(claimed, str) or not claimed:
+        return [_err("snapshot", "MISSING_SOURCE_HASH",
+                     "snapshot에 text가 있으면 sha256 필수 — make_snapshot을 쓰라")]
+    actual = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    if claimed != actual:
+        return [_err("snapshot", "SOURCE_HASH_MISMATCH",
+                     {"claimed": claimed, "actual": actual})]
+    return []
+
+
 # ═══════════════════════════════════════════════════════
 # Stage 1 — snapshot: 원문 고정 (NFC + sha256 + 좌표 기준)
 # ═══════════════════════════════════════════════════════
@@ -161,6 +186,9 @@ def validate_selection(selection: Dict[str, Any],
     if not isinstance(candidates, list):
         return _fail(stage, [_err(stage, "CANDIDATES_NOT_LIST",
                                   {"got": type(candidates).__name__})])
+    integ = _snapshot_integrity_errors(snapshot)
+    if integ:
+        return _fail("snapshot", integ)
     errors = []
     ids = {c["sense_id"] for c in candidates
            if isinstance(c, dict) and "sense_id" in c}
@@ -296,6 +324,9 @@ def assemble_concepts(bundle: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(snapshot, dict):
         return _fail(stage, [_err(stage, "SNAPSHOT_NOT_OBJECT",
                                   {"got": type(snapshot).__name__})])
+    integ = _snapshot_integrity_errors(snapshot)
+    if integ:
+        return _fail("snapshot", integ)
     text = snapshot.get("text", "")
     raw_concepts = bundle.get("concepts")
 
@@ -488,6 +519,9 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(snapshot, dict):
         return _fail(stage, [_err(stage, "SNAPSHOT_NOT_OBJECT",
                                   {"got": type(snapshot).__name__})])
+    integ = _snapshot_integrity_errors(snapshot)
+    if integ:
+        return _fail("snapshot", integ)
     text = snapshot.get("text", "")
     raw = bundle.get("concepts")
     if not isinstance(raw, list) or not raw:

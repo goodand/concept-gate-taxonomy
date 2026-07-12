@@ -498,6 +498,16 @@ async def test_normalizer_protocol():
               not mb["ok"] and any(e["code"] == "MISSING_KIND_RATIONALE"
                                    for e in mb["errors"]))
 
+        # 3-10b. 위조 snapshot hash 거부 (발견 1 / 분석 §7.3)
+        forged = {"text": gt, "sha256": "deadbeef", "uri": "x"}
+        mf = (await client.call_tool("map_owl", {"bundle": {
+            "snapshot": forged, "concepts": [
+                {"name": "평행사변형", "definition_kind": "primitive"}]}})).data
+        check("3-10b map_owl: 위조 hash → SOURCE_HASH_MISMATCH 거부",
+              not mf["ok"] and mf["stage"] == "snapshot"
+              and any(e["code"] == "SOURCE_HASH_MISMATCH" for e in mf["errors"]),
+              f"got {mf}")
+
         # 3-11. classify_owl — reasoner 가용 시 유도, 불가 시 구조화 오류
         cls_res = (await client.call_tool("classify_owl", {"owl": m["owl"]})).data
         if cls_res["ok"]:
