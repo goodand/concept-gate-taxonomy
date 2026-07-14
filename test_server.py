@@ -11,7 +11,7 @@ import asyncio
 import json
 import sys
 
-import server
+from conceptgate import server
 from fastmcp import Client
 
 

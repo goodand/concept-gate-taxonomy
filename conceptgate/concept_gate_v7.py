@@ -347,7 +347,7 @@ class ConceptGate:
         until corrected.
         """
         try:
-            from cg_partwhole import hint_to_feature_type
+            from .cg_partwhole import hint_to_feature_type
         except Exception:
             hint_to_feature_type = None
 
@@ -467,7 +467,7 @@ class ConceptGate:
         if pm.rigidity == OntoCleanRigidity.ANTI_RIGID and cm.rigidity == OntoCleanRigidity.RIGID:
             violations.append("rigidity: anti-rigid parent cannot subsume rigid child")
             try:
-                from cg_gufo import rule_ref
+                from .cg_gufo import rule_ref
                 ref = rule_ref("RA02")
                 rule_refs.append({"base_rule": ref.base_rule, "implementation_rule": ref.implementation_rule})
             except Exception:

@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-import cg_normalizer as N
+from conceptgate import cg_normalizer as N
 
 TEXT = "개는 갯과의 가축화된 동물이다."
 VALID_SNAP = N.make_snapshot(TEXT)["snapshot"]

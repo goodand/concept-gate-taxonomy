@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-import cg_normalizer as N
+from conceptgate import cg_normalizer as N
 
 
 TEXT = "개는 갯과의 가축화된 동물이다. 고양이는 고양잇과의 동물이다. 말은 초식 동물이다."
@@ -155,7 +155,7 @@ def test_assemble_happy_path_lints_clean():
 def test_assembled_output_passes_concept_gate():
     """조립 산출물이 실제 concept-gate 파이프라인을 PASS해야 한다 (end-to-end)."""
     import json
-    import concept_gate_v7 as cg
+    from conceptgate import concept_gate_v7 as cg
     snap = _snap()
     r = N.assemble_concepts(_dog_cat_horse_bundle(snap))
     assert r["ok"]
@@ -287,7 +287,7 @@ def test_owlmap_forged_span_is_selection_stage():
 def test_owlmap_vocab_matches_cg_owl():
     """cg_normalizer의 제한 어휘가 cg_owl과 어긋나면 안 된다 (drift 방지)."""
     try:
-        import cg_owl
+        from conceptgate import cg_owl
     except ImportError:
         import pytest
         pytest.skip("owlready2 미설치")

@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 try:
-    from cg_partwhole import hint_to_feature_type
+    from .cg_partwhole import hint_to_feature_type
 except Exception:  # pragma: no cover - graceful fallback for copied files
     def hint_to_feature_type(relation_hint: Optional[str]) -> Optional[str]:
         fallback = {

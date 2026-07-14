@@ -35,7 +35,7 @@ pytest.importorskip("owlready2", reason="owlready2 미설치 (선택 의존성)"
 import os
 os.environ["PATH"] = "/opt/homebrew/opt/openjdk/bin:" + os.environ.get("PATH", "")
 
-import cg_owl
+from conceptgate import cg_owl
 
 
 # ── P1: primitive → Bird/Airplane spurious is-a 차단 ─────────────────
@@ -152,7 +152,7 @@ if __name__ == "__main__":
 def test_p4_natural_language_to_reasoner_end_to_end():
     """자연어 스냅샷의 span 근거로 typed 제안을 만들고, map_to_owl 검증을
     거쳐 HermiT가 정사각형 ⊑ 직사각형을 스스로 유도한다 — 전 구간 배선."""
-    import cg_normalizer as N
+    from conceptgate import cg_normalizer as N
     text = ("평행사변형은 사각형이다. 직사각형은 네 각이 직각인 평행사변형이다. "
             "정사각형은 네 변이 같고 네 각이 직각인 평행사변형이다.")
     snap = N.make_snapshot(text)["snapshot"]

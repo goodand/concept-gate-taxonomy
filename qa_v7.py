@@ -31,16 +31,16 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-SRC = HERE / "concept_gate_v7.py"
+SRC = HERE / "conceptgate" / "concept_gate_v7.py"
 
 if not SRC.exists():
-    print(f"[FATAL] concept_gate_v7.py가 {HERE}에 없습니다.")
-    print("        v6.3 소스를 이 스크립트와 같은 디렉토리에 두세요.")
+    print(f"[FATAL] conceptgate/concept_gate_v7.py가 {HERE}에 없습니다.")
+    print("        repo 루트에서 실행하세요.")
     sys.exit(2)
 
 # dataclass의 모듈 해석을 위해 sys.path 기반 import 사용
 sys.path.insert(0, str(HERE))
-import concept_gate_v7 as cg
+from conceptgate import concept_gate_v7 as cg
 
 # 단축 별칭
 E = cg.FeatureType.ESSENTIAL
@@ -458,7 +458,7 @@ R.check("G7 빈 종차 → STALLED/OSCILLATING",
 print("\n[PART H] GraphExporter")
 
 try:
-    from cg_graph_export import GraphExporter
+    from conceptgate.cg_graph_export import GraphExporter
     _ge_avail = True
 except ImportError:
     _ge_avail = False
@@ -521,7 +521,7 @@ r_struct = cg.SemanticTypeInference.infer("구성요소", "", "")
 R.check("I4 구성요소 → STRUCTURAL", r_struct.inferred_type == cg.FeatureType.STRUCTURAL)
 
 # I5. obo-relations subtree 조립 (core.obo 로드, fallback 아님)
-import cg_partwhole as _pw
+from conceptgate import cg_partwhole as _pw
 _rels = _pw.load_obo_partwhole()
 R.check("I5 obo part_of/has_part 로드",
         "BFO:0000050" in _rels and "BFO:0000051" in _rels and _rels["BFO:0000050"]["transitive"])
@@ -901,7 +901,7 @@ R.check("M5 unknown ontoclean 값 → ParseGate ERROR",
 # ═════════════════════════════════════════════
 print("\n[PART N] Scior/gUFO adapter")
 
-import cg_gufo as _gufo
+from conceptgate import cg_gufo as _gufo
 
 _rules = _gufo.load_scior_rules()
 R.check("N1 Scior TSV에서 RA02 로드",

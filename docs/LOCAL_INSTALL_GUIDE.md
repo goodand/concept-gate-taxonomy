@@ -18,52 +18,48 @@ LLM 호출도 하지 않습니다. 검증, 추론, 그래프화만 로컬에서 
 
 ```bash
 git clone https://github.com/goodand/concept-gate-taxonomy.git
-cd concept-gate-taxonomy/files
+cd concept-gate-taxonomy
 ```
 
-`files/` 폴더 안에 서버 실행에 필요한 파일이 있습니다.
+서버 실행에 필요한 코드는 전부 `conceptgate/` 패키지 안에 있습니다(사본 없음).
+서버는 패키지로 실행합니다 — `python -m conceptgate.server`.
 
-- `server.py`
-- `concept_gate_v7.py`
-- `cg_graph_export.py`
-- `cg_partwhole.py`
-- `cg_gufo.py`
-- `cg_input_linter.py`
-- `test_server.py`
-- `requirements.txt`
+`vendor/`는 `cg_gufo`(Scior 규칙 TSV)와 `cg_partwhole`(obo core.obo)이 읽습니다.
+없어도 내장 fallback으로 동작하지만, 규칙이 축소되므로 함께 받는 것을 권장합니다.
 
-repo 루트의 `vendor/`, `docs/` 등은 stdio MCP 서버 실행에는 필요하지 않습니다.
-
-전체 clone이 부담되면 sparse checkout으로 `files/`만 받을 수 있습니다.
+전체 clone(약 40MB — 대부분 `vendor/`)이 부담되면 sparse checkout으로 줄일 수 있습니다.
 
 ```bash
 git clone --depth 1 --filter=blob:none --sparse https://github.com/goodand/concept-gate-taxonomy.git
 cd concept-gate-taxonomy
-git sparse-checkout set files
-cd files
+git sparse-checkout set conceptgate vendor
 ```
 
-### 2. 가상환경 생성 + 의존성 설치
+`vendor`를 빼면 더 가볍지만 gUFO/OBO 규칙이 내장 fallback으로 축소됩니다.
+
+### 2. 가상환경 생성 + 패키지 설치
+
+`pip install -e .`로 설치하면 `conceptgate-mcp` 실행 파일이 함께 만들어집니다.
 
 uv 사용:
 
 ```bash
 uv venv --python 3.12
-uv pip install -r requirements.txt
+uv pip install -e .
 ```
 
 uv가 없으면:
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -e .
 ```
 
 Windows PowerShell:
 
 ```powershell
 py -3 -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m pip install -e .
 ```
 
 ### 3. 설치 확인
@@ -80,7 +76,7 @@ Windows:
 .venv\Scripts\python.exe test_server.py
 ```
 
-`통과: 47/47`이 나오면 정상입니다.
+`통과: 66/66`이 나오면 정상입니다.
 
 ### 4. 현재 절대 경로 확인
 
@@ -93,7 +89,7 @@ pwd
 예:
 
 ```text
-/Users/name/concept-gate-taxonomy/files
+/Users/name/concept-gate-taxonomy
 ```
 
 Windows PowerShell:
@@ -109,26 +105,29 @@ Windows PowerShell:
 `~/.codex/config.toml` 파일을 열고, 없으면 생성한 뒤 아래 내용을 추가합니다.
 `<PWD>`는 4단계에서 확인한 절대 경로로 교체하세요.
 
+패키지를 설치하면(`pip install -e .`) `conceptgate-mcp` 실행 파일이 생깁니다.
+이걸 그대로 가리키면 작업 디렉터리에 상관없이 동작합니다.
+
 ```toml
 [mcp_servers.conceptgate]
-command = "<PWD>/.venv/bin/python"
-args = ["<PWD>/server.py"]
+command = "<PWD>/.venv/bin/conceptgate-mcp"
+args = []
 ```
 
 macOS 예시:
 
 ```toml
 [mcp_servers.conceptgate]
-command = "/Users/name/concept-gate-taxonomy/files/.venv/bin/python"
-args = ["/Users/name/concept-gate-taxonomy/files/server.py"]
+command = "/Users/name/concept-gate-taxonomy/.venv/bin/conceptgate-mcp"
+args = []
 ```
 
 Windows 예시:
 
 ```toml
 [mcp_servers.conceptgate]
-command = "C:\\Users\\name\\concept-gate-taxonomy\\files\\.venv\\Scripts\\python.exe"
-args = ["C:\\Users\\name\\concept-gate-taxonomy\\files\\server.py"]
+command = "C:\\Users\\name\\concept-gate-taxonomy\\.venv\\Scripts\\conceptgate-mcp.exe"
+args = []
 ```
 
 ## 사용
@@ -157,38 +156,37 @@ expand로 재실행해줘.
 
 ### command not found 또는 서버가 안 뜸
 
-`config.toml`의 `command`와 `args`가 절대 경로인지 확인하세요.
+`config.toml`의 `command`가 절대 경로인지 확인하세요.
 
 ```bash
-ls <PWD>/.venv/bin/python
-ls <PWD>/server.py
+ls <PWD>/.venv/bin/conceptgate-mcp
 ```
 
 Windows:
 
 ```powershell
-Test-Path "<PWD>\.venv\Scripts\python.exe"
-Test-Path "<PWD>\server.py"
+Test-Path "<PWD>\.venv\Scripts\conceptgate-mcp.exe"
 ```
 
-### No module named fastmcp
+### No module named fastmcp / conceptgate
 
-의존성 설치가 안 된 상태입니다.
+패키지 설치가 안 된 상태입니다.
 
 ```bash
-.venv/bin/pip install -r requirements.txt
+.venv/bin/pip install -e .
 ```
 
 Windows:
 
 ```powershell
-.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m pip install -e .
 ```
 
-### No module named concept_gate_v7
+### classify_owl이 REASONER_UNAVAILABLE을 반환
 
-`server.py`가 `concept_gate_v7.py`와 같은 폴더인 `files/` 안에 있어야 합니다.
-파일을 `files/` 밖으로 옮기지 마세요.
+OWL 분류기(HermiT)는 Java가 필요합니다. `java -version`으로 확인하고,
+없으면 JRE를 설치하세요(macOS: `brew install openjdk`).
+Java 없이도 나머지 도구는 정상 동작합니다.
 
 ### Python 3.10 미만
 

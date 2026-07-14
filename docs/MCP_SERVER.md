@@ -15,20 +15,26 @@ client → run_pipeline → WARNING + expansion_actions
 
 ## 파일 구성
 
+정본 소스는 `conceptgate/` 패키지 하나뿐이다(배포 사본 없음).
+
 ```
-conceptgate-mcp/
-├── server.py              MCP 서버 (FastMCP)
-├── concept_gate_v7.py     ConceptGate 코어 (수정 없음, import만)
-├── cg_partwhole.py        part-whole 어휘 어댑터 (참조용 배포 복사본)
-├── cg_gufo.py             Scior/gUFO rule metadata 어댑터 (fallback 포함)
-├── cg_input_linter.py     입력 JSON 사전 점검 linter (stdlib)
-├── cg_graph_export.py     GraphExporter (수정 없음, import만)
-├── test_server.py         단위 테스트 (직접 호출 29 + MCP 프로토콜 14)
+concept-gate-taxonomy/
+├── conceptgate/
+│   ├── server.py          MCP 서버 (FastMCP). `python -m conceptgate.server`
+│   ├── concept_gate_v7.py ConceptGate 코어
+│   ├── cg_partwhole.py    part-whole 어휘 어댑터 (vendor/obo-relations)
+│   ├── cg_gufo.py         Scior/gUFO rule metadata 어댑터 (fallback 포함)
+│   ├── cg_input_linter.py 입력 JSON 사전 점검 linter (stdlib)
+│   ├── cg_normalizer.py   evidence-carrying 경계 어댑터
+│   ├── cg_owl.py          OWL 2 DL 직렬화 + HermiT 분류 (Java 필요)
+│   └── cg_graph_export.py GraphExporter
+├── test_server.py         MCP 서버 테스트 (66건)
 ├── pyproject.toml
-├── README.md
-├── codex_config.toml      Codex CLI MCP 설정 예시
-├── claude_desktop_config.json  Claude Desktop MCP 설정 예시
-└── sample_concepts.json   도구 입력 예시
+├── Dockerfile             배포 이미지 (JRE 포함)
+└── examples/
+    ├── codex_config.toml           Codex CLI MCP 설정 예시
+    ├── claude_desktop_config.json  Claude Desktop MCP 설정 예시
+    └── ../sample_concepts.json     도구 입력 예시
 ```
 
 ## 설치
@@ -37,23 +43,8 @@ Codex CLI에서 로컬 stdio MCP로 설치하려면
 [`LOCAL_INSTALL_GUIDE.md`](LOCAL_INSTALL_GUIDE.md)를 먼저 보세요.
 clone, 가상환경, 테스트, `config.toml` 등록까지 실패 지점 중심으로 정리되어 있습니다.
 
-파일을 다운로드한 뒤 디렉토리 구조를 유지해야 합니다:
-
-```
-conceptgate-mcp/
-├── server.py              ← 반드시 concept_gate_v7.py와 같은 디렉토리
-├── concept_gate_v7.py
-├── cg_partwhole.py
-├── cg_gufo.py
-├── cg_input_linter.py
-├── cg_graph_export.py
-├── test_server.py
-├── pyproject.toml
-├── README.md
-├── codex_config.toml      ← 설정 파일 참고용 (런타임에 불필요)
-├── claude_desktop_config.json
-└── sample_concepts.json
-```
+`pip install -e .`로 설치하면 `conceptgate-mcp` 실행 파일이 생기고, 작업 디렉터리와
+무관하게 동작한다. 개별 파일을 옮겨 배치할 필요가 없다.
 
 uv 사용 (권장 — 시스템 Python 충돌 회피):
 
@@ -222,8 +213,7 @@ source evidence → atomic features → lint_concepts → run_pipeline
   - **WholeOver**: 한 개념이 부분과 그 특수화를 동시 보유
 
 OntoClean rigidity 위반은 Scior/gUFO의 R22/RA02 rule reference를 함께 보존한다.
-`files/` 단독 설치에는 `vendor/scior`가 없으므로 `cg_gufo.py`의 내장 fallback
-metadata를 사용한다.
+`vendor/scior` 없이 설치한 경우 `cg_gufo.py`의 내장 fallback metadata를 사용한다.
 
 ## 연결
 

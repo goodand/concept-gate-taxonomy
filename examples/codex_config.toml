@@ -1,0 +1,15 @@
+# Codex CLI MCP server 등록 예시
+# 프로젝트 또는 전역 Codex config.toml에 추가
+#
+# 먼저 repo 루트에서 패키지를 설치한다:
+#   python3 -m venv .venv && .venv/bin/pip install -e .
+# 그러면 .venv/bin/conceptgate-mcp 실행 파일이 만들어진다.
+
+[mcp_servers.conceptgate]
+command = "/absolute/path/to/concept-gate-taxonomy/.venv/bin/conceptgate-mcp"
+args = []
+
+# 대안: 패키지를 설치하지 않고 모듈로 실행 (repo 루트가 cwd여야 한다)
+# [mcp_servers.conceptgate]
+# command = "/absolute/path/to/concept-gate-taxonomy/.venv/bin/python"
+# args = ["-m", "conceptgate.server"]

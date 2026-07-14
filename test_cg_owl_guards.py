@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 pytest.importorskip("owlready2", reason="owlready2 미설치 (선택 의존성)")
 
-import cg_owl
+from conceptgate import cg_owl
 
 
 def _build(**kw):

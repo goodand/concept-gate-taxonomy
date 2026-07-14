@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-import concept_gate_v7 as cg
+from conceptgate import concept_gate_v7 as cg
 
 
 def _run(concepts_dict):
@@ -128,7 +128,7 @@ def test_r4_freeform_category_mismatch_still_blocked():
 # ── R6: material_of 는 has-a (structural_composition) ─────────────────────
 
 def test_r6_material_of_maps_to_structural():
-    from cg_partwhole import hint_to_feature_type
+    from conceptgate.cg_partwhole import hint_to_feature_type
     assert hint_to_feature_type("material_of") == "structural_composition"
 
 

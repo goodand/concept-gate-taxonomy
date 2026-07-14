@@ -436,7 +436,7 @@ def assemble_concepts(bundle: Dict[str, Any]) -> Dict[str, Any]:
         for c in out_concepts
     ]
     try:
-        from cg_input_linter import lint_concepts as _lint
+        from .cg_input_linter import lint_concepts as _lint
         lint = _lint(concepts_payload)
     except Exception as exc:  # linter 자체 실패도 stage로 표면화
         return _fail("lint", [_err("lint", "LINTER_UNAVAILABLE", str(exc))])

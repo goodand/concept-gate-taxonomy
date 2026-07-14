@@ -65,7 +65,11 @@ def hint_to_feature_type(relation_hint: Optional[str]) -> Optional[str]:
 
 
 def _default_obo_path() -> str:
-    """cg_partwhole.py 기준으로 core.obo 후보 경로 탐색 (root / files/ 양쪽)."""
+    """cg_partwhole.py 기준으로 core.obo 후보 경로 탐색.
+
+    패키지 안(conceptgate/)에서 실행될 때는 ../vendor/가, 설치된 wheel처럼
+    vendor를 옆에 둔 배치에서는 vendor/가 잡힌다. 둘 다 없으면 내장 fallback.
+    """
     here = os.path.dirname(os.path.abspath(__file__))
     for rel in ("vendor/obo-relations/core.obo",
                 "../vendor/obo-relations/core.obo"):

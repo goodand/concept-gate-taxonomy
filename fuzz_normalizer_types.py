@@ -13,7 +13,7 @@ import traceback
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-import cg_normalizer as N
+from conceptgate import cg_normalizer as N
 
 SNAP = N.make_snapshot("개는 갯과의 가축화된 동물이다.")["snapshot"]
 
@@ -104,7 +104,7 @@ for b in BAD:
 # 배경: classify_owl 경계는 이전 fuzz 범위 밖이었고 concepts=[7] 등이
 # unhandled TypeError로 crash했다 (아키텍처 분석 §7.5).
 try:
-    import cg_owl as OWL
+    from conceptgate import cg_owl as OWL
 except ImportError:
     OWL = None
     print("[skip] owlready2 미설치 — cg_owl 표면 fuzz 생략", file=sys.stderr)

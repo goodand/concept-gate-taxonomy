@@ -181,8 +181,8 @@ class GraphExporter:
 if __name__ == "__main__":
     import sys
     from pathlib import Path
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import concept_gate_v7 as cg
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from conceptgate import concept_gate_v7 as cg
 
     E = cg.FeatureType.ESSENTIAL
     f = lambda n, e: cg.NormalizedFeature(n, E, e, e)

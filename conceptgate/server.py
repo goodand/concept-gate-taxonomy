@@ -11,14 +11,12 @@ concept_gate_v7.py와 cg_graph_export.py는 import만 하며 수정하지 않는
 
 import json
 import os
-import sys
 import time
 
 from fastmcp import FastMCP
 from starlette.responses import JSONResponse
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from concept_gate_v7 import (  # noqa: E402
+from .concept_gate_v7 import (
     ConceptPipeline,
     ParseGate,
     ExpansionAction,
@@ -29,8 +27,8 @@ from concept_gate_v7 import (  # noqa: E402
     parse_expansion_response,
     EXPANSION_OUTPUT_SCHEMA,
 )
-from cg_graph_export import GraphExporter  # noqa: E402
-from cg_input_linter import lint_concepts as run_input_linter  # noqa: E402
+from .cg_graph_export import GraphExporter
+from .cg_input_linter import lint_concepts as run_input_linter
 
 # ═══════════════════════════════════════════════════════
 # 입력 크기 제한 (DoS 방어)
@@ -647,7 +645,7 @@ def client_guide() -> dict:
 #  이 도구들은 확인 가능한 조건만 결정론 판정. 단계별 오류로 원인 식별.)
 # ═══════════════════════════════════════════════════════
 
-import cg_normalizer  # noqa: E402
+from . import cg_normalizer
 
 
 @mcp.resource("normalizer://protocol/v1")
@@ -721,7 +719,7 @@ def classify_owl(owl: dict) -> dict:
     REASONER_UNAVAILABLE 오류를 구조화해 반환한다.
     """
     try:
-        import cg_owl  # owlready2 필요 (lazy)
+        from . import cg_owl  # owlready2 필요 (lazy)
     except ImportError as exc:
         return {"ok": False, "stage": "owl-classify",
                 "errors": [{"stage": "owl-classify",
