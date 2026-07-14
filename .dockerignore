@@ -1,0 +1,21 @@
+# 빌드 컨텍스트 전송량을 줄인다. 단 라이선스 고지(licenses/,
+# THIRD_PARTY_NOTICES.md)는 제외하지 않는다 — Docker 이미지도 배포물이고
+# vendor의 Apache-2.0/CC-BY 고지는 배포물에 보존해야 한다.
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.git/
+dist/
+build/
+*.egg-info/
+docs/
+experiments/
+reference/
+examples/
+test_*.py
+qa_*.py
+fuzz_*.py
+README.md
+CLAUDE.md
