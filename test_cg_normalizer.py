@@ -204,6 +204,53 @@ def test_assemble_caps_bound_inputs():
     assert not r["ok"] and r["errors"][0]["code"] == "TOO_MANY_CONCEPTS"
 
 
+# ── claim 방향 (리뷰 발견 1b) ────────────────────────────
+#
+# 입력 규약(DISAMBIGUATION_PROTOCOL §4): "X는 Y의 일종"(is_a)
+#   → concept X 가 label Y 를 is_a feature 로 갖는다. 즉 label 이 부모다.
+# 따라서 is_a claim 은 subject=X(자식), object=Y(부모) 여야 한다.
+#
+# 반면 부분-전체 어휘는 전부 <feature> <hint> <concept> 로 읽힌다
+#   (Winston: pedal component_of bike) → subject=label, object=name.
+# 방향이 관계마다 다르므로 둘 다 고정한다.
+
+def _claim_for(r, label):
+    hits = [c for c in r["claims"] if label in (c["subject"], c["object"])]
+    assert hits, f"claim 없음: {label}"
+    return hits[0]
+
+
+def test_is_a_claim_points_child_to_parent():
+    """개는 동물의 일종 → (개 is_a 동물). 역전이면 계층이 뒤집힌다."""
+    snap = _snap()
+    t = snap["text"]
+    r = N.assemble_concepts({"snapshot": snap, "concepts": [
+        {"name": "개", "features": [
+            {"label": "동물", "relation": "is_a",
+             "evidence_span": _span(t, "가축화된 동물이다")}]}]})
+    assert r["ok"], r.get("errors")
+    c = _claim_for(r, "동물")
+    assert c["predicate"] == "is_a"
+    assert c["subject"] == "개", f"주어가 자식이어야 한다: {c}"
+    assert c["object"] == "동물", f"목적어가 부모여야 한다: {c}"
+
+
+def test_partwhole_claim_points_part_to_whole():
+    """자전거의 부품 페달 → (페달 component_of 자전거). is_a와 방향이 반대."""
+    res = N.make_snapshot("자전거는 페달을 부품으로 가진다.", uri="local:pw")
+    assert res["ok"]
+    snap = res["snapshot"]
+    r = N.assemble_concepts({"snapshot": snap, "concepts": [
+        {"name": "자전거", "features": [
+            {"label": "페달", "relation": "component_integral",
+             "evidence_span": _span(snap["text"], "페달을 부품으로")}]}]})
+    assert r["ok"], r.get("errors")
+    c = _claim_for(r, "페달")
+    assert c["predicate"] == "component_of"
+    assert c["subject"] == "페달", f"주어가 부분이어야 한다: {c}"
+    assert c["object"] == "자전거", f"목적어가 전체여야 한다: {c}"
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-q"]))

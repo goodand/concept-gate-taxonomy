@@ -233,22 +233,34 @@ def validate_selection(selection: Dict[str, Any],
 # Winston 1987 6종 원문 대조 결과(adversarial-verification-research-agenda.md):
 #   feature-activity는 현행 어휘에 대응 없음 -> unmapped (침묵 매핑 금지).
 #   place-area/portion-mass는 조건부. "직접 대응" 가정은 폐기됨.
+#
+# claim_subject — claim의 주어가 feature인가 concept인가. 관계마다 다르다:
+#   부분-전체 어휘는 <feature> <hint> <concept>로 읽힌다
+#     (Winston: pedal component_of bike) -> 주어는 feature.
+#   is_a만 반대다. 입력 규약이 "X는 Y의 일종"(concept X, feature label Y)이므로
+#     label이 부모다 -> (X is_a Y), 즉 주어는 concept.
+#   이 축을 테이블에 적어두지 않으면 새 관계를 추가할 때 방향이 조용히 뒤집힌다
+#     (리뷰 발견 1b가 정확히 그 사고였다).
 
 RELATION_CROSSWALK: Dict[str, Dict[str, Any]] = {
     "component_integral": {"relation_hint": "component_of",
+                           "claim_subject": "feature",
                            "feature_type": "structural_composition",
                            "mapping_status": "exact",
                            "theory": "Winston 1987 #1 (pedal-bike)"},
     "member_collection":  {"relation_hint": "member_of",
+                           "claim_subject": "feature",
                            "feature_type": "structural_composition",
                            "mapping_status": "exact",
                            "theory": "Winston 1987 #2 (ship-fleet)"},
     "portion_mass":       {"relation_hint": "subquantity_of",
+                           "claim_subject": "feature",
                            "feature_type": "structural_composition",
                            "mapping_status": "conditional",
                            "condition": "전체가 mass/quantity일 때만",
                            "theory": "Winston 1987 #3 (slice-pie)"},
     "stuff_object":       {"relation_hint": "material_of",
+                           "claim_subject": "feature",
                            "feature_type": "structural_composition",
                            "mapping_status": "exact",
                            "theory": "Winston 1987 #4 (steel-car); "
@@ -260,20 +272,24 @@ RELATION_CROSSWALK: Dict[str, Dict[str, Any]] = {
                                    "없음. 침묵 매핑 대신 명시적 거부.",
                            "theory": "Winston 1987 #5 (paying-shopping)"},
     "place_area":         {"relation_hint": "located_in",
+                           "claim_subject": "feature",
                            "feature_type": "locational",
                            "mapping_status": "conditional",
                            "condition": "place-area meronymy일 때만 "
                                         "(단순 공간 포함 cup-in-room 제외)",
                            "theory": "Winston 1987 #6 (oasis-desert)"},
     "subcollection":      {"relation_hint": "subcollection_of",
+                           "claim_subject": "feature",
                            "feature_type": "structural_composition",
                            "mapping_status": "exact",
                            "theory": "gUFO isSubCollectionOf (Winston 6종 밖)"},
     "ufo_phase":          {"relation_hint": "phase_of",
+                           "claim_subject": "feature",
                            "feature_type": "contextual_usage",
                            "mapping_status": "exact",
                            "theory": "gUFO Phase (anti-rigid) — Winston과 무관"},
     "is_a":               {"relation_hint": "is_a",
+                           "claim_subject": "concept",
                            "feature_type": "essential_feature",
                            "mapping_status": "exact",
                            "theory": "분류적 subsumption (C ⊑ D)"},
@@ -409,10 +425,18 @@ def assemble_concepts(bundle: Dict[str, Any]) -> Dict[str, Any]:
             if decision["relation_hint"]:
                 feat["relation_hint"] = decision["relation_hint"]
             feats_out.append(feat)
+            # 방향은 관계마다 다르다 (crosswalk의 claim_subject 참조).
+            # is_a는 concept이 주어(개 is_a 동물), 부분-전체는 feature가
+            # 주어(페달 component_of 자전거). 예전엔 전부 feature를 주어로 써서
+            # is_a가 뒤집혔다 — "동물 is_a 개" (리뷰 발견 1b).
+            if decision.get("claim_subject") == "concept":
+                subj, obj = name, label
+            else:
+                subj, obj = label, name
             claims.append({
                 "id": f"claim-{len(claims) + 1}",
-                "subject": label, "predicate": decision["relation_hint"],
-                "object": name,
+                "subject": subj, "predicate": decision["relation_hint"],
+                "object": obj,
                 "evidence_span": span,
                 "source_sha256": snapshot.get("sha256"),
                 "verification_status": vstatus,
