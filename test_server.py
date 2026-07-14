@@ -508,6 +508,50 @@ async def test_normalizer_protocol():
               and any(e["code"] == "SOURCE_HASH_MISMATCH" for e in mf["errors"]),
               f"got {mf}")
 
+        # 3-10c~e. selection 검증이 MCP 경유로도 강제되는가 (발견 6).
+        # validate_selection은 있었지만 assemble/map_owl이 호출하지 않아
+        # 실제 도구 경로로는 위조가 통과했다. 도구 표면에서 고정한다.
+        snap_d = (await client.call_tool(
+            "make_snapshot", {"text": "개는 갯과의 가축화된 동물이다."})).data["snapshot"]
+        dt = snap_d["text"]
+        di = dt.find("가축화된 동물이다")
+        dspan = {"start": di, "end": di + len("가축화된 동물이다")}
+
+        fake_sense = (await client.call_tool("assemble_concepts", {"bundle": {
+            "snapshot": snap_d, "concepts": [
+                {"name": "개", "sense_id": "memory:개:999",
+                 "features": [{"label": "동물", "relation": "is_a",
+                               "evidence_span": dspan}]}]}})).data
+        check("3-10c assemble: 위조 sense_id → SENSE_NOT_IN_CANDIDATES 거부",
+              not fake_sense["ok"]
+              and any(e["code"] == "SENSE_NOT_IN_CANDIDATES"
+                      for e in fake_sense["errors"]), f"got {fake_sense}")
+
+        bad_quote = (await client.call_tool("assemble_concepts", {"bundle": {
+            "snapshot": snap_d, "concepts": [
+                {"name": "개", "features": [
+                    {"label": "동물", "relation": "is_a",
+                     "evidence_span": dspan,
+                     "quote": "원문에 없는 인용"}]}]}})).data
+        check("3-10d assemble: quote≠span → QUOTE_MISMATCH 거부",
+              not bad_quote["ok"]
+              and any(e["code"] == "QUOTE_MISMATCH"
+                      for e in bad_quote["errors"]), f"got {bad_quote}")
+
+        owl_quote = (await client.call_tool("map_owl", {"bundle": {
+            "snapshot": gsnap, "concepts": [
+                {"name": "평행사변형", "definition_kind": "primitive"},
+                {"name": "직사각형", "definition_kind": "defined",
+                 "kind_rationale": "r", "genus": "평행사변형",
+                 "differentia": [{"property": "직각성", "restriction": "value",
+                                  "filler": True,
+                                  "evidence_span": {"start": gi, "end": gi + 14},
+                                  "quote": "위조된 인용"}]}]}})).data
+        check("3-10e map_owl: quote≠span → QUOTE_MISMATCH 거부",
+              not owl_quote["ok"]
+              and any(e["code"] == "QUOTE_MISMATCH"
+                      for e in owl_quote["errors"]), f"got {owl_quote}")
+
         # 3-11. classify_owl — reasoner 가용 시 유도, 불가 시 구조화 오류
         cls_res = (await client.call_tool("classify_owl", {"owl": m["owl"]})).data
         if cls_res["ok"]:

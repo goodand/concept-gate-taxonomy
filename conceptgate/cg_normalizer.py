@@ -167,6 +167,44 @@ def lookup_senses(surface: str,
 # Stage 3 — selection: agent의 sense 선택·인용을 결정론 검증
 # ═══════════════════════════════════════════════════════
 
+def _span_evidence(span: Any, quote: Any, text: str, stage: str,
+                   ctx: Dict[str, Any]) -> tuple:
+    """span 좌표를 검증하고 인용문을 돌려준다. (evidence|None, errors).
+
+    validate_selection / assemble / map_owl이 **공유**한다. 예전에는 세 곳이
+    각자 span 로직을 따로 갖고 있었고, assemble·map_owl 사본은 길이 상한과
+    quote 대조를 빠뜨려 위조가 통과했다 (리뷰 발견 6).
+    """
+    if not isinstance(span, dict):
+        return None, [_err(stage, "SPAN_NOT_OBJECT",
+                           {**ctx, "got": type(span).__name__})]
+    s, e = span.get("start"), span.get("end")
+    if not (isinstance(s, int) and isinstance(e, int)
+            and 0 <= s < e <= len(text)):
+        return None, [_err(stage, "SPAN_OUT_OF_BOUNDS",
+                           {**ctx, "span": span, "text_chars": len(text)})]
+    if e - s > MAX_SPAN_CHARS:
+        return None, [_err(stage, "SPAN_TOO_LONG",
+                           {**ctx, "chars": e - s, "max": MAX_SPAN_CHARS})]
+    quoted = text[s:e]
+    if quote is not None and quoted != quote:
+        return None, [_err(stage, "QUOTE_MISMATCH",
+                           {**ctx, "expected": quoted[:80],
+                            "got": str(quote)[:80]})]
+    return quoted, []
+
+
+def _sense_errors(sense_id: Any, candidates: List[Dict[str, Any]],
+                  stage: str, ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """제안된 sense_id가 실제 후보에 있는지. local:은 사전 밖 신조어용 허용."""
+    ids = {c["sense_id"] for c in candidates
+           if isinstance(c, dict) and "sense_id" in c}
+    if sense_id in ids or str(sense_id or "").startswith("local:"):
+        return []
+    return [_err(stage, "SENSE_NOT_IN_CANDIDATES",
+                 {**ctx, "sense_id": sense_id, "candidates": sorted(ids)})]
+
+
 def validate_selection(selection: Dict[str, Any],
                        candidates: List[Dict[str, Any]],
                        snapshot: Dict[str, Any]) -> Dict[str, Any]:
@@ -189,33 +227,13 @@ def validate_selection(selection: Dict[str, Any],
     integ = _snapshot_integrity_errors(snapshot)
     if integ:
         return _fail("snapshot", integ)
-    errors = []
-    ids = {c["sense_id"] for c in candidates
-           if isinstance(c, dict) and "sense_id" in c}
-    sid = selection.get("sense_id")
-    if sid not in ids and not str(sid or "").startswith("local:"):
-        errors.append(_err(stage, "SENSE_NOT_IN_CANDIDATES",
-                           {"sense_id": sid, "candidates": sorted(ids)}))
+    errors = _sense_errors(selection.get("sense_id"), candidates, stage, {})
     span = selection.get("evidence_span")
     text = snapshot.get("text", "")
     if span is not None:
-        if not isinstance(span, dict):
-            errors.append(_err(stage, "SPAN_NOT_OBJECT",
-                               {"got": type(span).__name__}))
-        else:
-            s, e = span.get("start"), span.get("end")
-            if not (isinstance(s, int) and isinstance(e, int)
-                    and 0 <= s < e <= len(text)):
-                errors.append(_err(stage, "SPAN_OUT_OF_BOUNDS",
-                                   {"span": span, "text_chars": len(text)}))
-            elif e - s > MAX_SPAN_CHARS:
-                errors.append(_err(stage, "SPAN_TOO_LONG", {"chars": e - s}))
-            else:
-                quote = selection.get("quote")
-                if quote is not None and text[s:e] != quote:
-                    errors.append(_err(stage, "QUOTE_MISMATCH",
-                                       {"expected": text[s:e][:80],
-                                        "got": str(quote)[:80]}))
+        _, span_errs = _span_evidence(span, selection.get("quote"),
+                                      text, stage, {})
+        errors.extend(span_errs)
     claimed_hash = selection.get("source_sha256")
     if claimed_hash and claimed_hash != snapshot.get("sha256"):
         errors.append(_err(stage, "SOURCE_HASH_MISMATCH",
@@ -313,17 +331,20 @@ def map_relation(meronymy_kind: str) -> Dict[str, Any]:
 # Stage 5+6 — assemble + lint: 제안 묶음 → concepts JSON
 # ═══════════════════════════════════════════════════════
 
-def assemble_concepts(bundle: Dict[str, Any]) -> Dict[str, Any]:
+def assemble_concepts(bundle: Dict[str, Any],
+                      inventory: Optional[MemoryInventory] = None
+                      ) -> Dict[str, Any]:
     """agent 제안 묶음을 concept-gate 입력 JSON으로 조립하고 lint까지 통과시킨다.
 
     bundle = {
       "snapshot": make_snapshot()["snapshot"],
       "concepts": [{
-         "name": str, "sense_id": str|None,
+         "name": str, "sense_id": str|None,     # sense_id는 후보 대조로 검증됨
          "features": [{
             "label": str,                       # monosemic 라벨 (FCA 대상)
             "relation": str,                    # crosswalk 키 (is_a, stuff_object, ...)
             "evidence_span": {"start","end"}|None,
+            "quote": str|None,                  # 있으면 span 내용과 일치해야 함
             "evidence_text": str|None,          # span 없을 때 직접 근거
          }, ...]
       }, ...]
@@ -374,6 +395,13 @@ def assemble_concepts(bundle: Dict[str, Any]) -> Dict[str, Any]:
             errors.append(_err(stage, "TOO_MANY_FEATURES",
                                {"concept": name, "n": len(feats_in)}))
             continue
+        # sense 선택 검증 — 제안된 sense_id가 실제 후보에 있는가.
+        # 예전엔 그냥 통과시켜 위조 sense_id가 concepts_json에 실렸다 (발견 6).
+        sid = rc.get("sense_id")
+        if sid is not None:
+            cands = lookup_senses(name, inventory)["candidates"]
+            errors.extend(_sense_errors(sid, cands, "selection",
+                                        {"concept": name}))
         feats_out = []
         for fi, f in enumerate(feats_in):
             if not isinstance(f, dict):
@@ -396,22 +424,17 @@ def assemble_concepts(bundle: Dict[str, Any]) -> Dict[str, Any]:
                 errors.extend(rel["errors"])
                 continue
             decision = rel["decision"]
-            # evidence 확정 (L1: span이 있으면 원문 대조)
+            # evidence 확정 (L1: span이 있으면 원문 대조).
+            # span 검증은 validate_selection과 같은 헬퍼를 쓴다 — 사본을 두면
+            # 한쪽만 강해지고 다른 쪽으로 위조가 통과한다 (발견 6).
             span = f.get("evidence_span")
             if span is not None:
-                if not isinstance(span, dict):
-                    errors.append(_err("selection", "SPAN_NOT_OBJECT",
-                                       {"concept": name, "label": label,
-                                        "got": type(span).__name__}))
+                evidence, span_errs = _span_evidence(
+                    span, f.get("quote"), text, "selection",
+                    {"concept": name, "label": label})
+                if span_errs:
+                    errors.extend(span_errs)
                     continue
-                s, e_ = span.get("start"), span.get("end")
-                if not (isinstance(s, int) and isinstance(e_, int)
-                        and 0 <= s < e_ <= len(text)):
-                    errors.append(_err("selection", "SPAN_OUT_OF_BOUNDS",
-                                       {"concept": name, "label": label,
-                                        "span": span}))
-                    continue
-                evidence = text[s:e_]
                 vstatus = "source_span_verified"
             else:
                 evidence = str(f.get("evidence_text", "")).strip()
@@ -562,19 +585,16 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
     disjoint_groups: List[List[str]] = []
 
     def _evidence(spec, ctx):
+        # assemble/validate_selection과 같은 헬퍼 (발견 6: 사본이 셋이었고
+        # 이쪽 사본은 길이 상한·quote 대조를 빠뜨렸다).
         span = spec.get("evidence_span")
         if span is not None:
-            if not isinstance(span, dict):
-                errors.append(_err("selection", "SPAN_NOT_OBJECT",
-                                   {**ctx, "got": type(span).__name__}))
+            ev, span_errs = _span_evidence(span, spec.get("quote"), text,
+                                           "selection", ctx)
+            if span_errs:
+                errors.extend(span_errs)
                 return None, None
-            s, e = span.get("start"), span.get("end")
-            if not (isinstance(s, int) and isinstance(e, int)
-                    and 0 <= s < e <= len(text)):
-                errors.append(_err("selection", "SPAN_OUT_OF_BOUNDS",
-                                   {**ctx, "span": span}))
-                return None, None
-            return text[s:e], "source_span_verified"
+            return ev, "source_span_verified"
         ev = spec.get("evidence_text")
         ev = ev.strip() if isinstance(ev, str) else ""
         return (ev or None), "unverified"

@@ -251,6 +251,85 @@ def test_partwhole_claim_points_part_to_whole():
     assert c["object"] == "자전거", f"목적어가 전체여야 한다: {c}"
 
 
+# ── selection 검증이 실제 경로에 배선돼 있는가 (리뷰 발견 6) ──
+#
+# validate_selection은 sense 후보 대조·span 길이 상한·quote 일치를 검사한다.
+# 그러나 assemble/map_owl이 이를 호출하지 않고 자체 span 로직만 쓰고 있었다.
+# 따라서 단위 테스트는 통과하는데 실제 도구 경로로는 위조가 통과했다.
+# 아래는 "함수가 존재한다"가 아니라 "실제 경로가 막는다"를 계약한다.
+
+def test_assemble_rejects_fabricated_sense_id():
+    """후보에 없는 sense_id는 assemble에서 거부돼야 한다."""
+    snap = _snap()
+    t = snap["text"]
+    r = N.assemble_concepts({"snapshot": snap, "concepts": [
+        {"name": "개", "sense_id": "memory:개:999",   # 인벤토리에 없는 sense
+         "features": [{"label": "동물", "relation": "is_a",
+                       "evidence_span": _span(t, "가축화된 동물이다")}]}]})
+    assert not r["ok"]
+    assert any(e["code"] == "SENSE_NOT_IN_CANDIDATES" for e in r["errors"]), r["errors"]
+
+
+def test_assemble_allows_local_sense_id():
+    """local: 네임스페이스는 사전 밖 신조어용으로 허용된다."""
+    snap = _snap()
+    t = snap["text"]
+    r = N.assemble_concepts({"snapshot": snap, "concepts": [
+        {"name": "개", "sense_id": "local:개:001",
+         "features": [{"label": "동물", "relation": "is_a",
+                       "evidence_span": _span(t, "가축화된 동물이다")}]}]})
+    assert r["ok"], r.get("errors")
+
+
+def test_assemble_rejects_quote_mismatch():
+    """quote가 span 내용과 다르면 거부 — evidence laundering 차단."""
+    snap = _snap()
+    t = snap["text"]
+    r = N.assemble_concepts({"snapshot": snap, "concepts": [
+        {"name": "개", "features": [
+            {"label": "동물", "relation": "is_a",
+             "evidence_span": _span(t, "가축화된 동물이다"),
+             "quote": "전혀 다른 내용"}]}]})
+    assert not r["ok"]
+    assert any(e["code"] == "QUOTE_MISMATCH" for e in r["errors"]), r["errors"]
+
+
+def test_assemble_rejects_oversized_span():
+    """span 길이 상한(MAX_SPAN_CHARS)을 assemble도 강제해야 한다."""
+    long_text = "개는 동물이다. " + ("가" * (N.MAX_SPAN_CHARS + 100))
+    snap = N.make_snapshot(long_text)["snapshot"]
+    r = N.assemble_concepts({"snapshot": snap, "concepts": [
+        {"name": "개", "features": [
+            {"label": "동물", "relation": "is_a",
+             "evidence_span": {"start": 0, "end": N.MAX_SPAN_CHARS + 50}}]}]})
+    assert not r["ok"]
+    assert any(e["code"] == "SPAN_TOO_LONG" for e in r["errors"]), r["errors"]
+
+
+def test_owlmap_rejects_quote_mismatch():
+    """map_owl 경로도 동일하게 quote를 대조해야 한다."""
+    snap = _geo_snap()
+    b = _geo_bundle(snap)
+    b["concepts"][1]["differentia"][0]["quote"] = "위조된 인용"
+    r = N.map_to_owl(b)
+    assert not r["ok"]
+    assert any(e["code"] == "QUOTE_MISMATCH" for e in r["errors"]), r["errors"]
+
+
+def test_owlmap_rejects_oversized_span():
+    long_text = GEO + ("가" * (N.MAX_SPAN_CHARS + 100))
+    snap = N.make_snapshot(long_text)["snapshot"]
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "평행사변형", "definition_kind": "primitive"},
+        {"name": "직사각형", "definition_kind": "defined",
+         "kind_rationale": "r", "genus": "평행사변형",
+         "differentia": [
+             {"property": "직각성", "restriction": "value", "filler": True,
+              "evidence_span": {"start": 0, "end": N.MAX_SPAN_CHARS + 50}}]}]})
+    assert not r["ok"]
+    assert any(e["code"] == "SPAN_TOO_LONG" for e in r["errors"]), r["errors"]
+
+
 if __name__ == "__main__":
     import pytest
     sys.exit(pytest.main([__file__, "-q"]))
