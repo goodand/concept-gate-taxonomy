@@ -143,6 +143,30 @@ def test_schema_rejects_defined_without_definition():
             {"name": "X", "definition_kind": "defined"}])
 
 
+# ── P5: phase stereotype punning (리뷰 발견 4) ───────────────────────
+
+def test_p5_phase_stereotype_emits_rdf_type_and_subclassof():
+    """gUFO Phase: Child rdf:type Phase(punning) *그리고* Child SubClassOf
+    Person 둘 다 분류 결과에 나타나야 한다 — HANDOFF §5-1 수용기준."""
+    world, onto, _ = cg_owl.build_ontology(concepts=[
+        {"name": "Person", "definition_kind": "primitive",
+         "stereotype": "kind"},
+        {"name": "Child", "definition_kind": "primitive",
+         "genus": "Person", "stereotype": "phase"},
+    ])
+    result = cg_owl.classify(world, onto)
+    assert result["unsatisfiable"] == []
+    assert cg_owl.is_subclass_of(onto, "Child", "Person"), \
+        "Child SubClassOf Person이 유도되지 않음"
+    assert "Person" in result["hierarchy"]["Child"]
+    assert result["stereotypes"].get("Child") == "Phase", \
+        "Child rdf:type Phase 펀닝이 분류 결과에 나타나지 않음"
+    assert result["stereotypes"].get("Person") == "Kind"
+    # 마커 클래스 자체는 도메인 hierarchy에 노출되지 않는다
+    assert "_GUFOPhase" not in result["hierarchy"]
+    assert "_GUFOKind" not in result["hierarchy"]
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
 

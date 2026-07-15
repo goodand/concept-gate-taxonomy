@@ -418,3 +418,43 @@ def test_owlmap_vocab_matches_cg_owl():
         import pytest
         pytest.skip("owlready2 미설치")
     assert N.OWL_RESTRICTIONS == cg_owl.SUPPORTED_RESTRICTIONS
+    assert N.OWL_STEREOTYPES == cg_owl.GUFO_STEREOTYPES
+
+
+def test_owlmap_rejects_bad_stereotype():
+    snap = _geo_snap()
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "primitive", "stereotype": "wizard"}]})
+    assert not r["ok"]
+    assert any(e["code"] == "BAD_STEREOTYPE" for e in r["errors"])
+
+
+def test_owlmap_rejects_unhashable_stereotype():
+    """stereotype=[1,2] — genus와 같은 부류의 unhashable-in-frozenset crash
+    (fuzz로 재현됨)."""
+    snap = _geo_snap()
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "primitive", "stereotype": [1, 2]}]})
+    assert not r["ok"]
+    assert any(e["code"] == "BAD_STEREOTYPE" for e in r["errors"])
+
+
+def test_owlmap_phase_requires_genus():
+    snap = _geo_snap()
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "primitive", "stereotype": "phase"}]})
+    assert not r["ok"]
+    assert any(e["code"] == "PHASE_WITHOUT_GENUS" for e in r["errors"])
+
+
+def test_owlmap_stereotype_passes_through_to_owl_concepts():
+    snap = _geo_snap()
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "평행사변형", "definition_kind": "primitive",
+         "stereotype": "kind"},
+        {"name": "X", "definition_kind": "primitive",
+         "genus": "평행사변형", "stereotype": "phase"}]})
+    assert r["ok"], r.get("errors")
+    by_name = {c["name"]: c for c in r["owl"]["concepts"]}
+    assert by_name["평행사변형"]["stereotype"] == "kind"
+    assert by_name["X"]["stereotype"] == "phase"

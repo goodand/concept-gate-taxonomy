@@ -514,6 +514,8 @@ def assemble_concepts(bundle: Dict[str, Any],
 OWL_RESTRICTIONS = frozenset(
     {"some", "only", "exactly", "min", "max", "value", "subClassOf"})
 OWL_DEFINITION_KINDS = frozenset({"primitive", "defined"})
+OWL_STEREOTYPES = frozenset(
+    {"kind", "subkind", "phase", "role", "category", "defined_class"})
 
 
 def _validate_owl_restriction(spec, names, stage, errors, ctx):
@@ -547,6 +549,11 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
          "name": str,
          "definition_kind": "primitive"|"defined",   # agent의 제안 (§0 질문 근거)
          "kind_rationale": str,                       # 왜 그 kind인지 (근거 필수)
+         "stereotype": "kind"|"subkind"|"phase"|"role"|"category"|"defined_class"|None,
+                                                       # gUFO meta-type (선택).
+                                                       # "phase"는 genus 필수 —
+                                                       # HermiT가 rdf:type Phase
+                                                       # + SubClassOf genus로 방출
          "genus": str|None,
          "differentia": [{property, restriction, filler, cardinality?,
                           evidence_span?|evidence_text?}],
@@ -621,10 +628,26 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
                                {"concept": name,
                                 "hint": "defined(≡)에는 왜 필요충분인지 근거 필수"}))
             continue
+        stereotype = rc.get("stereotype")
+        if stereotype is not None and (
+                not isinstance(stereotype, str)
+                or stereotype not in OWL_STEREOTYPES):
+            errors.append(_err(stage, "BAD_STEREOTYPE",
+                               {"concept": name, "got": stereotype,
+                                "known": sorted(OWL_STEREOTYPES)}))
+            continue
         genus = rc.get("genus")
         if genus and genus not in names:
             errors.append(_err(stage, "UNKNOWN_GENUS",
                                {"concept": name, "genus": genus}))
+            continue
+        if stereotype == "phase" and not genus:
+            # gUFO Phase는 특수화하는 genus(Kind) 없이 방출하면 무의미하다
+            # (리뷰 발견 4 수용기준: Child rdf:type Phase *그리고*
+            # Child SubClassOf Person).
+            errors.append(_err(stage, "PHASE_WITHOUT_GENUS",
+                               {"concept": name,
+                                "hint": "phase는 genus(특수화 대상 Kind) 필수"}))
             continue
         diff, nec = [], []
         for lst_name, src, dst in (("differentia", rc.get("differentia") or [], diff),
@@ -669,6 +692,8 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
         oc = {"name": name, "definition_kind": dkind}
         if genus:
             oc["genus"] = genus
+        if stereotype:
+            oc["stereotype"] = stereotype
         if diff:
             oc["differentia"] = diff
         if nec:

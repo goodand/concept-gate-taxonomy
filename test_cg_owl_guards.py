@@ -127,5 +127,27 @@ def test_is_subclass_of_nonstr_names():
         cg_owl.is_subclass_of(onto, 7, "X")
 
 
+# ── stereotype (리뷰 발견 4) ──────────────────────────────────────────
+
+def test_unknown_stereotype_is_structured_error():
+    with pytest.raises(cg_owl.SerializationError, match="stereotype"):
+        _build(concepts=[{"name": "X", "stereotype": "wizard"}])
+
+
+def test_stereotype_unhashable_is_structured_error():
+    """stereotype=[1,2] — genus와 같은 부류의 unhashable-in-frozenset crash
+    (fuzz로 재현됨: `not in GUFO_STEREOTYPES` 앞에 isinstance 가드 없었음)."""
+    with pytest.raises(cg_owl.SerializationError, match="stereotype"):
+        _build(concepts=[{"name": "X", "stereotype": [1, 2]}])
+
+
+def test_no_stereotype_build_unaffected():
+    """stereotype을 안 쓰는 기존 호출은 마커가 생기지 않는다."""
+    world, onto, classes = _build(
+        concepts=[{"name": "Wing", "definition_kind": "primitive"}])
+    assert set(classes) == {"Wing"}
+    assert onto["_GUFOPhase"] is None
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))

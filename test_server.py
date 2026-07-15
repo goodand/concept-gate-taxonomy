@@ -583,6 +583,47 @@ async def test_normalizer_protocol():
               not g3["ok"] and g3["stage"] == "owl-serialize",
               f"got {g3}")
 
+        # 3-13. gUFO phase stereotype 펀닝 — MCP 경유 전 구간 (리뷰 발견 4)
+        phase_snap = (await client.call_tool(
+            "make_snapshot", {"text": "사람은 존재다. 아이는 사람의 한 단계다."})).data["snapshot"]
+        phase_owl = {"snapshot": phase_snap, "concepts": [
+            {"name": "사람", "definition_kind": "primitive",
+             "stereotype": "kind"},
+            {"name": "아이", "definition_kind": "primitive",
+             "genus": "사람", "stereotype": "phase"},
+        ]}
+        pm = (await client.call_tool("map_owl", {"bundle": phase_owl})).data
+        check("3-13a map_owl: stereotype이 owl.concepts로 전달됨",
+              pm["ok"] and pm["owl"]["concepts"][1]["stereotype"] == "phase",
+              f"got {pm}")
+        pc = (await client.call_tool("classify_owl", {"owl": pm["owl"]})).data
+        if pc["ok"]:
+            check("3-13b classify_owl: 아이 rdf:type Phase 그리고 SubClassOf 사람",
+                  pc["stereotypes"].get("아이") == "Phase"
+                  and "사람" in pc["hierarchy"].get("아이", []),
+                  f"got {pc}")
+        else:
+            check("3-13b classify_owl: 미가용 시 구조화 오류",
+                  pc["errors"][0]["code"] in
+                  ("REASONER_UNAVAILABLE", "OWLREADY2_UNAVAILABLE"))
+
+        pbad1 = (await client.call_tool("map_owl", {"bundle": {
+            "snapshot": phase_snap, "concepts": [
+                {"name": "X", "stereotype": "wizard"}]}})).data
+        check("3-13c map_owl: 알 수 없는 stereotype 거부",
+              not pbad1["ok"]
+              and any(e["code"] == "BAD_STEREOTYPE" for e in pbad1["errors"]),
+              f"got {pbad1}")
+
+        pbad2 = (await client.call_tool("map_owl", {"bundle": {
+            "snapshot": phase_snap, "concepts": [
+                {"name": "아이", "stereotype": "phase"}]}})).data
+        check("3-13d map_owl: genus 없는 phase 거부",
+              not pbad2["ok"]
+              and any(e["code"] == "PHASE_WITHOUT_GENUS"
+                      for e in pbad2["errors"]),
+              f"got {pbad2}")
+
 
 # ═══════════════════════════════════════════════════════
 # 실행

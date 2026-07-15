@@ -25,11 +25,31 @@ from owlready2 import (
     ObjectProperty,
     Thing,
     World,
+    rdf_type,
     sync_reasoner,
 )
 
 SUPPORTED_RESTRICTIONS = {"some", "only", "exactly", "min", "max", "value",
                           "subClassOf"}
+
+# gUFO stereotype (owl-serialization-spec.md §2). "defined_class"는 meta-type이
+# 아니라 definition_kind="defined"의 동의어라 punning 마커가 없다.
+GUFO_STEREOTYPES = frozenset(
+    {"kind", "subkind", "phase", "role", "category", "defined_class"})
+
+# stereotype -> punning 마커 클래스의 로컬 이름. 리뷰 발견 4: gUFO는
+# "Child rdf:type gufo:Phase" (punning, me타타입) + "Child SubClassOf Person"
+# (subsumption) 둘 다로 phase를 표현한다 — 기존 코드는 후자조차 없었다.
+# 마커는 도메인 개념과 이름이 겹치지 않도록 접두어를 둔다(사용자가 개념을
+# "Phase"라 명명할 수 있음).
+_STEREOTYPE_MARKERS = {
+    "kind": "_GUFOKind",
+    "subkind": "_GUFOSubKind",
+    "phase": "_GUFOPhase",
+    "role": "_GUFORole",
+    "category": "_GUFOCategory",
+}
+_MARKER_TO_LABEL = {v: v[len("_GUFO"):] for v in _STEREOTYPE_MARKERS.values()}
 
 
 class SerializationError(ValueError):
@@ -64,6 +84,13 @@ def _validate_inputs(concepts, object_properties, data_properties,
         if genus is not None and not isinstance(genus, str):
             raise SerializationError(
                 f"{name}: genus must be str|None, got {type(genus).__name__}")
+        stereotype = c.get("stereotype")
+        if stereotype is not None and (
+                not isinstance(stereotype, str)
+                or stereotype not in GUFO_STEREOTYPES):
+            raise SerializationError(
+                f"{name}: unknown stereotype {stereotype!r}, "
+                f"must be one of {sorted(GUFO_STEREOTYPES)}")
         for field in ("differentia", "necessary_only"):
             specs = c.get(field, [])
             if specs is None:
@@ -206,6 +233,14 @@ def build_ontology(concepts: List[Dict[str, Any]],
                 p.range = [rng]
             props[dspec["name"]] = p
 
+        # gUFO stereotype 마커 (실제 쓰이는 것만 선언 — 안 쓰는 빌드는
+        # 출력이 이전과 바이트 단위로 동일해야 한다)
+        needed_markers = {
+            _STEREOTYPE_MARKERS[c["stereotype"]] for c in concepts
+            if c.get("stereotype") in _STEREOTYPE_MARKERS
+        }
+        markers = {m: types.new_class(m, (Thing,)) for m in needed_markers}
+
         # 1차: 클래스 선언 (genus 참조가 순서 무관하도록 먼저 전부 만든다)
         for c in concepts:
             classes[c["name"]] = types.new_class(c["name"], (Thing,))
@@ -247,6 +282,15 @@ def build_ontology(concepts: List[Dict[str, Any]],
                 for n in parts + necessary:
                     cls.is_a.append(n)
 
+            marker_name = _STEREOTYPE_MARKERS.get(c.get("stereotype"))
+            if marker_name:
+                # punning: cls는 SubClassOf로 genus를 특수화하면서 동시에
+                # rdf:type으로 meta-type을 갖는다. owlready2의 .is_a는 둘을
+                # 구분하지 않고 합쳐 보여주므로(punning 시 확인됨), classify()
+                # 가 raw triple로 따로 걸러낸다.
+                onto._add_obj_triple_spo(cls.storid, rdf_type,
+                                         markers[marker_name].storid)
+
         for group in disjoint_groups or []:
             unknown = [n for n in group if n not in classes]
             if unknown:
@@ -258,25 +302,56 @@ def build_ontology(concepts: List[Dict[str, Any]],
 
 
 def classify(world, onto) -> Dict[str, Any]:
-    """HermiT 실행 → 유도된 계층과 unsatisfiable 목록 반환."""
+    """HermiT 실행 → 유도된 계층·stereotype 펀닝·unsatisfiable 목록 반환.
+
+    hierarchy는 SubClassOf만 담는다(기존 계약 불변). stereotype 펀닝
+    (rdf:type)은 raw triple로 별도 추출한다 — owlready2는 클래스 엔티티의
+    rdf:type과 rdfs:subClassOf를 .is_a 하나로 합쳐 보여주므로, 마커를
+    거기 섞으면 "Child ⊑ Phase"처럼 보여 subsumption과 meta-typing이
+    혼동된다(punning 실험으로 확인).
+    """
     with onto:
         sync_reasoner(world, infer_property_values=False, debug=0)
+
+    marker_storid_to_label = {}
+    for marker_name, label in _MARKER_TO_LABEL.items():
+        marker_cls = onto[marker_name]
+        if marker_cls is not None:
+            marker_storid_to_label[marker_cls.storid] = label
+    marker_storids = set(marker_storid_to_label)
+
     hierarchy: Dict[str, List[str]] = {}
+    stereotypes: Dict[str, str] = {}
     unsat: List[str] = []
     for cls in onto.classes():
+        if cls.storid in marker_storids:
+            continue  # 마커 자체는 도메인 개념이 아니다
+        type_targets = {o for _, _, o in
+                        onto._get_obj_triples_spo_spo(cls.storid, rdf_type, None)}
+        hit = type_targets & marker_storids
+        if hit:
+            stereotypes[cls.name] = marker_storid_to_label[next(iter(hit))]
         parents = sorted(
             p.name for p in cls.is_a
             if hasattr(p, "name") and p is not Thing and p.name != cls.name
+            and p.storid not in marker_storids
         )
         equiv = list(cls.equivalent_to)
         if Nothing in cls.is_a or Nothing in equiv:
             unsat.append(cls.name)
         hierarchy[cls.name] = parents
-    return {"hierarchy": hierarchy, "unsatisfiable": sorted(unsat)}
+    return {"hierarchy": hierarchy, "unsatisfiable": sorted(unsat),
+            "stereotypes": stereotypes}
 
 
 def is_subclass_of(onto, child_name: str, parent_name: str) -> bool:
-    """분류 후: child ⊑ parent (전이 포함) 인가."""
+    """분류 후: child ⊑ parent (전이 포함) 인가.
+
+    ponytail: stereotype 마커(_GUFOPhase 등)를 parent_name으로 넘기면
+    owlready2의 .ancestors()가 punning으로 추가된 rdf:type도 subsumption처럼
+    따라간다 — True가 나올 수 있다. 마커 조회는 classify()의 stereotypes를
+    쓸 것. 실 gUFO owl:imports(finding 3)가 들어오면 이 구분이 다시 필요.
+    """
     if not isinstance(child_name, str) or not isinstance(parent_name, str):
         raise SerializationError(
             f"class names must be str: {child_name!r}/{parent_name!r}")

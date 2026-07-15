@@ -93,6 +93,10 @@ for b in BAD:
          lambda b=b: N.map_to_owl({"snapshot": SNAP, "concepts": [
              {"name": "x", "definition_kind": "primitive",
               "disjoint_with": b}]}))
+    case(f"map_owl(stereotype={type(b).__name__})",
+         lambda b=b: N.map_to_owl({"snapshot": SNAP, "concepts": [
+             {"name": "x", "definition_kind": "primitive",
+              "stereotype": b}]}))
     case(f"map_owl(kind_rationale={type(b).__name__})",
          lambda b=b: N.map_to_owl({"snapshot": SNAP, "concepts": [
              {"name": "x", "definition_kind": "defined", "genus": None,
@@ -138,6 +142,8 @@ if OWL is not None:
                 lambda b=b: _build(concepts=[{"name": b}]))
         owlcase(f"owl.build(genus={type(b).__name__})",
                 lambda b=b: _build(concepts=[{"name": "X", "genus": b}]))
+        owlcase(f"owl.build(stereotype={type(b).__name__})",
+                lambda b=b: _build(concepts=[{"name": "X", "stereotype": b}]))
         owlcase(f"owl.build(differentia={type(b).__name__})",
                 lambda b=b: _build(concepts=[{"name": "X", "differentia": b}]))
         owlcase(f"owl.build(diff_item={type(b).__name__})",
