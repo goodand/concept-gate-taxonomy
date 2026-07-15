@@ -175,6 +175,28 @@ def test_p5_phase_stereotype_emits_rdf_type_and_subclassof():
                for o in onto.imported_ontologies)
 
 
+# ── P6: gUFO 공리 발화 증명 (finding 3) ──────────────────────────────
+
+def test_p6_gufo_disjointness_axiom_fires():
+    """owl:imports가 장식이 아니다 — gUFO의 Phase⊥Role 공리가 HermiT에서
+    실제로 발화하는지 증명한다. P5는 '일관된 입력이 통과한다'만 보이므로,
+    import한 gUFO 공리가 reasoner에 정말 닿는지는 모순 입력으로 증명한다.
+    공개 스키마는 stereotype이 개념당 하나라 이 모순을 못 만들므로, raw
+    triple로 Child에 Phase+Role 이중 punning을 주입한다."""
+    from owlready2 import rdf_type, OwlReadyInconsistentOntologyError
+    world, onto, classes = cg_owl.build_ontology(concepts=[
+        {"name": "Person", "definition_kind": "primitive",
+         "stereotype": "kind"},
+        {"name": "Child", "definition_kind": "primitive",
+         "genus": "Person", "stereotype": "phase"},
+    ])
+    role = world[cg_owl.GUFO_NS + "Role"]
+    assert role is not None, "gUFO Role 클래스가 import되지 않음"
+    onto._add_obj_triple_spo(classes["Child"].storid, rdf_type, role.storid)
+    with pytest.raises(OwlReadyInconsistentOntologyError):
+        cg_owl.classify(world, onto)
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
 

@@ -75,7 +75,7 @@ Subtree 갱신: `git subtree pull --prefix vendor/obo-relations https://github.c
 ### 테스트 5종 (전부 그린이어야 머지)
 
 ```bash
-venv/bin/python -m pytest -q                        # 78
+venv/bin/python -m pytest -q                        # 79
 venv/bin/python test_server.py                      # 73/73
 venv/bin/python qa_v7.py                            # 101/101
 venv/bin/python -m conceptgate.concept_gate_v7      # 60/60 (인라인)
