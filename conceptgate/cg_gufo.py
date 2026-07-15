@@ -61,7 +61,7 @@ def load_scior_rules(path: Optional[str] = None) -> Dict[str, SciorRuleRef]:
     """Load Scior implementation rules from the vendored TSV.
 
     Falls back to the minimal rules ConceptGate currently uses when the subtree
-    is absent, which keeps files/-only MCP installs working.
+    is absent, which keeps vendor-less installs working.
     """
     rules_path = path or _default_rules_path()
     if not os.path.exists(rules_path):

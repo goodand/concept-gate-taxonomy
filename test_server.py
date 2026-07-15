@@ -11,7 +11,7 @@ import asyncio
 import json
 import sys
 
-import server
+from conceptgate import server
 from fastmcp import Client
 
 
@@ -277,6 +277,9 @@ async def test_mcp_protocol():
         check("2-1 도구 6개 등록",
               {"lint_concepts", "run_pipeline", "expand", "classify_parents", "export_graph", "analyze_expansion"} <= tool_names,
               f"got {tool_names}")
+        check("2-1b normalizer 도구 3개 등록",
+              {"make_snapshot", "lookup_senses", "assemble_concepts"} <= tool_names,
+              f"got {tool_names}")
 
         # 2-2. 리소스 목록
         resources = await client.list_resources()
@@ -287,6 +290,9 @@ async def test_mcp_protocol():
                   "conceptgate://pipeline-status-codes",
                   "conceptgate://client-guide",
               } <= res_uris,
+              f"got {res_uris}")
+        check("2-2b normalizer 리소스 2개 등록",
+              {"normalizer://protocol/v1", "normalizer://relations/v1"} <= res_uris,
               f"got {res_uris}")
 
         # 2-3. 프롬프트 목록
@@ -386,6 +392,239 @@ async def test_mcp_protocol():
               and inject_result.data["server_meta"]["timing_ms"] >= 0)
 
 
+async def test_normalizer_protocol():
+    print("\n[PART 3] Normalizer surface (자연어 → evidence-carrying concepts)")
+
+    async with Client(server.mcp) as client:
+        # 3-1. protocol resource 읽기
+        proto = await client.read_resource("normalizer://protocol/v1")
+        proto_text = proto[0].text
+        check("3-1 protocol resource에 단계 순서 명시",
+              "make_snapshot" in proto_text and "assemble_concepts" in proto_text)
+
+        # 3-2. relation crosswalk resource — feature_activity는 unmapped
+        rel = await client.read_resource("normalizer://relations/v1")
+        rel_data = json.loads(rel[0].text)
+        check("3-2 crosswalk: feature_activity → unmapped",
+              rel_data["crosswalk"]["feature_activity"]["mapping_status"] == "unmapped")
+        check("3-2b crosswalk: stuff_object → material_of / structural",
+              rel_data["crosswalk"]["stuff_object"]["relation_hint"] == "material_of"
+              and rel_data["crosswalk"]["stuff_object"]["feature_type"]
+              == "structural_composition")
+
+        # 3-3. make_snapshot → 결정론 해시
+        snap = (await client.call_tool(
+            "make_snapshot", {"text": "개는 갯과의 가축화된 동물이다."})).data
+        check("3-3 make_snapshot → sha256 고정", snap["ok"] and
+              len(snap["snapshot"]["sha256"]) == 64)
+
+        # 3-4. lookup_senses → 다의어 후보
+        senses = (await client.call_tool("lookup_senses", {"surface": "개"})).data
+        check("3-4 lookup_senses: 개 → 2 sense 후보", len(senses["candidates"]) == 2)
+
+        # 3-5. assemble_concepts happy-path → lint 통과 concepts
+        t = snap["snapshot"]["text"]
+        j = t.find("가축화된 동물이다")
+        i = t.find("갯과의 가축화된")
+        bundle = {"snapshot": snap["snapshot"], "concepts": [
+            {"name": "동물", "features": [
+                {"label": "동물", "relation": "is_a",
+                 "evidence_span": {"start": j, "end": j + 9}}]},
+            {"name": "개", "features": [
+                {"label": "동물", "relation": "is_a",
+                 "evidence_span": {"start": j, "end": j + 9}},
+                {"label": "갯과", "relation": "is_a",
+                 "evidence_span": {"start": i, "end": i + 8}}]},
+        ]}
+        asm = (await client.call_tool("assemble_concepts", {"bundle": bundle})).data
+        check("3-5 assemble → complete + lint 통과",
+              asm["ok"] and asm["stage"] == "complete", f"got {asm}")
+        check("3-5b 모든 claim이 L1(source_span_verified)",
+              all(c["verification_status"] == "source_span_verified"
+                  for c in asm["claims"]))
+
+        # 3-6. 조립 산출물이 run_pipeline을 통과 (end-to-end via MCP)
+        gate = (await client.call_tool(
+            "run_pipeline",
+            {"concepts": asm["concepts_json"]["concepts"]})).data
+        check("3-6 조립 concepts → run_pipeline PASS + is-a edge",
+              gate["status"] == "PASS"
+              and gate["dag"].get("동물") == ["개"], f"got {gate['status']}, {gate['dag']}")
+
+        # 3-7. 위조된 span은 selection stage에서 거부 (원인 단계 식별)
+        bad = {"snapshot": snap["snapshot"], "concepts": [
+            {"name": "개", "features": [
+                {"label": "동물", "relation": "is_a",
+                 "evidence_span": {"start": 0, "end": 999999}}]}]}
+        bad_res = (await client.call_tool("assemble_concepts", {"bundle": bad})).data
+        check("3-7 위조 span → selection stage 거부",
+              not bad_res["ok"] and bad_res["stage"] == "selection")
+
+        # 3-8. feature_activity 관계는 crosswalk에서 거부
+        fa = {"snapshot": snap["snapshot"], "concepts": [
+            {"name": "쇼핑", "features": [
+                {"label": "지불", "relation": "feature_activity",
+                 "evidence_text": "지불은 쇼핑의 일부 활동이다"}]}]}
+        fa_res = (await client.call_tool("assemble_concepts", {"bundle": fa})).data
+        check("3-8 feature_activity → crosswalk 거부",
+              not fa_res["ok"] and fa_res["stage"] == "crosswalk")
+
+        # 3-9. OWL 경로: map_owl — defined에 kind_rationale 필수
+        geo_text = ("평행사변형은 사각형이다. 직사각형은 네 각이 직각인 "
+                    "평행사변형이다.")
+        gsnap = (await client.call_tool(
+            "make_snapshot", {"text": geo_text})).data["snapshot"]
+        gt = gsnap["text"]
+        gi = gt.find("네 각이 직각인 평행사변형")
+        good_owl = {"snapshot": gsnap, "concepts": [
+            {"name": "평행사변형", "definition_kind": "primitive"},
+            {"name": "직사각형", "definition_kind": "defined",
+             "kind_rationale": "본문이 직각인 평행사변형으로 정의",
+             "genus": "평행사변형",
+             "differentia": [{"property": "직각성", "restriction": "value",
+                              "filler": True,
+                              "evidence_span": {"start": gi, "end": gi + 14}}]},
+        ]}
+        m = (await client.call_tool("map_owl", {"bundle": good_owl})).data
+        check("3-9 map_owl → ok + typed 제약 + L1 claims",
+              m["ok"] and m["owl"]["concepts"][1]["definition_kind"] == "defined"
+              and all(c["verification_status"] == "source_span_verified"
+                      for c in m["claims"]), f"got {m}")
+
+        bad_owl = {"snapshot": gsnap, "concepts": [
+            {"name": "X", "definition_kind": "defined", "genus": None}]}
+        mb = (await client.call_tool("map_owl", {"bundle": bad_owl})).data
+        check("3-10 map_owl: 근거 없는 defined(≡) 거부",
+              not mb["ok"] and any(e["code"] == "MISSING_KIND_RATIONALE"
+                                   for e in mb["errors"]))
+
+        # 3-10b. 위조 snapshot hash 거부 (발견 1 / 분석 §7.3)
+        forged = {"text": gt, "sha256": "deadbeef", "uri": "x"}
+        mf = (await client.call_tool("map_owl", {"bundle": {
+            "snapshot": forged, "concepts": [
+                {"name": "평행사변형", "definition_kind": "primitive"}]}})).data
+        check("3-10b map_owl: 위조 hash → SOURCE_HASH_MISMATCH 거부",
+              not mf["ok"] and mf["stage"] == "snapshot"
+              and any(e["code"] == "SOURCE_HASH_MISMATCH" for e in mf["errors"]),
+              f"got {mf}")
+
+        # 3-10c~e. selection 검증이 MCP 경유로도 강제되는가 (발견 6).
+        # validate_selection은 있었지만 assemble/map_owl이 호출하지 않아
+        # 실제 도구 경로로는 위조가 통과했다. 도구 표면에서 고정한다.
+        snap_d = (await client.call_tool(
+            "make_snapshot", {"text": "개는 갯과의 가축화된 동물이다."})).data["snapshot"]
+        dt = snap_d["text"]
+        di = dt.find("가축화된 동물이다")
+        dspan = {"start": di, "end": di + len("가축화된 동물이다")}
+
+        fake_sense = (await client.call_tool("assemble_concepts", {"bundle": {
+            "snapshot": snap_d, "concepts": [
+                {"name": "개", "sense_id": "memory:개:999",
+                 "features": [{"label": "동물", "relation": "is_a",
+                               "evidence_span": dspan}]}]}})).data
+        check("3-10c assemble: 위조 sense_id → SENSE_NOT_IN_CANDIDATES 거부",
+              not fake_sense["ok"]
+              and any(e["code"] == "SENSE_NOT_IN_CANDIDATES"
+                      for e in fake_sense["errors"]), f"got {fake_sense}")
+
+        bad_quote = (await client.call_tool("assemble_concepts", {"bundle": {
+            "snapshot": snap_d, "concepts": [
+                {"name": "개", "features": [
+                    {"label": "동물", "relation": "is_a",
+                     "evidence_span": dspan,
+                     "quote": "원문에 없는 인용"}]}]}})).data
+        check("3-10d assemble: quote≠span → QUOTE_MISMATCH 거부",
+              not bad_quote["ok"]
+              and any(e["code"] == "QUOTE_MISMATCH"
+                      for e in bad_quote["errors"]), f"got {bad_quote}")
+
+        owl_quote = (await client.call_tool("map_owl", {"bundle": {
+            "snapshot": gsnap, "concepts": [
+                {"name": "평행사변형", "definition_kind": "primitive"},
+                {"name": "직사각형", "definition_kind": "defined",
+                 "kind_rationale": "r", "genus": "평행사변형",
+                 "differentia": [{"property": "직각성", "restriction": "value",
+                                  "filler": True,
+                                  "evidence_span": {"start": gi, "end": gi + 14},
+                                  "quote": "위조된 인용"}]}]}})).data
+        check("3-10e map_owl: quote≠span → QUOTE_MISMATCH 거부",
+              not owl_quote["ok"]
+              and any(e["code"] == "QUOTE_MISMATCH"
+                      for e in owl_quote["errors"]), f"got {owl_quote}")
+
+        # 3-11. classify_owl — reasoner 가용 시 유도, 불가 시 구조화 오류
+        cls_res = (await client.call_tool("classify_owl", {"owl": m["owl"]})).data
+        if cls_res["ok"]:
+            check("3-11 classify_owl: 직사각형 ⊑ 평행사변형 유도",
+                  "평행사변형" in cls_res["hierarchy"].get("직사각형", []),
+                  f"got {cls_res['hierarchy']}")
+        else:
+            check("3-11 classify_owl: 미가용 시 구조화 오류",
+                  cls_res["errors"][0]["code"] in
+                  ("REASONER_UNAVAILABLE", "OWLREADY2_UNAVAILABLE"))
+
+        # 3-12. classify_owl 경계 가드 — 변형 payload는 crash가 아니라
+        # 구조화 오류 (아키텍처 분석 §7.5: concepts=[7]이 TypeError였음)
+        g1 = (await client.call_tool("classify_owl",
+                                     {"owl": {"concepts": [7]}})).data
+        check("3-12a classify_owl: concept_item=int → 구조화 오류",
+              not g1["ok"] and g1["stage"] == "owl-serialize",
+              f"got {g1}")
+        g2 = (await client.call_tool(
+            "classify_owl", {"owl": {"data_properties": [7]}})).data
+        check("3-12b classify_owl: data_property=int → 구조화 오류",
+              not g2["ok"] and any(e["code"] == "DATA_PROPERTY_NOT_OBJECT"
+                                   for e in g2["errors"]),
+              f"got {g2}")
+        g3 = (await client.call_tool("classify_owl", {"owl": {
+            "concepts": [{"name": "X", "definition_kind": "defined",
+                          "differentia": [7]}]}})).data
+        check("3-12c classify_owl: diff_item=int → 구조화 오류",
+              not g3["ok"] and g3["stage"] == "owl-serialize",
+              f"got {g3}")
+
+        # 3-13. gUFO phase stereotype 펀닝 — MCP 경유 전 구간 (리뷰 발견 4)
+        phase_snap = (await client.call_tool(
+            "make_snapshot", {"text": "사람은 존재다. 아이는 사람의 한 단계다."})).data["snapshot"]
+        phase_owl = {"snapshot": phase_snap, "concepts": [
+            {"name": "사람", "definition_kind": "primitive",
+             "stereotype": "kind"},
+            {"name": "아이", "definition_kind": "primitive",
+             "genus": "사람", "stereotype": "phase"},
+        ]}
+        pm = (await client.call_tool("map_owl", {"bundle": phase_owl})).data
+        check("3-13a map_owl: stereotype이 owl.concepts로 전달됨",
+              pm["ok"] and pm["owl"]["concepts"][1]["stereotype"] == "phase",
+              f"got {pm}")
+        pc = (await client.call_tool("classify_owl", {"owl": pm["owl"]})).data
+        if pc["ok"]:
+            check("3-13b classify_owl: 아이 rdf:type Phase 그리고 SubClassOf 사람",
+                  pc["stereotypes"].get("아이") == "Phase"
+                  and "사람" in pc["hierarchy"].get("아이", []),
+                  f"got {pc}")
+        else:
+            check("3-13b classify_owl: 미가용 시 구조화 오류",
+                  pc["errors"][0]["code"] in
+                  ("REASONER_UNAVAILABLE", "OWLREADY2_UNAVAILABLE"))
+
+        pbad1 = (await client.call_tool("map_owl", {"bundle": {
+            "snapshot": phase_snap, "concepts": [
+                {"name": "X", "stereotype": "wizard"}]}})).data
+        check("3-13c map_owl: 알 수 없는 stereotype 거부",
+              not pbad1["ok"]
+              and any(e["code"] == "BAD_STEREOTYPE" for e in pbad1["errors"]),
+              f"got {pbad1}")
+
+        pbad2 = (await client.call_tool("map_owl", {"bundle": {
+            "snapshot": phase_snap, "concepts": [
+                {"name": "아이", "stereotype": "phase"}]}})).data
+        check("3-13d map_owl: genus 없는 phase 거부",
+              not pbad2["ok"]
+              and any(e["code"] == "PHASE_WITHOUT_GENUS"
+                      for e in pbad2["errors"]),
+              f"got {pbad2}")
+
+
 # ═══════════════════════════════════════════════════════
 # 실행
 # ═══════════════════════════════════════════════════════
@@ -393,6 +632,7 @@ async def test_mcp_protocol():
 if __name__ == "__main__":
     test_direct()
     asyncio.run(test_mcp_protocol())
+    asyncio.run(test_normalizer_protocol())
 
     total = passed + failed
     print(f"\n{'=' * 57}")

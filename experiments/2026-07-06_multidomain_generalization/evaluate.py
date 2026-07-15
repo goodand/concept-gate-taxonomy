@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, ROOT)
 
-from concept_gate_v7 import ConceptPipeline, ParseGate  # noqa: E402
+from conceptgate.concept_gate_v7 import ConceptPipeline, ParseGate  # noqa: E402
 from cg_input_linter import lint_concepts  # noqa: E402
 
 CROSS_CODES = {"NO_SHARED_ESSENTIAL_LABELS", "ISA_CLAIM_FEATURE"}

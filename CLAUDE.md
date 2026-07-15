@@ -56,13 +56,31 @@ Subtree 갱신: `git subtree pull --prefix vendor/obo-relations https://github.c
 
 ## Project Structure
 
-- `concept_gate_v7.py` -- Core FCA-based concept lattice reasoner
-- `cg_partwhole.py` -- Part-whole adapter assembling vocabulary from vendor/obo-relations subtree
-- `files/server.py` -- MCP server (FastMCP adapter)
-- `files/concept_gate_v7.py`, `files/cg_partwhole.py` -- Deployment copies (keep in sync with root)
-- `qa_v7.py` -- QA test suite (89 tests)
+**정본 소스는 `conceptgate/` 패키지 하나뿐이다. 배포 사본을 만들지 말 것.**
+예전에는 루트와 `files/`에 같은 모듈이 두 벌 있었고, 한쪽만 고치면 다른 쪽 테스트가
+옛 코드로 돌아 *거짓 통과*가 났다. 그 실패 모드를 없애려고 단일 패키지로 합쳤다.
+새 모듈은 `conceptgate/`에 추가하면 wheel에 자동 포함된다(수동 목록 없음).
+
+- `conceptgate/concept_gate_v7.py` -- Core FCA-based concept lattice reasoner
+- `conceptgate/cg_partwhole.py` -- Part-whole adapter assembling vocabulary from vendor/obo-relations subtree
+- `conceptgate/cg_owl.py` -- OWL 2 DL serializer + HermiT classification (Java 필요)
+- `conceptgate/cg_normalizer.py` -- evidence-carrying 경계 어댑터 (단계 파이프라인)
+- `conceptgate/server.py` -- MCP server (FastMCP adapter). 실행: `python -m conceptgate.server`
+- `conceptgate/data/gufo.owl` -- gUFO endurants-only 서브셋 (형식 변환 사본, third_party/sources.lock.json에 해시 고정)
+- `qa_v7.py`, `test_*.py`, `fuzz_normalizer_types.py` -- 테스트 (repo 루트에서 실행)
+- `Dockerfile` -- 배포. JRE 포함 (HermiT가 Java를 요구하므로 Docker가 필수)
 - `vendor/` -- git subtrees (see Subtree Registry)
 - `docs/` -- Implementation packets and documentation
+
+### 테스트 5종 (전부 그린이어야 머지)
+
+```bash
+venv/bin/python -m pytest -q                        # 86
+venv/bin/python test_server.py                      # 73/73
+venv/bin/python qa_v7.py                            # 101/101
+venv/bin/python -m conceptgate.concept_gate_v7      # 60/60 (인라인)
+venv/bin/python fuzz_normalizer_types.py            # 209, CRASH=0
+```
 
 ## Key Architecture
 

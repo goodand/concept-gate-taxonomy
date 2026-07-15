@@ -1,12 +1,18 @@
-# 배치 A: 이 파일을 repo 루트에 두고, 서버 파일은 files/ 안에 유지할 때
-# render.yaml 위치: repo 루트 (concept-gate-taxonomy/render.yaml)
+# Render 배포 설정.
+#
+# runtime: docker인 이유 — HermiT(OWL DL reasoner)가 Java를 요구하는데,
+# 네이티브 python 런타임은 빌드 단계에 root가 없어 JRE를 설치할 수 없다.
+# python 런타임으로 두면 배포 자체는 성공하지만 OWL 경로(classify_owl 등)가
+# 전부 REASONER_UNAVAILABLE로 죽는다.
+#
+# 소스는 repo 루트의 conceptgate/ 패키지 하나뿐이다(배포 사본 없음).
+# 빌드·기동 명령은 Dockerfile이 소유하므로 buildCommand/startCommand를 두지 않는다.
 services:
   - type: web
     name: conceptgate-mcp
-    runtime: python
-    rootDir: files          # ← 서버 파일이 files/ 안에 있으므로
-    buildCommand: pip install -r requirements.txt
-    startCommand: python server.py
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     envVars:
       - key: PORT
         value: "8000"
@@ -14,6 +20,4 @@ services:
         generateValue: true
       - key: MCP_TRANSPORT
         value: "http"
-      - key: PYTHON_VERSION
-        value: "3.12"
     healthCheckPath: /health

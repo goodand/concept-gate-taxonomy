@@ -1,0 +1,23 @@
+[project]
+name = "conceptgate-mcp"
+version = "0.1.0"
+description = "MCP server for ConceptGate — an FCA/OWL-based concept hierarchy classifier"
+requires-python = ">=3.10"
+dependencies = ["fastmcp==3.4.3", "owlready2==0.51"]
+
+[project.optional-dependencies]
+# validate_gufo()의 SHACL 구조 검증용 — 없으면 경고 하나로 생략 (경고 반환 계약)
+shacl = ["pyshacl>=0.30"]
+
+[project.scripts]
+conceptgate-mcp = "conceptgate.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# 모듈을 손으로 나열하지 않는다. 예전 include 목록은 모듈이 늘 때마다 갱신을
+# 잊어 wheel이 깨졌다(cg_input_linter/cg_partwhole/cg_gufo 누락 사고).
+# 패키지 단위 선언은 그 실패 모드 자체를 없앤다.
+packages = ["conceptgate"]

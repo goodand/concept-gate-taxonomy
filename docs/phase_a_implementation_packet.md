@@ -1,5 +1,10 @@
 # Phase A Implementation Packet: UFO-based is-a vs has-a Discrimination
 
+> ⚠️ **경로 정보는 낡았다 (기록물).** 이 패킷이 쓰이던 당시에는 루트와 `files/`에
+> 소스가 두 벌 있었고 `cp ... files/`로 동기화했다. 지금 정본은 `conceptgate/`
+> 패키지 하나뿐이며 **사본을 만들면 안 된다.** 아래의 `cp` 지시는 따르지 말 것.
+> 설계 의도만 참고하고, 현재 구조는 `CLAUDE.md`를 보라.
+
 > **설계 이력**: Phase A 원안은 LLM에게 has-a를 `functional`로 출력하도록 지시했으나,
 > Phase B에서 STRUCTURAL 타입 추가 후 프롬프트-교정 논리 모순이 발생.
 > Option A(프롬프트가 structural_composition을 직접 지시, 교정 로직 삭제)로 해결.

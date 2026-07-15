@@ -1,5 +1,9 @@
 # Phase C Design Packet: RCA 다중 격자 + UFO Anti-Pattern 감지
 
+> ⚠️ **경로 정보는 낡았다 (기록물).** 당시에는 루트와 `files/`에 소스가 두 벌 있었다.
+> 지금 정본은 `conceptgate/` 패키지 하나뿐이며 **사본을 만들면 안 된다.**
+> 아래의 `cp ... files/` 동기화 지시는 따르지 말 것. 현재 구조는 `CLAUDE.md` 참조.
+
 Phase C 최소 구현(composition_view, 커밋 `aea9dbc`)의 나머지 설계.
 구현 전 설계 문서이며, 이 packet만 읽고 다른 에이전트가 구현할 수 있도록 작성됨.
 

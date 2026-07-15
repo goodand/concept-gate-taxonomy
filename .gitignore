@@ -12,3 +12,8 @@ uv.lock
 .env
 *.log
 /변경사항/
+
+# build artifacts
+dist/
+build/
+*.egg-info/

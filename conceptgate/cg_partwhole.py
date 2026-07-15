@@ -25,12 +25,15 @@ from typing import Dict, Optional
 
 
 # ── UFO relation_hint → FeatureType.value 매핑 ──
-# LLM schema의 relation_hint enum과 대응. is_a/material_of만 essential,
-# component_of/member_of 등은 structural_composition(has-a),
-# phase_of는 contextual_usage(UFO anti-rigid), located_in은 locational.
+# LLM schema의 relation_hint enum과 대응. is_a만 essential(분류적),
+# 부분-전체 계열(component/member/subcollection/subquantity/material)은
+# structural_composition(has-a), phase_of는 contextual_usage(UFO anti-rigid),
+# located_in은 locational.
+# 주의: Winston 1987의 stuff-object(재료-대상)는 meronymy이지 is-a가 아니다.
+# "재료가 본질적일 수 있다"는 essentiality의 문제로 관계 타입과 별개 축이다.
 RELATION_HINT_TYPE: Dict[str, str] = {
     "is_a":            "essential_feature",       # 분류적 (C ⊑ D)
-    "material_of":     "essential_feature",       # Winston: 재료-대상은 본질 가능
+    "material_of":     "structural_composition",  # Winston stuff-object (has-a)
     "component_of":    "structural_composition",  # 구성요소-통합체 (has-a)
     "member_of":       "structural_composition",  # 멤버-집합
     "subcollection_of":"structural_composition",  # 집합-집합
@@ -62,7 +65,11 @@ def hint_to_feature_type(relation_hint: Optional[str]) -> Optional[str]:
 
 
 def _default_obo_path() -> str:
-    """cg_partwhole.py 기준으로 core.obo 후보 경로 탐색 (root / files/ 양쪽)."""
+    """cg_partwhole.py 기준으로 core.obo 후보 경로 탐색.
+
+    패키지 안(conceptgate/)에서 실행될 때는 ../vendor/가, 설치된 wheel처럼
+    vendor를 옆에 둔 배치에서는 vendor/가 잡힌다. 둘 다 없으면 내장 fallback.
+    """
     here = os.path.dirname(os.path.abspath(__file__))
     for rel in ("vendor/obo-relations/core.obo",
                 "../vendor/obo-relations/core.obo"):
