@@ -162,9 +162,17 @@ def test_p5_phase_stereotype_emits_rdf_type_and_subclassof():
     assert result["stereotypes"].get("Child") == "Phase", \
         "Child rdf:type Phase 펀닝이 분류 결과에 나타나지 않음"
     assert result["stereotypes"].get("Person") == "Kind"
-    # 마커 클래스 자체는 도메인 hierarchy에 노출되지 않는다
-    assert "_GUFOPhase" not in result["hierarchy"]
-    assert "_GUFOKind" not in result["hierarchy"]
+    # gUFO 클래스 자체는 도메인 hierarchy에 노출되지 않는다 (finding 3:
+    # 실 gUFO import 후에도 hierarchy는 도메인 SubClassOf만 담는다 —
+    # reasoner가 전파하는 gufo:AntiRigidType 등 gUFO 조상도 안 샌다)
+    assert "Phase" not in result["hierarchy"]
+    assert "Kind" not in result["hierarchy"]
+    for parents in result["hierarchy"].values():
+        assert not any(p in ("AntiRigidType", "RigidType", "Sortal",
+                             "EndurantType") for p in parents), parents
+    # owl:imports가 실제로 선언되어 있다
+    assert any(o.base_iri.startswith("http://purl.org/nemo/gufo")
+               for o in onto.imported_ontologies)
 
 
 if __name__ == "__main__":

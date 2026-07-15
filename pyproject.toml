@@ -5,6 +5,10 @@ description = "MCP server for ConceptGate — an FCA/OWL-based concept hierarchy
 requires-python = ">=3.10"
 dependencies = ["fastmcp==3.4.3", "owlready2==0.51"]
 
+[project.optional-dependencies]
+# validate_gufo()의 SHACL 구조 검증용 — 없으면 경고 하나로 생략 (경고 반환 계약)
+shacl = ["pyshacl>=0.30"]
+
 [project.scripts]
 conceptgate-mcp = "conceptgate.server:main"
 

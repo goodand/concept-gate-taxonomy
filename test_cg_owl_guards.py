@@ -142,11 +142,45 @@ def test_stereotype_unhashable_is_structured_error():
 
 
 def test_no_stereotype_build_unaffected():
-    """stereotype을 안 쓰는 기존 호출은 마커가 생기지 않는다."""
+    """stereotype을 안 쓰는 기존 호출은 gUFO를 로드하지 않는다 — 출력
+    불변 + 205 트리플 파싱/reasoner 비용 회피 (lazy load 계약)."""
     world, onto, classes = _build(
         concepts=[{"name": "Wing", "definition_kind": "primitive"}])
     assert set(classes) == {"Wing"}
-    assert onto["_GUFOPhase"] is None
+    assert list(onto.imported_ontologies) == []
+    assert world[cg_owl.GUFO_NS + "Phase"] is None
+
+
+def test_stereotype_build_imports_gufo():
+    """stereotype이 있으면 gUFO가 로드되고 owl:imports로 선언된다.
+    조용한 생략(빈 stereotypes로 성공)은 위조 통과라 fail-fast 계약."""
+    if not cg_owl._GUFO_OWL.exists():
+        pytest.skip("conceptgate/data/gufo.owl 없음")
+    world, onto, classes = _build(
+        concepts=[{"name": "Person", "stereotype": "kind"}])
+    assert [o.base_iri for o in onto.imported_ontologies] \
+        and world[cg_owl.GUFO_NS + "Kind"] is not None
+
+
+def test_validate_gufo_clean_and_violation():
+    """validate_gufo: 경고 반환 계약 — ok는 항상 True, 위반은 warnings로."""
+    if not cg_owl._GUFO_OWL.exists():
+        pytest.skip("conceptgate/data/gufo.owl 없음")
+    world, onto, _ = _build(concepts=[
+        {"name": "Person", "stereotype": "kind"},
+        {"name": "Child", "genus": "Person", "stereotype": "phase"}])
+    v = cg_owl.validate_gufo(world, onto)
+    assert v["ok"] is True
+    codes = {w["code"] for w in v["warnings"]}
+    assert "GUFO_SHAPE_VIOLATION" not in codes
+
+    # Phase인데 Kind 특수화 없음 → 구조 위반 경고 (pyshacl 있을 때만)
+    w2, o2, _ = _build(concepts=[{"name": "Orphan", "stereotype": "phase"}])
+    v2 = cg_owl.validate_gufo(w2, o2)
+    assert v2["ok"] is True
+    codes2 = {w["code"] for w in v2["warnings"]}
+    assert codes2 <= {"GUFO_SHAPE_VIOLATION", "PYSHACL_UNAVAILABLE"}
+    assert codes2, "위반인데 경고가 없다"
 
 
 if __name__ == "__main__":

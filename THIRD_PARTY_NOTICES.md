@@ -23,7 +23,16 @@
 - 라이선스: Apache-2.0
 - 용도: `cg_gufo.py`가 RA02/RA03/RU01 rule metadata(TSV)를 읽기 전용으로 재사용. Scior의 rdflib/owlrl 런타임은 import하지 않음
 
-## gUFO (참조 어휘)
+## gUFO 1.0.0 (CC BY 4.0)
 
-- 출처: https://nemo-ufes.github.io/gufo/ (CC BY 4.0)
-- 용도: `concept_gate_v7.py`의 UFO stereotype specialization 행렬과 OntoClean 메타게이트의 근거 어휘. 파일 복제 없음(어휘 참조만)
+- 출처: https://nemo-ufes.github.io/gufo/ — Almeida, Falbo, Guizzardi, Sales 2019
+- IRI: `http://purl.org/nemo/gufo#` / Version IRI: `http://purl.org/nemo/gufo#/1.0.0`
+- 라이선스: Creative Commons Attribution 4.0 (CC BY 4.0)
+- 용도 1 (어휘 참조): `concept_gate_v7.py`의 UFO stereotype specialization 행렬과 OntoClean 메타게이트의 근거 어휘
+- 용도 2 (파일 파생, finding 3): `conceptgate/data/gufo.owl` — 공식 배포 서브셋
+  `gufoEndurantsOnly.ttl`(Scior 서브트리 경유)을 RDF/XML로 **무변경 형식 변환**한
+  사본. `cg_owl.build_ontology()`가 stereotype 사용 시 `owl:imports`로 선언해
+  HermiT가 gUFO disjointness/rigidity 공리를 네이티브 적용. 변환 명령·해시는
+  `third_party/sources.lock.json`에 고정
+  - 원본 SHA-256: `e5c1557dc2f3fee65ad4b96ca1ea2d036037574d1aba2c620c5ae02d2a24de4d`
+  - 변환본 SHA-256: `fc792a35cde0729ae77a94ac4be9d4acb9621cf3f8b46864fe1dee2be6040577`

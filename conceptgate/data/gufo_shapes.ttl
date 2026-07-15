@@ -1,0 +1,32 @@
+# gUFO 구조 제약 (SHACL) — cg_owl.validate_gufo()가 사용.
+# anti-rigid 타입(Phase/Role)은 rigid Kind를 특수화해야 한다는 gUFO 모델링
+# 규칙. punning된 클래스(rdf:type gufo:Phase인 노드)가 rdfs:subClassOf로
+# gufo:Kind 타입 클래스에 닿는지 검사한다. sh:class는 값 노드의 rdf:type을
+# 보므로 punning과 그대로 맞물린다.
+# ponytail: 직접 부모만 검사 (경고 전용이라 간접 체인 false-positive 허용).
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix gufo: <http://purl.org/nemo/gufo#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix cgsh: <http://conceptgate.local/shapes#> .
+
+cgsh:PhaseNeedsKind
+    a sh:NodeShape ;
+    sh:targetClass gufo:Phase ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:qualifiedValueShape [ sh:class gufo:Kind ] ;
+        sh:qualifiedMinCount 1 ;
+        sh:severity sh:Warning ;
+        sh:message "gufo:Phase는 gufo:Kind의 특수화여야 한다 (anti-rigid는 rigid 기반 필요)"@ko ;
+    ] .
+
+cgsh:RoleNeedsKind
+    a sh:NodeShape ;
+    sh:targetClass gufo:Role ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:qualifiedValueShape [ sh:class gufo:Kind ] ;
+        sh:qualifiedMinCount 1 ;
+        sh:severity sh:Warning ;
+        sh:message "gufo:Role은 gufo:Kind의 특수화여야 한다 (anti-rigid는 rigid 기반 필요)"@ko ;
+    ] .

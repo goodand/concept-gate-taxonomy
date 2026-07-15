@@ -1,0 +1,16 @@
+{
+  "gufo": {
+    "iri": "http://purl.org/nemo/gufo#",
+    "version_iri": "http://purl.org/nemo/gufo#/1.0.0",
+    "version": "1.0.0",
+    "license": "CC-BY-4.0",
+    "source": "https://nemo-ufes.github.io/gufo/",
+    "upstream_variant": "gufoEndurantsOnly (endurant types subset, official gUFO distribution)",
+    "source_path": "vendor/scior/scior/resources/gufoEndurantsOnly.ttl",
+    "source_sha256": "e5c1557dc2f3fee65ad4b96ca1ea2d036037574d1aba2c620c5ae02d2a24de4d",
+    "artifact_path": "conceptgate/data/gufo.owl",
+    "artifact_sha256": "fc792a35cde0729ae77a94ac4be9d4acb9621cf3f8b46864fe1dee2be6040577",
+    "conversion": "rdflib 7.6.0: Graph().parse(source, format='turtle').serialize(artifact, format='xml')",
+    "conversion_reason": "owlready2 0.51 cannot parse Turtle; full gufo.ttl rejected by HermiT (xsd:date DataAllValuesFrom outside OWL 2 datatype map)"
+  }
+}

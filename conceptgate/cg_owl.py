@@ -15,6 +15,7 @@ reasoner가 subsumption을 '판정'한다.
 from __future__ import annotations
 
 import types
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from owlready2 import (
@@ -37,19 +38,25 @@ SUPPORTED_RESTRICTIONS = {"some", "only", "exactly", "min", "max", "value",
 GUFO_STEREOTYPES = frozenset(
     {"kind", "subkind", "phase", "role", "category", "defined_class"})
 
-# stereotype -> punning 마커 클래스의 로컬 이름. 리뷰 발견 4: gUFO는
-# "Child rdf:type gufo:Phase" (punning, me타타입) + "Child SubClassOf Person"
-# (subsumption) 둘 다로 phase를 표현한다 — 기존 코드는 후자조차 없었다.
-# 마커는 도메인 개념과 이름이 겹치지 않도록 접두어를 둔다(사용자가 개념을
-# "Phase"라 명명할 수 있음).
-_STEREOTYPE_MARKERS = {
-    "kind": "_GUFOKind",
-    "subkind": "_GUFOSubKind",
-    "phase": "_GUFOPhase",
-    "role": "_GUFORole",
-    "category": "_GUFOCategory",
+# gUFO endurants-only 서브셋 (RDF/XML — owlready2는 Turtle을 못 읽는다).
+# 원본: vendor/scior/scior/resources/gufoEndurantsOnly.ttl. 풀 gufo.ttl은
+# xsd:date DataAllValuesFrom 공리를 HermiT가 거부한다(OWL 2 datatype map 밖).
+# 변환 출처·해시는 third_party/sources.lock.json에 고정.
+_GUFO_OWL = Path(__file__).parent / "data" / "gufo.owl"
+GUFO_NS = "http://purl.org/nemo/gufo#"
+
+# stereotype → gUFO 실 클래스 로컬이름. 리뷰 발견 4는 로컬 마커(_GUFOPhase)로
+# punning을 도입했고, finding 3이 이를 실 gUFO IRI로 교체했다 — 이제
+# "Child rdf:type gufo:Phase" (punning, 메타타입) + "Child SubClassOf Person"
+# (subsumption) 둘 다 표준 어휘이고, gUFO의 공리(Kind⊥SubKind, Phase⊥Role,
+# Rigid⊥NonRigid 등)를 HermiT가 네이티브로 적용한다.
+_GUFO_STEREOTYPE_CLASSES = {
+    "kind": "Kind",
+    "subkind": "SubKind",
+    "phase": "Phase",
+    "role": "Role",
+    "category": "Category",
 }
-_MARKER_TO_LABEL = {v: v[len("_GUFO"):] for v in _STEREOTYPE_MARKERS.values()}
 
 
 class SerializationError(ValueError):
@@ -220,6 +227,32 @@ def build_ontology(concepts: List[Dict[str, Any]],
     classes: Dict[str, Any] = {}
     props: Dict[str, Any] = {}
 
+    # gUFO는 stereotype이 실제 쓰일 때만 로드한다 — 안 쓰는 빌드는 출력이
+    # 이전과 동일해야 하고, 205 트리플 파싱·reasoner 부담도 피한다.
+    # stereotype이 있는데 gUFO가 없으면 조용히 생략하지 않는다(fail-fast):
+    # 생략하면 classify()의 stereotypes가 빈 채로 성공해 위조 통과가 된다.
+    needed_stereotypes = {
+        c["stereotype"] for c in concepts
+        if c.get("stereotype") in _GUFO_STEREOTYPE_CLASSES
+    }
+    gufo_classes: Dict[str, Any] = {}
+    if needed_stereotypes:
+        if not _GUFO_OWL.exists():
+            raise SerializationError(
+                f"stereotype punning requires gUFO but {_GUFO_OWL} is missing")
+        try:
+            gufo_onto = world.get_ontology(_GUFO_OWL.resolve().as_uri()).load()
+        except Exception as exc:
+            raise SerializationError(f"gUFO load failed: {exc}") from exc
+        onto.imported_ontologies.append(gufo_onto)
+        for stereo in needed_stereotypes:
+            gufo_cls = world[GUFO_NS + _GUFO_STEREOTYPE_CLASSES[stereo]]
+            if gufo_cls is None:
+                raise SerializationError(
+                    f"gUFO class {_GUFO_STEREOTYPE_CLASSES[stereo]!r} "
+                    f"not found in {_GUFO_OWL}")
+            gufo_classes[stereo] = gufo_cls
+
     with onto:
         for pname in object_properties or []:
             props[pname] = types.new_class(pname, (ObjectProperty,))
@@ -232,14 +265,6 @@ def build_ontology(concepts: List[Dict[str, Any]],
             if rng is not None:
                 p.range = [rng]
             props[dspec["name"]] = p
-
-        # gUFO stereotype 마커 (실제 쓰이는 것만 선언 — 안 쓰는 빌드는
-        # 출력이 이전과 바이트 단위로 동일해야 한다)
-        needed_markers = {
-            _STEREOTYPE_MARKERS[c["stereotype"]] for c in concepts
-            if c.get("stereotype") in _STEREOTYPE_MARKERS
-        }
-        markers = {m: types.new_class(m, (Thing,)) for m in needed_markers}
 
         # 1차: 클래스 선언 (genus 참조가 순서 무관하도록 먼저 전부 만든다)
         for c in concepts:
@@ -282,14 +307,14 @@ def build_ontology(concepts: List[Dict[str, Any]],
                 for n in parts + necessary:
                     cls.is_a.append(n)
 
-            marker_name = _STEREOTYPE_MARKERS.get(c.get("stereotype"))
-            if marker_name:
+            stereo = c.get("stereotype")
+            if stereo in gufo_classes:
                 # punning: cls는 SubClassOf로 genus를 특수화하면서 동시에
-                # rdf:type으로 meta-type을 갖는다. owlready2의 .is_a는 둘을
-                # 구분하지 않고 합쳐 보여주므로(punning 시 확인됨), classify()
-                # 가 raw triple로 따로 걸러낸다.
+                # rdf:type으로 gufo 메타타입을 갖는다. owlready2의 .is_a는
+                # 둘을 구분하지 않고 합쳐 보여주므로(punning 실험으로 확인),
+                # classify()가 raw triple로 따로 걸러낸다.
                 onto._add_obj_triple_spo(cls.storid, rdf_type,
-                                         markers[marker_name].storid)
+                                         gufo_classes[stereo].storid)
 
         for group in disjoint_groups or []:
             unknown = [n for n in group if n not in classes]
@@ -306,35 +331,37 @@ def classify(world, onto) -> Dict[str, Any]:
 
     hierarchy는 SubClassOf만 담는다(기존 계약 불변). stereotype 펀닝
     (rdf:type)은 raw triple로 별도 추출한다 — owlready2는 클래스 엔티티의
-    rdf:type과 rdfs:subClassOf를 .is_a 하나로 합쳐 보여주므로, 마커를
-    거기 섞으면 "Child ⊑ Phase"처럼 보여 subsumption과 meta-typing이
+    rdf:type과 rdfs:subClassOf를 .is_a 하나로 합쳐 보여주므로, 메타타입을
+    거기 섞으면 "Child ⊑ gufo:Phase"처럼 보여 subsumption과 meta-typing이
     혼동된다(punning 실험으로 확인).
     """
     with onto:
         sync_reasoner(world, infer_property_values=False, debug=0)
 
-    marker_storid_to_label = {}
-    for marker_name, label in _MARKER_TO_LABEL.items():
-        marker_cls = onto[marker_name]
-        if marker_cls is not None:
-            marker_storid_to_label[marker_cls.storid] = label
-    marker_storids = set(marker_storid_to_label)
+    gufo_storid_to_label = {}
+    for gufo_name in _GUFO_STEREOTYPE_CLASSES.values():
+        gufo_cls = world[GUFO_NS + gufo_name]
+        if gufo_cls is not None:
+            gufo_storid_to_label[gufo_cls.storid] = gufo_name
+    gufo_storids = set(gufo_storid_to_label)
 
     hierarchy: Dict[str, List[str]] = {}
     stereotypes: Dict[str, str] = {}
     unsat: List[str] = []
+    # onto.classes()는 이 온톨로지에 선언된 클래스만 — import된 gUFO
+    # 클래스는 애초에 순회에 없다. 단 punning 병합 때문에 gUFO 클래스가
+    # 부모 목록(is_a)에는 나타나므로 네임스페이스로 걸러낸다 (reasoner가
+    # gufo:Phase ⊑ gufo:AntiRigidType 전파로 5종 밖의 gUFO 조상도 추가함).
     for cls in onto.classes():
-        if cls.storid in marker_storids:
-            continue  # 마커 자체는 도메인 개념이 아니다
         type_targets = {o for _, _, o in
                         onto._get_obj_triples_spo_spo(cls.storid, rdf_type, None)}
-        hit = type_targets & marker_storids
+        hit = type_targets & gufo_storids
         if hit:
-            stereotypes[cls.name] = marker_storid_to_label[next(iter(hit))]
+            stereotypes[cls.name] = gufo_storid_to_label[next(iter(hit))]
         parents = sorted(
             p.name for p in cls.is_a
             if hasattr(p, "name") and p is not Thing and p.name != cls.name
-            and p.storid not in marker_storids
+            and not getattr(p, "iri", "").startswith(GUFO_NS)
         )
         equiv = list(cls.equivalent_to)
         if Nothing in cls.is_a or Nothing in equiv:
@@ -347,10 +374,10 @@ def classify(world, onto) -> Dict[str, Any]:
 def is_subclass_of(onto, child_name: str, parent_name: str) -> bool:
     """분류 후: child ⊑ parent (전이 포함) 인가.
 
-    ponytail: stereotype 마커(_GUFOPhase 등)를 parent_name으로 넘기면
-    owlready2의 .ancestors()가 punning으로 추가된 rdf:type도 subsumption처럼
-    따라간다 — True가 나올 수 있다. 마커 조회는 classify()의 stereotypes를
-    쓸 것. 실 gUFO owl:imports(finding 3)가 들어오면 이 구분이 다시 필요.
+    ponytail: gUFO 메타타입 조회에는 쓰지 말 것 — onto[name]은 도메인
+    네임스페이스만 찾으므로 "Phase" 같은 gUFO 이름은 unknown class가 되고,
+    설령 도메인 개념이 같은 이름이어도 punning 조상과 섞인다. 메타타입은
+    classify()의 stereotypes로 조회하라.
     """
     if not isinstance(child_name, str) or not isinstance(parent_name, str):
         raise SerializationError(
@@ -360,3 +387,44 @@ def is_subclass_of(onto, child_name: str, parent_name: str) -> bool:
     if child is None or parent is None:
         raise SerializationError(f"unknown class: {child_name}/{parent_name}")
     return parent in child.ancestors()
+
+
+# gUFO 구조 제약 (SHACL). Phase/Role은 anti-rigid라 rigid Kind의 특수화가
+# 필요하다는 gUFO 모델링 규칙을 reasoner 실행 *전에* 구조로 검사한다.
+_GUFO_SHAPES = Path(__file__).parent / "data" / "gufo_shapes.ttl"
+
+
+def validate_gufo(world, onto) -> Dict[str, Any]:
+    """pyshacl로 gUFO 구조 제약을 검증한다 — 경고 반환, 흐름 차단 없음.
+
+    build_ontology() 결과를 받아 SHACL shapes(_GUFO_SHAPES)에 대조한다.
+    반환: {ok: True, warnings: [{code, detail}...]} — 위반은 경고이지
+    에러가 아니다(점진 도입). pyshacl 미설치면 PYSHACL_UNAVAILABLE 경고
+    하나로 알리고 통과시킨다. ponytail: 추후 서버 파이프라인에 내장해
+    fail-closed로 올릴 여지를 둔 별도 함수.
+    """
+    try:
+        import pyshacl
+    except ImportError:
+        return {"ok": True, "warnings": [
+            {"code": "PYSHACL_UNAVAILABLE",
+             "detail": "pyshacl 미설치 — gUFO 구조 검증 생략 "
+                       "(pip install conceptgate-mcp[shacl])"}]}
+    if not _GUFO_SHAPES.exists():
+        return {"ok": True, "warnings": [
+            {"code": "SHAPES_MISSING",
+             "detail": f"{_GUFO_SHAPES} 없음 — gUFO 구조 검증 생략"}]}
+
+    # owlready2의 rdflib 브리지는 graph-aware store가 아니라 pyshacl이
+    # 직접 못 받는다 — 일반 Graph로 트리플을 복사해 넘긴다.
+    import rdflib
+    data_graph = rdflib.Graph()
+    for triple in world.as_rdflib_graph():
+        data_graph.add(triple)
+    conforms, _, results_text = pyshacl.validate(
+        data_graph, shacl_graph=str(_GUFO_SHAPES), inference="none")
+    warnings = []
+    if not conforms:
+        warnings.append({"code": "GUFO_SHAPE_VIOLATION",
+                         "detail": results_text.strip()[:2000]})
+    return {"ok": True, "warnings": warnings}
