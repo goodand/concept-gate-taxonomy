@@ -270,6 +270,20 @@ def test_assemble_rejects_fabricated_sense_id():
     assert any(e["code"] == "SENSE_NOT_IN_CANDIDATES" for e in r["errors"]), r["errors"]
 
 
+def test_assemble_long_name_with_sense_id_no_crash():
+    """이름이 MAX_SURFACE_CHARS를 넘고 sense_id가 있으면 lookup_senses가
+    candidates 키 없는 실패 dict를 낸다 — 예전엔 [\"candidates\"] KeyError로
+    crash (PR#2 봇 발견 #1). 구조화 오류로 거부돼야 한다."""
+    snap = _snap()
+    long_name = "개" * (N.MAX_SURFACE_CHARS + 1)
+    r = N.assemble_concepts({"snapshot": snap, "concepts": [
+        {"name": long_name, "sense_id": "memory:개:001",
+         "features": [{"label": "동물", "relation": "is_a",
+                       "evidence_text": "근거"}]}]})
+    assert not r["ok"]
+    assert any(e["code"] == "SURFACE_TOO_LONG" for e in r["errors"]), r["errors"]
+
+
 def test_assemble_allows_local_sense_id():
     """local: 네임스페이스는 사전 밖 신조어용으로 허용된다."""
     snap = _snap()
@@ -445,6 +459,43 @@ def test_owlmap_phase_requires_genus():
         {"name": "X", "definition_kind": "primitive", "stereotype": "phase"}]})
     assert not r["ok"]
     assert any(e["code"] == "PHASE_WITHOUT_GENUS" for e in r["errors"])
+
+
+def test_owlmap_role_requires_genus():
+    """finding 3/4 일관성: Role도 anti-rigid sortal이라 genus(Kind) 필수 —
+    gufo_shapes.ttl과 normalizer가 어긋나면 안 된다 (PR#2 봇 발견 #4)."""
+    snap = _geo_snap()
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "primitive", "stereotype": "role"}]})
+    assert not r["ok"]
+    assert any(e["code"] == "ROLE_WITHOUT_GENUS" for e in r["errors"]), r["errors"]
+
+
+def test_owlmap_property_not_string():
+    """restriction property가 str이 아니면 경계에서 막는다 — 예전엔 통과 후
+    cg_owl에서 SerializationError로 떨어졌다 (PR#2 봇 발견 #3)."""
+    snap = _geo_snap()
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "primitive",
+         "differentia": [{"property": 7, "restriction": "some",
+                          "filler": "X", "evidence_text": "근거"}]}]})
+    assert not r["ok"]
+    assert any(e["code"] == "PROPERTY_NOT_STRING" for e in r["errors"]), r["errors"]
+
+
+def test_owlmap_bad_span_no_duplicate_missing_evidence():
+    """bad span은 구체 오류 하나만 보고 — 예전엔 SPAN_OUT_OF_BOUNDS와
+    MISSING_EVIDENCE가 같은 원인에 중복 보고됐다 (PR#2 봇 발견 #2)."""
+    snap = _geo_snap()
+    r = N.map_to_owl({"snapshot": snap, "concepts": [
+        {"name": "X", "definition_kind": "primitive",
+         "differentia": [{"property": "p", "restriction": "value",
+                          "filler": True,
+                          "evidence_span": {"start": 0, "end": 999999}}]}]})
+    assert not r["ok"]
+    codes = [e["code"] for e in r["errors"]]
+    assert "SPAN_OUT_OF_BOUNDS" in codes, codes
+    assert "MISSING_EVIDENCE" not in codes, codes
 
 
 def test_owlmap_stereotype_passes_through_to_owl_concepts():

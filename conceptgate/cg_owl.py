@@ -79,6 +79,7 @@ def _validate_inputs(concepts, object_properties, data_properties,
     if not isinstance(concepts, list):
         raise SerializationError(
             f"concepts must be list, got {type(concepts).__name__}")
+    seen_names: set = set()
     for i, c in enumerate(concepts):
         if not isinstance(c, dict):
             raise SerializationError(
@@ -87,6 +88,11 @@ def _validate_inputs(concepts, object_properties, data_properties,
         if not isinstance(name, str) or not name:
             raise SerializationError(
                 f"concepts[{i}].name must be non-empty str, got {name!r}")
+        # 중복 이름은 classes dict에서 나중 것이 이전 것을 덮어 개념이 조용히
+        # 사라진다 — 빌드 전에 막는다.
+        if name in seen_names:
+            raise SerializationError(f"duplicate concept name: {name!r}")
+        seen_names.add(name)
         genus = c.get("genus")
         if genus is not None and not isinstance(genus, str):
             raise SerializationError(
@@ -139,6 +145,10 @@ def _validate_inputs(concepts, object_properties, data_properties,
             raise SerializationError(
                 f"disjoint_groups[{i}] must be list, "
                 f"got {type(group).__name__}")
+        if len(group) < 2:
+            # AllDisjoint는 2개 이상이어야 의미가 있다 (0·1개는 무의미).
+            raise SerializationError(
+                f"disjoint_groups[{i}] must have >=2 members, got {len(group)}")
         for n in group:
             if not isinstance(n, str):
                 raise SerializationError(
@@ -353,6 +363,12 @@ def classify(world, onto) -> Dict[str, Any]:
     # 부모 목록(is_a)에는 나타나므로 네임스페이스로 걸러낸다 (reasoner가
     # gufo:Phase ⊑ gufo:AntiRigidType 전파로 5종 밖의 gUFO 조상도 추가함).
     for cls in onto.classes():
+        # ponytail: raw triple 조회(_get_obj_triples_spo_spo)를 쓴다. build에서
+        # rdf:type을 raw triple로 주입했으므로 metaclass(type(cls))는 여전히
+        # owlready2 ThingClass이고 gufo 메타타입을 노출하지 않는다(실험 확인).
+        # .is_a는 rdf:type과 subClassOf를 합쳐 subsumption과 혼동된다. 따라서
+        # 이 low-level 접근자가 정확한 조회 경로다 — owlready2가 내부에서
+        # 표준으로 쓰는 API이며, 대체 시 위 두 제약을 먼저 확인할 것.
         type_targets = {o for _, _, o in
                         onto._get_obj_triples_spo_spo(cls.storid, rdf_type, None)}
         hit = type_targets & gufo_storids
@@ -360,7 +376,8 @@ def classify(world, onto) -> Dict[str, Any]:
             stereotypes[cls.name] = gufo_storid_to_label[next(iter(hit))]
         parents = sorted(
             p.name for p in cls.is_a
-            if hasattr(p, "name") and p is not Thing and p.name != cls.name
+            if hasattr(p, "name") and p is not Thing and p is not Nothing
+            and p.name != cls.name
             and not getattr(p, "iri", "").startswith(GUFO_NS)
         )
         equiv = list(cls.equivalent_to)

@@ -399,9 +399,14 @@ def assemble_concepts(bundle: Dict[str, Any],
         # 예전엔 그냥 통과시켜 위조 sense_id가 concepts_json에 실렸다 (발견 6).
         sid = rc.get("sense_id")
         if sid is not None:
-            cands = lookup_senses(name, inventory)["candidates"]
-            errors.extend(_sense_errors(sid, cands, "selection",
-                                        {"concept": name}))
+            # lookup_senses는 이름이 상한을 넘으면 candidates 키 없는 실패
+            # dict를 낸다 — ok를 먼저 봐야 KeyError crash를 피한다.
+            lookup_res = lookup_senses(name, inventory)
+            if lookup_res["ok"]:
+                errors.extend(_sense_errors(sid, lookup_res["candidates"],
+                                            "selection", {"concept": name}))
+            else:
+                errors.extend(lookup_res["errors"])
         feats_out = []
         for fi, f in enumerate(feats_in):
             if not isinstance(f, dict):
@@ -529,8 +534,14 @@ def _validate_owl_restriction(spec, names, stage, errors, ctx):
             errors.append(_err(stage, "UNKNOWN_CLASS_REF",
                                {**ctx, "filler": spec.get("filler")}))
         return
-    if not spec.get("property"):
+    prop = spec.get("property")
+    if not prop:
         errors.append(_err(stage, "MISSING_PROPERTY", ctx))
+    elif not isinstance(prop, str):
+        # 경계 어댑터가 여기서 잡지 않으면 cg_owl에서 SerializationError로
+        # 떨어진다 — 타입 위반은 이 층에서 구조화 오류로 막는다.
+        errors.append(_err(stage, "PROPERTY_NOT_STRING",
+                           {**ctx, "got": type(prop).__name__}))
     if kind in ("exactly", "min", "max"):
         n = spec.get("cardinality")
         if not isinstance(n, int) or n < 0:
@@ -641,13 +652,14 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
             errors.append(_err(stage, "UNKNOWN_GENUS",
                                {"concept": name, "genus": genus}))
             continue
-        if stereotype == "phase" and not genus:
-            # gUFO Phase는 특수화하는 genus(Kind) 없이 방출하면 무의미하다
-            # (리뷰 발견 4 수용기준: Child rdf:type Phase *그리고*
-            # Child SubClassOf Person).
-            errors.append(_err(stage, "PHASE_WITHOUT_GENUS",
+        if stereotype in ("phase", "role") and not genus:
+            # gUFO anti-rigid sortal(Phase·Role)은 identity를 주는 rigid Kind를
+            # genus로 특수화해야 의미가 있다. gufo_shapes.ttl이 Phase·Role
+            # 둘 다 검사하므로 normalizer도 둘 다 막아 두 검증층을 일치시킨다
+            # (리뷰 발견 4 수용기준: Child rdf:type Phase *그리고* SubClassOf).
+            errors.append(_err(stage, f"{stereotype.upper()}_WITHOUT_GENUS",
                                {"concept": name,
-                                "hint": "phase는 genus(특수화 대상 Kind) 필수"}))
+                                "hint": f"{stereotype}는 genus(특수화 대상 Kind) 필수"}))
             continue
         diff, nec = [], []
         for lst_name, src, dst in (("differentia", rc.get("differentia") or [], diff),
@@ -667,7 +679,10 @@ def map_to_owl(bundle: Dict[str, Any]) -> Dict[str, Any]:
                 _validate_owl_restriction(spec, names, stage, errors, ctx)
                 ev, vstatus = _evidence(spec, ctx)
                 if ev is None:
-                    errors.append(_err(stage, "MISSING_EVIDENCE", ctx))
+                    # vstatus is None이면 _evidence가 이미 구체 span 오류를
+                    # errors에 넣었다 — 일반 MISSING_EVIDENCE 중복 보고 방지.
+                    if vstatus is not None:
+                        errors.append(_err(stage, "MISSING_EVIDENCE", ctx))
                     continue
                 clean = {k: spec[k] for k in
                          ("property", "restriction", "filler", "cardinality")

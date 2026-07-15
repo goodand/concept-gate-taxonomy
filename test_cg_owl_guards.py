@@ -141,6 +141,19 @@ def test_stereotype_unhashable_is_structured_error():
         _build(concepts=[{"name": "X", "stereotype": [1, 2]}])
 
 
+def test_duplicate_concept_name_is_structured_error():
+    """중복 이름은 classes dict에서 덮여 개념이 조용히 사라진다 — 빌드 전에
+    막아야 한다 (PR#2 봇 발견 #5)."""
+    with pytest.raises(cg_owl.SerializationError, match="duplicate"):
+        _build(concepts=[{"name": "X"}, {"name": "X"}])
+
+
+def test_disjoint_group_needs_two_members():
+    """AllDisjoint는 2개 이상이어야 의미가 있다 (PR#2 봇 발견 #6)."""
+    with pytest.raises(cg_owl.SerializationError, match=">=2"):
+        _build(concepts=[{"name": "X"}], disjoint_groups=[["X"]])
+
+
 def test_no_stereotype_build_unaffected():
     """stereotype을 안 쓰는 기존 호출은 gUFO를 로드하지 않는다 — 출력
     불변 + 205 트리플 파싱/reasoner 비용 회피 (lazy load 계약)."""

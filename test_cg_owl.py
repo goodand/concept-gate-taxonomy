@@ -197,6 +197,26 @@ def test_p6_gufo_disjointness_axiom_fires():
         cg_owl.classify(world, onto)
 
 
+# ── P7: unsatisfiable 클래스가 Nothing을 parents로 흘리지 않음 (PR#2 #7) ──
+
+def test_p7_unsatisfiable_class_excludes_nothing_from_parents():
+    """C ⊑ A, C ⊑ B, A⊥B → C는 unsatisfiable(is_a에 Nothing)이지만 온톨로지는
+    consistent. Nothing이 parents 목록으로 새면 안 된다."""
+    world, onto, _ = cg_owl.build_ontology(
+        concepts=[
+            {"name": "A", "definition_kind": "primitive"},
+            {"name": "B", "definition_kind": "primitive"},
+            {"name": "C", "definition_kind": "primitive", "genus": "A",
+             "differentia": [{"restriction": "subClassOf", "filler": "B"}]},
+        ],
+        disjoint_groups=[["A", "B"]])
+    result = cg_owl.classify(world, onto)
+    assert "C" in result["unsatisfiable"]
+    assert "Nothing" not in result["hierarchy"].get("C", [])
+    assert all("Nothing" not in parents
+               for parents in result["hierarchy"].values())
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
 
