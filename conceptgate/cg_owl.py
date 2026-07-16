@@ -336,6 +336,36 @@ def build_ontology(concepts: List[Dict[str, Any]],
     return world, onto, classes
 
 
+def _is_reportable_class(x) -> bool:
+    """보고 가능한 도메인 명명 클래스인가 — 익명 제약식·Thing·Nothing·gUFO
+    조상을 제외한다. parents(is_a)와 equivalence 그룹 수집이 같은 위생 규칙을
+    공유하도록 술어를 한 곳에 둔다(중복 필터 제거 + 재사용)."""
+    return (hasattr(x, "name") and x is not Thing and x is not Nothing
+            and not getattr(x, "iri", "").startswith(GUFO_NS))
+
+
+def _connected_groups(adj: Dict[str, set]) -> List[List[str]]:
+    """무방향 인접에서 크기>1 연결요소를 정렬해 반환 — 파생 동치의 전이 폐포.
+    owlready2의 INDIRECT_equivalent_to는 gUFO import 시 명명 클래스를
+    누락하므로(실험 확인) 직접 equivalent_to 간선을 모아 여기서 병합한다."""
+    seen: set = set()
+    groups: List[List[str]] = []
+    for start in adj:
+        if start in seen:
+            continue
+        stack, comp = [start], []
+        while stack:
+            n = stack.pop()
+            if n in seen:
+                continue
+            seen.add(n)
+            comp.append(n)
+            stack.extend(adj[n] - seen)
+        if len(comp) > 1:
+            groups.append(sorted(comp))
+    return sorted(groups)
+
+
 def classify(world, onto) -> Dict[str, Any]:
     """HermiT 실행 → 유도된 계층·stereotype 펀닝·unsatisfiable 목록 반환.
 
@@ -358,6 +388,7 @@ def classify(world, onto) -> Dict[str, Any]:
     hierarchy: Dict[str, List[str]] = {}
     stereotypes: Dict[str, str] = {}
     unsat: List[str] = []
+    equiv_adj: Dict[str, set] = {}
     # onto.classes()는 이 온톨로지에 선언된 클래스만 — import된 gUFO
     # 클래스는 애초에 순회에 없다. 단 punning 병합 때문에 gUFO 클래스가
     # 부모 목록(is_a)에는 나타나므로 네임스페이스로 걸러낸다 (reasoner가
@@ -376,16 +407,37 @@ def classify(world, onto) -> Dict[str, Any]:
             stereotypes[cls.name] = gufo_storid_to_label[next(iter(hit))]
         parents = sorted(
             p.name for p in cls.is_a
-            if hasattr(p, "name") and p is not Thing and p is not Nothing
-            and p.name != cls.name
-            and not getattr(p, "iri", "").startswith(GUFO_NS)
+            if _is_reportable_class(p) and p.name != cls.name
         )
         equiv = list(cls.equivalent_to)
-        if Nothing in cls.is_a or Nothing in equiv:
+        is_unsat = Nothing in cls.is_a or Nothing in equiv
+        if is_unsat:
             unsat.append(cls.name)
+        else:
+            # 파생 동치 간선 수집 (리뷰 발견 A·B). 직접 equivalent_to에서
+            # 명명 클래스만 무방향 간선으로 모아 뒤에서 연결요소로 병합한다.
+            # unsat(≡Nothing)는 서로 동치로 얽히므로 제외해 unsatisfiable과
+            # 축을 분리한다(Nothing 동치는 unsatisfiable이 이미 보고).
+            for x in equiv:
+                if _is_reportable_class(x):
+                    equiv_adj.setdefault(cls.name, set()).add(x.name)
+                    equiv_adj.setdefault(x.name, set()).add(cls.name)
         hierarchy[cls.name] = parents
+    equivalence_groups = _connected_groups(equiv_adj)
+    # gUFO 경로에서 HermiT가 동치류의 SubClassOf를 대표에만 부여해 나머지
+    # 멤버의 부모가 유실된다(적대 검증 발견 #1, HEAD부터 있던 기존 결함).
+    # A≡B이면 B의 상위는 A의 상위다 — 그룹 부모 합집합으로 복원한다.
+    # 그룹 자신은 제외해 별칭이 부모로 새지 않게 한다(펼치기 반려 결정 유지).
+    for group in equivalence_groups:
+        merged = sorted({p for m in group for p in hierarchy[m]} - set(group))
+        for m in group:
+            hierarchy[m] = merged
     return {"hierarchy": hierarchy, "unsatisfiable": sorted(unsat),
-            "stereotypes": stereotypes}
+            "stereotypes": stereotypes,
+            "equivalence_groups": equivalence_groups,
+            # old client가 hierarchy만 읽어도 "이 결과를 그대로 믿으면 위험"을
+            # 알 수 있는 얇은 경보등 (파생 동치가 하나라도 있으면 True).
+            "has_nontrivial_equivalences": bool(equivalence_groups)}
 
 
 def is_subclass_of(onto, child_name: str, parent_name: str) -> bool:

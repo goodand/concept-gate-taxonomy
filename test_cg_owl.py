@@ -217,6 +217,112 @@ def test_p7_unsatisfiable_class_excludes_nothing_from_parents():
                for parents in result["hierarchy"].values())
 
 
+# ── P8: 파생 동치 보고 (리뷰 발견 A·B) ──────────────────────────────
+
+def _sa(name, filler="SelfAttention"):
+    """defined 개념 하나 — hasPart.some.<filler> 로만 정의."""
+    return {"name": name, "definition_kind": "defined",
+            "differentia": [{"property": "hasPart", "restriction": "some",
+                             "filler": filler}]}
+
+
+def test_p8_accidental_equivalence_reported_hierarchy_intact():
+    """Encoder ≡ Decoder(동일 정의)는 파생 동치다. equivalence_groups로
+    노출되어야 하고, hierarchy는 여전히 '직계 부모'만 담아야 한다 —
+    RichEncoder는 부모를 [Decoder]로만 보고(그룹으로 펼치지 않음)."""
+    world, onto, _ = cg_owl.build_ontology(concepts=[
+        {"name": "SelfAttention", "definition_kind": "primitive"},
+        {"name": "FFN", "definition_kind": "primitive"},
+        _sa("Encoder"), _sa("Decoder"),
+        {"name": "RichEncoder", "definition_kind": "defined",
+         "differentia": [
+             {"property": "hasPart", "restriction": "some",
+              "filler": "SelfAttention"},
+             {"property": "hasPart", "restriction": "some", "filler": "FFN"}]},
+    ], object_properties=["hasPart"])
+    r = cg_owl.classify(world, onto)
+    assert ["Decoder", "Encoder"] in r["equivalence_groups"], \
+        f"파생 동치 미보고: {r['equivalence_groups']}"
+    assert r["has_nontrivial_equivalences"] is True
+    # hierarchy는 펼치지 않는다 — 직계 부모 의미 보존 (부모 펼치기 반려)
+    assert "Decoder" in r["hierarchy"]["RichEncoder"]
+    assert r["unsatisfiable"] == []
+
+
+def test_p8_transitive_equivalence_single_group():
+    """A ≡ B ≡ C — INDIRECT_equivalent_to의 전이 폐포로 한 그룹 3원소.
+    (union-find를 직접 짜지 않고 라이브러리가 병합한다는 계약을 고정.)"""
+    world, onto, _ = cg_owl.build_ontology(concepts=[
+        {"name": "SelfAttention", "definition_kind": "primitive"},
+        _sa("A"), _sa("B"), _sa("C"),
+    ], object_properties=["hasPart"])
+    r = cg_owl.classify(world, onto)
+    assert r["equivalence_groups"] == [["A", "B", "C"]], \
+        f"전이 폐포가 한 그룹이 아님: {r['equivalence_groups']}"
+
+
+def test_p8_equivalence_group_excludes_gufo_and_top():
+    """stereotype punning과 동치가 공존해도 그룹엔 도메인 이름만 —
+    Thing/Nothing/gUFO(Kind 등)가 섞이면 안 된다(_is_reportable_class 위생)."""
+    world, onto, _ = cg_owl.build_ontology(concepts=[
+        {"name": "SelfAttention", "definition_kind": "primitive"},
+        {**_sa("Encoder"), "stereotype": "kind"},
+        {**_sa("Decoder"), "stereotype": "kind"},
+    ], object_properties=["hasPart"])
+    r = cg_owl.classify(world, onto)
+    assert r["equivalence_groups"] == [["Decoder", "Encoder"]]
+    flat = {n for g in r["equivalence_groups"] for n in g}
+    assert not (flat & {"Thing", "Nothing", "Kind", "SubKind", "Phase",
+                        "Role", "Category"}), flat
+
+
+def test_p8_unsatisfiable_excluded_from_equivalence_groups():
+    """C·D 둘 다 unsatisfiable(≡Nothing이라 서로도 동치). 이 축은
+    unsatisfiable로만 보고하고 equivalence_groups로 새지 않아야 한다."""
+    world, onto, _ = cg_owl.build_ontology(concepts=[
+        {"name": "A", "definition_kind": "primitive"},
+        {"name": "B", "definition_kind": "primitive"},
+        {"name": "C", "definition_kind": "defined", "genus": "A",
+         "differentia": [{"restriction": "subClassOf", "filler": "B"}]},
+        {"name": "D", "definition_kind": "defined", "genus": "A",
+         "differentia": [{"restriction": "subClassOf", "filler": "B"}]},
+    ], disjoint_groups=[["A", "B"]])
+    r = cg_owl.classify(world, onto)
+    assert set(r["unsatisfiable"]) == {"C", "D"}
+    assert r["equivalence_groups"] == []
+    assert r["has_nontrivial_equivalences"] is False
+
+
+# ── P9: gUFO 경로에서 동치 멤버의 직계 부모 유실 복원 (적대 검증 발견 #1) ──
+
+def test_p9_gufo_equivalence_members_keep_direct_parents():
+    """gUFO import 시 HermiT가 SubClassOf를 동치 대표에만 부여해 나머지
+    멤버의 부모가 유실됐다(적대 검증 발견 #1, HEAD부터 있던 기존 결함).
+    그룹 부모 합집합 복원 후에는 Encoder·Decoder 둘 다 Block을 직계 부모로
+    보고해야 하고, 서로(별칭)는 부모 목록에 나타나면 안 된다."""
+    world, onto, _ = cg_owl.build_ontology(concepts=[
+        {"name": "Block", "definition_kind": "primitive",
+         "stereotype": "category"},
+        {"name": "SelfAttn", "definition_kind": "primitive",
+         "stereotype": "kind"},
+        {"name": "Encoder", "definition_kind": "defined", "genus": "Block",
+         "stereotype": "subkind",
+         "differentia": [{"property": "hasPart", "restriction": "some",
+                          "filler": "SelfAttn"}]},
+        {"name": "Decoder", "definition_kind": "defined", "genus": "Block",
+         "stereotype": "subkind",
+         "differentia": [{"property": "hasPart", "restriction": "some",
+                          "filler": "SelfAttn"}]},
+    ], object_properties=["hasPart"])
+    r = cg_owl.classify(world, onto)
+    assert r["equivalence_groups"] == [["Decoder", "Encoder"]]
+    assert r["hierarchy"]["Encoder"] == ["Block"], "비대표 멤버 부모 유실 재발"
+    assert r["hierarchy"]["Decoder"] == ["Block"]
+    # 별칭은 부모가 아니다 (부모 펼치기 반려 결정 유지)
+    assert "Decoder" not in r["hierarchy"]["Encoder"]
+    assert "Encoder" not in r["hierarchy"]["Decoder"]
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
 
