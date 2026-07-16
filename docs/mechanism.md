@@ -31,7 +31,7 @@ flowchart TB
 
     AGENT -->|"제안"| SNAP
     ASM -->|"concepts JSON"| MAP
-    HERMIT --> OUT["hierarchy · stereotypes · unsatisfiable"]:::out
+    HERMIT --> OUT["hierarchy · stereotypes · unsatisfiable ·<br/>equivalence_groups · has_nontrivial_equivalences"]:::out
 
     classDef llm fill:#f5d76e,stroke:#b7950b,color:#000
     classDef out fill:#82c99a,stroke:#1e8449,color:#000
@@ -80,7 +80,7 @@ flowchart TB
     SKIP --> CL
     CL --> H{"모순?"}
     H -->|"Phase⊥Role 위반 등"| UNSAT["unsatisfiable /<br/>InconsistentOntology"]
-    H -->|"일관"| RES["hierarchy: 도메인 SubClassOf만<br/>stereotypes: 개념→gUFO 메타타입"]
+    H -->|"일관"| RES["hierarchy: 도메인 SubClassOf만(직계 부모)<br/>stereotypes: 개념→gUFO 메타타입<br/>equivalence_groups: 파생 동치 그룹"]
 ```
 
 핵심 설계 결정 두 가지:
@@ -91,6 +91,12 @@ flowchart TB
 - **`validate_gufo`는 경고 반환(fail-open)이다.** anti-rigid(Phase·Role)이
   rigid Kind를 특수화하는지 SHACL로 reasoner 실행 *전에* 검사하되, 위반은
   경고이지 흐름 차단이 아니다. pyshacl 미설치면 경고 하나로 생략한다.
+- **파생 동치는 `equivalence_groups`로 보고하고 `hierarchy`는 안 펼친다.**
+  두 defined 개념이 같은 정의라 `A ≡ B`가 되면 그 사실을 별도 필드로 낸다
+  (`hierarchy`에 별칭을 넣으면 "직계 부모" 의미가 깨진다). 단 gUFO import 시
+  HermiT가 동치류의 SubClassOf를 대표에만 부여해 나머지 멤버의 부모가
+  유실되므로, `classify()`는 그룹 부모를 합집합해 전원에게 복원한다(그룹
+  자신은 제외해 별칭이 부모로 새지 않게 한다).
 
 ## 4. 검증이 행동으로 증명하는 것
 
@@ -100,4 +106,6 @@ flowchart TB
 | Phase 펀닝: rdf:type gufo:Phase **그리고** SubClassOf | P5 |
 | owl:imports가 장식이 아니다 (Phase⊥Role 공리 발화) | P6 |
 | unsatisfiable 클래스가 Nothing을 parents로 안 흘림 | P7 |
+| 파생 동치를 그룹으로 보고(전이 폐포·unsat 격리·별칭 비오염) | P8 |
+| gUFO 경로에서 동치 멤버 전원이 직계 부모를 유지 | P9 |
 | 어떤 변형 입력도 crash하지 않는다 (CRASH=0) | `fuzz_normalizer_types.py` |

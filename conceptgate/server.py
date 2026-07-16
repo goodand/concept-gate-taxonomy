@@ -713,7 +713,13 @@ def map_owl(bundle: dict) -> dict:
 def classify_owl(owl: dict) -> dict:
     """map_owl 출력을 풀 DL reasoner(HermiT)로 분류한다.
 
-    반환: {ok, hierarchy: {class: [유도된 부모들]}, unsatisfiable: [...]}.
+    반환: {ok, hierarchy: {class: [유도된 직계 부모들]},
+    stereotypes: {class: gUFO 메타타입}, unsatisfiable: [...],
+    equivalence_groups: [[동치인 클래스들], ...],
+    has_nontrivial_equivalences: bool}.
+    hierarchy는 직계 부모만 담는다(동치 별칭으로 펼치지 않음). 두 defined
+    개념이 같은 정의라 논리적으로 동일 클래스가 되면 equivalence_groups로
+    보고하고, has_nontrivial_equivalences로 그 존재를 알린다.
     subsumption의 소유자는 이 reasoner다 — OWL 2 DL 의미론에 대해
     건전·완전하다. Java가 없는 환경(예: 기본 Render)에서는
     REASONER_UNAVAILABLE 오류를 구조화해 반환한다.
