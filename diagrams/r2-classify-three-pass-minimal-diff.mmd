@@ -1,0 +1,27 @@
+flowchart TD
+    START["sync_reasoner(world)"]
+
+    subgraph PASS0["Pass 0 — 동치 그룹 수집 (신규)"]
+        E1["for cls in onto.classes():<br/>read cls.equivalent_to"]
+        E2{"명명 클래스인가?"}
+        E3{"Thing / Nothing / imported gUFO 제외?"}
+        E4["union-find 병합<br/>A≡B, B≡C → same group"]
+        E5["그룹 크기 > 1만 유지"]
+        E1 --> E2 --> E3 --> E4 --> E5
+    end
+
+    subgraph PASS1["Pass 1 — 기존 classify 로직"]
+        H1["hierarchy ← cls.is_a<br/>기존 의미 유지"]
+        H2["stereotypes ← raw rdf:type"]
+        H3["unsatisfiable ← Nothing in is_a/equivalent_to"]
+    end
+
+    subgraph PASS2["Pass 2 — 신규 필드 구성"]
+        N1["equivalence_groups 생성"]
+        N2["has_nontrivial_equivalences 생성"]
+        N3["representatives 생성 (선택)"]
+    end
+
+    OUT["return<br/>hierarchy + stereotypes + unsatisfiable<br/>+ equivalence_groups + has_nontrivial_equivalences<br/>(+ representatives optional)"]
+
+    START --> PASS0 --> PASS1 --> PASS2 --> OUT

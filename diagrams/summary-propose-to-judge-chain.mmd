@@ -1,0 +1,11 @@
+flowchart TD
+    A[LLM proposes]
+    B[Normalizer validates input]
+    C[Lint catches modeling smells]
+    D[OWL serialization]
+    E[HermiT reasons]
+    F[classify_facts reports logic]
+    G[diagnose_model interprets risk]
+    H[Client decides repair]
+
+    A --> B --> C --> D --> E --> F --> G --> H

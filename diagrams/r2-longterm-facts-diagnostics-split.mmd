@@ -1,0 +1,31 @@
+flowchart TD
+    A["build_ontology"]
+    B["sync_reasoner"]
+    C["classify_facts"]
+    D["diagnose_model"]
+    E["client / MCP"]
+
+    C1["hierarchy"]
+    C2["equivalence_groups"]
+    C3["unsatisfiable"]
+    C4["stereotypes"]
+
+    D1["possible accidental equivalence"]
+    D2["defined-by-parthood-only smell"]
+    D3["equivalence stereotype conflict"]
+    D4["collapse-to-existing-class"]
+
+    A --> B --> C
+    B --> D
+    C --> C1
+    C --> C2
+    C --> C3
+    C --> C4
+
+    D --> D1
+    D --> D2
+    D --> D3
+    D --> D4
+
+    C --> E
+    D --> E

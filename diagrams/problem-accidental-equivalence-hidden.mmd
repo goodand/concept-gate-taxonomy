@@ -1,0 +1,16 @@
+flowchart TD
+    A[Encoder ≡ ∃hasPart.SelfAttention]
+    B[Decoder ≡ ∃hasPart.SelfAttention]
+    C[RichEncoder ≡ ∃hasPart.SelfAttention ⊓ ∃hasPart.FFN]
+
+    A --> D[HermiT]
+    B --> D
+    C --> D
+
+    D --> E[Encoder ≡ Decoder]
+    D --> F[RichEncoder ⊑ Encoder]
+    D --> G[RichEncoder ⊑ Decoder]
+
+    E -. current classify does not surface clearly .-> H[Client sees two top-level classes]
+    F -. only one may appear in hierarchy .-> I[RichEncoder parent list looks incomplete]
+    G -. alias/equivalence context lost .-> I

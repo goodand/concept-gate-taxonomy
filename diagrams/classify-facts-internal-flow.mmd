@@ -1,0 +1,28 @@
+flowchart TD
+    A[owlready2 classes]
+    B[read cls.is_a]
+    C[read cls.equivalent_to]
+    D[read raw rdf:type triples]
+    E[detect Nothing equivalence]
+
+    F[build direct_hierarchy]
+    G[collect named equivalence edges]
+    H[union-find / transitive merge]
+    I[build equivalence_groups]
+    J[choose representative deterministically]
+    K[build representatives map]
+    L[extract stereotypes]
+    M[extract unsatisfiable]
+
+    N[classify_facts output]
+
+    A --> B --> F
+    A --> C --> G --> H --> I --> J --> K
+    A --> D --> L
+    A --> E --> M
+
+    F --> N
+    I --> N
+    K --> N
+    L --> N
+    M --> N

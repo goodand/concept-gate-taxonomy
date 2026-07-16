@@ -1,0 +1,10 @@
+flowchart TD
+    U[User / Agent]
+    T1[propose concepts]
+    T2[run lint]
+    T3[run OWL classification]
+    T4[read facts]
+    T5[read diagnostics]
+    T6[revise proposal]
+
+    U --> T1 --> T2 --> T3 --> T4 --> T5 --> T6

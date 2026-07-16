@@ -1,0 +1,29 @@
+flowchart TD
+    A[concept JSON before OWL serialization]
+    B[lint_before_reasoning]
+
+    C1[defined class with only hasPart differentia]
+    C2[defined class without strong genus]
+    C3[duplicate defined signatures]
+    C4[sibling classes with indistinguishable restrictions]
+    C5[stereotype mismatch smell]
+
+    D[pre-reasoning warnings]
+    E[allow]
+    F[block or require correction]
+
+    A --> B
+    B --> C1
+    B --> C2
+    B --> C3
+    B --> C4
+    B --> C5
+
+    C1 --> D
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    C5 --> D
+
+    D --> E
+    D --> F
