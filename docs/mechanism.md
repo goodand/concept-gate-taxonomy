@@ -31,7 +31,7 @@ flowchart TB
 
     AGENT -->|"제안"| SNAP
     ASM -->|"concepts JSON"| MAP
-    HERMIT --> OUT["hierarchy · stereotypes · unsatisfiable ·<br/>equivalence_groups · has_nontrivial_equivalences"]:::out
+    HERMIT --> OUT["hierarchy · stereotypes · unsatisfiable ·<br/>equivalence_groups · has_nontrivial_equivalences · representatives"]:::out
 
     classDef llm fill:#f5d76e,stroke:#b7950b,color:#000
     classDef out fill:#82c99a,stroke:#1e8449,color:#000
@@ -96,7 +96,13 @@ flowchart TB
   (`hierarchy`에 별칭을 넣으면 "직계 부모" 의미가 깨진다). 단 gUFO import 시
   HermiT가 동치류의 SubClassOf를 대표에만 부여해 나머지 멤버의 부모가
   유실되므로, `classify()`는 그룹 부모를 합집합해 전원에게 복원한다(그룹
-  자신은 제외해 별칭이 부모로 새지 않게 한다).
+  자신은 제외해 별칭이 부모로 새지 않게 한다). `representatives`(동치류당
+  사전순 최소)로 클라이언트가 동치류를 한 노드로 접는 quotient graph를
+  만들 수 있다 — 같은 부모가 alias마다 중복 노출되는 것을 피한다.
+- **hierarchy는 entailed OWL hierarchy이지 candidate feature hierarchy가
+  아니다.** `classify_owl`의 계층은 OWL 공리의 model-theoretic 함의이고,
+  `run_pipeline`의 DAG는 feature-label 집합 포함으로 만든 후보다 — 인식론적
+  등급이 다르므로 같은 검증 수준으로 읽으면 안 된다.
 
 ## 4. 검증이 행동으로 증명하는 것
 

@@ -323,6 +323,42 @@ def test_p9_gufo_equivalence_members_keep_direct_parents():
     assert "Encoder" not in r["hierarchy"]["Decoder"]
 
 
+# ── P10: quotient 대표 매핑 (의미충실도 리뷰 R3) ─────────────────────
+
+def test_p10_representatives_enable_quotient_folding():
+    """동치류를 하나의 노드로 접기 위한 결정적 대표(사전순 최소)를 반환한다.
+    equivalence_groups는 정렬돼 있어 g[0]이 대표. 클라이언트가
+    representatives로 alias를 접으면 부모 정보가 중복 복제되지 않는다."""
+    world, onto, _ = cg_owl.build_ontology(concepts=[
+        {"name": "SelfAttn", "definition_kind": "primitive"},
+        {"name": "Encoder", "definition_kind": "defined",
+         "differentia": [{"property": "hasPart", "restriction": "some",
+                          "filler": "SelfAttn"}]},
+        {"name": "Decoder", "definition_kind": "defined",
+         "differentia": [{"property": "hasPart", "restriction": "some",
+                          "filler": "SelfAttn"}]},
+    ], object_properties=["hasPart"])
+    r = cg_owl.classify(world, onto)
+    # 대표는 사전순 최소 = Decoder (D < E), 전원이 같은 대표를 가리킨다
+    assert r["representatives"] == {"Decoder": "Decoder", "Encoder": "Decoder"}
+    # quotient graph를 만들 수 있다 — alias가 대표 노드로 접힌다
+    rep = lambda n: r["representatives"].get(n, n)
+    assert rep("Encoder") == rep("Decoder")
+
+
+def test_p10_representatives_empty_without_equivalence():
+    """동치가 없으면 representatives는 빈 맵 — equivalence_groups와 대칭 계약."""
+    world, onto, _ = cg_owl.build_ontology(concepts=[
+        {"name": "Para", "definition_kind": "primitive"},
+        {"name": "Rect", "definition_kind": "defined", "genus": "Para",
+         "differentia": [{"property": "r", "restriction": "value",
+                          "filler": True}]},
+    ], data_properties=[{"name": "r", "functional": True, "range": bool}])
+    r = cg_owl.classify(world, onto)
+    assert r["representatives"] == {}
+    assert r["equivalence_groups"] == []
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
 

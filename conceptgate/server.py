@@ -716,10 +716,20 @@ def classify_owl(owl: dict) -> dict:
     반환: {ok, hierarchy: {class: [유도된 직계 부모들]},
     stereotypes: {class: gUFO 메타타입}, unsatisfiable: [...],
     equivalence_groups: [[동치인 클래스들], ...],
-    has_nontrivial_equivalences: bool}.
+    has_nontrivial_equivalences: bool,
+    representatives: {class: 동치류 대표(사전순 최소)}}.
+
+    인식론적 등급: 이 hierarchy는 OWL 공리의 model-theoretic 함의(entailed
+    OWL hierarchy)다 — run_pipeline의 feature-label 집합 포함으로 만든
+    후보(candidate feature hierarchy)와 등급이 다르다. 전자는 형식 공리의
+    논리적 귀결, 후자는 입력 표면형의 부분순서이니 같은 검증 수준으로
+    읽지 말 것.
+
     hierarchy는 직계 부모만 담는다(동치 별칭으로 펼치지 않음). 두 defined
     개념이 같은 정의라 논리적으로 동일 클래스가 되면 equivalence_groups로
-    보고하고, has_nontrivial_equivalences로 그 존재를 알린다.
+    보고하고, has_nontrivial_equivalences로 그 존재를 알린다. representatives는
+    동치류를 한 노드로 접기 위한 결정적 대표라, 클라이언트가 quotient graph를
+    만들 수 있다(같은 부모가 alias마다 복제되는 것을 피함).
     subsumption의 소유자는 이 reasoner다 — OWL 2 DL 의미론에 대해
     건전·완전하다. Java가 없는 환경(예: 기본 Render)에서는
     REASONER_UNAVAILABLE 오류를 구조화해 반환한다.

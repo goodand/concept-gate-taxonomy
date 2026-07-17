@@ -432,12 +432,18 @@ def classify(world, onto) -> Dict[str, Any]:
         merged = sorted({p for m in group for p in hierarchy[m]} - set(group))
         for m in group:
             hierarchy[m] = merged
+    # quotient 매핑: 동치류를 하나의 노드로 접기 위한 결정적 대표(사전순 최소).
+    # equivalence_groups는 이미 정렬돼 있어 g[0]이 대표다. 클라이언트는
+    # representatives.get(name, name)으로 alias를 접어 quotient graph를 만든다
+    # (같은 부모 정보가 alias마다 복제되는 문제 해소 — 의미충실도 리뷰 R3).
+    representatives = {m: g[0] for g in equivalence_groups for m in g}
     return {"hierarchy": hierarchy, "unsatisfiable": sorted(unsat),
             "stereotypes": stereotypes,
             "equivalence_groups": equivalence_groups,
             # old client가 hierarchy만 읽어도 "이 결과를 그대로 믿으면 위험"을
             # 알 수 있는 얇은 경보등 (파생 동치가 하나라도 있으면 True).
-            "has_nontrivial_equivalences": bool(equivalence_groups)}
+            "has_nontrivial_equivalences": bool(equivalence_groups),
+            "representatives": representatives}
 
 
 def is_subclass_of(onto, child_name: str, parent_name: str) -> bool:
