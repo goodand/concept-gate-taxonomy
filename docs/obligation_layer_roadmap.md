@@ -11,6 +11,90 @@ L2 조건: "document ⊨ formal model"을 기계가 보증 (LLM 변환의 의미
 L3 기술: obligation 시스템 + (필요 시) warm reasoner + content-addressed state
 ```
 
+## 마일스톤 체인 (L1에서 역방향 도출, 2026-07-18 확정)
+
+현 상태 진단: L3 최소핵 달성(M0), **L2는 0%** — 등록된 obligation 7종 전부가
+기존 결정론 검사의 거울이라 `문서 의미 ⊨ 추출 주장`(HANDOFF §9 R5의 갭)을
+판정하는 semantic obligation이 하나도 없다. E1이 이를 실증했다(아래).
+
+```
+M0 ✅ 권한 경계 (L3 최소핵)
+   verdict/assurance 분리 + Decider Registry(cg_obligations.py) +
+   파이프라인 배선(run_pipeline/expand/classify_owl 응답 obligations 필드).
+   E1 완료(음성): 거울 obligation은 행동 변화 한계 효과 0 (천장 효과 —
+   anti_patterns/lint가 이미 시끄러운 실패 모드에선 타입 재표현일 뿐).
+   reasoner 지연 실측: min 475 / median 498 / p95 539 ms.
+
+M1 ⬜ 첫 semantic obligation — relation.is_a (L2 진입)
+   HANDOFF R2(관계 반례 검사)를 obligation으로: is-a 후보에 반례 질문
+   4종(instance-of/role/phase/part-of 아닌가)을 적용. 결정론 규칙로
+   검사 가능한 부분은 gate(RULE_CHECKED), 나머지는 LLM 제안
+   (SOURCE_ANCHORED 상한)으로 분리.
+   → 최초의 certificate-only 신호: 기존 status/lint/anti_patterns가
+     전부 침묵하는데 obligation만 미충족인 상태가 처음 생긴다.
+   검증: E2. 완료 기준: E2에서 ARM 분기 검출.
+
+M2 ⬜ evidence.full_support (L2 확대)
+   claim의 모든 성분이 evidence span 집합으로 지지되는가 (MEG 원리).
+   LLM decider — assurance 상한이 SOURCE_ANCHORED이므로 min_assurance에
+   미달, aggregate는 UNKNOWN에 머문다 (세탁 불가 구조의 실전 검증).
+   검증: E3. 완료 기준: false-PASS 0 + UNKNOWN 분포 실측.
+
+M3 ⬜ 선행 4종 완성 + gold benchmark (L2 판정 품질)
+   relation.part_of + definition.sufficient 추가 → 선행 4종 완성.
+   검증: E4. 완료 기준: gold set에서 함정 재현율 > 오탐율.
+   33종 확대는 이 결과가 트리거 (아래 보류 표와 일치).
+
+M4 ⬜ 누적 루프 (L1 진입)
+   제안→검증→재제안 확장 루프 + dependency invalidation(아래 보존 설계 —
+   이 시점이 트리거 발동). client-carried state envelope 최소형.
+   검증: E5 (기존 analyze_expansion 재사용). M1 이후 M2·M3과 병렬 가능.
+
+M5 ⬜ 신뢰 소비 (L1 완성)
+   인증된 온톨로지의 외부 소비(export/타 시스템 연결). 트리거 기반
+   인프라(warm JVM, R2, auth)는 실측 조건 충족 시에만. M3+M4 이후.
+```
+
+의존성: M1→M2→M3 순차(각 실험 결과가 다음 설계의 입력), M4는 M1 이후
+병렬 가능, M5는 M3+M4 이후.
+
+## 실험 설계 (E2~E5 — 각 마일스톤의 완료 게이트)
+
+### E2 — certificate-only 신호 A/B (M1 검증, E1 후속)
+
+E1이 확정한 요구: "다른 신호 침묵 + 의무만 미충족" fixture가 있어야 ARM이
+갈린다. M1의 relation.is_a가 그 fixture를 처음 가능하게 한다.
+
+- **fixture**: 표면상 유효한 is-a(status PASS, lint 0, anti_patterns 0)이지만
+  반례 검사에 걸리는 입력. 예: "선장 is-a 사람" — role을 kind로 위장한
+  UFO 문헌의 고전 사례.
+- **ARM A**: obligations 제거 응답 / **ARM B**: 포함. E1과 동일 프로토콜
+  (Haiku 5+5 trial, tool 접근 0, 결정적 채점 — evaluate.py 패턴 재사용).
+- **가설**: ARM A는 report_done(=false-done), ARM B는 repair/보류.
+- **판정**: B repair율 > A → M1의 행동 가치 실증. 동일 → decider 신호
+  전달 설계 재검토(tool description에 certificate 읽기 지침 추가 후 재실험 —
+  tool_description_ab의 교훈: 클라이언트는 description만 읽는다).
+
+### E3 — UNKNOWN 정직성 실측 (M2 검증)
+
+- 지지 완전/부분/무관 evidence 3계열 × N trial에서 LLM decider가 제안만
+  하고 aggregate가 UNKNOWN에 머무는지 관측.
+- **측정**: false-PASS 발생 건수(불변조건의 실전판 — 목표 0), UNKNOWN 비율,
+  human_or_abstain 경로 노출 빈도.
+- **판정**: false-PASS 1건이라도 나오면 M2 재설계 (세탁 구멍).
+
+### E4 — 반례 검사 gold set (M3 검증)
+
+- gold 10~20건: 유효 is-a/part-of 절반 + 함정 절반(instance-of, role,
+  phase, member_of, 재질-객체 혼동).
+- **측정**: 함정 검출 재현율 / 유효 관계 오탐율 (결정적 채점).
+- **판정**: 함정 재현율이 오탐율을 의미 있게 상회해야 33종 확대 트리거.
+
+### E5 — 누적 수렴 (M4 검증)
+
+- 확장 루프 N회에서 invalidation 후 재수렴 여부 — 기존
+  analyze_expansion(converged/stalled/oscillating) 재사용.
+
 ## 지금 구현 (blocker 1만 — 결정론 세탁 차단)
 
 `conceptgate/cg_obligations.py` 한 파일, stdlib only, 배포 불변:
@@ -25,12 +109,12 @@ L3 기술: obligation 시스템 + (필요 시) warm reasoner + content-addressed
 
 | 보류 항목 | 도입 트리거 |
 |---|---|
-| dependency invalidation 로직 (TMS식 stale 전파) | 확장 루프(제안→검증→재제안) 실구현 시 |
+| dependency invalidation 로직 (TMS식 stale 전파) | 확장 루프(제안→검증→재제안) 실구현 시 (= M4) |
 | L1 result cache (canonical hash → 추론 결과) | 동일 reasoning 입력 반복이 실측될 때 |
-| warm JVM reasoner gateway (2-service 분리) | 세션당 reasoner 호출 > 20 또는 p95 누적 > 60초 |
+| warm JVM reasoner gateway (2-service 분리) | 세션당 reasoner 호출 > 20 또는 p95 누적 > 60초. E1 실측: median 498ms/호출 → 60s 예산 ≈ 120회/세션. 기존 ">20회" 트리거는 실측 대비 6배 보수적 — 유지하되 근거 병기 |
 | R2/S3 content-addressed state 외부화 | client payload 한도 접근 시 |
 | cache_token / HMAC / auth 강화 | 외부(비신뢰) 사용자 등장 시 |
-| semantic obligation 33종 확대 | 선행 4종(evidence.full_support, relation.is_a, relation.part_of, definition.sufficient)이 benchmark 개선을 보인 후 |
+| semantic obligation 33종 확대 | 선행 4종(evidence.full_support, relation.is_a, relation.part_of, definition.sufficient)이 benchmark 개선을 보인 후 — 실험 게이트: E2(행동 분기) → E3(false-PASS 0) → E4(gold set 재현율 > 오탐율) |
 
 ## 보존 설계 결정 (트리거 발동 시 이 사양대로)
 
