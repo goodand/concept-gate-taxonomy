@@ -137,6 +137,35 @@ dependence, category 위반을 검사한다. 값이 없으면 기존 FCA feature
 - `structural_composition` → has-a 구성 그래프 (부분-전체). `composition` 필드로
   별도 반환: `{"edges": [[전체, 부분], ...], "shared_parts": {부분: [전체들]}}`.
 
+### obligation certificate (인증 관점)
+
+`run_pipeline`·`expand`·`classify_owl` 응답에는 `obligations` 필드가 붙는다.
+`status`(운영 관점, 비차단 WARNING 허용)와 달리 **엄격한 인증 관점**이다 —
+같은 실행이라도 두 관점이 갈릴 수 있다.
+
+```json
+{"obligations": {
+  "ok": false, "verdict": "fail",
+  "results": [
+    {"obligation": "ufo.no_antipattern", "verdict": "fail",
+     "assurance": "RULE_CHECKED", "decider": "gate",
+     "evidence": "anti_patterns", "reason": "UFO 안티패턴 1건 감지"}
+  ],
+  "errors": ["ufo.no_antipattern"]}}
+```
+
+- `verdict` ∈ `{pass, fail, unknown, conflict}` — 판정 결과.
+- `assurance` — **누가** 판정했는가의 보증 등급
+  (`PROPOSED < SOURCE_ANCHORED < RULE_CHECKED < REASONER_PROVED < HUMAN_APPROVED`).
+  LLM 제안은 `SOURCE_ANCHORED`가 상한이고, `RULE_CHECKED` 이상은 결정론적
+  decider(gate/reasoner)만 발급한다 — 결정론 세탁 방지.
+- `decider` ∈ `{gate, reasoner, local_rule, llm, human}`.
+- `classify_owl`에서 Java 미가용이면 `owl.consistent`는 `pass`가 아니라
+  `unknown`(assurance `PROPOSED`)이다 — '판정 안 됨'을 '통과'로 읽지 말 것.
+
+status는 `PASS_WITH_WARNING`(비차단)인데 `obligations.verdict`는 `fail`일 수
+있다: 안티패턴은 운영상 경고지만 인증상 미충족이다.
+
 선택 필드 `relation_hint`(UFO 어휘)로 관계 맥락을 명시할 수 있다:
 is_a, component_of, member_of, subcollection_of, subquantity_of,
 material_of, phase_of, located_in.

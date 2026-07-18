@@ -29,6 +29,7 @@ from .concept_gate_v7 import (
 )
 from .cg_graph_export import GraphExporter
 from .cg_input_linter import lint_concepts as run_input_linter
+from . import cg_obligations
 
 # ═══════════════════════════════════════════════════════
 # 입력 크기 제한 (DoS 방어)
@@ -281,7 +282,7 @@ def _serialize_warning(w):
 def _serialize_pipeline_output(out):
     """파이프라인 출력을 JSON-직렬화 가능한 형태로 변환."""
     r = out["result"]
-    return {
+    serialized = {
         "status": out["status"],
         "dag": dict(r["dag"]),
         "levels": r["levels"],
@@ -306,6 +307,12 @@ def _serialize_pipeline_output(out):
         # UFO 안티패턴 (MixRig, PartOver, WholeOver) — WARNING 수준
         "anti_patterns": out.get("anti_patterns", []),
     }
+    # obligation certificate — 인증 관점(엄격). status는 운영 관점이라
+    # 둘이 다를 수 있다: 안티패턴은 status에선 WARNING(비차단)이지만
+    # 인증에선 ufo.no_antipattern FAIL이다.
+    serialized["obligations"] = cg_obligations.certify(
+        cg_obligations.results_from_pipeline(serialized))
+    return serialized
 
 
 # ═══════════════════════════════════════════════════════
@@ -382,6 +389,13 @@ def run_pipeline(concepts: list[dict]) -> dict:
     per each issue's suggestion and call run_pipeline again, even when
     status is PASS: PASS with an empty dag usually means the input
     violated the edge contract above.
+
+    The response also carries an obligations certificate: per-obligation
+    {verdict, assurance, decider, evidence} plus an aggregate verdict.
+    This is the strict certification view — status PASS_WITH_WARNING with
+    a detected UFO anti-pattern still yields obligations.verdict "fail".
+    Assurance names WHO decided (gate/reasoner/llm); only deterministic
+    deciders can issue rule_checked or higher.
     """
     started = time.perf_counter()
     size_err = _validate_input_size(concepts)
@@ -733,28 +747,35 @@ def classify_owl(owl: dict) -> dict:
     subsumption의 소유자는 이 reasoner다 — OWL 2 DL 의미론에 대해
     건전·완전하다. Java가 없는 환경(예: 기본 Render)에서는
     REASONER_UNAVAILABLE 오류를 구조화해 반환한다.
+
+    응답의 obligations 필드는 owl.consistent 의무의 certificate다:
+    reasoner가 실제 실행됐으면 reasoner_proved 보증의 pass/fail,
+    미가용이면 unknown — '판정 안 됨'은 '통과'가 아니다.
     """
     try:
         from . import cg_owl  # owlready2 필요 (lazy)
     except ImportError as exc:
-        return {"ok": False, "stage": "owl-classify",
-                "errors": [{"stage": "owl-classify",
-                            "code": "OWLREADY2_UNAVAILABLE",
-                            "detail": str(exc)}]}
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-classify",
+             "errors": [{"stage": "owl-classify",
+                         "code": "OWLREADY2_UNAVAILABLE",
+                         "detail": str(exc)}]})
     if not isinstance(owl, dict):
-        return {"ok": False, "stage": "owl-serialize",
-                "errors": [{"stage": "owl-serialize",
-                            "code": "OWL_NOT_OBJECT",
-                            "detail": f"owl must be dict, "
-                                      f"got {type(owl).__name__}"}]}
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-serialize",
+             "errors": [{"stage": "owl-serialize",
+                         "code": "OWL_NOT_OBJECT",
+                         "detail": f"owl must be dict, "
+                                   f"got {type(owl).__name__}"}]})
     raw_dp = owl.get("data_properties") or []
     if not isinstance(raw_dp, list) or any(
             not isinstance(d, dict) for d in raw_dp):
-        return {"ok": False, "stage": "owl-serialize",
-                "errors": [{"stage": "owl-serialize",
-                            "code": "DATA_PROPERTY_NOT_OBJECT",
-                            "detail": "data_properties must be a list of "
-                                      "objects"}]}
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-serialize",
+             "errors": [{"stage": "owl-serialize",
+                         "code": "DATA_PROPERTY_NOT_OBJECT",
+                         "detail": "data_properties must be a list of "
+                                   "objects"}]})
     try:
         world, onto, _ = cg_owl.build_ontology(
             concepts=owl.get("concepts", []),
@@ -763,19 +784,33 @@ def classify_owl(owl: dict) -> dict:
                              for d in raw_dp],
             disjoint_groups=owl.get("disjoint_groups", []))
     except cg_owl.SerializationError as exc:
-        return {"ok": False, "stage": "owl-serialize",
-                "errors": [{"stage": "owl-serialize",
-                            "code": "SERIALIZATION_ERROR",
-                            "detail": str(exc)}]}
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-serialize",
+             "errors": [{"stage": "owl-serialize",
+                         "code": "SERIALIZATION_ERROR",
+                         "detail": str(exc)}]})
     try:
         result = cg_owl.classify(world, onto)
     except Exception as exc:
-        return {"ok": False, "stage": "owl-classify",
-                "errors": [{"stage": "owl-classify",
-                            "code": "REASONER_UNAVAILABLE",
-                            "detail": f"HermiT 실행 실패 (Java 필요): "
-                                      f"{str(exc)[:200]}"}]}
-    return {"ok": True, "stage": "owl-classify", **result}
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-classify",
+             "errors": [{"stage": "owl-classify",
+                         "code": "REASONER_UNAVAILABLE",
+                         "detail": f"HermiT 실행 실패 (Java 필요): "
+                                   f"{str(exc)[:200]}"}]})
+    return _attach_owl_obligations(
+        {"ok": True, "stage": "owl-classify", **result})
+
+
+def _attach_owl_obligations(resp: dict) -> dict:
+    """owl.consistent certificate를 classify_owl 응답에 주입.
+
+    reasoner 미가용이면 UNKNOWN이 기록된다 — '판정 안 됨'이
+    '통과'로 읽히지 않게 하는 것이 목적 (Java 없는 기본 Render 경로).
+    """
+    resp["obligations"] = cg_obligations.certify(
+        cg_obligations.results_from_classification(resp))
+    return resp
 
 
 # ═══════════════════════════════════════════════════════

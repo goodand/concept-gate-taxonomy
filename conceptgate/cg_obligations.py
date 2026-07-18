@@ -145,6 +145,72 @@ def aggregate(results: Iterable[ObligationResult]) -> Verdict:
     return Verdict.UNKNOWN
 
 
+def results_from_pipeline(serialized: Dict[str, Any]) -> List[ObligationResult]:
+    """_serialize_pipeline_output 산출물 → 관계 obligation 결과 4종.
+
+    gates는 이미 실행됐다 — 이 어댑터는 그 판정을 ObligationResult로
+    옮길 뿐 재검사하지 않는다. 입력은 직렬화된 dict(실행 결합 없음).
+    """
+    issues = serialized.get("composition_issues") or []
+    by_kind: Dict[str, List[Dict[str, Any]]] = {}
+    for i in issues:
+        by_kind.setdefault(i.get("kind", ""), []).append(i)
+
+    def _gate(obligation: str, kind: str, gate_name: str) -> ObligationResult:
+        hits = by_kind.get(kind, [])
+        if hits:
+            return ObligationResult(
+                obligation, Verdict.FAIL, Assurance.RULE_CHECKED,
+                DeciderKind.GATE, evidence=f"composition_issues[kind={kind}]",
+                reason="; ".join(h.get("detail", "") for h in hits[:3]))
+        return ObligationResult(
+            obligation, Verdict.PASS, Assurance.RULE_CHECKED,
+            DeciderKind.GATE, evidence=f"{gate_name}: {kind} 위반 0건")
+
+    anti = serialized.get("anti_patterns") or []
+    if anti:
+        ufo = ObligationResult(
+            "ufo.no_antipattern", Verdict.FAIL, Assurance.RULE_CHECKED,
+            DeciderKind.GATE, evidence="anti_patterns",
+            reason=f"UFO 안티패턴 {len(anti)}건 감지")
+    else:
+        ufo = ObligationResult(
+            "ufo.no_antipattern", Verdict.PASS, Assurance.RULE_CHECKED,
+            DeciderKind.GATE, evidence="UFOAntiPatternGate: 0건")
+    return [
+        _gate("relation.antisymmetry", "antisymmetry", "CompositionGate"),
+        _gate("relation.acyclicity", "cycle", "CompositionGate"),
+        _gate("relation.isa_hasa_exclusivity", "isa_hasa_conflict",
+              "CompositionGate"),
+        ufo,
+    ]
+
+
+def results_from_classification(resp: Dict[str, Any]) -> List[ObligationResult]:
+    """classify_owl 응답 → owl.consistent 결과 1종.
+
+    ok=False(reasoner 미가용 등)면 decider가 실행되지 않은 것 —
+    spec.on_unavailable(UNKNOWN)을 기록한다. UNKNOWN은 집계에서
+    PASS를 차단하므로 '판정 안 됨'이 '통과'로 세탁되지 않는다.
+    """
+    spec = OBLIGATION_REGISTRY["owl.consistent"]
+    if not resp.get("ok"):
+        codes = [e.get("code") for e in resp.get("errors", [])]
+        return [ObligationResult(
+            "owl.consistent", spec.on_unavailable, Assurance.PROPOSED,
+            DeciderKind.REASONER,
+            reason=f"decider 미실행: {codes or 'unknown'}")]
+    unsat = resp.get("unsatisfiable") or []
+    if unsat:
+        return [ObligationResult(
+            "owl.consistent", Verdict.FAIL, Assurance.REASONER_PROVED,
+            DeciderKind.REASONER, evidence="unsatisfiable",
+            reason=f"unsatisfiable classes: {unsat[:5]}")]
+    return [ObligationResult(
+        "owl.consistent", Verdict.PASS, Assurance.REASONER_PROVED,
+        DeciderKind.REASONER, evidence="HermiT: unsatisfiable 0건")]
+
+
 def certify(results: List[ObligationResult]) -> Dict[str, Any]:
     """검증 + 집계 단일 진입점. 불변조건 위반이 하나라도 있으면 FAIL."""
     errors: List[Dict[str, Any]] = []

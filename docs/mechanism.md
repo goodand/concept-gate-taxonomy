@@ -103,6 +103,15 @@ flowchart TB
   아니다.** `classify_owl`의 계층은 OWL 공리의 model-theoretic 함의이고,
   `run_pipeline`의 DAG는 feature-label 집합 포함으로 만든 후보다 — 인식론적
   등급이 다르므로 같은 검증 수준으로 읽으면 안 된다.
+- **obligation certificate는 `verdict`와 `assurance`를 분리한다.** 응답의
+  `obligations` 필드는 각 의무를 `verdict`(pass/fail/unknown/conflict)와
+  `assurance`(누가 판정했나: gate/reasoner가 발급하는 RULE_CHECKED·
+  REASONER_PROVED vs LLM 상한 SOURCE_ANCHORED)로 이중 기록한다. 단일
+  pass/fail이면 "LLM이 PASS"와 "reasoner가 증명한 PASS"가 구분되지 않아
+  결정론 세탁이 생긴다 — assurance 축이 그 세탁을 막는다. reasoner 미가용은
+  PASS가 아니라 UNKNOWN(assurance PROPOSED)으로 떨어진다. 이 인증 관점은
+  운영 `status`와 독립이라, 비차단 WARNING이 `obligations.verdict` fail로
+  나타날 수 있다.
 
 ## 4. 검증이 행동으로 증명하는 것
 
@@ -114,4 +123,7 @@ flowchart TB
 | unsatisfiable 클래스가 Nothing을 parents로 안 흘림 | P7 |
 | 파생 동치를 그룹으로 보고(전이 폐포·unsat 격리·별칭 비오염) | P8 |
 | gUFO 경로에서 동치 멤버 전원이 직계 부모를 유지 | P9 |
+| gate 판정이 RULE_CHECKED obligation으로 이관된다 (재검사 없음) | `test_cg_obligations.py` |
+| reasoner 미가용은 PASS가 아니라 UNKNOWN이다 (세탁 방지) | `test_cg_obligations.py` |
+| LLM은 REASONER_PROVED 보증을 발급할 수 없다 | `test_cg_obligations.py` |
 | 어떤 변형 입력도 crash하지 않는다 (CRASH=0) | `fuzz_normalizer_types.py` |

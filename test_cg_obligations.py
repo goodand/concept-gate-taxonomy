@@ -7,7 +7,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from conceptgate.cg_obligations import (
     MAX_ASSURANCE, OBLIGATION_REGISTRY, Assurance, DeciderKind,
-    ObligationResult, Verdict, aggregate, certify, validate_result,
+    ObligationResult, Verdict, aggregate, certify,
+    results_from_classification, results_from_pipeline, validate_result,
 )
 
 
@@ -95,3 +96,56 @@ def test_depends_on_recorded_as_provenance():
     r = _r(depends_on=("claim:42", "obl:81"))
     out = certify([r])
     assert out["results"][0]["depends_on"] == ["claim:42", "obl:81"]
+
+
+# ── 파이프라인 어댑터 (배선) ──────────────────────────────
+
+def test_pipeline_adapter_clean_output_all_pass():
+    results = results_from_pipeline(
+        {"composition_issues": [], "anti_patterns": []})
+    assert {r.obligation for r in results} == {
+        "relation.antisymmetry", "relation.acyclicity",
+        "relation.isa_hasa_exclusivity", "ufo.no_antipattern"}
+    cert = certify(results)
+    assert cert["ok"] and cert["verdict"] == "pass" and cert["errors"] == []
+
+
+def test_pipeline_adapter_maps_issue_kinds_to_obligations():
+    results = results_from_pipeline({
+        "composition_issues": [
+            {"kind": "antisymmetry", "detail": "A⊃B 와 B⊃A 동시"},
+            {"kind": "cycle", "detail": "A 순환"},
+        ],
+        "anti_patterns": [{"kind": "MixRig"}],
+    })
+    by = {r.obligation: r for r in results}
+    assert by["relation.antisymmetry"].verdict is Verdict.FAIL
+    assert by["relation.acyclicity"].verdict is Verdict.FAIL
+    assert by["relation.isa_hasa_exclusivity"].verdict is Verdict.PASS
+    assert by["ufo.no_antipattern"].verdict is Verdict.FAIL
+    assert certify(results)["verdict"] == "fail"
+    # 모든 결과가 registry 불변조건을 통과해야 함 (어댑터 자체의 세탁 방지)
+    for r in results:
+        assert validate_result(r) == []
+
+
+# ── 분류 어댑터 (배선) ───────────────────────────────────
+
+def test_classification_adapter_pass_and_fail():
+    [ok] = results_from_classification({"ok": True, "unsatisfiable": []})
+    assert (ok.verdict, ok.assurance) == (
+        Verdict.PASS, Assurance.REASONER_PROVED)
+    assert validate_result(ok) == []
+    [bad] = results_from_classification(
+        {"ok": True, "unsatisfiable": ["Ghost"]})
+    assert bad.verdict is Verdict.FAIL and "Ghost" in bad.reason
+
+
+def test_classification_adapter_unavailable_is_unknown_not_pass():
+    # Java 없는 기본 Render 경로 — '판정 안 됨'이 '통과'로 세탁되면 안 됨
+    [r] = results_from_classification(
+        {"ok": False, "errors": [{"code": "REASONER_UNAVAILABLE"}]})
+    assert r.verdict is Verdict.UNKNOWN
+    assert r.assurance is Assurance.PROPOSED  # 증명 보증 참칭 금지
+    cert = certify([r])
+    assert not cert["ok"] and cert["verdict"] == "unknown"
