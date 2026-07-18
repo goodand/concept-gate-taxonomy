@@ -127,4 +127,7 @@ flowchart TB
 | reasoner 미가용은 PASS가 아니라 UNKNOWN이다 (세탁 방지) | `test_cg_obligations.py` |
 | LLM은 REASONER_PROVED 보증을 발급할 수 없다 | `test_cg_obligations.py` |
 | OntoClean 근거 없는 is-a는 status PASS라도 relation.is_a UNKNOWN이다 | `test_cg_obligations.py` |
+| 등록된 obligation handler가 실제 코드에 존재한다 (registry drift 차단) | `test_cg_obligations.py` |
+| gate 출력 필드 부재는 위반 0건과 다르다 (UNKNOWN, 세탁 방지) | `test_cg_obligations.py` |
+| assemble_concepts의 source 검증이 certificate로 노출된다 | `test_cg_obligations.py` |
 | 어떤 변형 입력도 crash하지 않는다 (CRASH=0) | `fuzz_normalizer_types.py` |

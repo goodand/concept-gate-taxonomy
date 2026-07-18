@@ -5,11 +5,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+import importlib
+
 from conceptgate.cg_obligations import (
     MAX_ASSURANCE, OBLIGATION_REGISTRY, Assurance, DeciderKind,
     ObligationResult, Verdict, aggregate, certify,
-    results_from_classification, results_from_isa, results_from_pipeline,
-    validate_result,
+    results_from_classification, results_from_isa, results_from_normalizer,
+    results_from_pipeline, validate_result,
 )
 
 
@@ -185,3 +187,64 @@ def test_isa_partial_ontoclean_is_ungrounded():
     # 한쪽만 메타데이터 → 간선 근거 불완전 → UNKNOWN
     [r] = results_from_isa({"동물": ["개"]}, {"동물"})
     assert r.verdict is Verdict.UNKNOWN
+
+
+# ── registry drift 방지 (handler 실존 CI) ─────────────────
+
+def test_registered_handlers_resolve():
+    # handler dotted path가 실제 코드에 존재하는지 확인 — registry가 코드와
+    # drift하면(예: 클래스명 오타) 여기서 잡는다.
+    for name, spec in OBLIGATION_REGISTRY.items():
+        parts = spec.handler.split(".")
+        obj = importlib.import_module("conceptgate." + parts[0])
+        for attr in parts[1:]:
+            obj = getattr(obj, attr)  # 없으면 AttributeError → 테스트 실패
+        assert obj is not None, name
+
+
+# ── 필드 부재는 위반 0건과 다르다 (세탁 방지 하드닝) ──────
+
+def test_pipeline_adapter_missing_field_is_unknown_not_pass():
+    # composition_issues/anti_patterns 키 자체가 없으면 gate 미실행 → UNKNOWN
+    results = results_from_pipeline({})
+    assert {r.verdict for r in results} == {Verdict.UNKNOWN}
+    assert certify(results)["verdict"] == "unknown"
+    # 빈 배열(키 존재)은 PASS — 검사 실행됨 + 위반 0
+    present = results_from_pipeline(
+        {"composition_issues": [], "anti_patterns": []})
+    assert {r.verdict for r in present} == {Verdict.PASS}
+
+
+# ── normalizer 어댑터 (source.* obligation 노출) ──────────
+
+def test_normalizer_adapter_all_verified_is_pass():
+    resp = {
+        "ok": True, "source": {"sha256": "a" * 64},
+        "claims": [{"verification_status": "source_span_verified"},
+                   {"verification_status": "source_span_verified"}],
+    }
+    results = results_from_normalizer(resp)
+    by = {r.obligation: r for r in results}
+    assert by["source.snapshot_hash"].verdict is Verdict.PASS
+    assert by["source.span_evidence"].verdict is Verdict.PASS
+    for r in results:
+        assert r.decider is DeciderKind.LOCAL_RULE
+        assert validate_result(r) == []
+    assert certify(results)["verdict"] == "pass"
+
+
+def test_normalizer_adapter_unverified_span_is_unknown_not_pass():
+    # span 미제출 claim이 있으면 '근거 없음'이 '검증됨'으로 세탁되면 안 됨
+    resp = {
+        "ok": True, "source": {"sha256": "b" * 64},
+        "claims": [{"verification_status": "source_span_verified"},
+                   {"verification_status": "unverified"}],
+    }
+    by = {r.obligation: r for r in results_from_normalizer(resp)}
+    assert by["source.span_evidence"].verdict is Verdict.UNKNOWN
+    assert by["source.span_evidence"].assurance is Assurance.PROPOSED
+
+
+def test_normalizer_adapter_failure_emits_nothing():
+    # 실패 응답은 stage 오류가 원인을 이미 표면화 — certificate 불요
+    assert results_from_normalizer({"ok": False, "stage": "snapshot"}) == []

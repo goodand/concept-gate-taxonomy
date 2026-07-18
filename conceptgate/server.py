@@ -724,8 +724,17 @@ def assemble_concepts(bundle: dict) -> dict:
     넣을 수 있다. 실패 시 stage 필드가 원인 단계(selection/crosswalk/
     assemble/lint)를 가리킨다. claims에는 span·source hash 기반의
     verification_status가 붙는다 — confidence는 검증이 아니다.
+
+    성공 응답에는 obligations certificate가 붙는다: source.snapshot_hash
+    (snapshot sha256 재계산 일치)와 source.span_evidence(claim span+quote+
+    hash 검증). span 미제공 claim이 있으면 span_evidence는 pass가 아니라
+    unknown — '근거 미제출'이 '검증됨'으로 세탁되지 않는다.
     """
-    return cg_normalizer.assemble_concepts(bundle)
+    resp = cg_normalizer.assemble_concepts(bundle)
+    obl = cg_obligations.results_from_normalizer(resp)
+    if obl:
+        resp["obligations"] = cg_obligations.certify(obl)
+    return resp
 
 
 @mcp.tool

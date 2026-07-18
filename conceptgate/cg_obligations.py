@@ -88,7 +88,7 @@ OBLIGATION_REGISTRY: Dict[str, ObligationSpec] = {
         "concept_gate_v7.CompositionGate", Verdict.FAIL),
     "relation.is_a": ObligationSpec(
         DeciderKind.GATE, Assurance.RULE_CHECKED,
-        "concept_gate_v7.SubsumptionGate.ontoclean_meta_gate", Verdict.UNKNOWN),
+        "concept_gate_v7.ConceptGate.ontoclean_meta_gate", Verdict.UNKNOWN),
     "ufo.no_antipattern": ObligationSpec(
         DeciderKind.GATE, Assurance.RULE_CHECKED,
         "concept_gate_v7.UFOAntiPatternGate", Verdict.UNKNOWN),
@@ -153,13 +153,22 @@ def results_from_pipeline(serialized: Dict[str, Any]) -> List[ObligationResult]:
 
     gates는 이미 실행됐다 — 이 어댑터는 그 판정을 ObligationResult로
     옮길 뿐 재검사하지 않는다. 입력은 직렬화된 dict(실행 결합 없음).
+
+    필드 부재는 '위반 0건'과 다르다: composition_issues/anti_patterns 키가
+    아예 없으면 gate가 실행되지 않은 것 → UNKNOWN(on_unavailable). 빈
+    배열(키 존재)만 PASS다 — '검사 안 됨'이 '통과'로 세탁되지 않게 한다.
     """
-    issues = serialized.get("composition_issues") or []
+    comp_ran = "composition_issues" in serialized
     by_kind: Dict[str, List[Dict[str, Any]]] = {}
-    for i in issues:
+    for i in (serialized.get("composition_issues") or []):
         by_kind.setdefault(i.get("kind", ""), []).append(i)
 
     def _gate(obligation: str, kind: str, gate_name: str) -> ObligationResult:
+        if not comp_ran:
+            return ObligationResult(
+                obligation, Verdict.UNKNOWN, Assurance.PROPOSED,
+                DeciderKind.GATE,
+                reason=f"{gate_name} 미실행 (composition_issues 필드 부재)")
         hits = by_kind.get(kind, [])
         if hits:
             return ObligationResult(
@@ -170,12 +179,16 @@ def results_from_pipeline(serialized: Dict[str, Any]) -> List[ObligationResult]:
             obligation, Verdict.PASS, Assurance.RULE_CHECKED,
             DeciderKind.GATE, evidence=f"{gate_name}: {kind} 위반 0건")
 
-    anti = serialized.get("anti_patterns") or []
-    if anti:
+    if "anti_patterns" not in serialized:
+        ufo = ObligationResult(
+            "ufo.no_antipattern", Verdict.UNKNOWN, Assurance.PROPOSED,
+            DeciderKind.GATE,
+            reason="UFOAntiPatternGate 미실행 (anti_patterns 필드 부재)")
+    elif serialized["anti_patterns"]:
         ufo = ObligationResult(
             "ufo.no_antipattern", Verdict.FAIL, Assurance.RULE_CHECKED,
             DeciderKind.GATE, evidence="anti_patterns",
-            reason=f"UFO 안티패턴 {len(anti)}건 감지")
+            reason=f"UFO 안티패턴 {len(serialized['anti_patterns'])}건 감지")
     else:
         ufo = ObligationResult(
             "ufo.no_antipattern", Verdict.PASS, Assurance.RULE_CHECKED,
@@ -187,6 +200,47 @@ def results_from_pipeline(serialized: Dict[str, Any]) -> List[ObligationResult]:
               "CompositionGate"),
         ufo,
     ]
+
+
+def results_from_normalizer(resp: Dict[str, Any]) -> List[ObligationResult]:
+    """assemble_concepts 성공 응답 → source.* obligation 2종.
+
+    registry에 등록됐으나 아직 발급되지 않던 source.snapshot_hash·
+    source.span_evidence를 실제 MCP 응답에 노출한다. cg_normalizer가 이미
+    snapshot integrity(_snapshot_integrity_errors)와 span+quote+hash
+    (_span_evidence)를 결정론적으로 검사했다 — 이 어댑터는 그 결과를 옮길 뿐.
+
+    실패 응답은 stage 오류가 이미 원인을 표면화하므로 certificate를 만들지
+    않는다(빈 목록). span 미제공(unverified) claim이 하나라도 있으면
+    source.span_evidence는 PASS가 아니라 UNKNOWN이다.
+    """
+    if not resp.get("ok"):
+        return []
+    results: List[ObligationResult] = []
+    source = resp.get("source") or {}
+    if source.get("sha256"):
+        results.append(ObligationResult(
+            "source.snapshot_hash", Verdict.PASS, Assurance.RULE_CHECKED,
+            DeciderKind.LOCAL_RULE,
+            evidence=f"snapshot sha256 재계산 일치: {source['sha256'][:12]}"))
+    else:
+        results.append(ObligationResult(
+            "source.snapshot_hash", Verdict.UNKNOWN, Assurance.PROPOSED,
+            DeciderKind.LOCAL_RULE, reason="snapshot 미제공 — hash 판정 대상 없음"))
+    claims = resp.get("claims") or []
+    unverified = [c for c in claims
+                  if c.get("verification_status") != "source_span_verified"]
+    if claims and not unverified:
+        results.append(ObligationResult(
+            "source.span_evidence", Verdict.PASS, Assurance.RULE_CHECKED,
+            DeciderKind.LOCAL_RULE,
+            evidence=f"claim {len(claims)}건 span+quote+hash 검증"))
+    else:
+        results.append(ObligationResult(
+            "source.span_evidence", Verdict.UNKNOWN, Assurance.PROPOSED,
+            DeciderKind.LOCAL_RULE,
+            reason=f"span 미검증 claim {len(unverified)}건 (evidence_span 부재)"))
+    return results
 
 
 def results_from_isa(dag: Dict[str, List[str]],
