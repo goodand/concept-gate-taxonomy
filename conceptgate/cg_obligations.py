@@ -86,6 +86,9 @@ OBLIGATION_REGISTRY: Dict[str, ObligationSpec] = {
     "relation.isa_hasa_exclusivity": ObligationSpec(
         DeciderKind.GATE, Assurance.RULE_CHECKED,
         "concept_gate_v7.CompositionGate", Verdict.FAIL),
+    "relation.is_a": ObligationSpec(
+        DeciderKind.GATE, Assurance.RULE_CHECKED,
+        "concept_gate_v7.SubsumptionGate.ontoclean_meta_gate", Verdict.UNKNOWN),
     "ufo.no_antipattern": ObligationSpec(
         DeciderKind.GATE, Assurance.RULE_CHECKED,
         "concept_gate_v7.UFOAntiPatternGate", Verdict.UNKNOWN),
@@ -184,6 +187,45 @@ def results_from_pipeline(serialized: Dict[str, Any]) -> List[ObligationResult]:
               "CompositionGate"),
         ufo,
     ]
+
+
+def results_from_isa(dag: Dict[str, List[str]],
+                     ontoclean_names: Iterable[str]) -> List[ObligationResult]:
+    """DAG의 is-a 간선 → relation.is_a obligation (M1: 첫 semantic obligation).
+
+    is-a 반례 4종(instance-of/role/phase/part-of 아닌가) 중 role·phase·rigidity·
+    dependence는 OntoCleanMetaGate가 결정론적으로 검사하고 위반 시 간선을 차단한다
+    (part-of masquerade는 Relation Discrimination Gate가 상류에서 차단). 따라서
+    *형성된* 간선은 두 경우뿐이다:
+
+    - 양 끝이 OntoClean 메타데이터를 지님 → 게이트가 반례를 검사·통과시킴
+      → RULE_CHECKED PASS.
+    - 메타데이터 부재 → 게이트가 판정 불가(on_unavailable) → UNKNOWN. 간선은
+      feature-label 집합 포함으로만 형성됐고 instance/role/phase masquerade가
+      결정론적으로 배제되지 않았다 — 이 is-a는 LLM 제안일 뿐이다.
+
+    이것이 최초의 certificate-only 신호다: status PASS·lint 0·anti_patterns 0인데
+    relation.is_a는 UNKNOWN. UNKNOWN은 집계에서 PASS를 막으므로 '판정 안 된 is-a'가
+    '통과'로 세탁되지 않는다.
+    """
+    names = set(ontoclean_names)
+    edges = [(p, c) for p, children in dag.items() for c in children]
+    if not edges:
+        return []  # is-a 주장 없음 — 판정 대상 없음 (공허)
+    grounded = {(p, c) for (p, c) in edges if p in names and c in names}
+    ungrounded = [e for e in edges if e not in grounded]
+    if ungrounded:
+        detail = ", ".join(f"{p}→{c}" for p, c in sorted(ungrounded)[:5])
+        return [ObligationResult(
+            "relation.is_a", Verdict.UNKNOWN, Assurance.PROPOSED,
+            DeciderKind.GATE,
+            reason=f"OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 "
+                   f"— LLM 제안 is-a: {detail}")]
+    detail = ", ".join(f"{p}→{c}" for p, c in sorted(grounded)[:5])
+    return [ObligationResult(
+        "relation.is_a", Verdict.PASS, Assurance.RULE_CHECKED,
+        DeciderKind.GATE,
+        evidence=f"OntoCleanMetaGate 검증 간선: {detail}")]
 
 
 def results_from_classification(resp: Dict[str, Any]) -> List[ObligationResult]:

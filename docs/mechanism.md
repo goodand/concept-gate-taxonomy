@@ -126,4 +126,5 @@ flowchart TB
 | gate 판정이 RULE_CHECKED obligation으로 이관된다 (재검사 없음) | `test_cg_obligations.py` |
 | reasoner 미가용은 PASS가 아니라 UNKNOWN이다 (세탁 방지) | `test_cg_obligations.py` |
 | LLM은 REASONER_PROVED 보증을 발급할 수 없다 | `test_cg_obligations.py` |
+| OntoClean 근거 없는 is-a는 status PASS라도 relation.is_a UNKNOWN이다 | `test_cg_obligations.py` |
 | 어떤 변형 입력도 crash하지 않는다 (CRASH=0) | `fuzz_normalizer_types.py` |

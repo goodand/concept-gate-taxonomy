@@ -8,7 +8,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 from conceptgate.cg_obligations import (
     MAX_ASSURANCE, OBLIGATION_REGISTRY, Assurance, DeciderKind,
     ObligationResult, Verdict, aggregate, certify,
-    results_from_classification, results_from_pipeline, validate_result,
+    results_from_classification, results_from_isa, results_from_pipeline,
+    validate_result,
 )
 
 
@@ -149,3 +150,38 @@ def test_classification_adapter_unavailable_is_unknown_not_pass():
     assert r.assurance is Assurance.PROPOSED  # 증명 보증 참칭 금지
     cert = certify([r])
     assert not cert["ok"] and cert["verdict"] == "unknown"
+
+
+# ── is-a 어댑터 (M1: 첫 semantic obligation) ──────────────
+
+def test_isa_no_edges_is_vacuous():
+    # is-a 주장이 없으면 판정 대상 없음 — 집계에 영향 없어야 함
+    assert results_from_isa({}, set()) == []
+    assert results_from_isa({"동물": []}, set()) == []
+
+
+def test_isa_without_ontoclean_is_unknown_not_pass():
+    # certificate-only 신호: 간선은 형성됐지만 OntoClean 근거 없음 → UNKNOWN
+    [r] = results_from_isa({"동물": ["개"]}, set())
+    assert r.verdict is Verdict.UNKNOWN
+    assert r.assurance is Assurance.PROPOSED  # LLM 제안 — RULE_CHECKED 참칭 금지
+    assert r.decider is DeciderKind.GATE
+    assert "개" in r.reason
+    assert validate_result(r) == []
+    # 집계에서 UNKNOWN이 PASS를 막는다 (세탁 방지)
+    assert certify([r])["verdict"] == "unknown"
+
+
+def test_isa_with_full_ontoclean_is_rule_checked_pass():
+    # 양 끝 메타데이터 → OntoCleanMetaGate가 검증함 → RULE_CHECKED PASS
+    [r] = results_from_isa({"동물": ["개"]}, {"동물", "개"})
+    assert r.verdict is Verdict.PASS
+    assert r.assurance is Assurance.RULE_CHECKED
+    assert r.evidence  # PASS는 evidence 필수
+    assert validate_result(r) == []
+
+
+def test_isa_partial_ontoclean_is_ungrounded():
+    # 한쪽만 메타데이터 → 간선 근거 불완전 → UNKNOWN
+    [r] = results_from_isa({"동물": ["개"]}, {"동물"})
+    assert r.verdict is Verdict.UNKNOWN

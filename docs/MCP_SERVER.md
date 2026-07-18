@@ -166,6 +166,20 @@ dependence, category 위반을 검사한다. 값이 없으면 기존 FCA feature
 status는 `PASS_WITH_WARNING`(비차단)인데 `obligations.verdict`는 `fail`일 수
 있다: 안티패턴은 운영상 경고지만 인증상 미충족이다.
 
+#### relation.is_a (semantic obligation)
+
+형성된 is-a 간선마다 반례(instance-of/role/phase/part-of)를 배제했는지 판정한다.
+role·phase·rigidity 위반은 OntoCleanMetaGate가 결정론적으로 잡아 간선을
+차단하므로, *형성된* 간선은 두 경우다:
+
+- 양 끝 개념이 `ontoclean` 메타데이터를 지님 → 게이트가 검증 → `pass`
+  (assurance `RULE_CHECKED`).
+- 메타데이터 부재 → 게이트 판정 불가 → `unknown` (assurance `PROPOSED`).
+  간선이 feature-label 포함만으로 형성됐고 masquerade가 배제되지 않았다 —
+  is-a는 아직 LLM 제안이다. **status PASS인데 `obligations.verdict` unknown**이
+  이 경우다. is-a를 pass로 올리려면 두 개념에 `ontoclean`(category·rigidity·
+  identity)을 넣어라.
+
 선택 필드 `relation_hint`(UFO 어휘)로 관계 맥락을 명시할 수 있다:
 is_a, component_of, member_of, subcollection_of, subquantity_of,
 material_of, phase_of, located_in.

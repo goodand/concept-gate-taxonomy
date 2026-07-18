@@ -279,8 +279,12 @@ def _serialize_warning(w):
     }
 
 
-def _serialize_pipeline_output(out):
-    """파이프라인 출력을 JSON-직렬화 가능한 형태로 변환."""
+def _serialize_pipeline_output(out, concepts=None):
+    """파이프라인 출력을 JSON-직렬화 가능한 형태로 변환.
+
+    concepts(파싱된 NormalizedConcept 목록)를 주면 relation.is_a obligation을
+    함께 발급한다 — OntoClean 메타데이터 유무로 is-a 간선의 결정론 근거를 판정.
+    """
     r = out["result"]
     serialized = {
         "status": out["status"],
@@ -309,9 +313,14 @@ def _serialize_pipeline_output(out):
     }
     # obligation certificate — 인증 관점(엄격). status는 운영 관점이라
     # 둘이 다를 수 있다: 안티패턴은 status에선 WARNING(비차단)이지만
-    # 인증에선 ufo.no_antipattern FAIL이다.
-    serialized["obligations"] = cg_obligations.certify(
-        cg_obligations.results_from_pipeline(serialized))
+    # 인증에선 ufo.no_antipattern FAIL이다. relation.is_a는 OntoClean 근거가
+    # 없는 is-a를 UNKNOWN으로 표면화한다(certificate-only 신호).
+    ontoclean_names = {c.name for c in (concepts or [])
+                       if getattr(c, "ontoclean", None) is not None}
+    obligations = cg_obligations.results_from_pipeline(serialized)
+    obligations += cg_obligations.results_from_isa(
+        serialized["dag"], ontoclean_names)
+    serialized["obligations"] = cg_obligations.certify(obligations)
     return serialized
 
 
@@ -396,6 +405,15 @@ def run_pipeline(concepts: list[dict]) -> dict:
     a detected UFO anti-pattern still yields obligations.verdict "fail".
     Assurance names WHO decided (gate/reasoner/llm); only deterministic
     deciders can issue rule_checked or higher.
+
+    relation.is_a adjudicates each formed is-a edge: edges whose both
+    endpoints carry OntoClean metadata are gate-verified (rule_checked
+    pass); edges without metadata are "unknown" — the is-a formed only by
+    feature-label subsumption and instance/role/phase masquerades were not
+    ruled out, so it stays an LLM proposal, not a certified is-a. A clean
+    status PASS can therefore accompany obligations.verdict "unknown".
+    To lift an is-a to pass, add ontoclean metadata (category, rigidity,
+    identity) to both concepts.
     """
     started = time.perf_counter()
     size_err = _validate_input_size(concepts)
@@ -406,7 +424,7 @@ def run_pipeline(concepts: list[dict]) -> dict:
         return _attach_server_meta(err, concepts, started)
     pipe = ConceptPipeline()
     out = pipe.run([parsed])
-    result = _attach_lint(_serialize_pipeline_output(out), concepts)
+    result = _attach_lint(_serialize_pipeline_output(out, parsed), concepts)
     return _attach_server_meta(result, concepts, started)
 
 
@@ -456,7 +474,7 @@ def expand(original_concepts: list[dict], expansions: list[dict]) -> dict:
         }
     pipe = ConceptPipeline()
     out = pipe.run([merged])
-    return _serialize_pipeline_output(out)
+    return _serialize_pipeline_output(out, merged)
 
 
 @mcp.tool
