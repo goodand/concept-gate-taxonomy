@@ -32,11 +32,11 @@ M1 ⬜ 첫 semantic obligation — relation.is_a (L2 진입)
    (SOURCE_ANCHORED 상한)으로 분리.
    → 최초의 certificate-only 신호: 기존 status/lint/anti_patterns가
      전부 침묵하는데 obligation만 미충족인 상태가 처음 생긴다.
-   검증: E2. 완료 기준: E2에서 ARM 분기 검출.
-   E2 결과(2026-07-19): 천장 효과 재현 — arm 간 행동 격차 0(실증 불가).
-   signal_mentioned check로 "신호 전달됨·행동 미변화" 확정. 원인: evidence
-   문장 임시성 단서 잔존 → baseline 미침묵. laundering 0/13. 다음: E3(M2)
-   또는 임시성 단서 제거 fixture로 E2 재실행(baseline 침묵 전제 충족 시).
+   검증: E2/E2.1. 완료 기준: provenance가 있는 clean-baseline trial에서 ARM
+   분기 검출. E2(2026-07-19)는 이전 세션 컨텍스트에서 복원된 기록이라 empirical
+   근거로 쓰지 않는다. 다만 evidence 문장의 임시성 단서 때문에 baseline이
+   침묵하지 않는 설계 confound를 확인했다. 다음 게이트는 단서 제거 fixture와
+   실행 provenance를 고정한 E2.1 재실험이다.
 
 M2 ⬜ evidence.full_support (L2 확대)
    claim의 모든 성분이 evidence span 집합으로 지지되는가 (MEG 원리).
@@ -64,20 +64,23 @@ M5 ⬜ 신뢰 소비 (L1 완성)
 
 ## 실험 설계 (E2~E5 — 각 마일스톤의 완료 게이트)
 
-### E2 — certificate-only 신호 A/B (M1 검증, E1 후속)
+### E2/E2.1 — certificate-only 신호 (M1 검증, E1 후속)
 
 E1이 확정한 요구: "다른 신호 침묵 + 의무만 미충족" fixture가 있어야 ARM이
 갈린다. M1의 relation.is_a가 그 fixture를 처음 가능하게 한다.
 
-- **fixture**: 표면상 유효한 is-a(status PASS, lint 0, anti_patterns 0)이지만
-  반례 검사에 걸리는 입력. 예: "선장 is-a 사람" — role을 kind로 위장한
-  UFO 문헌의 고전 사례.
-- **ARM A**: obligations 제거 응답 / **ARM B**: 포함. E1과 동일 프로토콜
-  (Haiku 5+5 trial, tool 접근 0, 결정적 채점 — evaluate.py 패턴 재사용).
-- **가설**: ARM A는 report_done(=false-done), ARM B는 repair/보류.
-- **판정**: B repair율 > A → M1의 행동 가치 실증. 동일 → decider 신호
-  전달 설계 재검토(tool description에 certificate 읽기 지침 추가 후 재실험 —
-  tool_description_ab의 교훈: 클라이언트는 description만 읽는다).
+- **E2 복원 기록**: nonce 이름은 썼지만 evidence에 temporality/role 단서가 남아
+  ARM A도 침묵하지 않았다. 원 실행 provenance도 없어 empirical 근거로 쓰지 않는다.
+- **E2.1 fixture**: 단서를 제거한 `nonce_role_clean`, 유효 is-a 음성 대조,
+  MixRig 양성 대조.
+- **ARM A/C/B**: 무신호 / 같은 의미의 평문 warning / 최소 structured
+  certificate. 목표 행동은 근거 없는 repair가 아니라 `request_evidence`다.
+- **protocol**: cell당 5회, 총 30회. fixture/scorer/generator를 먼저 커밋하고,
+  cell 내 동일 prompt를 고정 seed로 교차 배치한다. prompt/manifest SHA-256·모델·
+  timezone-aware 시각·cold-context ID·tool 접근 상태·원문 응답을 저장한다.
+  형식 불량 응답도 제외하지 않고 `INVALID`로 채점한다.
+- **판정**: C/B가 A보다 확정 보고를 줄이는지 보되, 양성 대조의 의도된 repair가
+  낮거나 provenance 계약이 깨지면 행동 효과를 해석하지 않는다.
 
 ### E3 — UNKNOWN 정직성 실측 (M2 검증)
 

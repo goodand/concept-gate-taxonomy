@@ -130,7 +130,7 @@
     "parent": null,
     "child": null,
     "honest_categories": [],
-    "safe_actions": ["repair"]
+    "safe_actions": ["mixrig_structural_repair"]
    }
   }
  ]
