@@ -1,0 +1,25 @@
+flowchart TD
+    START["sync_reasoner (HermiT) — 기존 그대로"]
+
+    subgraph PASS1["1차 순회: 동치 그룹 수집 (신규)"]
+        E1["cls.equivalent_to 읽기"]
+        E2{"가드 B·C: 명명 클래스만<br/>익명 제약식 제외<br/>Thing/Nothing/gUFO 제외<br/>(기존 부모 필터 재사용)"}
+        E3["전이적 병합<br/>A≡B, B≡C → {A,B,C}"]
+        E4["가드 E: 대표 선택 결정적<br/>사전순 최소 → 테스트/diff 안정"]
+        E1 --> E2 --> E3 --> E4
+    end
+
+    subgraph PASS2["2차 순회: 기존 로직 그대로"]
+        H1["parents ← cls.is_a<br/>가드 A: 펼치지 않음 (직계 부모 보존)"]
+        H2["stereotypes ← raw rdf:type"]
+        H3["unsatisfiable ← Nothing 판정"]
+    end
+
+    OUT["반환: hierarchy(불변) + stereotypes(불변)<br/>+ unsatisfiable(불변)<br/>+ equivalence_groups(신규) + representatives(신규)"]
+
+    START --> PASS1 --> PASS2 --> OUT
+
+    OUT --> T["P8 테스트로 고정:<br/>Encoder≡Decoder 케이스<br/>+ 그룹·대표 정렬 검증"]
+
+    DEFER["보류 (백로그):<br/>facts/diagnostics 층 분리 ·<br/>EQUIVALENCE_STEREOTYPE_CONFLICT 진단 ·<br/>provenance(asserted vs inferred)"]
+    OUT -.->|"최소 diff 원칙 — 이번 범위 밖"| DEFER

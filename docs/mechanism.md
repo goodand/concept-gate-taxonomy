@@ -31,7 +31,7 @@ flowchart TB
 
     AGENT -->|"제안"| SNAP
     ASM -->|"concepts JSON"| MAP
-    HERMIT --> OUT["hierarchy · stereotypes · unsatisfiable"]:::out
+    HERMIT --> OUT["hierarchy · stereotypes · unsatisfiable ·<br/>equivalence_groups · has_nontrivial_equivalences · representatives"]:::out
 
     classDef llm fill:#f5d76e,stroke:#b7950b,color:#000
     classDef out fill:#82c99a,stroke:#1e8449,color:#000
@@ -80,7 +80,7 @@ flowchart TB
     SKIP --> CL
     CL --> H{"모순?"}
     H -->|"Phase⊥Role 위반 등"| UNSAT["unsatisfiable /<br/>InconsistentOntology"]
-    H -->|"일관"| RES["hierarchy: 도메인 SubClassOf만<br/>stereotypes: 개념→gUFO 메타타입"]
+    H -->|"일관"| RES["hierarchy: 도메인 SubClassOf만(직계 부모)<br/>stereotypes: 개념→gUFO 메타타입<br/>equivalence_groups: 파생 동치 그룹"]
 ```
 
 핵심 설계 결정 두 가지:
@@ -91,6 +91,27 @@ flowchart TB
 - **`validate_gufo`는 경고 반환(fail-open)이다.** anti-rigid(Phase·Role)이
   rigid Kind를 특수화하는지 SHACL로 reasoner 실행 *전에* 검사하되, 위반은
   경고이지 흐름 차단이 아니다. pyshacl 미설치면 경고 하나로 생략한다.
+- **파생 동치는 `equivalence_groups`로 보고하고 `hierarchy`는 안 펼친다.**
+  두 defined 개념이 같은 정의라 `A ≡ B`가 되면 그 사실을 별도 필드로 낸다
+  (`hierarchy`에 별칭을 넣으면 "직계 부모" 의미가 깨진다). 단 gUFO import 시
+  HermiT가 동치류의 SubClassOf를 대표에만 부여해 나머지 멤버의 부모가
+  유실되므로, `classify()`는 그룹 부모를 합집합해 전원에게 복원한다(그룹
+  자신은 제외해 별칭이 부모로 새지 않게 한다). `representatives`(동치류당
+  사전순 최소)로 클라이언트가 동치류를 한 노드로 접는 quotient graph를
+  만들 수 있다 — 같은 부모가 alias마다 중복 노출되는 것을 피한다.
+- **hierarchy는 entailed OWL hierarchy이지 candidate feature hierarchy가
+  아니다.** `classify_owl`의 계층은 OWL 공리의 model-theoretic 함의이고,
+  `run_pipeline`의 DAG는 feature-label 집합 포함으로 만든 후보다 — 인식론적
+  등급이 다르므로 같은 검증 수준으로 읽으면 안 된다.
+- **obligation certificate는 `verdict`와 `assurance`를 분리한다.** 응답의
+  `obligations` 필드는 각 의무를 `verdict`(pass/fail/unknown/conflict)와
+  `assurance`(누가 판정했나: gate/reasoner가 발급하는 RULE_CHECKED·
+  REASONER_PROVED vs LLM 상한 SOURCE_ANCHORED)로 이중 기록한다. 단일
+  pass/fail이면 "LLM이 PASS"와 "reasoner가 증명한 PASS"가 구분되지 않아
+  결정론 세탁이 생긴다 — assurance 축이 그 세탁을 막는다. reasoner 미가용은
+  PASS가 아니라 UNKNOWN(assurance PROPOSED)으로 떨어진다. 이 인증 관점은
+  운영 `status`와 독립이라, 비차단 WARNING이 `obligations.verdict` fail로
+  나타날 수 있다.
 
 ## 4. 검증이 행동으로 증명하는 것
 
@@ -100,4 +121,13 @@ flowchart TB
 | Phase 펀닝: rdf:type gufo:Phase **그리고** SubClassOf | P5 |
 | owl:imports가 장식이 아니다 (Phase⊥Role 공리 발화) | P6 |
 | unsatisfiable 클래스가 Nothing을 parents로 안 흘림 | P7 |
+| 파생 동치를 그룹으로 보고(전이 폐포·unsat 격리·별칭 비오염) | P8 |
+| gUFO 경로에서 동치 멤버 전원이 직계 부모를 유지 | P9 |
+| gate 판정이 RULE_CHECKED obligation으로 이관된다 (재검사 없음) | `test_cg_obligations.py` |
+| reasoner 미가용은 PASS가 아니라 UNKNOWN이다 (세탁 방지) | `test_cg_obligations.py` |
+| LLM은 REASONER_PROVED 보증을 발급할 수 없다 | `test_cg_obligations.py` |
+| OntoClean 근거 없는 is-a는 status PASS라도 relation.is_a UNKNOWN이다 | `test_cg_obligations.py` |
+| 등록된 obligation handler가 실제 코드에 존재한다 (registry drift 차단) | `test_cg_obligations.py` |
+| gate 출력 필드 부재는 위반 0건과 다르다 (UNKNOWN, 세탁 방지) | `test_cg_obligations.py` |
+| assemble_concepts의 source 검증이 certificate로 노출된다 | `test_cg_obligations.py` |
 | 어떤 변형 입력도 crash하지 않는다 (CRASH=0) | `fuzz_normalizer_types.py` |

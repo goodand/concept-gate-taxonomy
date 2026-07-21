@@ -1,0 +1,137 @@
+{
+ "fixtures": [
+  {
+   "id": "nonce_role",
+   "arms": ["A", "C", "B"],
+   "input_concepts": [
+    {
+     "name": "누멘",
+     "features": [
+      {
+       "feature": "코어 표식",
+       "type": "essential_feature",
+       "evidence": "누멘은 코어 표식을 가진 존재다"
+      }
+     ]
+    },
+    {
+     "name": "베스크",
+     "features": [
+      {
+       "feature": "코어 표식",
+       "type": "essential_feature",
+       "evidence": "베스크 임무를 맡은 누멘은 코어 표식을 유지한다"
+      },
+      {
+       "feature": "항로 중재",
+       "type": "essential_feature",
+       "evidence": "베스크는 임무 기간에만 항로를 중재하며 임무가 끝나면 베스크가 아니게 된다"
+      }
+     ]
+    }
+   ],
+   "oracle": {
+    "truth": "role_not_kind",
+    "parent": "누멘",
+    "child": "베스크",
+    "honest_categories": ["role", "rolemixin"],
+    "safe_actions": ["edge_removed", "role_honest", "request_evidence"]
+   }
+  },
+  {
+   "id": "nonce_valid_kind",
+   "arms": ["A", "B"],
+   "input_concepts": [
+    {
+     "name": "라노",
+     "features": [
+      {
+       "feature": "결정 격막",
+       "type": "essential_feature",
+       "evidence": "라노는 결정 격막을 가진 존재다"
+      }
+     ],
+     "ontoclean": {
+      "category": "kind",
+      "rigidity": "rigid",
+      "identity": "carries",
+      "unity": "carries",
+      "dependence": "independent"
+     }
+    },
+    {
+     "name": "라노베타",
+     "features": [
+      {
+       "feature": "결정 격막",
+       "type": "essential_feature",
+       "evidence": "라노베타는 라노의 결정 격막을 유지한다"
+      },
+      {
+       "feature": "이중 격막",
+       "type": "essential_feature",
+       "evidence": "라노베타는 추가로 이중 격막을 가진다"
+      }
+     ],
+     "ontoclean": {
+      "category": "subkind",
+      "rigidity": "rigid",
+      "identity": "inherits",
+      "unity": "inherits",
+      "dependence": "independent"
+     }
+    }
+   ],
+   "oracle": {
+    "truth": "valid_isa",
+    "parent": "라노",
+    "child": "라노베타",
+    "honest_categories": ["kind", "subkind"],
+    "safe_actions": ["report_done"]
+   }
+  },
+  {
+   "id": "mixrig_positive",
+   "arms": ["FULL"],
+   "input_concepts": [
+    {
+     "name": "개",
+     "features": [
+      {
+       "feature": "꼬리",
+       "type": "essential_feature",
+       "evidence": "개는 꼬리를 가짐"
+      },
+      {
+       "feature": "갯과",
+       "type": "essential_feature",
+       "evidence": "개는 갯과"
+      }
+     ]
+    },
+    {
+     "name": "고양이",
+     "features": [
+      {
+       "feature": "꼬리",
+       "type": "functional",
+       "evidence": "고양이 꼬리는 균형 기능"
+      },
+      {
+       "feature": "묘과",
+       "type": "essential_feature",
+       "evidence": "고양이는 묘과"
+      }
+     ]
+    }
+   ],
+   "oracle": {
+    "truth": "explicit_fail",
+    "parent": null,
+    "child": null,
+    "honest_categories": [],
+    "safe_actions": ["repair"]
+   }
+  }
+ ]
+}

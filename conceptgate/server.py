@@ -29,6 +29,7 @@ from .concept_gate_v7 import (
 )
 from .cg_graph_export import GraphExporter
 from .cg_input_linter import lint_concepts as run_input_linter
+from . import cg_obligations
 
 # ═══════════════════════════════════════════════════════
 # 입력 크기 제한 (DoS 방어)
@@ -278,10 +279,14 @@ def _serialize_warning(w):
     }
 
 
-def _serialize_pipeline_output(out):
-    """파이프라인 출력을 JSON-직렬화 가능한 형태로 변환."""
+def _serialize_pipeline_output(out, concepts=None):
+    """파이프라인 출력을 JSON-직렬화 가능한 형태로 변환.
+
+    concepts(파싱된 NormalizedConcept 목록)를 주면 relation.is_a obligation을
+    함께 발급한다 — OntoClean 메타데이터 유무로 is-a 간선의 결정론 근거를 판정.
+    """
     r = out["result"]
-    return {
+    serialized = {
         "status": out["status"],
         "dag": dict(r["dag"]),
         "levels": r["levels"],
@@ -306,6 +311,17 @@ def _serialize_pipeline_output(out):
         # UFO 안티패턴 (MixRig, PartOver, WholeOver) — WARNING 수준
         "anti_patterns": out.get("anti_patterns", []),
     }
+    # obligation certificate — 인증 관점(엄격). status는 운영 관점이라
+    # 둘이 다를 수 있다: 안티패턴은 status에선 WARNING(비차단)이지만
+    # 인증에선 ufo.no_antipattern FAIL이다. relation.is_a는 OntoClean 근거가
+    # 없는 is-a를 UNKNOWN으로 표면화한다(certificate-only 신호).
+    ontoclean_names = {c.name for c in (concepts or [])
+                       if getattr(c, "ontoclean", None) is not None}
+    obligations = cg_obligations.results_from_pipeline(serialized)
+    obligations += cg_obligations.results_from_isa(
+        serialized["dag"], ontoclean_names)
+    serialized["obligations"] = cg_obligations.certify(obligations)
+    return serialized
 
 
 # ═══════════════════════════════════════════════════════
@@ -382,6 +398,22 @@ def run_pipeline(concepts: list[dict]) -> dict:
     per each issue's suggestion and call run_pipeline again, even when
     status is PASS: PASS with an empty dag usually means the input
     violated the edge contract above.
+
+    The response also carries an obligations certificate: per-obligation
+    {verdict, assurance, decider, evidence} plus an aggregate verdict.
+    This is the strict certification view — status PASS_WITH_WARNING with
+    a detected UFO anti-pattern still yields obligations.verdict "fail".
+    Assurance names WHO decided (gate/reasoner/llm); only deterministic
+    deciders can issue rule_checked or higher.
+
+    relation.is_a adjudicates each formed is-a edge: edges whose both
+    endpoints carry OntoClean metadata are gate-verified (rule_checked
+    pass); edges without metadata are "unknown" — the is-a formed only by
+    feature-label subsumption and instance/role/phase masquerades were not
+    ruled out, so it stays an LLM proposal, not a certified is-a. A clean
+    status PASS can therefore accompany obligations.verdict "unknown".
+    To lift an is-a to pass, add ontoclean metadata (category, rigidity,
+    identity) to both concepts.
     """
     started = time.perf_counter()
     size_err = _validate_input_size(concepts)
@@ -392,7 +424,7 @@ def run_pipeline(concepts: list[dict]) -> dict:
         return _attach_server_meta(err, concepts, started)
     pipe = ConceptPipeline()
     out = pipe.run([parsed])
-    result = _attach_lint(_serialize_pipeline_output(out), concepts)
+    result = _attach_lint(_serialize_pipeline_output(out, parsed), concepts)
     return _attach_server_meta(result, concepts, started)
 
 
@@ -442,7 +474,7 @@ def expand(original_concepts: list[dict], expansions: list[dict]) -> dict:
         }
     pipe = ConceptPipeline()
     out = pipe.run([merged])
-    return _serialize_pipeline_output(out)
+    return _serialize_pipeline_output(out, merged)
 
 
 @mcp.tool
@@ -692,8 +724,17 @@ def assemble_concepts(bundle: dict) -> dict:
     넣을 수 있다. 실패 시 stage 필드가 원인 단계(selection/crosswalk/
     assemble/lint)를 가리킨다. claims에는 span·source hash 기반의
     verification_status가 붙는다 — confidence는 검증이 아니다.
+
+    성공 응답에는 obligations certificate가 붙는다: source.snapshot_hash
+    (snapshot sha256 재계산 일치)와 source.span_evidence(claim span+quote+
+    hash 검증). span 미제공 claim이 있으면 span_evidence는 pass가 아니라
+    unknown — '근거 미제출'이 '검증됨'으로 세탁되지 않는다.
     """
-    return cg_normalizer.assemble_concepts(bundle)
+    resp = cg_normalizer.assemble_concepts(bundle)
+    obl = cg_obligations.results_from_normalizer(resp)
+    if obl:
+        resp["obligations"] = cg_obligations.certify(obl)
+    return resp
 
 
 @mcp.tool
@@ -713,32 +754,55 @@ def map_owl(bundle: dict) -> dict:
 def classify_owl(owl: dict) -> dict:
     """map_owl 출력을 풀 DL reasoner(HermiT)로 분류한다.
 
-    반환: {ok, hierarchy: {class: [유도된 부모들]}, unsatisfiable: [...]}.
+    반환: {ok, hierarchy: {class: [유도된 직계 부모들]},
+    stereotypes: {class: gUFO 메타타입}, unsatisfiable: [...],
+    equivalence_groups: [[동치인 클래스들], ...],
+    has_nontrivial_equivalences: bool,
+    representatives: {class: 동치류 대표(사전순 최소)}}.
+
+    인식론적 등급: 이 hierarchy는 OWL 공리의 model-theoretic 함의(entailed
+    OWL hierarchy)다 — run_pipeline의 feature-label 집합 포함으로 만든
+    후보(candidate feature hierarchy)와 등급이 다르다. 전자는 형식 공리의
+    논리적 귀결, 후자는 입력 표면형의 부분순서이니 같은 검증 수준으로
+    읽지 말 것.
+
+    hierarchy는 직계 부모만 담는다(동치 별칭으로 펼치지 않음). 두 defined
+    개념이 같은 정의라 논리적으로 동일 클래스가 되면 equivalence_groups로
+    보고하고, has_nontrivial_equivalences로 그 존재를 알린다. representatives는
+    동치류를 한 노드로 접기 위한 결정적 대표라, 클라이언트가 quotient graph를
+    만들 수 있다(같은 부모가 alias마다 복제되는 것을 피함).
     subsumption의 소유자는 이 reasoner다 — OWL 2 DL 의미론에 대해
     건전·완전하다. Java가 없는 환경(예: 기본 Render)에서는
     REASONER_UNAVAILABLE 오류를 구조화해 반환한다.
+
+    응답의 obligations 필드는 owl.consistent 의무의 certificate다:
+    reasoner가 실제 실행됐으면 reasoner_proved 보증의 pass/fail,
+    미가용이면 unknown — '판정 안 됨'은 '통과'가 아니다.
     """
     try:
         from . import cg_owl  # owlready2 필요 (lazy)
     except ImportError as exc:
-        return {"ok": False, "stage": "owl-classify",
-                "errors": [{"stage": "owl-classify",
-                            "code": "OWLREADY2_UNAVAILABLE",
-                            "detail": str(exc)}]}
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-classify",
+             "errors": [{"stage": "owl-classify",
+                         "code": "OWLREADY2_UNAVAILABLE",
+                         "detail": str(exc)}]})
     if not isinstance(owl, dict):
-        return {"ok": False, "stage": "owl-serialize",
-                "errors": [{"stage": "owl-serialize",
-                            "code": "OWL_NOT_OBJECT",
-                            "detail": f"owl must be dict, "
-                                      f"got {type(owl).__name__}"}]}
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-serialize",
+             "errors": [{"stage": "owl-serialize",
+                         "code": "OWL_NOT_OBJECT",
+                         "detail": f"owl must be dict, "
+                                   f"got {type(owl).__name__}"}]})
     raw_dp = owl.get("data_properties") or []
     if not isinstance(raw_dp, list) or any(
             not isinstance(d, dict) for d in raw_dp):
-        return {"ok": False, "stage": "owl-serialize",
-                "errors": [{"stage": "owl-serialize",
-                            "code": "DATA_PROPERTY_NOT_OBJECT",
-                            "detail": "data_properties must be a list of "
-                                      "objects"}]}
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-serialize",
+             "errors": [{"stage": "owl-serialize",
+                         "code": "DATA_PROPERTY_NOT_OBJECT",
+                         "detail": "data_properties must be a list of "
+                                   "objects"}]})
     try:
         world, onto, _ = cg_owl.build_ontology(
             concepts=owl.get("concepts", []),
@@ -747,19 +811,33 @@ def classify_owl(owl: dict) -> dict:
                              for d in raw_dp],
             disjoint_groups=owl.get("disjoint_groups", []))
     except cg_owl.SerializationError as exc:
-        return {"ok": False, "stage": "owl-serialize",
-                "errors": [{"stage": "owl-serialize",
-                            "code": "SERIALIZATION_ERROR",
-                            "detail": str(exc)}]}
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-serialize",
+             "errors": [{"stage": "owl-serialize",
+                         "code": "SERIALIZATION_ERROR",
+                         "detail": str(exc)}]})
     try:
         result = cg_owl.classify(world, onto)
     except Exception as exc:
-        return {"ok": False, "stage": "owl-classify",
-                "errors": [{"stage": "owl-classify",
-                            "code": "REASONER_UNAVAILABLE",
-                            "detail": f"HermiT 실행 실패 (Java 필요): "
-                                      f"{str(exc)[:200]}"}]}
-    return {"ok": True, "stage": "owl-classify", **result}
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-classify",
+             "errors": [{"stage": "owl-classify",
+                         "code": "REASONER_UNAVAILABLE",
+                         "detail": f"HermiT 실행 실패 (Java 필요): "
+                                   f"{str(exc)[:200]}"}]})
+    return _attach_owl_obligations(
+        {"ok": True, "stage": "owl-classify", **result})
+
+
+def _attach_owl_obligations(resp: dict) -> dict:
+    """owl.consistent certificate를 classify_owl 응답에 주입.
+
+    reasoner 미가용이면 UNKNOWN이 기록된다 — '판정 안 됨'이
+    '통과'로 읽히지 않게 하는 것이 목적 (Java 없는 기본 Render 경로).
+    """
+    resp["obligations"] = cg_obligations.certify(
+        cg_obligations.results_from_classification(resp))
+    return resp
 
 
 # ═══════════════════════════════════════════════════════

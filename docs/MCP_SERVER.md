@@ -137,6 +137,57 @@ dependence, category 위반을 검사한다. 값이 없으면 기존 FCA feature
 - `structural_composition` → has-a 구성 그래프 (부분-전체). `composition` 필드로
   별도 반환: `{"edges": [[전체, 부분], ...], "shared_parts": {부분: [전체들]}}`.
 
+### obligation certificate (인증 관점)
+
+`run_pipeline`·`expand`·`classify_owl` 응답, 그리고 `assemble_concepts`
+성공 응답에 `obligations` 필드가 붙는다. `status`(운영 관점, 비차단 WARNING
+허용)와 달리 **엄격한 인증 관점**이다 — 같은 실행이라도 두 관점이 갈릴 수 있다.
+
+```json
+{"obligations": {
+  "ok": false, "verdict": "fail",
+  "results": [
+    {"obligation": "ufo.no_antipattern", "verdict": "fail",
+     "assurance": "RULE_CHECKED", "decider": "gate",
+     "evidence": "anti_patterns", "reason": "UFO 안티패턴 1건 감지"}
+  ],
+  "errors": ["ufo.no_antipattern"]}}
+```
+
+- `verdict` ∈ `{pass, fail, unknown, conflict}` — 판정 결과.
+- `assurance` — **누가** 판정했는가의 보증 등급
+  (`PROPOSED < SOURCE_ANCHORED < RULE_CHECKED < REASONER_PROVED < HUMAN_APPROVED`).
+  LLM 제안은 `SOURCE_ANCHORED`가 상한이고, `RULE_CHECKED` 이상은 결정론적
+  decider(gate/reasoner)만 발급한다 — 결정론 세탁 방지.
+- `decider` ∈ `{gate, reasoner, local_rule, llm, human}`.
+- `classify_owl`에서 Java 미가용이면 `owl.consistent`는 `pass`가 아니라
+  `unknown`(assurance `PROPOSED`)이다 — '판정 안 됨'을 '통과'로 읽지 말 것.
+
+status는 `PASS_WITH_WARNING`(비차단)인데 `obligations.verdict`는 `fail`일 수
+있다: 안티패턴은 운영상 경고지만 인증상 미충족이다.
+
+#### relation.is_a (semantic obligation)
+
+형성된 is-a 간선마다 반례(instance-of/role/phase/part-of)를 배제했는지 판정한다.
+role·phase·rigidity 위반은 OntoCleanMetaGate가 결정론적으로 잡아 간선을
+차단하므로, *형성된* 간선은 두 경우다:
+
+- 양 끝 개념이 `ontoclean` 메타데이터를 지님 → 게이트가 검증 → `pass`
+  (assurance `RULE_CHECKED`).
+- 메타데이터 부재 → 게이트 판정 불가 → `unknown` (assurance `PROPOSED`).
+  간선이 feature-label 포함만으로 형성됐고 masquerade가 배제되지 않았다 —
+  is-a는 아직 LLM 제안이다. **status PASS인데 `obligations.verdict` unknown**이
+  이 경우다. is-a를 pass로 올리려면 두 개념에 `ontoclean`(category·rigidity·
+  identity)을 넣어라.
+
+#### source.snapshot_hash / source.span_evidence (assemble_concepts)
+
+`assemble_concepts` 성공 응답에 붙는다. cg_normalizer가 이미 수행한 결정론
+검사를 노출한다: snapshot sha256 재계산 일치(`source.snapshot_hash`),
+claim별 span+quote+hash 검증(`source.span_evidence`). span을 제출하지 않은
+claim(`verification_status: unverified`)이 하나라도 있으면 span_evidence는
+`pass`가 아니라 `unknown` — '근거 미제출'이 '검증됨'으로 세탁되지 않는다.
+
 선택 필드 `relation_hint`(UFO 어휘)로 관계 맥락을 명시할 수 있다:
 is_a, component_of, member_of, subcollection_of, subquantity_of,
 material_of, phase_of, located_in.

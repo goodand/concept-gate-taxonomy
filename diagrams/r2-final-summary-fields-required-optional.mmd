@@ -1,0 +1,15 @@
+flowchart TD
+    A["reasoner result"]
+    B["hierarchy (unchanged)"]
+    C["unsatisfiable (unchanged)"]
+    D["stereotypes (unchanged)"]
+    E["equivalence_groups (new, required)"]
+    F["has_nontrivial_equivalences (new, recommended)"]
+    G["representatives (optional)"]
+
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    E --> F
+    E -. convenience only .-> G
