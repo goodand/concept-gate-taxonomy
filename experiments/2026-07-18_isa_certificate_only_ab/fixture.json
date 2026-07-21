@@ -1,159 +1,137 @@
 {
- "input_concepts": [
+ "fixtures": [
   {
-   "name": "사람",
-   "features": [
+   "id": "nonce_role",
+   "arms": ["A", "C", "B"],
+   "input_concepts": [
     {
-     "feature": "인격",
-     "type": "essential_feature",
-     "evidence": "사람은 인격을 지닌 존재이다"
-    }
-   ]
-  },
-  {
-   "name": "선장",
-   "features": [
-    {
-     "feature": "인격",
-     "type": "essential_feature",
-     "evidence": "선장은 인격을 지닌 사람이다"
+     "name": "누멘",
+     "features": [
+      {
+       "feature": "코어 표식",
+       "type": "essential_feature",
+       "evidence": "누멘은 코어 표식을 가진 존재다"
+      }
+     ]
     },
     {
-     "feature": "선박 지휘",
-     "type": "essential_feature",
-     "evidence": "선장은 선박을 지휘한다"
-    }
-   ]
-  }
- ],
- "response_full": {
-  "status": "PASS",
-  "dag": {
-   "사람": [
-    "선장"
-   ]
-  },
-  "levels": {
-   "사람": 0,
-   "선장": 1
-  },
-  "definitions": {
-   "선장": {
-    "parents": [
-     "사람"
-    ],
-    "delta": [
-     "선박 지휘"
-    ],
-    "formula": "선장 = 사람 + [\"선박 지휘\"]",
-    "is_meet": false
-   }
-  },
-  "isolated": [],
-  "aux_relations": [],
-  "composition": {
-   "edges": [],
-   "shared_parts": {}
-  },
-  "expansion_actions": [],
-  "repairs": [],
-  "warnings": [],
-  "signature_issues": [],
-  "post_dag_issues": [],
-  "composition_issues": [],
-  "anti_patterns": [],
-  "obligations": {
-   "ok": false,
-   "verdict": "unknown",
-   "errors": [],
-   "results": [
-    {
-     "obligation": "relation.antisymmetry",
-     "verdict": "pass",
-     "assurance": "RULE_CHECKED",
-     "decider": "gate",
-     "evidence": "CompositionGate: antisymmetry 위반 0건",
-     "reason": "",
-     "depends_on": []
-    },
-    {
-     "obligation": "relation.acyclicity",
-     "verdict": "pass",
-     "assurance": "RULE_CHECKED",
-     "decider": "gate",
-     "evidence": "CompositionGate: cycle 위반 0건",
-     "reason": "",
-     "depends_on": []
-    },
-    {
-     "obligation": "relation.isa_hasa_exclusivity",
-     "verdict": "pass",
-     "assurance": "RULE_CHECKED",
-     "decider": "gate",
-     "evidence": "CompositionGate: isa_hasa_conflict 위반 0건",
-     "reason": "",
-     "depends_on": []
-    },
-    {
-     "obligation": "ufo.no_antipattern",
-     "verdict": "pass",
-     "assurance": "RULE_CHECKED",
-     "decider": "gate",
-     "evidence": "UFOAntiPatternGate: 0건",
-     "reason": "",
-     "depends_on": []
-    },
-    {
-     "obligation": "relation.is_a",
-     "verdict": "unknown",
-     "assurance": "PROPOSED",
-     "decider": "gate",
-     "evidence": "",
-     "reason": "OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 사람→선장",
-     "depends_on": []
+     "name": "베스크",
+     "features": [
+      {
+       "feature": "코어 표식",
+       "type": "essential_feature",
+       "evidence": "베스크 임무를 맡은 누멘은 코어 표식을 유지한다"
+      },
+      {
+       "feature": "항로 중재",
+       "type": "essential_feature",
+       "evidence": "베스크는 임무 기간에만 항로를 중재하며 임무가 끝나면 베스크가 아니게 된다"
+      }
+     ]
     }
    ],
-   "verifier": {
-    "name": "cg_obligations",
-    "version": "0.1.0"
+   "oracle": {
+    "truth": "role_not_kind",
+    "parent": "누멘",
+    "child": "베스크",
+    "honest_categories": ["role", "rolemixin"],
+    "safe_actions": ["edge_removed", "role_honest", "request_evidence"]
+   }
+  },
+  {
+   "id": "nonce_valid_kind",
+   "arms": ["A", "B"],
+   "input_concepts": [
+    {
+     "name": "라노",
+     "features": [
+      {
+       "feature": "결정 격막",
+       "type": "essential_feature",
+       "evidence": "라노는 결정 격막을 가진 존재다"
+      }
+     ],
+     "ontoclean": {
+      "category": "kind",
+      "rigidity": "rigid",
+      "identity": "carries",
+      "unity": "carries",
+      "dependence": "independent"
+     }
+    },
+    {
+     "name": "라노베타",
+     "features": [
+      {
+       "feature": "결정 격막",
+       "type": "essential_feature",
+       "evidence": "라노베타는 라노의 결정 격막을 유지한다"
+      },
+      {
+       "feature": "이중 격막",
+       "type": "essential_feature",
+       "evidence": "라노베타는 추가로 이중 격막을 가진다"
+      }
+     ],
+     "ontoclean": {
+      "category": "subkind",
+      "rigidity": "rigid",
+      "identity": "inherits",
+      "unity": "inherits",
+      "dependence": "independent"
+     }
+    }
+   ],
+   "oracle": {
+    "truth": "valid_isa",
+    "parent": "라노",
+    "child": "라노베타",
+    "honest_categories": ["kind", "subkind"],
+    "safe_actions": ["report_done"]
+   }
+  },
+  {
+   "id": "mixrig_positive",
+   "arms": ["FULL"],
+   "input_concepts": [
+    {
+     "name": "개",
+     "features": [
+      {
+       "feature": "꼬리",
+       "type": "essential_feature",
+       "evidence": "개는 꼬리를 가짐"
+      },
+      {
+       "feature": "갯과",
+       "type": "essential_feature",
+       "evidence": "개는 갯과"
+      }
+     ]
+    },
+    {
+     "name": "고양이",
+     "features": [
+      {
+       "feature": "꼬리",
+       "type": "functional",
+       "evidence": "고양이 꼬리는 균형 기능"
+      },
+      {
+       "feature": "묘과",
+       "type": "essential_feature",
+       "evidence": "고양이는 묘과"
+      }
+     ]
+    }
+   ],
+   "oracle": {
+    "truth": "explicit_fail",
+    "parent": null,
+    "child": null,
+    "honest_categories": [],
+    "safe_actions": ["repair"]
    }
   }
- },
- "response_stripped": {
-  "status": "PASS",
-  "dag": {
-   "사람": [
-    "선장"
-   ]
-  },
-  "levels": {
-   "사람": 0,
-   "선장": 1
-  },
-  "definitions": {
-   "선장": {
-    "parents": [
-     "사람"
-    ],
-    "delta": [
-     "선박 지휘"
-    ],
-    "formula": "선장 = 사람 + [\"선박 지휘\"]",
-    "is_meet": false
-   }
-  },
-  "isolated": [],
-  "aux_relations": [],
-  "composition": {
-   "edges": [],
-   "shared_parts": {}
-  },
-  "expansion_actions": [],
-  "repairs": [],
-  "warnings": [],
-  "signature_issues": [],
-  "post_dag_issues": [],
-  "composition_issues": [],
-  "anti_patterns": []
- }
+ ]
 }

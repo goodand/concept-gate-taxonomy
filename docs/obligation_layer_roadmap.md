@@ -33,6 +33,10 @@ M1 ⬜ 첫 semantic obligation — relation.is_a (L2 진입)
    → 최초의 certificate-only 신호: 기존 status/lint/anti_patterns가
      전부 침묵하는데 obligation만 미충족인 상태가 처음 생긴다.
    검증: E2. 완료 기준: E2에서 ARM 분기 검출.
+   E2 결과(2026-07-19): 천장 효과 재현 — arm 간 행동 격차 0(실증 불가).
+   signal_mentioned check로 "신호 전달됨·행동 미변화" 확정. 원인: evidence
+   문장 임시성 단서 잔존 → baseline 미침묵. laundering 0/13. 다음: E3(M2)
+   또는 임시성 단서 제거 fixture로 E2 재실행(baseline 침묵 전제 충족 시).
 
 M2 ⬜ evidence.full_support (L2 확대)
    claim의 모든 성분이 evidence span 집합으로 지지되는가 (MEG 원리).
