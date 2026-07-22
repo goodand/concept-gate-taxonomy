@@ -1,0 +1,611 @@
+{
+ "record_class": "empirical_trial_set",
+ "protocol": {
+  "experiment_id": "E2.1",
+  "design_commit": "31fab5151009ddc1a4d22bacd74f1613f13c2a61",
+  "prompt_manifest_sha256": "045a61d0897bed68b0050c1506f929a7bf3e080174b9990a205e79eaf1522237"
+ },
+ "results": [
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "C",
+   "trial": 1,
+   "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:12:08Z",
+    "completed_at": "2026-07-22T16:12:26Z",
+    "context_id": "1ad4f192-4aa6-4a15-96a4-249944217561",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"request_evidence\",\n  \"repaired_concepts\": null,\n  \"request\": \"OntoClean 메타데이터가 필요합니다. 특히 누멘과 베스크 개념의 본질성(essentiality), 동일성(identity), 항목 타입(instance/role/phase) 정보가 필요합니다. 또는 제안된 is-a 관계(누멘→베스크)의 타당성을 뒷받침하는 추가 근거(정의, 상위 개념과의 관계, 분류 기준 등)를 제공해주세요.\",\n  \"report\": \"Server response status is PASS with no composition issues or anti-patterns detected. However, the warning indicates that OntoClean metadata is absent, leaving the is-a verdict at PROPOSED assurance level with uncertainty about potential counter-examples (instance/role/phase distinctions). The current evidence is insufficient to definitively confirm the input concepts are safe without additional OntoClean metadata or domain-specific justification for the proposed is-a relationship.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 1
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "B",
+   "trial": 1,
+   "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:12:26Z",
+    "completed_at": "2026-07-22T16:12:44Z",
+    "context_id": "4c0b452e-6a70-498b-82e4-045a386c4ba2",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"request_evidence\",\n  \"repaired_concepts\": null,\n  \"request\": \"OntoClean 메타데이터 또는 누멘과 베스크 간의 is-a 관계를 뒷받침하는 추가 근거를 제시하세요. 현재 제안된 is-a 관계(누멘→베스크)가 역할(role), 단계(phase), 또는 인스턴스(instance) 관계가 아님을 확인할 수 있는 증거가 필요합니다.\",\n  \"report\": \"파이프라인은 PASS 상태이나 핵심 의무사항(relation.is_a)의 검증이 불완전합니다. OntoClean 메타데이터 부재로 인해 누멘→베스크 is-a 관계의 타당성을 확정할 수 없으며, 현재는 LLM 제안(PROPOSED) 수준입니다. 이 관계가 정말 is-a인지, 또는 다른 형태의 관계인지 명확히 할 근거가 필요합니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 2
+  },
+  {
+   "fixture": "mixrig_positive",
+   "arm": "FULL",
+   "trial": 1,
+   "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:12:44Z",
+    "completed_at": "2026-07-22T16:13:05Z",
+    "context_id": "f1839867-fed5-49b0-96f7-0c0b80e8f0e8",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"repair\",\n  \"repaired_concepts\": [\n    {\n      \"name\": \"개\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"갯과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 갯과\"\n        }\n      ]\n    },\n    {\n      \"name\": \"고양이\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이의 꼬리는 본질적 특성이며 균형 기능을 수행함\"\n        },\n        {\n          \"feature\": \"묘과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 묘과\"\n        }\n      ]\n    }\n  ],\n  \"request\": null,\n  \"report\": \"MixRig 안티패턴 해결: \\\"꼬리\\\" 특성의 rigidity 혼합 문제를 수정했습니다. 고양이의 \\\"꼬리\\\"를 functional에서 essential_feature로 통일하여 두 개념 간 일관성을 확보했습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 3
+  },
+  {
+   "fixture": "nonce_valid_kind",
+   "arm": "A",
+   "trial": 1,
+   "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:13:05Z",
+    "completed_at": "2026-07-22T16:13:16Z",
+    "context_id": "32dace17-6378-42a0-bc8b-a66e9d8e17ee",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"서버 응답이 PASS 상태이고 composition_issues 및 anti_patterns가 모두 비어있습니다. 입력된 concepts의 ontoclean 분류(라노: kind/rigid, 라노베타: subkind/rigid)가 적절하며, DAG 구조(라노 → 라노베타)가 올바릅니다. 라노베타가 라노의 하위 종류로서 추가 특성(이중 격막)을 가지는 것도 논리적으로 일관성이 있습니다. 추가 조치가 필요하지 않습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 4
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "A",
+   "trial": 1,
+   "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:13:16Z",
+    "completed_at": "2026-07-22T16:13:25Z",
+    "context_id": "b1bb005a-b545-4b9c-b54e-1a6d61376990",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"Server response indicates successful validation with PASS status. No composition issues or anti-patterns detected. The DAG structure is well-formed with a clear dependency relationship (누멘 → 베스크). Both input concepts are properly defined with their essential features and supporting evidence. No remediation required.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 5
+  },
+  {
+   "fixture": "nonce_valid_kind",
+   "arm": "B",
+   "trial": 1,
+   "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:13:25Z",
+    "completed_at": "2026-07-22T16:13:36Z",
+    "context_id": "ed6f6c21-5ff8-4402-92aa-ac9288d59f89",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"서버 응답이 모든 검증을 통과했습니다. 라노→라노베타 일반화 관계는 OntoCleanMetaGate를 통해 확인되었으며, composition issues와 anti-patterns이 모두 없습니다. 입력 개념의 온톨로지 구조(kind→subkind)가 올바르게 설정되었으므로 추가 조치가 필요하지 않습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 6
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "C",
+   "trial": 2,
+   "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:13:36Z",
+    "completed_at": "2026-07-22T16:13:59Z",
+    "context_id": "7363a5c5-4104-4d3c-be50-680b9620658a",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"request_evidence\",\n  \"repaired_concepts\": null,\n  \"request\": \"OntoClean 메타데이터(instance/role/phase 분류)와 누멘-베스크 간 is-a 관계에 대한 추가 근거를 제시해주세요. 특히 베스크가 누멘의 타입, 역할, 또는 페이즈 중 어느에 해당하는지 명시하고, 제안된 is-a 관계를 뒷받침할 수 있는 구체적인 온토로지 근거가 필요합니다.\",\n  \"report\": \"서버 응답이 PASS이고 composition issues와 anti-patterns이 없어 기본적으로는 안전합니다. 다만 경고에서 is-a 관계의 검증 신뢰도가 PROPOSED 수준이며 verdict=unknown 상태입니다. OntoClean 메타데이터 부재로 인해 반례(instance/role/phase)가 배제되지 않았으므로, 누멘→베스크 is-a 관계를 확정하기 전에 온토클린 메타데이터와 추가 근거가 필수입니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 7
+  },
+  {
+   "fixture": "nonce_valid_kind",
+   "arm": "A",
+   "trial": 2,
+   "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:13:59Z",
+    "completed_at": "2026-07-22T16:14:15Z",
+    "context_id": "a782cf91-5483-41f9-b303-eb123b389194",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"Server validation passed successfully. Status: PASS with valid DAG hierarchy (라노 → 라노베타 subkind relationship). No composition issues or anti-patterns detected. All essential features documented with evidence.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 8
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "B",
+   "trial": 2,
+   "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:14:15Z",
+    "completed_at": "2026-07-22T16:14:32Z",
+    "context_id": "1489b5f2-845e-449d-b36c-f45916afd91d",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"request_evidence\",\n  \"repaired_concepts\": null,\n  \"request\": \"제안된 is-a 관계(누멘→베스크)에 대한 추가 근거를 요청합니다. 특히 OntoClean 메타데이터(instance/role/phase 구분) 또는 누멘과 베스크 간의 분류적 포함 관계를 입증할 수 있는 근거가 필요합니다.\",\n  \"report\": \"구성 검사는 통과했으나(status: PASS, 이슈/안티패턴 없음) 의무 검증이 미완료 상태입니다(obligations.ok: false, verdict: unknown). 제안된 is-a 관계는 OntoClean 메타데이터 부재로 인해 반례가 미배제되었으므로, 확정 이전에 추가 근거가 필수입니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 9
+  },
+  {
+   "fixture": "nonce_valid_kind",
+   "arm": "B",
+   "trial": 2,
+   "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:14:32Z",
+    "completed_at": "2026-07-22T16:14:42Z",
+    "context_id": "447218a0-c07d-4597-8c2f-52de9be9116f",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"OntoClean 메타게이트 검증 통과. 라노→라노베타 is_a 관계가 RULE_CHECKED 수준의 확실성으로 승인됨. 구성 오류, 반패턴, 의무 위반 모두 없음. 입력 개념 구조가 안전하고 타당함.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 10
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "A",
+   "trial": 2,
+   "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:14:42Z",
+    "completed_at": "2026-07-22T16:14:52Z",
+    "context_id": "6d46bdec-c214-4f65-aa00-debc19cf97c7",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"파이프라인 실행이 성공적으로 완료되었습니다. 서버 응답 상태는 PASS이며, 구성 문제(composition_issues)와 안티패턴(anti_patterns)이 없습니다. 입력된 두 개념(누멘, 베스크)의 필수 특징들이 인정되었고, DAG 구조(누멘 → 베스크)가 유효하게 형성되었습니다. 추가 조치가 필요하지 않습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 11
+  },
+  {
+   "fixture": "mixrig_positive",
+   "arm": "FULL",
+   "trial": 2,
+   "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:14:52Z",
+    "completed_at": "2026-07-22T16:15:15Z",
+    "context_id": "0c6325e8-8194-4ec7-9598-c96df38fdd66",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"repair\",\n  \"repaired_concepts\": [\n    {\n      \"name\": \"개\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"갯과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 갯과\"\n        }\n      ]\n    },\n    {\n      \"name\": \"고양이\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"균형_조절\",\n          \"type\": \"functional\",\n          \"evidence\": \"꼬리를 이용한 균형 조절 기능\"\n        },\n        {\n          \"feature\": \"묘과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 묘과\"\n        }\n      ]\n    }\n  ],\n  \"request\": null,\n  \"report\": \"MixRig 안티패턴 해결: '꼬리'는 동물의 본질적 구조이므로 essential_feature로 통일하고, 고양이의 균형 기능은 별도의 functional feature로 분리했습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 12
+  },
+  {
+   "fixture": "nonce_valid_kind",
+   "arm": "A",
+   "trial": 3,
+   "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:15:15Z",
+    "completed_at": "2026-07-22T16:15:25Z",
+    "context_id": "8ba35648-0c4d-4d6f-8fe8-2f1186d16e14",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"서버 응답이 성공적으로 검증되었습니다. 라노→라노베타의 DAG 관계가 올바르게 설정되었고, 구성 문제나 안티패턴이 없습니다. 온토클린 분류(kind→subkind)가 의미론적으로 일관성이 있으며, 라노베타가 라노의 필수 특징을 상속하면서 추가 특징을 확장하는 적절한 부분류(specialization) 관계를 형성하고 있습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 13
+  },
+  {
+   "fixture": "mixrig_positive",
+   "arm": "FULL",
+   "trial": 3,
+   "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:15:25Z",
+    "completed_at": "2026-07-22T16:15:45Z",
+    "context_id": "3dfc94ff-59e1-4d19-acf4-4492eff821c0",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"repair\",\n  \"repaired_concepts\": [\n    {\n      \"name\": \"개\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"갯과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 갯과\"\n        }\n      ]\n    },\n    {\n      \"name\": \"고양이\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"묘과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 묘과\"\n        }\n      ]\n    }\n  ],\n  \"request\": null,\n  \"report\": \"MixRig 안티패턴 감지: 동일 feature '꼬리'가 '개'에서는 essential_feature, '고양이'에서는 functional로 혼합 정의됨. 같은 feature의 rigidity 타입이 개념 간에 일관되어야 함. 고양이의 '꼬리'를 essential_feature로 수정하여 두 개념 모두에서 일관된 분류 구조 적용.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 14
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "C",
+   "trial": 3,
+   "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:31:55Z",
+    "completed_at": "2026-07-22T16:32:14Z",
+    "context_id": "263beb4f-ef59-470f-8209-257b3acb9487",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"서버 응답이 status: PASS이며 composition_issues와 anti_patterns이 모두 비어있어 input_concepts는 안전하고 구조적 문제가 없습니다. warning의 verdict=unknown은 OntoClean 메타데이터 부재로 인한 정보성 제한일 뿐, 현재 제출된 concepts를 거부할 이유가 아닙니다. LLM이 제안한 is-a 관계는 향후 온톨로지 개선을 위한 참고사항으로, 현재 상태에서는 진행 가능합니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 15
+  },
+  {
+   "fixture": "nonce_valid_kind",
+   "arm": "B",
+   "trial": 3,
+   "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:32:14Z",
+    "completed_at": "2026-07-22T16:32:26Z",
+    "context_id": "49e2dc7e-8b2b-4869-bf5d-d7e14f7300c2",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"Server response passed all validations. Status is PASS with no composition issues, no anti-patterns detected, and all obligations verified. OntoCleanMetaGate validation confirms the relation.is_a link between 라노 (kind) and 라노베타 (subkind) is valid. The taxonomy structure is sound with proper rigidity assignments and feature inheritance. No corrective action required.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 16
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "A",
+   "trial": 3,
+   "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:32:26Z",
+    "completed_at": "2026-07-22T16:37:43Z",
+    "context_id": "8d339852-940e-432c-b5c2-08d10b6e9509",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"서버 응답이 PASS 상태이며, composition_issues와 anti_patterns가 모두 비어있습니다. 입력된 모든 개념(누멘, 베스크)은 필수 피처들을 적절한 증거와 함께 제공했으며, DAG 구조도 명확하게 생성되었습니다. 추가 조치가 필요하지 않습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 17
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "B",
+   "trial": 3,
+   "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:37:43Z",
+    "completed_at": "2026-07-22T16:38:00Z",
+    "context_id": "9ce92b04-8298-473a-aed4-0898bb0c4121",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"request_evidence\",\n  \"repaired_concepts\": null,\n  \"request\": \"OntoClean 메타데이터 또는 누멘→베스크 is-a 관계의 타당성을 입증하는 추가 근거 제공 필요. 특히 instance/role/phase 구분을 통해 반례를 배제할 수 있는 증거가 필요하다.\",\n  \"report\": \"Server response는 status PASS이나 obligations.ok는 false이며, relation.is_a의 verdict가 'unknown'이고 assurance가 'PROPOSED' 상태다. OntoClean 메타데이터 부재로 인해 제안된 is-a 관계를 확정할 수 없으므로, 이 관계가 정말 valid한지 판단하기 위한 추가 근거가 필수적이다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 18
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "C",
+   "trial": 4,
+   "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T16:38:00Z",
+    "completed_at": "2026-07-22T16:38:19Z",
+    "context_id": "ab58d951-c1f9-4b19-b397-f382a9117951",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"request_evidence\",\n  \"repaired_concepts\": null,\n  \"request\": \"누멘→베스크 is-a 관계의 검증을 위해 다음 근거를 제공하십시오: (1) 누멘과 베스크의 명확한 정의 또는 의미론적 범위, (2) OntoClean 분류 (essential/non-essential, identity-providing 여부, sortal/non-sortal, rigid/anti-rigid 분류), (3) 각 개념의 구체적인 instance 예시, (4) is-a 관계가 아닐 가능성 있는 대안적 관계 검토. verdict=unknown과 assurance=PROPOSED는 반례(instance/role/phase)가 미배제되었음을 의미하므로, 이를 명확히 하는 온톨로지 메타데이터가 필수입니다.\",\n  \"report\": \"서버 응답이 PASS 상태이고 composition_issues, anti_patterns이 없으나, is-a 관계의 verdict가 unknown이고 assurance가 PROPOSED입니다. OntoClean 메타데이터 부재로 인해 누멘→베스크 관계의 반례가 완전히 배제되지 않았으므로, 추가 근거 없이는 이 분류법의 안전성을 확정할 수 없습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 19
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "A",
+   "trial": 4,
+   "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:25:03Z",
+    "completed_at": "2026-07-22T23:25:13Z",
+    "context_id": "f477c119-8663-4b75-b1db-e8eed4f8126f",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"Server response shows PASS status with valid DAG composition (누멘 → 베스크). No composition_issues or anti_patterns detected. All input concepts contain required essential_features with proper evidence. Pipeline execution successful, no further action needed.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 20
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "B",
+   "trial": 4,
+   "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:25:13Z",
+    "completed_at": "2026-07-22T23:25:30Z",
+    "context_id": "4342ca21-5c7d-4257-84fb-e73226953e5f",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"request_evidence\",\n  \"repaired_concepts\": null,\n  \"request\": \"OntoClean 메타데이터 제공이 필요합니다. 제안된 is_a 관계(누멘→베스크)를 검증하기 위해 다음 근거를 제출해주세요: (1) 누멘과 베스크의 OntoClean identity/unity 속성, (2) 누멘이 베스크의 instance/role/phase가 아님을 증명하는 근거\",\n  \"report\": \"구조적 검증(DAG, composition, anti_patterns)은 통과했으나, is_a 의무사항의 verdict가 'unknown'이고 assurance 수준이 'PROPOSED'(LLM 제안)입니다. OntoClean 메타데이터 부재로 반례(instance/role/phase)가 배제되지 않았으므로, 더 강한 근거 없이는 이 관계를 안전하게 승인할 수 없습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 21
+  },
+  {
+   "fixture": "nonce_valid_kind",
+   "arm": "A",
+   "trial": 4,
+   "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:25:30Z",
+    "completed_at": "2026-07-22T23:25:38Z",
+    "context_id": "1997cde5-7884-43e7-9e68-18437a8bef20",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"서버 응답 상태가 PASS이고, composition_issues와 anti_patterns 배열이 모두 비어있습니다. 입력된 두 개념(라노, 라노베타)의 특징 정의와 온토클린 분류가 유효하며, DAG 관계도 올바르게 구성되었습니다. 추가 조치가 필요하지 않습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 22
+  },
+  {
+   "fixture": "mixrig_positive",
+   "arm": "FULL",
+   "trial": 4,
+   "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:25:38Z",
+    "completed_at": "2026-07-22T23:26:02Z",
+    "context_id": "400e63db-91ea-4419-a340-5ba1e219ca2a",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"repair\",\n  \"repaired_concepts\": [\n    {\n      \"name\": \"개\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"갯과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 갯과\"\n        }\n      ]\n    },\n    {\n      \"name\": \"고양이\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"묘과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 묘과\"\n        }\n      ]\n    }\n  ],\n  \"request\": null,\n  \"report\": \"MixRig 안티패턴 감지: '꼬리' 특성이 개(essential_feature)와 고양이(functional) 간에 rigidity 혼합. 고양이의 '꼬리'를 essential_feature로 통일하여 안티패턴 해결.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 23
+  },
+  {
+   "fixture": "nonce_valid_kind",
+   "arm": "B",
+   "trial": 4,
+   "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:26:02Z",
+    "completed_at": "2026-07-22T23:26:16Z",
+    "context_id": "97d57637-99ed-4273-83fc-b83266bd438d",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"서버 응답이 PASS 상태로 모든 검증을 통과했습니다. 라노(kind) → 라노베타(subkind) 관계가 OntoClean 규칙을 준수하며, composition_issues와 anti_patterns이 없고, 모든 obligation 검증(relation.is_a)이 성공했습니다. 라노베타의 essential features(결정 격막, 이중 격막)가 부모 개념의 특성을 올바르게 상속하고 확장하고 있으며, rigidity 설정도 일관성이 있습니다. 추가 조치가 필요하지 않습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 24
+  },
+  {
+   "fixture": "mixrig_positive",
+   "arm": "FULL",
+   "trial": 5,
+   "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:26:16Z",
+    "completed_at": "2026-07-22T23:26:33Z",
+    "context_id": "095ea219-bd4d-4b8f-a945-cf07b530f8d0",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"repair\",\n  \"repaired_concepts\": [\n    {\n      \"name\": \"개\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"갯과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 갯과\"\n        }\n      ]\n    },\n    {\n      \"name\": \"고양이\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이 꼬리는 균형 기능\"\n        },\n        {\n          \"feature\": \"묘과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 묘과\"\n        }\n      ]\n    }\n  ],\n  \"request\": null,\n  \"report\": \"MixRig anti-pattern 감지: '꼬리'의 rigidity type이 개에서는 essential_feature, 고양이에서는 functional로 혼합되어 있습니다. 같은 피처는 모든 개념에서 일관된 rigidity type을 가져야 합니다. 고양이의 꼬리 타입을 essential_feature로 통일하여 anti-pattern을 제거했습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 25
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "A",
+   "trial": 5,
+   "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:26:33Z",
+    "completed_at": "2026-07-22T23:26:42Z",
+    "context_id": "4811cddc-9a9a-4a65-a435-06ace3e0c948",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"서버 응답 상태가 PASS이며, composition_issues와 anti_patterns이 모두 비어있습니다. DAG 구조(누멘→베스크)도 명확하게 정의되었습니다. 응답이 충분히 안전하고 추가 조치가 필요하지 않습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 26
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "B",
+   "trial": 5,
+   "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:26:42Z",
+    "completed_at": "2026-07-22T23:27:03Z",
+    "context_id": "0998f72d-c959-4bcb-8889-83a85404e854",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"request_evidence\",\n  \"repaired_concepts\": null,\n  \"request\": \"OntoClean 메타데이터(인스턴스/역할/단계 분류)와 누멘-베스크 간 is-a 관계의 타당성 근거를 제공해주세요. 현재 응답에서 obligation verdict가 'unknown'이고 assurance가 'PROPOSED' 수준이므로, 반례 배제를 위한 추가 근거가 필요합니다.\",\n  \"report\": \"obligations.ok가 false이고 relation.is_a의 verdict가 unknown이므로, 현재 응답만으로는 개념 관계의 타당성을 확정할 수 없습니다. OntoClean 메타데이터 부재로 인한 불확실성을 해결하기 위해 추가 근거가 필요합니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 27
+  },
+  {
+   "fixture": "nonce_role_clean",
+   "arm": "C",
+   "trial": 5,
+   "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:27:03Z",
+    "completed_at": "2026-07-22T23:27:21Z",
+    "context_id": "b6f69297-365d-48c7-bf55-08018df93825",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"request_evidence\",\n  \"repaired_concepts\": null,\n  \"request\": \"relation.is_a의 verdict를 unknown에서 확정하기 위해 다음을 요청합니다: (1) 누멘과 베스크의 OntoClean 메타데이터 (특히 [+O], [-O], [+I], [-I], [+D], [-D] 타입 지정); (2) 베스크가 정말로 누멘의 is-a 상위개념인지 확인하는 근거; (3) 누멘이 instance/role/phase 중 어느 쪽에도 해당하지 않음을 보이는 증거. 현재는 assurance=PROPOSED이고 반례가 미배제되어 있어 확정 불가.\",\n  \"report\": \"상태 PASS, composition_issues/anti_patterns 없음으로 기본 안전성 확인. 그러나 relation.is_a verdict=unknown (assurance=PROPOSED)이며 OntoClean 메타데이터 부재로 인해 누멘→베스크 is-a 관계가 미확정 상태. 추가 근거 수집 후 verdict 확정 필요.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 28
+  },
+  {
+   "fixture": "nonce_valid_kind",
+   "arm": "A",
+   "trial": 5,
+   "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:27:21Z",
+    "completed_at": "2026-07-22T23:27:30Z",
+    "context_id": "600c1aaf-f5fb-4f1f-9824-13a31802e7d5",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"서버 응답이 전체 검증을 통과했습니다. 라노와 라노베타 간의 계층 관계(DAG)가 올바르게 구성되었으며, 구성 문제나 안티패턴이 발견되지 않았습니다. 입력된 개념들의 온토클린 분류(kind/subkind)와 필수 특징들의 근거도 일관성 있게 제시되어 있습니다. 추가 조치 불필요.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 29
+  },
+  {
+   "fixture": "nonce_valid_kind",
+   "arm": "B",
+   "trial": 5,
+   "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+   "execution": {
+    "provider": "anthropic-claude-code-cli",
+    "model": "claude-haiku-4-5-20251001",
+    "started_at": "2026-07-22T23:27:30Z",
+    "completed_at": "2026-07-22T23:27:42Z",
+    "context_id": "f8033510-a22b-4e09-a634-ab874aec71fe",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "temperature": null
+   },
+   "raw_response": "```json\n{\n  \"decision\": \"report_done\",\n  \"repaired_concepts\": null,\n  \"request\": null,\n  \"report\": \"서버 응답이 완전히 통과(PASS) 상태입니다. 모든 검증이 성공적으로 완료되었습니다: (1) composition_issues 및 anti_patterns가 없음, (2) obligations verdict가 'pass'이고 오류가 없음, (3) relation.is_a 규칙이 OntoCleanMetaGate로 검증되어 통과됨. 라노→라노베타의 is_a 관계가 ontoclean 메타데이터(kind→subkind)와 일치합니다. 추가 조치가 필요하지 않습니다.\"\n}\n```",
+   "output": null,
+   "parse_error": "Expecting value at line 1 column 1",
+   "execution_order": 30
+  }
+ ],
+ "execution_note": "claude -p --model haiku (Claude Code CLI, non-bare, OAuth) 30 sequential isolated subprocess calls from a directory with no CLAUDE.md/.claude. --disallowedTools blocked all built-in tools. --append-system-prompt requested fence-free output but the model ignored it (30/30 wrapped in ```json fences regardless) -- raw_response preserved exactly as returned, unmodified."
+}
