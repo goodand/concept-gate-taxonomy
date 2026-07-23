@@ -1,0 +1,21 @@
+{
+  "name": "client_decision",
+  "description": "The client agent's single decision about the run_pipeline response.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["decision", "repaired_concepts", "request", "report"],
+    "properties": {
+      "decision": {
+        "type": "string",
+        "enum": ["report_done", "repair", "request_evidence"]
+      },
+      "repaired_concepts": {
+        "type": ["array", "null"],
+        "items": {"type": "object"}
+      },
+      "request": {"type": ["string", "null"]},
+      "report": {"type": "string"}
+    }
+  }
+}
