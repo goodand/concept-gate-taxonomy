@@ -1,0 +1,59 @@
+{
+  "status": "frozen",
+  "experiment_id": "E2.2.3",
+  "purpose": "OFAT (one-factor-at-a-time) ablation of the 3 interventions E2.2.2 combined at once. E2.2.2 added, simultaneously: (A) a GLOBAL_CONSISTENCY_RULE prompt sentence requiring one feature-type value across every concept sharing a feature name, (B) a COMPLETE_STATE_RULE prompt sentence requiring repaired_concepts to include every input concept, and (C) decision_schema.json's repaired_concepts.minItems=2 structural constraint -- reaching 20/20 (1.00) from E2.2.1's 3/20 (0.15), but leaving it impossible to tell which factor(s) were necessary or sufficient. This design isolates each factor into its own arm on top of the SAME vocab-exposure baseline shared by E2.2.1 and E2.2.2 (structural_composition vocabulary hint; constant infrastructure, not one of the 3 ablation factors): A_ONLY (vocab + Factor A only), B_ONLY (vocab + Factor B only), C_ONLY (vocab only, schema minItems=2 but no extra prompt rules). Diagnostic ablation design -- no single accept/reject Go/No-go, unlike E2.2.1/E2.2.2.",
+  "source": "dir1_directed fixture and oracle copied verbatim from experiments/2026-07-24_e2.2.2_directed_pc_invariant_fix/fixture.json (frozen E2.2.2 design, commit 559f61f), unmodified back through experiments/2026-07-24_e2.2.1_directed_pc_vocabulary_fix/fixture.json and experiments/2026-07-23_isa_certificate_structure_bvsc/fixture.json (frozen E2.2 design, commit 49f030b). Not modified except arms/replicates: 1 arm ['FULL']x20 -> 3 arms ['A_ONLY','B_ONLY','C_ONLY']x20 each (N=60 total).",
+  "fixtures": [
+    {
+      "id": "dir1_directed",
+      "topology": "simple",
+      "role": "directed_repair_pc",
+      "arms": ["A_ONLY", "B_ONLY", "C_ONLY"],
+      "replicates": {"A_ONLY": 20, "B_ONLY": 20, "C_ONLY": 20},
+      "input_concepts": [
+        {
+          "name": "돌체",
+          "features": [
+            {
+              "feature": "바퀴",
+              "type": "essential_feature",
+              "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+            },
+            {
+              "feature": "갑종",
+              "type": "essential_feature",
+              "evidence": "갑종이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "돌체린",
+          "features": [
+            {
+              "feature": "바퀴",
+              "type": "functional",
+              "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+            },
+            {
+              "feature": "을종",
+              "type": "essential_feature",
+              "evidence": "을종이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "explicit_fail_directed",
+        "part_feature": "바퀴",
+        "safe_actions": ["structural_composition_repair"],
+        "unsafe_actions": ["report_done"],
+        "note": "Evidence states 바퀴 is a structural part, so the evidence-determined repair is to unify 바퀴 to one structural_composition feature on both concepts. Only that direction passes."
+      },
+      "precondition": {
+        "status": "PASS_WITH_WARNING",
+        "isa": "n/a",
+        "anti": 1
+      }
+    }
+  ]
+}

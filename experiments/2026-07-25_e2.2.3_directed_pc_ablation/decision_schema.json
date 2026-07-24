@@ -1,0 +1,114 @@
+{
+  "experiment_id": "E2.2.3",
+  "description": "OFAT ablation schema companion. E2.2.2 combined a prompt-level global-consistency rule (factor A), a prompt-level complete-state rule (factor B), and a schema-level repaired_concepts.minItems=2 constraint (factor C) into ONE arm and could not tell which factor did the work. E2.2.3 keeps A and B as PROMPT TEXT only (see _gen_prompts.py's ARM_RULES) and keeps C as a pure SCHEMA difference -- the two variants below are the only schema-level lever in this experiment. As in every prior experiment in this series, this file is a frozen documentation/provenance artifact only: _gen_prompts.py and evaluate.py never import it. The actual JSON Schema object for whichever variant an arm uses must be manually transcribed into the ad-hoc Workflow-tool script at execution time, exactly as the single schema in E2.2.1/E2.2.2's decision_schema.json was transcribed into their Workflow scripts.",
+  "arm_schema_map": {
+    "A_ONLY": "no_minitems",
+    "B_ONLY": "no_minitems",
+    "C_ONLY": "minitems_2"
+  },
+  "variants": {
+    "no_minitems": {
+      "name": "client_decision_v4_ofat_no_minitems",
+      "description": "Used by A_ONLY and B_ONLY. Byte-identical to E2.2.1's client_decision_v2_vocab_exposed schema (repaired_concepts is an unconstrained-length array/null) -- i.e. NO minItems constraint. Factor C is deliberately absent here so these two arms isolate only their respective prompt rule.",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision", "repaired_concepts", "request", "report"],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": ["report_done", "repair", "request_evidence"]
+          },
+          "repaired_concepts": {
+            "type": ["array", "null"],
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "features"],
+              "properties": {
+                "name": {"type": "string"},
+                "features": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["feature", "type", "evidence"],
+                    "properties": {
+                      "feature": {"type": "string"},
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "essential_feature",
+                          "contextual_usage",
+                          "locational",
+                          "functional",
+                          "social_treatment",
+                          "structural_composition"
+                        ]
+                      },
+                      "evidence": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "request": {"type": ["string", "null"]},
+          "report": {"type": "string"}
+        }
+      }
+    },
+    "minitems_2": {
+      "name": "client_decision_v4_ofat_minitems2",
+      "description": "Used by C_ONLY only. Byte-identical to E2.2.2's client_decision_v3_invariants_enforced schema -- same as no_minitems but with repaired_concepts.minItems=2 (hardcoded to dir1_directed's exact 2-concept input; fixture-specific, not general purpose). This is the ONLY lever in this arm: no GLOBAL_CONSISTENCY_RULE or COMPLETE_STATE_RULE text in the prompt (see _gen_prompts.py's ARM_RULES['C_ONLY'] = (VOCAB_HINT,)).",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision", "repaired_concepts", "request", "report"],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": ["report_done", "repair", "request_evidence"]
+          },
+          "repaired_concepts": {
+            "type": ["array", "null"],
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "features"],
+              "properties": {
+                "name": {"type": "string"},
+                "features": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["feature", "type", "evidence"],
+                    "properties": {
+                      "feature": {"type": "string"},
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "essential_feature",
+                          "contextual_usage",
+                          "locational",
+                          "functional",
+                          "social_treatment",
+                          "structural_composition"
+                        ]
+                      },
+                      "evidence": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "request": {"type": ["string", "null"]},
+          "report": {"type": "string"}
+        }
+      }
+    }
+  }
+}
