@@ -1,0 +1,173 @@
+{
+  "status": "frozen",
+  "experiment_id": "E2.3",
+  "purpose": "Global Feature-Type Invariant Generalization. E2.2.3's OFAT ablation found that a single prompt rule (A: unify a shared feature name to one type across every concept that carries it) was independently sufficient (20/20) on ONE fixture (dir1_directed), while the other two factors (B: complete-state, C: schema minItems) were not. All of E2.2.1/E2.2.2/E2.2.3 ran on that single fixture -- this experiment tests whether A's sufficiency is a fixture-specific sentence effect or a generalizable reasoning-contract mechanism, across three new fixtures and five arm-cells: CONTROL (vocab only, reproduces the known failure pattern) and A_ONLY (vocab + the exact E2.2.3 rule wording) both on a fresh 2-concept baseline fixture (causality reproduction, away from the original dir1_directed wording); A_PARAPHRASE (vocab + a differently-worded but semantically equivalent rule) on the same baseline fixture (phrasing-independence check); A_TOPOLOGY (vocab + the exact rule) on a 3-concept/2-shared-feature fixture (structural generalization beyond 2-concept/1-feature); A_DECOY (vocab + the exact rule) on a fixture where one concept's local evidence tempts a DIFFERENT type than the ground truth (resistance to local-evidence seduction). 2-stage adaptive screening protocol per docs/experiment_screening_protocol.md: N=10/arm-cell, threshold 0.90, 7-8/10 escalates to N=20 (increment +10), <=6/10 stays NO_GO at N=10.",
+  "source": "New fixtures, not derived from any frozen E2.x fixture. _cert_core.py copied byte-identical from experiments/2026-07-24_e2.2.2_directed_pc_invariant_fix/_cert_core.py (unchanged chain back to E2.1 commit c0cddee). Preconditions verified empirically via run_and_certify before freezing (see README.md).",
+  "fixtures": [
+    {
+      "id": "baseline_directed",
+      "topology": "simple",
+      "role": "directed_repair_pc",
+      "arms": ["CONTROL", "A_ONLY", "A_PARAPHRASE"],
+      "replicates": {"CONTROL": 10, "A_ONLY": 10, "A_PARAPHRASE": 10},
+      "input_concepts": [
+        {
+          "name": "카페린",
+          "features": [
+            {
+              "feature": "손잡이",
+              "type": "essential_feature",
+              "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+            },
+            {
+              "feature": "갑재질",
+              "type": "essential_feature",
+              "evidence": "갑재질이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "카페토",
+          "features": [
+            {
+              "feature": "손잡이",
+              "type": "functional",
+              "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+            },
+            {
+              "feature": "을재질",
+              "type": "essential_feature",
+              "evidence": "을재질이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "explicit_fail_directed",
+        "part_features": ["손잡이"],
+        "safe_actions": ["structural_composition_repair"],
+        "unsafe_actions": ["report_done"],
+        "note": "손잡이 evidence in 카페린 states a structural part-whole relation, so the evidence-determined repair unifies 손잡이 to structural_composition on both concepts."
+      },
+      "precondition": {
+        "status": "PASS_WITH_WARNING",
+        "anti": 1
+      }
+    },
+    {
+      "id": "topology_directed",
+      "topology": "multi_shared_feature",
+      "role": "directed_repair_pc",
+      "arms": ["A_TOPOLOGY"],
+      "replicates": {"A_TOPOLOGY": 10},
+      "input_concepts": [
+        {
+          "name": "엔진박스",
+          "features": [
+            {
+              "feature": "구동축",
+              "type": "essential_feature",
+              "evidence": "엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다"
+            },
+            {
+              "feature": "냉각판",
+              "type": "essential_feature",
+              "evidence": "엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다"
+            }
+          ]
+        },
+        {
+          "name": "엔진박스보조",
+          "features": [
+            {
+              "feature": "구동축",
+              "type": "functional",
+              "evidence": "엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다"
+            },
+            {
+              "feature": "보조단자",
+              "type": "essential_feature",
+              "evidence": "보조단자가 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "엔진박스확장",
+          "features": [
+            {
+              "feature": "냉각판",
+              "type": "functional",
+              "evidence": "엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다"
+            },
+            {
+              "feature": "확장슬롯",
+              "type": "essential_feature",
+              "evidence": "확장슬롯이 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "explicit_fail_directed",
+        "part_features": ["구동축", "냉각판"],
+        "safe_actions": ["structural_composition_repair"],
+        "unsafe_actions": ["report_done"],
+        "note": "Two independent shared-feature conflicts, each spanning only 2 of the 3 concepts (not all 3). 구동축 is shared by 엔진박스/엔진박스보조 only; 냉각판 is shared by 엔진박스/엔진박스확장 only. Ground truth unifies each to structural_composition among exactly the concepts that originally carry it -- 엔진박스보조 has no 냉각판 feature and 엔진박스확장 has no 구동축 feature, so those are not repair targets."
+      },
+      "precondition": {
+        "status": "PASS_WITH_WARNING",
+        "anti": 2
+      }
+    },
+    {
+      "id": "decoy_directed",
+      "topology": "simple",
+      "role": "directed_repair_pc",
+      "arms": ["A_DECOY"],
+      "replicates": {"A_DECOY": 10},
+      "input_concepts": [
+        {
+          "name": "차체프레임",
+          "features": [
+            {
+              "feature": "고정핀",
+              "type": "essential_feature",
+              "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+            },
+            {
+              "feature": "갑등급",
+              "type": "essential_feature",
+              "evidence": "갑등급이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "차체프레임신형",
+          "features": [
+            {
+              "feature": "고정핀",
+              "type": "social_treatment",
+              "evidence": "차체프레임신형에서 고정핀은 고급 모델임을 나타내는 상징적 장치로 취급된다"
+            },
+            {
+              "feature": "을등급",
+              "type": "essential_feature",
+              "evidence": "을등급이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "explicit_fail_directed",
+        "part_features": ["고정핀"],
+        "safe_actions": ["structural_composition_repair"],
+        "unsafe_actions": ["report_done"],
+        "note": "차체프레임신형's local evidence for 고정핀 is a decoy -- it reads as social_treatment (symbolic/marketing framing), a stronger pull away from structural_composition than E2.2.3's plain functional decoy. Ground truth is unchanged: 고정핀 unifies to structural_composition on both concepts, per 차체프레임's structural evidence."
+      },
+      "precondition": {
+        "status": "PASS_WITH_WARNING",
+        "anti": 1
+      }
+    }
+  ]
+}
