@@ -25,7 +25,7 @@ M0 ✅ 권한 경계 (L3 최소핵)
    anti_patterns/lint가 이미 시끄러운 실패 모드에선 타입 재표현일 뿐).
    reasoner 지연 실측: min 475 / median 498 / p95 539 ms.
 
-M1 ⬜ 첫 semantic obligation — relation.is_a (L2 진입)
+M1 🟡 첫 semantic obligation — relation.is_a (L2 진입, 주효과 달성·부속 결함 발견)
    HANDOFF R2(관계 반례 검사)를 obligation으로: is-a 후보에 반례 질문
    4종(instance-of/role/phase/part-of 아닌가)을 적용. 결정론 규칙로
    검사 가능한 부분은 gate(RULE_CHECKED), 나머지는 LLM 제안
@@ -33,10 +33,59 @@ M1 ⬜ 첫 semantic obligation — relation.is_a (L2 진입)
    → 최초의 certificate-only 신호: 기존 status/lint/anti_patterns가
      전부 침묵하는데 obligation만 미충족인 상태가 처음 생긴다.
    검증: E2. 완료 기준: E2에서 ARM 분기 검출.
-   E2 결과(2026-07-19): 천장 효과 재현 — arm 간 행동 격차 0(실증 불가).
-   signal_mentioned check로 "신호 전달됨·행동 미변화" 확정. 원인: evidence
-   문장 임시성 단서 잔존 → baseline 미침묵. laundering 0/13. 다음: E3(M2)
-   또는 임시성 단서 제거 fixture로 E2 재실행(baseline 침묵 전제 충족 시).
+
+   E2 결과(2026-07-19, 최초 A/B): 천장 효과 재현 — arm 간 행동 격차
+   0(실증 불가). signal_mentioned check로 "신호 전달됨·행동 미변화" 확정.
+   원인: evidence 문장 임시성 단서 잔존 → baseline 미침묵. laundering 0/13.
+
+   E2 재설계(2026-07-19~23, 신호분해 3-arm A/C/B + truth oracle):
+   - E2.1(clean baseline, 2026-07-19): B/C 내용 동등 기계 보장 확인,
+     코드펜스 문제로 실측 실패 → schema-forced 출력으로 전환 필요성 확인.
+   - E2.2(B-C 구조 확증, 2026-07-23, 154 trial): **주효과 달성** —
+     구조화 certificate(B)가 평문 warning(C)보다 무근거 report_done을
+     유의하게 더 억제 (Δ_BC=+0.32, 순열검정 p=0.00055, 부트스트랩
+     CI95=[0.16, 0.48]). Go/No-go 6기준 중 5개 통과, **directed PC만
+     실패**(0/10) — 사전등록 해석 규칙상 주효과 자동 무효화 아님.
+   - E2.2.1(directed PC 마이크로 보정, 2026-07-24, 20 trial): directed
+     PC 실패 원인을 "모델이 structural_composition 단어를 모른다"는
+     가설로 보고 vocabulary를 prompt/schema에 노출 → 0/10에서 3/20(15%)로
+     소폭 개선했으나 임계치(0.80) 미달, **가설 기각**. 실제 원인은
+     vocabulary 부재가 아니라 **명세되지 않은 두 구조 계약**이었음이
+     trial report 텍스트에서 직접 확인됨(아래).
+
+   완료 판정: M1의 원 완료 기준(E2 ARM 분기 검출)은 E2.2로 충족.
+   단, repair 상황에서 새로운 결함(아래)이 발견되어 M1은 "부분 완료 +
+   후속 조사 필요"로 재분류.
+
+   **발견된 hidden contract 결함 (E2.2.1 근본 원인 분석, 2026-07-24)**:
+   certificate가 모델에게 전달해야 했지만 한 번도 명시하지 않은 구조적
+   불변조건 2개가 있었다.
+   1. 동일 feature 이름은 **모든 concept에서 type이 전역적으로 일치**해야
+      한다는 불변조건 부재 → wrong_direction_repair 55%: 모델은 각
+      concept의 evidence 문장을 독립적(concept-local)으로 해석해
+      "다른 concept은 다른 type이어도 의미론적으로 정당하다"고 합리화함
+      (trial 3 report: "a structural component in 돌체 and a functional
+      role in 돌체린" — 이걸 해소로 착각).
+   2. repair 출력(`repaired_concepts`)이 **partial diff가 아니라 전체
+      state**여야 한다는 출력 계약 부재 → destructive_repair 30%: 모델이
+      충돌을 정확히 인지하고도(trial 9) 수정한 concept만 반환하고 나머지는
+      누락.
+   → 결론: 실패는 모델 능력 부족도 vocabulary 미노출도 아니라, **실험
+     설계가 명세하지 않은 구조 계약을 모델이 추론해주길 기대**한 누락.
+
+   **재해석(2026-07-24, 다음 방향 결정)**: certificate의 역할을
+   "모델에게 더 강한 warning을 주는 신호"에서 **"모델이 유지해야 할 전역
+   불변조건과 출력 상태 계약을 명시하는 reasoning contract"**로
+   재정의한다. 다음 실험(E2.3 또는 이어지는 마일스톤)의 개념적 초점은
+   Δ_BC 반복이 아니라 다음 4가지:
+   - 모델이 feature-name 단위 전역 일관성을 유지하는가
+   - repair를 local justification이 아니라 global state normalization으로
+     수행하는가
+   - repaired_concepts를 diff가 아니라 complete state로 이해하는가
+   - certificate가 이 불변조건들을 plain prompt보다 더 안정적으로
+     보존시키는가 (B-C 대비를 이 새 DV에 대해서만 재도입할지는 E2.3
+     설계 시점에 결정 — 아직 미확정)
+   상태: 개념적 방향만 확정, 구체 설계(fixture/arm/N)는 아직 없음.
 
 M2 ⬜ evidence.full_support (L2 확대)
    claim의 모든 성분이 evidence span 집합으로 지지되는가 (MEG 원리).
@@ -64,20 +113,21 @@ M5 ⬜ 신뢰 소비 (L1 완성)
 
 ## 실험 설계 (E2~E5 — 각 마일스톤의 완료 게이트)
 
-### E2 — certificate-only 신호 A/B (M1 검증, E1 후속)
+### E2 — certificate-only 신호 A/B → B-C 구조 확증 (M1 검증, E1 후속)
 
 E1이 확정한 요구: "다른 신호 침묵 + 의무만 미충족" fixture가 있어야 ARM이
 갈린다. M1의 relation.is_a가 그 fixture를 처음 가능하게 한다.
 
-- **fixture**: 표면상 유효한 is-a(status PASS, lint 0, anti_patterns 0)이지만
-  반례 검사에 걸리는 입력. 예: "선장 is-a 사람" — role을 kind로 위장한
-  UFO 문헌의 고전 사례.
-- **ARM A**: obligations 제거 응답 / **ARM B**: 포함. E1과 동일 프로토콜
-  (Haiku 5+5 trial, tool 접근 0, 결정적 채점 — evaluate.py 패턴 재사용).
-- **가설**: ARM A는 report_done(=false-done), ARM B는 repair/보류.
-- **판정**: B repair율 > A → M1의 행동 가치 실증. 동일 → decider 신호
-  전달 설계 재검토(tool description에 certificate 읽기 지침 추가 후 재실험 —
-  tool_description_ab의 교훈: 클라이언트는 description만 읽는다).
+최초 설계(A/B, 위 문단)는 천장 효과로 실증 실패 → 신호분해 3-arm(A/C/B) +
+truth oracle로 재설계. 실제 실행 체인과 결과는 위 M1 섹션 참조:
+E2.1(clean baseline) → **E2.2(B-C 구조 확증, N=154): 주효과 확증
+(Δ_BC=+0.32, p=0.00055) — M1 완료 기준 충족** → E2.2.1(directed PC
+마이크로 보정, N=20): 가설 기각, hidden contract 결함 2건 발견.
+
+**다음 실험(E2.3, 미확정)의 방향**: Δ_BC 반복이 아니라 "certificate가
+전역 불변조건(feature-name 일관성)과 출력 상태 계약(diff vs complete
+state)을 plain prompt보다 더 안정적으로 보존시키는가"로 초점 전환. 구체
+fixture/arm/N 설계는 아직 없음 — 위 M1 섹션의 재해석 문단 참조.
 
 ### E3 — UNKNOWN 정직성 실측 (M2 검증)
 
