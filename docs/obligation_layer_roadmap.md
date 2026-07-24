@@ -25,7 +25,7 @@ M0 ✅ 권한 경계 (L3 최소핵)
    anti_patterns/lint가 이미 시끄러운 실패 모드에선 타입 재표현일 뿐).
    reasoner 지연 실측: min 475 / median 498 / p95 539 ms.
 
-M1 🟡 첫 semantic obligation — relation.is_a (L2 진입, 주효과 달성·부속 결함 발견)
+M1 🟡 첫 semantic obligation — relation.is_a (L2 진입, 주효과 달성·directed-PC 결함 원인 규명 및 단일 레버 확정)
    HANDOFF R2(관계 반례 검사)를 obligation으로: is-a 후보에 반례 질문
    4종(instance-of/role/phase/part-of 아닌가)을 적용. 결정론 규칙로
    검사 가능한 부분은 gate(RULE_CHECKED), 나머지는 LLM 제안
@@ -53,9 +53,10 @@ M1 🟡 첫 semantic obligation — relation.is_a (L2 진입, 주효과 달성·
      vocabulary 부재가 아니라 **명세되지 않은 두 구조 계약**이었음이
      trial report 텍스트에서 직접 확인됨(아래).
 
-   완료 판정: M1의 원 완료 기준(E2 ARM 분기 검출)은 E2.2로 충족.
-   단, repair 상황에서 새로운 결함(아래)이 발견되어 M1은 "부분 완료 +
-   후속 조사 필요"로 재분류.
+   완료 판정: M1의 원 완료 기준(E2 ARM 분기 검출)은 E2.2로 충족. repair
+   상황에서 발견된 결함(아래)은 E2.2.1~E2.2.3로 원인 규명과 요인 분해까지
+   완료됐으나, 그 함의를 반영한 certificate 재설계는 아직 착수 전이라 M1은
+   "핵심 실증 완료 + 재설계 대기"로 재분류.
 
    **발견된 hidden contract 결함 (E2.2.1 근본 원인 분석, 2026-07-24)**:
    certificate가 모델에게 전달해야 했지만 한 번도 명시하지 않은 구조적
@@ -73,19 +74,71 @@ M1 🟡 첫 semantic obligation — relation.is_a (L2 진입, 주효과 달성·
    → 결론: 실패는 모델 능력 부족도 vocabulary 미노출도 아니라, **실험
      설계가 명세하지 않은 구조 계약을 모델이 추론해주길 기대**한 누락.
 
-   **재해석(2026-07-24, 다음 방향 결정)**: certificate의 역할을
-   "모델에게 더 강한 warning을 주는 신호"에서 **"모델이 유지해야 할 전역
-   불변조건과 출력 상태 계약을 명시하는 reasoning contract"**로
-   재정의한다. 다음 실험(E2.3 또는 이어지는 마일스톤)의 개념적 초점은
-   Δ_BC 반복이 아니라 다음 4가지:
-   - 모델이 feature-name 단위 전역 일관성을 유지하는가
+   **E2.2.2(directed PC 마이크로 보정 라운드 2, 2026-07-24, 20 trial)**:
+   E2.2.1의 실제 trial report에서 확인된 두 hidden contract를 (a) prompt
+   규칙으로 명시하고 (b) 계약 2는 스키마 minItems로 구조적으로도 강제 →
+   20/20(1.00) **완전 회복**. 단, 세 개입(A=전역 일관성 규칙, B=complete-state
+   규칙, C=schema minItems)을 동시에 넣어 무엇이 필요/충분했는지 알 수 없는
+   상태로 남음 — 결과 커밋이 직접 이 후속 과제를 명시.
+
+   **E2.2.3(directed PC 3요인 OFAT ablation, 2026-07-25, 60 trial)**: A/B/C를
+   각각 단독 arm(N=20)으로 분리. 결과는 비대칭적이고 결정적이었다:
+
+   | arm | 내용 | rate | 판정 |
+   |---|---|---|---|
+   | A_ONLY | 전역 일관성 규칙만 | 20/20 = 1.00 | 단독으로 완전 충분 |
+   | B_ONLY | complete-state 규칙만 | 1/20 = 0.05 | 기저선과 통계적으로 무차별 |
+   | C_ONLY | schema minItems만 | 0/20 = 0.00 | 기저선과 통계적으로 무차별 |
+
+   즉 E2.2.2의 "3요인 결합 수정"은 실제로는 **A 하나가 필요충분조건**이고
+   B·C는 얹혀간 것이었다. 부수 발견: E2.2.1에서 30%였던 destructive_repair
+   (concept 누락)가 E2.2.3 60 trial 전체에서 0건 — B_ONLY/C_ONLY도
+   실패했지만 전부 wrong_direction_repair(방향 불일치)였지 concept을
+   빠뜨리지는 않았다.
+
+   **재해석(2026-07-24 초안 → 2026-07-25 E2.2.3 결과로 확정)**: certificate의
+   역할을 "모델에게 더 강한 warning을 주는 신호"에서 **"모델이 유지해야 할
+   전역 불변조건과 출력 상태 계약을 명시하는 reasoning contract"**로
+   재정의한다. E2.2.3는 이 재정의의 핵심 함의 하나를 이미 실증했다: **불변조건을
+   자연어 관계 규칙으로 명시하는 것이 스키마 구조 강제보다 강력한 레버였다**
+   (C_ONLY=0.00 — cardinality 강제는 그 자체로 repair 방향을 만들지 못함).
+
+   Before/After — certificate의 역할:
+
+   | 축 | Before (E2.1/E2.2 단계) | After (E2.2.1~E2.2.3 이후) |
+   |---|---|---|
+   | 주 질문 | structured certificate가 plain warning보다 unsafe finalization을 더 줄이는가 | certificate가 reasoning state의 불변조건을 명시하고 보존시키는가 |
+   | 실험 단위 | 단일 response의 decision 행동 | 판단-보류-repair의 상태 전이 |
+   | certificate 역할 | 판단 보조 신호, 경고의 구조화 표현 | 경고 신호가 아니라 계약 객체 |
+   | 주요 성공 신호 | request_evidence 증가, 무근거 report_done 감소 | hidden invariant가 prompt 밖에 남지 않고, 모델이 global state 기준으로 행동 |
+   | 주요 실패 해석 | warning을 충분히 강하게 전달 못했거나 모델이 repair 방향을 못 고름 | 모델 능력 부족보다 계약 누락·state 범위 누락·output semantics 누락을 우선 의심 |
+
+   **다음 마일스톤의 주 설계 원칙** (E2.2.3 결과로 뒷받침됨):
+   1. **불변조건을 실험 대상으로 올린다** — "동일 feature 이름은 동일
+      type이어야 한다" 같은 규칙을 채점기 내부 기대값으로 묻어두지 않고,
+      certificate가 운반하는 명시적 contract 필드로 표현한다.
+   2. **vocabulary/자연어 규칙/schema 강제를 층위로 분리해 실험한다** —
+      E2.2.1~E2.2.3가 보여준 것처럼 이 셋은 서로 다른 층위이며, "prompt를
+      더 자세히 줬더니 좋아졌다"로 뭉뚱그리면 안 된다.
+   3. **repair를 local edit가 아니라 global state normalization으로
+      정의한다** — repaired_concepts가 diff인지 complete state인지 모호하면
+      모델은 partial diff를 낼 합리적 근거를 갖는다.
+   4. **schema는 backstop이지 의미론 자체가 아니다** — C_ONLY=0/20이 실증:
+      cardinality 강제(minItems)는 complete-state 누락은 막아도 repair
+      *방향*(feature identity의 전역 일관성)은 만들지 못한다. 별도 계약으로
+      표현해야 한다.
+
+   다음 실험(E2.3 또는 이어지는 마일스톤)의 개념적 초점:
+   - 모델이 feature-name 단위 전역 일관성을 유지하는가 (E2.2.3로 단독
+     충분성 확인됨 — 이제 이 규칙을 certificate 자체에 어떻게 실어
+     보낼지가 다음 질문)
    - repair를 local justification이 아니라 global state normalization으로
      수행하는가
    - repaired_concepts를 diff가 아니라 complete state로 이해하는가
-   - certificate가 이 불변조건들을 plain prompt보다 더 안정적으로
-     보존시키는가 (B-C 대비를 이 새 DV에 대해서만 재도입할지는 E2.3
-     설계 시점에 결정 — 아직 미확정)
-   상태: 개념적 방향만 확정, 구체 설계(fixture/arm/N)는 아직 없음.
+   - repo/reasoner/schema를 결합할 때도 같은 전역 불변조건이 유지되는가
+     (새로 추가된 질문 — repo 결합 실험의 전제조건)
+   상태: 개념적 방향 확정 + 핵심 레버(자연어 관계 규칙 > schema 강제 단독)
+   실증됨. 구체 설계(fixture/arm/N, repo 결합 여부)는 아직 없음.
 
 M2 ⬜ evidence.full_support (L2 확대)
    claim의 모든 성분이 evidence span 집합으로 지지되는가 (MEG 원리).
@@ -122,12 +175,15 @@ E1이 확정한 요구: "다른 신호 침묵 + 의무만 미충족" fixture가 
 truth oracle로 재설계. 실제 실행 체인과 결과는 위 M1 섹션 참조:
 E2.1(clean baseline) → **E2.2(B-C 구조 확증, N=154): 주효과 확증
 (Δ_BC=+0.32, p=0.00055) — M1 완료 기준 충족** → E2.2.1(directed PC
-마이크로 보정, N=20): 가설 기각, hidden contract 결함 2건 발견.
+마이크로 보정, N=20): 가설 기각, hidden contract 결함 2건 발견 →
+E2.2.2(결합 수정, N=20): 20/20 완전 회복, 요인 미분리 → **E2.2.3(OFAT
+ablation, N=60): A_ONLY 단독 충분(1.00), B_ONLY/C_ONLY 기저선 수준 — 단일
+필요충분요인 확정**.
 
-**다음 실험(E2.3, 미확정)의 방향**: Δ_BC 반복이 아니라 "certificate가
-전역 불변조건(feature-name 일관성)과 출력 상태 계약(diff vs complete
-state)을 plain prompt보다 더 안정적으로 보존시키는가"로 초점 전환. 구체
-fixture/arm/N 설계는 아직 없음 — 위 M1 섹션의 재해석 문단 참조.
+**다음 실험(E2.3, 미확정)의 방향**: 위 M1 섹션의 Before/After 프레이밍과
+4가지 설계 원칙 참조. 핵심 전환은 Δ_BC 반복이 아니라 certificate가
+"전역 불변조건과 출력 상태 계약을 명시하는 reasoning contract" 역할을
+안정적으로 수행하는지 검증하는 것. 구체 fixture/arm/N 설계는 아직 없음.
 
 ### E3 — UNKNOWN 정직성 실측 (M2 검증)
 
