@@ -1,0 +1,52 @@
+{
+  "name": "client_decision_v3_invariants_enforced",
+  "description": "E2.2.2 patch over E2.2.1's schema: repaired_concepts now has minItems=2, matching dir1_directed's exact input concept count, as a STRUCTURAL enforcement of the complete-state contract (the model literally cannot submit fewer than 2 concept objects). This schema is fixture-specific (hardcoded to 2) and only valid for this single-fixture experiment. The feature[].type enum from E2.2.1 is unchanged.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["decision", "repaired_concepts", "request", "report"],
+    "properties": {
+      "decision": {
+        "type": "string",
+        "enum": ["report_done", "repair", "request_evidence"]
+      },
+      "repaired_concepts": {
+        "type": ["array", "null"],
+        "minItems": 2,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "features"],
+          "properties": {
+            "name": {"type": "string"},
+            "features": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["feature", "type", "evidence"],
+                "properties": {
+                  "feature": {"type": "string"},
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "essential_feature",
+                      "contextual_usage",
+                      "locational",
+                      "functional",
+                      "social_treatment",
+                      "structural_composition"
+                    ]
+                  },
+                  "evidence": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      },
+      "request": {"type": ["string", "null"]},
+      "report": {"type": "string"}
+    }
+  }
+}
