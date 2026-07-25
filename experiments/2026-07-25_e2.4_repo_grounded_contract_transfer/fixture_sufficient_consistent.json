@@ -1,0 +1,51 @@
+{
+  "record_class": "repo_evidence_packet",
+  "experiment_id": "E2.4",
+  "repo": "goodand/concept-gate-taxonomy",
+  "commit": "d581d53",
+  "extraction_policy": {
+    "allowed_sources": [
+      "conceptgate/ module names, function/class names, docstrings, explicit comments",
+      "docs/, reference/, experiments/ prose",
+      "tests and fixtures encoding expected behavior directly",
+      "commit messages copied verbatim with hash"
+    ],
+    "disallowed_sources": [
+      "general model knowledge about ontology/OWL/GUFO/software architecture",
+      "inference from file path or symbol name alone without a supporting text span",
+      "external repositories or papers"
+    ],
+    "outside_knowledge_policy": "forbidden"
+  },
+  "candidate_concepts": [
+    {
+      "name": "이름속성_개념",
+      "features": [
+        {
+          "feature": "이름",
+          "type": "essential_feature",
+          "evidence_refs": [
+            "ev1"
+          ]
+        }
+      ]
+    }
+  ],
+  "evidence_items": [
+    {
+      "evidence_id": "ev1",
+      "source_path": "conceptgate/concept_gate_v7.py",
+      "source_kind": "code",
+      "locator": "lines 279-301 (SemanticTypeInference.infer classmethod)",
+      "text": "    def infer(cls, feature, evidence, claim) -> TypeInferenceResult:\n        fn = feature.lower()\n        ec = f\"{evidence} {claim}\".lower()\n\n        if cls._has_exc(fn):\n            return TypeInferenceResult(FeatureType.ESSENTIAL, False, [], \"feature_exception\")\n\n        ft, fm = cls._scan(fn)\n        if ft is not None:\n            if cls._has_exc(ec):\n                return TypeInferenceResult(ft, True, fm, \"ambiguous_exception_vs_combo\")\n            return TypeInferenceResult(ft, False, fm, \"feature_combo\")\n\n        if cls._has_exc(ec):\n            return TypeInferenceResult(FeatureType.ESSENTIAL, False, [], \"evidence_exception\")\n\n        # [v6.2 변경] evidence-only contextual → WEAK_CONTEXT_WARNING\n        et, em = cls._scan(ec)\n        if et is not None:\n            return TypeInferenceResult(et, False, em, \"evidence_contextual_weak\",\n                                       is_weak_warning=True)\n\n        return TypeInferenceResult(FeatureType.ESSENTIAL, False, [], \"clean\")",
+      "text_sha256": "f5639ebfc8c0f492d01fb2597d670ffeac2d7ac33d0ddac9ff99a57b2770ec62",
+      "extraction_note": "The infer() method's own documented decision rule: if a feature name/evidence matches no contextual/locational/functional/social/structural marker (COMBOS/SINGLE_STRONG/exceptions), the 'clean' fallback at line 301 explicitly returns FeatureType.ESSENTIAL. The feature name '이름' (a bare identifier attribute) matches none of the marker sets, so this rule's precondition genuinely applies -- direct_support for essential_feature, not circular vocabulary-definition text (unlike the discarded first draft of this fixture, which cited the enum definition itself and was correctly flagged as out_of_scope/circular by independent review)."
+    }
+  ],
+  "server_response": {
+    "status": "PASS",
+    "dag": {},
+    "composition_issues": [],
+    "anti_patterns": []
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "record_class": "repo_evidence_packet",
+  "experiment_id": "E2.4",
+  "repo": "goodand/concept-gate-taxonomy",
+  "commit": "d581d53",
+  "extraction_policy": {
+    "allowed_sources": [
+      "conceptgate/ module names, function/class names, docstrings, explicit comments",
+      "docs/, reference/, experiments/ prose",
+      "tests and fixtures encoding expected behavior directly",
+      "commit messages copied verbatim with hash"
+    ],
+    "disallowed_sources": [
+      "general model knowledge about ontology/OWL/GUFO/software architecture",
+      "inference from file path or symbol name alone without a supporting text span",
+      "external repositories or papers"
+    ],
+    "outside_knowledge_policy": "forbidden"
+  },
+  "candidate_concepts": [
+    {
+      "name": "완제품유닛A",
+      "features": [
+        {
+          "feature": "재료",
+          "type": "essential_feature",
+          "evidence_refs": [
+            "ev2"
+          ]
+        },
+        {
+          "feature": "갑식별자",
+          "type": "essential_feature",
+          "evidence_refs": []
+        }
+      ]
+    },
+    {
+      "name": "완제품유닛B",
+      "features": [
+        {
+          "feature": "재료",
+          "type": "structural_composition",
+          "evidence_refs": [
+            "ev3"
+          ]
+        },
+        {
+          "feature": "을식별자",
+          "type": "essential_feature",
+          "evidence_refs": []
+        }
+      ]
+    }
+  ],
+  "evidence_items": [
+    {
+      "evidence_id": "ev2",
+      "source_path": "conceptgate/cg_partwhole.py",
+      "source_kind": "doc",
+      "locator": "lines 28-33 (module docstring, RELATION_HINT_TYPE comment block)",
+      "text": "# LLM schema의 relation_hint enum과 대응. is_a만 essential(분류적),\n# 부분-전체 계열(component/member/subcollection/subquantity/material)은\n# structural_composition(has-a), phase_of는 contextual_usage(UFO anti-rigid),\n# located_in은 locational.\n# 주의: Winston 1987의 stuff-object(재료-대상)는 meronymy이지 is-a가 아니다.\n# \"재료가 본질적일 수 있다\"는 essentiality의 문제로 관계 타입과 별개 축이다.",
+      "text_sha256": "6fc429fd84360665ad75caa6d51917b4b50e616f8b5e14dbba50848eead65f94",
+      "extraction_note": "Explains that part-whole relations (component/member/subcollection/subquantity/material) map to structural_composition, and explicitly cautions that 'material can be essential' is a separate axis from relation type -- indirect_context for 완제품유닛A's 재료, not by itself a direct_support for essential_feature."
+    },
+    {
+      "evidence_id": "ev3",
+      "source_path": "conceptgate/cg_partwhole.py",
+      "source_kind": "code",
+      "locator": "line 36 (RELATION_HINT_TYPE dict entry)",
+      "text": "    \"material_of\":     \"structural_composition\",  # Winston stuff-object (has-a)",
+      "text_sha256": "41e2a2fe56c7bb302d4f204cb344bec05da407bbdd57bd85a42911cb2048ed76",
+      "extraction_note": "Direct, explicit mapping: material_of -> structural_composition. direct_support for structural_composition as 재료's correct type."
+    }
+  ],
+  "server_response": {
+    "status": "PASS_WITH_WARNING",
+    "dag": {},
+    "composition_issues": [],
+    "anti_patterns": [
+      {
+        "pattern": "MixRig",
+        "subject": "재료",
+        "detail": "\"재료\" rigidity 혼합: ['essential_feature', 'structural_composition']",
+        "involved": [
+          "완제품유닛A",
+          "완제품유닛B"
+        ]
+      }
+    ]
+  }
+}

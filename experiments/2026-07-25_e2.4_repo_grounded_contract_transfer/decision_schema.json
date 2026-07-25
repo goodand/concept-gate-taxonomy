@@ -23,28 +23,51 @@
       "schema": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["decision", "repaired_concepts", "request", "report"],
+        "required": [
+          "decision",
+          "repaired_concepts",
+          "request",
+          "report"
+        ],
         "properties": {
           "decision": {
             "type": "string",
-            "enum": ["report_done", "repair", "request_evidence"]
+            "enum": [
+              "report_done",
+              "repair",
+              "request_evidence"
+            ]
           },
           "repaired_concepts": {
-            "type": ["array", "null"],
+            "type": [
+              "array",
+              "null"
+            ],
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["name", "features"],
+              "required": [
+                "name",
+                "features"
+              ],
               "properties": {
-                "name": {"type": "string"},
+                "name": {
+                  "type": "string"
+                },
                 "features": {
                   "type": "array",
                   "items": {
                     "type": "object",
                     "additionalProperties": false,
-                    "required": ["feature", "type", "evidence"],
+                    "required": [
+                      "feature",
+                      "type",
+                      "evidence"
+                    ],
                     "properties": {
-                      "feature": {"type": "string"},
+                      "feature": {
+                        "type": "string"
+                      },
                       "type": {
                         "type": "string",
                         "enum": [
@@ -56,15 +79,24 @@
                           "structural_composition"
                         ]
                       },
-                      "evidence": {"type": "string"}
+                      "evidence": {
+                        "type": "string"
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "request": {"type": ["string", "null"]},
-          "report": {"type": "string"}
+          "request": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "report": {
+            "type": "string"
+          }
         }
       }
     },
@@ -72,7 +104,6 @@
       "name": "client_decision_v6_e2.4_evidence_contract",
       "description": "CONTRACT_REPO schema. Requires explicit source confinement, evidence audit, per-feature sufficiency judgments, invariant checks, repair plan, abstain payload, and final decision.",
       "schema": {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "additionalProperties": false,
         "required": [
@@ -102,18 +133,31 @@
           "concept": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["name", "features"],
+            "required": [
+              "name",
+              "features"
+            ],
             "properties": {
-              "name": {"type": "string"},
+              "name": {
+                "type": "string"
+              },
               "features": {
                 "type": "array",
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["feature", "type", "evidence"],
+                  "required": [
+                    "feature",
+                    "type",
+                    "evidence"
+                  ],
                   "properties": {
-                    "feature": {"type": "string"},
-                    "type": {"$ref": "#/$defs/feature_type"},
+                    "feature": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "$ref": "#/$defs/feature_type"
+                    },
                     "evidence": {
                       "type": "string",
                       "description": "Evidence ids or a compact evidence summary from the supplied packet only."
@@ -127,7 +171,11 @@
         "properties": {
           "decision": {
             "type": "string",
-            "enum": ["accept_report", "repair", "abstain"]
+            "enum": [
+              "accept_report",
+              "repair",
+              "abstain"
+            ]
           },
           "contract_verdict": {
             "type": "string",
@@ -142,17 +190,27 @@
           "evidence_scope": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["source_policy", "used_evidence_ids", "outside_knowledge_used"],
+            "required": [
+              "source_policy",
+              "used_evidence_ids",
+              "outside_knowledge_used"
+            ],
             "properties": {
               "source_policy": {
                 "type": "string",
-                "enum": ["packet_only"]
+                "enum": [
+                  "packet_only"
+                ]
               },
               "used_evidence_ids": {
                 "type": "array",
-                "items": {"type": "string"}
+                "items": {
+                  "type": "string"
+                }
               },
-              "outside_knowledge_used": {"type": "boolean"}
+              "outside_knowledge_used": {
+                "type": "boolean"
+              }
             }
           },
           "evidence_audit": {
@@ -169,8 +227,12 @@
                 "rationale"
               ],
               "properties": {
-                "evidence_id": {"type": "string"},
-                "source_path": {"type": "string"},
+                "evidence_id": {
+                  "type": "string"
+                },
+                "source_path": {
+                  "type": "string"
+                },
                 "admissibility": {
                   "type": "string",
                   "enum": [
@@ -183,15 +245,26 @@
                 },
                 "supported_type": {
                   "anyOf": [
-                    {"$ref": "#/$defs/feature_type"},
-                    {"type": "null"}
+                    {
+                      "$ref": "#/$defs/feature_type"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "claim_strength": {
                   "type": "string",
-                  "enum": ["explicit", "implicit", "weak", "none"]
+                  "enum": [
+                    "explicit",
+                    "implicit",
+                    "weak",
+                    "none"
+                  ]
                 },
-                "rationale": {"type": "string"}
+                "rationale": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -210,24 +283,43 @@
                 "rationale"
               ],
               "properties": {
-                "concept": {"type": "string"},
-                "feature": {"type": "string"},
-                "original_type": {"$ref": "#/$defs/feature_type"},
+                "concept": {
+                  "type": "string"
+                },
+                "feature": {
+                  "type": "string"
+                },
+                "original_type": {
+                  "$ref": "#/$defs/feature_type"
+                },
                 "sufficiency": {
                   "type": "string",
-                  "enum": ["sufficient", "insufficient", "conflicting", "not_evaluated"]
+                  "enum": [
+                    "sufficient",
+                    "insufficient",
+                    "conflicting",
+                    "not_evaluated"
+                  ]
                 },
                 "selected_type": {
                   "anyOf": [
-                    {"$ref": "#/$defs/feature_type"},
-                    {"type": "null"}
+                    {
+                      "$ref": "#/$defs/feature_type"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "evidence_ids": {
                   "type": "array",
-                  "items": {"type": "string"}
+                  "items": {
+                    "type": "string"
+                  }
                 },
-                "rationale": {"type": "string"}
+                "rationale": {
+                  "type": "string"
+                }
               }
             }
           },
@@ -245,10 +337,14 @@
                 "rationale"
               ],
               "properties": {
-                "feature": {"type": "string"},
+                "feature": {
+                  "type": "string"
+                },
                 "involved_concepts": {
                   "type": "array",
-                  "items": {"type": "string"}
+                  "items": {
+                    "type": "string"
+                  }
                 },
                 "status": {
                   "type": "string",
@@ -262,24 +358,38 @@
                 },
                 "target_type": {
                   "anyOf": [
-                    {"$ref": "#/$defs/feature_type"},
-                    {"type": "null"}
+                    {
+                      "$ref": "#/$defs/feature_type"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "evidence_ids": {
                   "type": "array",
-                  "items": {"type": "string"}
+                  "items": {
+                    "type": "string"
+                  }
                 },
-                "rationale": {"type": "string"}
+                "rationale": {
+                  "type": "string"
+                }
               }
             }
           },
           "repair_plan": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["allowed", "steps", "reject_reason"],
+            "required": [
+              "allowed",
+              "steps",
+              "reject_reason"
+            ],
             "properties": {
-              "allowed": {"type": "boolean"},
+              "allowed": {
+                "type": "boolean"
+              },
               "steps": {
                 "type": "array",
                 "items": {
@@ -294,20 +404,35 @@
                     "reason"
                   ],
                   "properties": {
-                    "concept": {"type": "string"},
-                    "feature": {"type": "string"},
-                    "from_type": {"$ref": "#/$defs/feature_type"},
-                    "to_type": {"$ref": "#/$defs/feature_type"},
+                    "concept": {
+                      "type": "string"
+                    },
+                    "feature": {
+                      "type": "string"
+                    },
+                    "from_type": {
+                      "$ref": "#/$defs/feature_type"
+                    },
+                    "to_type": {
+                      "$ref": "#/$defs/feature_type"
+                    },
                     "evidence_ids": {
                       "type": "array",
-                      "items": {"type": "string"}
+                      "items": {
+                        "type": "string"
+                      }
                     },
-                    "reason": {"type": "string"}
+                    "reason": {
+                      "type": "string"
+                    }
                   }
                 }
               },
               "reject_reason": {
-                "type": ["string", "null"]
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             }
           },
@@ -315,17 +440,27 @@
             "anyOf": [
               {
                 "type": "array",
-                "items": {"$ref": "#/$defs/concept"}
+                "items": {
+                  "$ref": "#/$defs/concept"
+                }
               },
-              {"type": "null"}
+              {
+                "type": "null"
+              }
             ]
           },
           "abstain": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["required", "reason", "missing_evidence"],
+            "required": [
+              "required",
+              "reason",
+              "missing_evidence"
+            ],
             "properties": {
-              "required": {"type": "boolean"},
+              "required": {
+                "type": "boolean"
+              },
               "reason": {
                 "type": "string",
                 "enum": [
@@ -341,16 +476,25 @@
                 "items": {
                   "type": "object",
                   "additionalProperties": false,
-                  "required": ["target", "request"],
+                  "required": [
+                    "target",
+                    "request"
+                  ],
                   "properties": {
-                    "target": {"type": "string"},
-                    "request": {"type": "string"}
+                    "target": {
+                      "type": "string"
+                    },
+                    "request": {
+                      "type": "string"
+                    }
                   }
                 }
               }
             }
           },
-          "report": {"type": "string"}
+          "report": {
+            "type": "string"
+          }
         }
       }
     }

@@ -168,3 +168,65 @@ qualification(smoke test)은 실제 frozen 매니페스트 프롬프트를 그�
 - Phase 2 독립 리뷰를 이 세션 안에서 fresh subagent로 할지, 사용자가
   직접 할지 — 원칙 4상 fixture 제작자(나)와 달라야 하므로 Agent 도구로
   fresh 세션을 쓰는 게 기본값이지만, 확정은 실행 세션에서.
+
+## Phase 0/2/스모크 실행 결과 (2026-07-25, 후속 세션)
+
+위 두 미결 사항은 해소됐다: 발취·병치 허용(사용자 승인), Phase 2는 fresh
+general-purpose subagent(agentId `a8f54937bc27c7215`)로 실행.
+
+**Phase 0**: 4개 fixture를 이 저장소의 실제 코드/문서/커밋 메시지에서
+구성(`fixture_*.json`, 커밋 안 됨 — 아직 조사 단계 파일). `run_and_certify`로
+server_response 실측, `evidence_packet_schema.json` 구조 검증 통과, 모든
+`text_sha256`이 실제 발췌 텍스트와 일치.
+
+**Phase 2 독립 리뷰**: 4개 중 2개에서 실제 결함 발견 —
+1. `sufficient_consistent`: 원 evidence(`FeatureType` enum 정의 자체)가
+   순환논리(vocabulary 존재 증명일 뿐, 특정 feature가 그 vocabulary에
+   속한다는 근거 아님) — `SemanticTypeInference.infer()`의 실제 결정
+   규칙 텍스트로 교체.
+2. `conflicting`: E2.2.1/E2.2.2 커밋 메시지 충돌은 실제이지만
+   **인과관계 서술의 충돌**이지 **FeatureType 온톨로지 분류의 충돌**이
+   아님 — evidence는 유지하되 기대 오라클을 "abstain(사유 불문)"으로
+   완화하고 이 판단을 fixture 안에 명시.
+
+**Smoke test** (8 cell, 1 trial씩; 1차 시도에서 CONTRACT_REPO 4개 전부
+`evidence_contract_v1`의 최상위 `$schema` 키 때문에 실패 → 제거 후 재실행
+성공):
+
+| fixture class | CONTRACT_REPO 결과 | 의도 | 일치 |
+|---|---|---|---|
+| sufficient_consistent | abstain (insufficient_evidence) | accept_report | ✗ |
+| sufficient_repairable | repair (sufficient_repairable) | repair | ✓ |
+| insufficient | accept_report (sufficient_consistent) | abstain | ✗ |
+| conflicting | abstain (conflicting_evidence) | abstain | ✓ |
+
+**핵심 검증 결과**: `conflicting` fixture에서 CONTROL_REPO/A_REPO(legacy
+스키마)는 둘 다 abstain 없이 스스로 "ev6가 ev5를 대체"라 판단하고 조용히
+repair했다. 동일 evidence에서 CONTRACT_REPO만 두 근거를 `conflict`로
+명시 분류하고 정확히 abstain했다 — 계약 구조가 실제로 판단 경계를
+안정화한다는 이 실험의 핵심 가설을 직접 뒷받침하는 첫 실측 증거.
+
+## 문제 정의 (N=10 본 실행 전 해결 필요)
+
+**문제 1 — `sufficient_consistent`가 구조적으로 어려움**: 리뷰에서 잡힌
+순환논리를 고쳤는데도 CONTRACT_REPO는 여전히 insufficient로 판정했다.
+이유: 텍스트가 "알고리즘이 어떻게 판단하는가"를 서술할 뿐 "이 feature는
+essential이다"를 직접 선언하지 않는다. 이 저장소의 코드/주석은 대부분
+**절차적**(어떻게 판단하는지)이지 **선언적**(특정 대상에 대한 직접
+단언)이 아니라서, "이미 충분하고 수리 불필요"를 보여줄 진짜 근거를
+코드에서 찾기 어렵다. 후보 해법: (a) `docs/`류 산문에서 더 선언적인
+문장 탐색, (b) 발취·병치로 직접 단언 문장 구성, (c) 이 semantic class
+자체를 이 코드베이스에 맞게 재정의.
+
+**문제 2 — `insufficient` fixture에서 진짜 오류 발생**: 완전히 무관한
+함수(JSON 추출 유틸)의 "검증 실패시 에러" 동작을, 모델이
+essential_feature의 "본질적"과 혼동해 accept_report로 오판했다. 이건
+fixture 결함이 아니라 **evidence가 진짜로 주제 무관(out_of_scope)한데도
+모델이 오분류한 CONTRACT_REPO 메커니즘 자체의 실제 약점**이다.
+
+**결정 필요**: 문제 2를 (a) 그대로 두고 N=10에서 측정할지(진짜 능력
+한계를 재는 것 — 실패율이 유의미한 데이터), 아니면 (b)
+`contract_prompt.md` 규칙 2를 강화해서("코드 동작이 기능상 필요하다는
+것 자체는 essential_feature 증거가 아니다") 막고 재검증할지. (a)는 raw
+baseline, (b)는 prompt-engineering 개입 후 재측정 — 둘 다 유효한
+실험이지만 다른 질문에 답한다. 사용자 결정 대기.

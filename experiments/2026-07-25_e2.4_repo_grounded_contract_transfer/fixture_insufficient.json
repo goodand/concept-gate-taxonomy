@@ -1,0 +1,51 @@
+{
+  "record_class": "repo_evidence_packet",
+  "experiment_id": "E2.4",
+  "repo": "goodand/concept-gate-taxonomy",
+  "commit": "d581d53",
+  "extraction_policy": {
+    "allowed_sources": [
+      "conceptgate/ module names, function/class names, docstrings, explicit comments",
+      "docs/, reference/, experiments/ prose",
+      "tests and fixtures encoding expected behavior directly",
+      "commit messages copied verbatim with hash"
+    ],
+    "disallowed_sources": [
+      "general model knowledge about ontology/OWL/GUFO/software architecture",
+      "inference from file path or symbol name alone without a supporting text span",
+      "external repositories or papers"
+    ],
+    "outside_knowledge_policy": "forbidden"
+  },
+  "candidate_concepts": [
+    {
+      "name": "JSON추출유틸",
+      "features": [
+        {
+          "feature": "코드블록처리방식",
+          "type": "essential_feature",
+          "evidence_refs": [
+            "ev4"
+          ]
+        }
+      ]
+    }
+  ],
+  "evidence_items": [
+    {
+      "evidence_id": "ev4",
+      "source_path": "conceptgate/concept_gate_v7.py",
+      "source_kind": "code",
+      "locator": "lines 556-560 (def extract_json_block)",
+      "text": "def extract_json_block(raw):\n    clean = re.sub(r'```(?:json)?\\s*', '', raw.strip()).replace('```', '').strip()\n    s, e = clean.find('{'), clean.rfind('}')\n    if s < 0 or e < 0: raise ValueError(\"JSON 블록 없음\")\n    return clean[s:e+1]",
+      "text_sha256": "8e3952d6b471de91b776d684e15645c05b1fad7e08d1249ed914229ed193b641",
+      "extraction_note": "Bare function body with no docstring or explanatory comment. Does not state what semantic role code-block-stripping plays for the concept -- audit should classify this as indirect_context or ambiguous, never direct_support for any specific FeatureType."
+    }
+  ],
+  "server_response": {
+    "status": "PASS",
+    "dag": {},
+    "composition_issues": [],
+    "anti_patterns": []
+  }
+}
