@@ -82,6 +82,29 @@ E1이 확정한 요구: "다른 신호 침묵 + 의무만 미충족" fixture가 
 - **판정**: C/B가 A보다 확정 보고를 줄이는지 보되, 양성 대조의 의도된 repair가
   낮거나 provenance 계약이 깨지면 행동 효과를 해석하지 않는다.
 
+> **참고 (2026-07-25)**: 이 섹션은 이 브랜치(`codex/e2.4-contract-repo-design`,
+> `codex/e2.2.1-directed-pc-vocab-fix-20260724` 계열)의 구버전이다. E2.1 이후
+> 실제로는 E2.2(B-C 구조 확증, N=154, Δ_BC=+0.32) → E2.2.1/E2.2.2/E2.2.3
+> (directed PC 마이크로 보정·OFAT ablation — 전역 일관성 규칙 하나가
+> 필요충분조건임을 확정) → **E2.3(synthetic fixture 일반화, 4개 축 전부
+> screened PASS)**까지 진행됐다. 상세 서술은 다른 브랜치
+> (`claude/ontoclean-gufo-handoff-7cmq0v`, 메인 저장소)의 동일 파일에 있으며,
+> 두 브랜치의 이 문서는 아직 병합되지 않았다 — 병합 시 그쪽이 상위 서술이다.
+
+### E2.4 — Repo-Grounded Evidence Sufficiency + Abstain/Repair Contract (design, 미실행)
+
+E2.3이 synthetic fixture 위에서 A(전역 feature-type 일관성 규칙)의 일반화를
+확인했다면, E2.4는 그 규칙이 **실제 repo-derived evidence** 위에서도
+판단/보류/수리 경계를 안정적으로 유지하는지 검증한다. 설계 상세는
+`experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/README.md`
+참조 — evidence 출처는 `goodand/concept-gate-taxonomy` 자체 코드/문서/테스트/
+커밋 메시지로 한정(외부 지식·타 저장소 금지), arm은 CONTROL_REPO/A_REPO/
+CONTRACT_REPO 3개, CONTRACT_REPO는 evidence audit → sufficiency 판정 →
+invariant 확인 → accept_report/repair/abstain 선택의 새 계약 스키마
+(`evidence_contract_v1`)를 쓴다. **이 커밋 시점엔 설계 패킷(README +
+스키마 2개 + prompt 블록)만 존재 — fixture 구성·매니페스트 생성·실행은
+아직 없음.**
+
 ### E3 — UNKNOWN 정직성 실측 (M2 검증)
 
 - 지지 완전/부분/무관 evidence 3계열 × N trial에서 LLM decider가 제안만

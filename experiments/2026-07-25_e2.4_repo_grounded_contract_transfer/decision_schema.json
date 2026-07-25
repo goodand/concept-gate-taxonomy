@@ -1,0 +1,358 @@
+{
+  "experiment_id": "E2.4",
+  "description": "Arm-to-schema companion for E2.4. CONTROL_REPO and A_REPO keep the legacy client decision shape used by E2.3 so their behavior remains comparable. CONTRACT_REPO uses evidence_contract_v1, a new schema that forces evidence audit, sufficiency judgment, invariant check, and abstain/repair bookkeeping before any final decision is interpretable. The schema is intentionally portable: cross-field conditions are listed as semantic_constraints and must be enforced by the scorer, because the workflow transport may not support advanced JSON Schema conditionals.",
+  "arm_schema_map": {
+    "CONTROL_REPO": "legacy_decision",
+    "A_REPO": "legacy_decision",
+    "CONTRACT_REPO": "evidence_contract_v1"
+  },
+  "semantic_constraints": [
+    "decision=repair requires contract_verdict=sufficient_repairable.",
+    "decision=accept_report requires contract_verdict=sufficient_consistent.",
+    "decision=abstain requires contract_verdict in {insufficient_evidence, conflicting_evidence, out_of_scope}.",
+    "decision=repair requires repair_plan.allowed=true and repaired_concepts to contain the complete input concept set.",
+    "decision=abstain requires repair_plan.allowed=false, repaired_concepts=null, and abstain.required=true.",
+    "Every evidence id cited by evidence_scope.used_evidence_ids, feature_judgments.evidence_ids, invariant_checks.evidence_ids, or repair_plan.steps.evidence_ids must exist in evidence_packet.evidence_items.",
+    "outside_knowledge_used must be false for any passing CONTRACT_REPO trial.",
+    "A feature judgment can be sufficient only when it cites at least one direct_support evidence item for selected_type and no conflicting direct evidence of equal strength."
+  ],
+  "variants": {
+    "legacy_decision": {
+      "name": "client_decision_v5_e2.3_legacy_repo",
+      "description": "Legacy client decision shape retained for CONTROL_REPO and A_REPO comparison. This is the E2.3 schema: decision + repaired_concepts + request + report.",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision", "repaired_concepts", "request", "report"],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": ["report_done", "repair", "request_evidence"]
+          },
+          "repaired_concepts": {
+            "type": ["array", "null"],
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "features"],
+              "properties": {
+                "name": {"type": "string"},
+                "features": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["feature", "type", "evidence"],
+                    "properties": {
+                      "feature": {"type": "string"},
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "essential_feature",
+                          "contextual_usage",
+                          "locational",
+                          "functional",
+                          "social_treatment",
+                          "structural_composition"
+                        ]
+                      },
+                      "evidence": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "request": {"type": ["string", "null"]},
+          "report": {"type": "string"}
+        }
+      }
+    },
+    "evidence_contract_v1": {
+      "name": "client_decision_v6_e2.4_evidence_contract",
+      "description": "CONTRACT_REPO schema. Requires explicit source confinement, evidence audit, per-feature sufficiency judgments, invariant checks, repair plan, abstain payload, and final decision.",
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "decision",
+          "contract_verdict",
+          "evidence_scope",
+          "evidence_audit",
+          "feature_judgments",
+          "invariant_checks",
+          "repair_plan",
+          "repaired_concepts",
+          "abstain",
+          "report"
+        ],
+        "$defs": {
+          "feature_type": {
+            "type": "string",
+            "enum": [
+              "essential_feature",
+              "contextual_usage",
+              "locational",
+              "functional",
+              "social_treatment",
+              "structural_composition"
+            ]
+          },
+          "concept": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "features"],
+            "properties": {
+              "name": {"type": "string"},
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["feature", "type", "evidence"],
+                  "properties": {
+                    "feature": {"type": "string"},
+                    "type": {"$ref": "#/$defs/feature_type"},
+                    "evidence": {
+                      "type": "string",
+                      "description": "Evidence ids or a compact evidence summary from the supplied packet only."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": ["accept_report", "repair", "abstain"]
+          },
+          "contract_verdict": {
+            "type": "string",
+            "enum": [
+              "sufficient_consistent",
+              "sufficient_repairable",
+              "insufficient_evidence",
+              "conflicting_evidence",
+              "out_of_scope"
+            ]
+          },
+          "evidence_scope": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["source_policy", "used_evidence_ids", "outside_knowledge_used"],
+            "properties": {
+              "source_policy": {
+                "type": "string",
+                "enum": ["packet_only"]
+              },
+              "used_evidence_ids": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "outside_knowledge_used": {"type": "boolean"}
+            }
+          },
+          "evidence_audit": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidence_id",
+                "source_path",
+                "admissibility",
+                "supported_type",
+                "claim_strength",
+                "rationale"
+              ],
+              "properties": {
+                "evidence_id": {"type": "string"},
+                "source_path": {"type": "string"},
+                "admissibility": {
+                  "type": "string",
+                  "enum": [
+                    "direct_support",
+                    "indirect_context",
+                    "ambiguous",
+                    "conflict",
+                    "out_of_scope"
+                  ]
+                },
+                "supported_type": {
+                  "anyOf": [
+                    {"$ref": "#/$defs/feature_type"},
+                    {"type": "null"}
+                  ]
+                },
+                "claim_strength": {
+                  "type": "string",
+                  "enum": ["explicit", "implicit", "weak", "none"]
+                },
+                "rationale": {"type": "string"}
+              }
+            }
+          },
+          "feature_judgments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "concept",
+                "feature",
+                "original_type",
+                "sufficiency",
+                "selected_type",
+                "evidence_ids",
+                "rationale"
+              ],
+              "properties": {
+                "concept": {"type": "string"},
+                "feature": {"type": "string"},
+                "original_type": {"$ref": "#/$defs/feature_type"},
+                "sufficiency": {
+                  "type": "string",
+                  "enum": ["sufficient", "insufficient", "conflicting", "not_evaluated"]
+                },
+                "selected_type": {
+                  "anyOf": [
+                    {"$ref": "#/$defs/feature_type"},
+                    {"type": "null"}
+                  ]
+                },
+                "evidence_ids": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                },
+                "rationale": {"type": "string"}
+              }
+            }
+          },
+          "invariant_checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "feature",
+                "involved_concepts",
+                "status",
+                "target_type",
+                "evidence_ids",
+                "rationale"
+              ],
+              "properties": {
+                "feature": {"type": "string"},
+                "involved_concepts": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "consistent",
+                    "violation_repairable",
+                    "underdetermined",
+                    "conflicting",
+                    "not_applicable"
+                  ]
+                },
+                "target_type": {
+                  "anyOf": [
+                    {"$ref": "#/$defs/feature_type"},
+                    {"type": "null"}
+                  ]
+                },
+                "evidence_ids": {
+                  "type": "array",
+                  "items": {"type": "string"}
+                },
+                "rationale": {"type": "string"}
+              }
+            }
+          },
+          "repair_plan": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["allowed", "steps", "reject_reason"],
+            "properties": {
+              "allowed": {"type": "boolean"},
+              "steps": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "concept",
+                    "feature",
+                    "from_type",
+                    "to_type",
+                    "evidence_ids",
+                    "reason"
+                  ],
+                  "properties": {
+                    "concept": {"type": "string"},
+                    "feature": {"type": "string"},
+                    "from_type": {"$ref": "#/$defs/feature_type"},
+                    "to_type": {"$ref": "#/$defs/feature_type"},
+                    "evidence_ids": {
+                      "type": "array",
+                      "items": {"type": "string"}
+                    },
+                    "reason": {"type": "string"}
+                  }
+                }
+              },
+              "reject_reason": {
+                "type": ["string", "null"]
+              }
+            }
+          },
+          "repaired_concepts": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {"$ref": "#/$defs/concept"}
+              },
+              {"type": "null"}
+            ]
+          },
+          "abstain": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["required", "reason", "missing_evidence"],
+            "properties": {
+              "required": {"type": "boolean"},
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "insufficient_evidence",
+                  "conflicting_evidence",
+                  "out_of_scope",
+                  "schema_or_payload_error"
+                ]
+              },
+              "missing_evidence": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["target", "request"],
+                  "properties": {
+                    "target": {"type": "string"},
+                    "request": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "report": {"type": "string"}
+        }
+      }
+    }
+  }
+}
