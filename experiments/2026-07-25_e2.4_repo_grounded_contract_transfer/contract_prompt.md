@@ -26,6 +26,24 @@ candidate_concepts, server_response만 포함한다.
    - direct_support만 sufficiency를 만들 수 있다.
    - 파일명, 심볼명, 테스트명은 단독으로 direct_support가 아니다. 명시 텍스트가
      있어야 한다.
+   - **essential_feature, contextual_usage, locational, functional,
+     social_treatment, structural_composition 6개는 전부 이 taxonomy가
+     정의하는 전문 용어다. 각각 일상어로 비슷하게 들리는 단어와 다르다**
+     (essential_feature≠"필수적", functional≠"기능이 있다",
+     structural_composition≠"구조를 가진 코드"). **어떤 코드가 무엇을
+     하는지(implementation: 무엇을 검증하는지, 어떤 알고리즘을 쓰는지,
+     왜 그렇게 짰는지)를 서술하는 것은, 그 자체로는 6개 type 중 어느
+     것에 대해서도 direct_support가 아니다.** direct_support가 되려면
+     텍스트가 그 feature의 **온톨로지적 성격**(is-a를 형성하는
+     분류적 속성인가essential / 맥락에 따라 달라지는가contextual /
+     장소-영역 관계인가locational / UFO 의미의 역할인가functional /
+     사회적·법적 처우인가social / 부분-전체 관계인가structural)을
+     **명시적으로 서술**해야 한다. "이 코드가 X를 검증/처리/구현한다"류의
+     구현 서술만 있고 그 X의 온톨로지적 성격을 말하는 문장이 없으면,
+     6개 type 중 어느 것으로도 repair하지 말고 evidence 전체를
+     out_of_scope 또는 indirect_context로 분류하여 insufficient로
+     abstain하라 — "그나마 이 type이 제일 그럴듯하다"는 식으로 아무
+     type이나 골라 repair하는 것은 금지된다.
 
 3. sufficiency를 먼저 판정하라.
    - sufficient: 적어도 하나의 direct_support evidence가 selected_type을
