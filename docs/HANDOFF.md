@@ -1,9 +1,17 @@
 # HANDOFF — ConceptGate 세션 인수인계
 
-- 작성: 2026-07-17 08:07 UTC
+- 작성: 2026-07-17 08:07 UTC (OWL/gUFO 동치 보고 작업 스냅샷)
 - 대상: **컨텍스트 없이 이어받는 새 세션**. 이 문서만 읽고 작업을 재개할 수 있게 쓴다.
 - 다음 예정: **큰 설계 변경** (semantic fidelity 계층 — 아래 §9 R5). 그 전에 동치
   보고 체계를 완결한 상태에서 넘긴다.
+
+> ⚠️ **2026-07-25 갱신**: 이 문서 이후 활성 작업은 M0~M5 마일스톤 체인
+> (`docs/obligation_layer_roadmap.md`)의 M1 검증 실험(E2.2~E2.4)으로
+> 옮겨갔다 — worktree `concept-gate-e2.2-wt`, 브랜치
+> `codex/e2.4-contract-repo-design`. **그 작업의 최신 상태는 이 파일이
+> 아니라 그 worktree의 `docs/HANDOFF.md`를 봐라.** 아래 §1~§12은 OWL/gUFO
+> 동치 보고 계층 작업(완료됨, 코드는 여전히 유효)의 기록으로 유지한다 —
+> `conceptgate/cg_owl.py`를 건드릴 때만 다시 참조하면 된다.
 
 > **먼저 이걸 하라**: 작업 시작 전 `verify-conceptgate` 스킬을 읽어라
 > (`.claude/skills/verify-conceptgate/SKILL.md`). 이 프로젝트의 반복 함정과 검증

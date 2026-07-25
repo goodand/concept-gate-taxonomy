@@ -183,7 +183,11 @@ ablation, N=60): A_ONLY 단독 충분(1.00), B_ONLY/C_ONLY 기저선 수준 — 
 **다음 실험(E2.3, 미확정)의 방향**: 위 M1 섹션의 Before/After 프레이밍과
 4가지 설계 원칙 참조. 핵심 전환은 Δ_BC 반복이 아니라 certificate가
 "전역 불변조건과 출력 상태 계약을 명시하는 reasoning contract" 역할을
-안정적으로 수행하는지 검증하는 것. 구체 fixture/arm/N 설계는 아직 없음.
+안정적으로 수행하는지 검증하는 것. 구체 fixture/arm 설계는 아직 없으나,
+**운영 프로토콜(N/threshold)은 확정**: `docs/experiment_screening_protocol.md`의
+2-stage 순차 스크리닝(N=10·threshold=0.90 우선 실행 → 7~8/10이거나 핵심
+주장에 직접 쓰이는 arm만 N=20으로 증분) 적용. 보고 시 "confirmed" 대신
+screened/provisional/candidate gate 용어 사용.
 
 ### E3 — UNKNOWN 정직성 실측 (M2 검증)
 
