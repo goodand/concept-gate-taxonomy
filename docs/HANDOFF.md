@@ -9,6 +9,13 @@
   문서이며 그쪽은 OWL/gUFO 동치 보고 작업(2026-07-17) 이후 갱신되지 않았다
   — 그 작업의 최신 상태는 그 문서를 그대로 신뢰해도 되지만, "지금 뭘 하고
   있는가"에 대한 답은 **이 문서**다.
+- **새 실험을 시작하기 전에** 메인 저장소 체크아웃의
+  `docs/EXPERIMENT_METHODOLOGY.md`를 읽어라 (이 worktree 브랜치엔 아직
+  없음 — `../concept-gate-taxonomy/docs/EXPERIMENT_METHODOLOGY.md`로
+  직접 접근). 동결/운영로그 분리, 실험 폴더 규약, provenance 계약,
+  worktree 격리, 비-git 감사본, 교훈 승격, 독립 재현 검증 7개 규칙.
+  이 worktree의 `experiments/` 구조(§3~§4)는 그 규약을 실제로 따른
+  사례다.
 
 ---
 
