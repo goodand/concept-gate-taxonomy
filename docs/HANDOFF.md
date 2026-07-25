@@ -12,6 +12,10 @@
 > 아니라 그 worktree의 `docs/HANDOFF.md`를 봐라.** 아래 §1~§12은 OWL/gUFO
 > 동치 보고 계층 작업(완료됨, 코드는 여전히 유효)의 기록으로 유지한다 —
 > `conceptgate/cg_owl.py`를 건드릴 때만 다시 참조하면 된다.
+>
+> **새 실험을 시작하기 전에 `docs/EXPERIMENT_METHODOLOGY.md`를 읽어라** —
+> 동결/운영로그 분리, 실험 폴더 규약, provenance 계약, worktree 격리,
+> 비-git 감사본, 교훈 승격, 독립 재현 검증 7개 규칙을 한 문서로 정리했다.
 
 > **먼저 이걸 하라**: 작업 시작 전 `verify-conceptgate` 스킬을 읽어라
 > (`.claude/skills/verify-conceptgate/SKILL.md`). 이 프로젝트의 반복 함정과 검증
