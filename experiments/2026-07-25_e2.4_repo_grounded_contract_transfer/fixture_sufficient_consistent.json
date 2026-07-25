@@ -19,27 +19,32 @@
   },
   "candidate_concepts": [
     {
-      "name": "이름속성_개념",
+      "name": "완제품유닛C",
       "features": [
         {
-          "feature": "이름",
-          "type": "essential_feature",
+          "feature": "구성부품",
+          "type": "structural_composition",
           "evidence_refs": [
-            "ev1"
+            "ev7"
           ]
+        },
+        {
+          "feature": "병식별자",
+          "type": "essential_feature",
+          "evidence_refs": []
         }
       ]
     }
   ],
   "evidence_items": [
     {
-      "evidence_id": "ev1",
-      "source_path": "conceptgate/concept_gate_v7.py",
+      "evidence_id": "ev7",
+      "source_path": "conceptgate/cg_partwhole.py",
       "source_kind": "code",
-      "locator": "lines 279-301 (SemanticTypeInference.infer classmethod)",
-      "text": "    def infer(cls, feature, evidence, claim) -> TypeInferenceResult:\n        fn = feature.lower()\n        ec = f\"{evidence} {claim}\".lower()\n\n        if cls._has_exc(fn):\n            return TypeInferenceResult(FeatureType.ESSENTIAL, False, [], \"feature_exception\")\n\n        ft, fm = cls._scan(fn)\n        if ft is not None:\n            if cls._has_exc(ec):\n                return TypeInferenceResult(ft, True, fm, \"ambiguous_exception_vs_combo\")\n            return TypeInferenceResult(ft, False, fm, \"feature_combo\")\n\n        if cls._has_exc(ec):\n            return TypeInferenceResult(FeatureType.ESSENTIAL, False, [], \"evidence_exception\")\n\n        # [v6.2 변경] evidence-only contextual → WEAK_CONTEXT_WARNING\n        et, em = cls._scan(ec)\n        if et is not None:\n            return TypeInferenceResult(et, False, em, \"evidence_contextual_weak\",\n                                       is_weak_warning=True)\n\n        return TypeInferenceResult(FeatureType.ESSENTIAL, False, [], \"clean\")",
-      "text_sha256": "f5639ebfc8c0f492d01fb2597d670ffeac2d7ac33d0ddac9ff99a57b2770ec62",
-      "extraction_note": "The infer() method's own documented decision rule: if a feature name/evidence matches no contextual/locational/functional/social/structural marker (COMBOS/SINGLE_STRONG/exceptions), the 'clean' fallback at line 301 explicitly returns FeatureType.ESSENTIAL. The feature name '이름' (a bare identifier attribute) matches none of the marker sets, so this rule's precondition genuinely applies -- direct_support for essential_feature, not circular vocabulary-definition text (unlike the discarded first draft of this fixture, which cited the enum definition itself and was correctly flagged as out_of_scope/circular by independent review)."
+      "locator": "line 37 (RELATION_HINT_TYPE dict entry)",
+      "text": "    \"component_of\":    \"structural_composition\",  # 구성요소-통합체 (has-a)",
+      "text_sha256": "5a4e6b9ff3cce7d8fef7389f4db685fbce89c193cec0c30e3b797ed686b86f4c",
+      "extraction_note": "Direct, explicit declarative mapping: component_of -> structural_composition. Unlike the discarded first two drafts of this fixture (circular FeatureType enum text; SemanticTypeInference.infer()'s procedural fallback rule, both rejected -- the enum by independent review as circular, the infer() rule by the CONTRACT_REPO smoke test as an inferential-step gap between 'how the algorithm decides' and 'this specific feature is thereby X'), this evidence is a bare declarative lookup-table entry with no algorithmic reasoning required: '구성부품' (component_of relation) maps directly and only to structural_composition, matching the concept's already-reported type exactly -- accept_report, not repair."
     }
   ],
   "server_response": {
