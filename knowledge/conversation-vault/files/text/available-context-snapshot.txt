@@ -1,0 +1,27 @@
+SOURCE COVERAGE SNAPSHOT
+Captured: 2026-07-26 Asia/Seoul
+
+AVAILABLE CONVERSATION MATERIAL
+- Project memory summary covering MCP isolation tests and the is-a/has-a boundary.
+- Supplied external conversation segment with message indices 330 through 363.
+- Current request: implement the agreed file-format canonical storage, symlink views,
+  Obsidian backlinks, typed edge graph, and subagent-assisted enrichment.
+
+AVAILABLE REPOSITORY MATERIAL
+- Local worktree: repo-e24-contract-design
+- Branch: codex/e2.4-contract-repo-design
+- Base commit reported by the prior session: 157c021
+- Read experiment source files for E2.2.1, E2.2.2, E2.2.3, E2.3, and E2.4.
+
+KNOWN COVERAGE LIMIT
+The product-provided context explicitly says that a longer external conversation was
+partly skipped. Neither the primary agent nor subagents can reconstruct messages that
+were not supplied. Therefore this vault is a provenance-bounded reconstruction, not
+a verbatim transcript of every historical message.
+
+NORMALIZATION POLICY
+- Preserve source coverage and uncertainty.
+- Separate design status from executed or verified status.
+- Treat experimental claims as bounded by their protocol labels.
+- Put semantic nodes in Markdown, machine indexes in JSON/JSONL/CSV, and derived
+  classifications in relative symlink views.

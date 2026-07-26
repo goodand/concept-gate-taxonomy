@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "principle": "Use tree placement for classification and typed edges only for non-hierarchical meaning.",
+  "relations": {
+    "is_a": {
+      "inverse": null,
+      "domain": ["concept"],
+      "range": ["concept"],
+      "definition": "The source concept is a subtype of the target concept."
+    },
+    "part_of": {
+      "inverse": "has_part",
+      "domain": ["source_record", "concept", "claim", "procedure", "experiment", "decision", "open_loop", "memory_card", "map_of_content"],
+      "range": ["project", "concept", "procedure", "source_record"],
+      "definition": "The source belongs to or composes the target."
+    },
+    "has_part": {
+      "inverse": "part_of",
+      "domain": ["project", "concept", "procedure", "source_record"],
+      "range": ["source_record", "concept", "claim", "procedure", "experiment", "decision", "open_loop", "memory_card", "map_of_content"],
+      "definition": "The target is a component or owned member of the source."
+    },
+    "derived_from": {
+      "inverse": null,
+      "domain": ["concept", "claim", "procedure", "experiment", "decision", "open_loop", "memory_card", "map_of_content"],
+      "range": ["source_record", "concept", "claim", "procedure", "experiment", "decision"],
+      "definition": "The source was distilled or constructed from the target."
+    },
+    "stated_in": {
+      "inverse": null,
+      "domain": ["concept", "claim", "decision"],
+      "range": ["source_record"],
+      "definition": "The target source explicitly states the source node."
+    },
+    "cites": {
+      "inverse": null,
+      "domain": ["source_record", "claim", "procedure", "experiment"],
+      "range": ["source_record"],
+      "definition": "The source explicitly references the target source record."
+    },
+    "supports": {
+      "inverse": null,
+      "domain": ["source_record", "claim", "experiment", "decision"],
+      "range": ["concept", "claim", "procedure", "experiment", "decision"],
+      "definition": "The source provides evidence or justification for the target."
+    },
+    "contradicts": {
+      "inverse": null,
+      "domain": ["source_record", "claim", "experiment"],
+      "range": ["claim", "experiment", "decision"],
+      "definition": "The source supplies incompatible evidence or a contrary result."
+    },
+    "addresses": {
+      "inverse": null,
+      "domain": ["source_record", "claim", "procedure", "experiment", "decision"],
+      "range": ["concept", "claim", "open_loop"],
+      "definition": "The source directly works on the target issue."
+    },
+    "partially_solves": {
+      "inverse": null,
+      "domain": ["source_record", "claim", "experiment"],
+      "range": ["claim", "open_loop"],
+      "definition": "The source resolves only a bounded part of the target."
+    },
+    "requires": {
+      "inverse": null,
+      "domain": ["procedure", "experiment", "open_loop"],
+      "range": ["concept", "procedure", "decision"],
+      "definition": "The source cannot be completed correctly without the target."
+    },
+    "precedes": {
+      "inverse": null,
+      "domain": ["procedure", "experiment"],
+      "range": ["procedure", "experiment"],
+      "definition": "The source must occur before the target in a workflow or experimental sequence."
+    },
+    "gates": {
+      "inverse": null,
+      "domain": ["concept", "claim", "procedure", "decision"],
+      "range": ["concept", "claim", "procedure", "experiment", "open_loop"],
+      "definition": "The source controls whether the target may proceed or be asserted."
+    },
+    "tests": {
+      "inverse": null,
+      "domain": ["experiment"],
+      "range": ["concept", "claim", "procedure", "decision"],
+      "definition": "The experiment evaluates the target."
+    },
+    "motivates": {
+      "inverse": null,
+      "domain": ["source_record", "claim", "experiment", "decision"],
+      "range": ["procedure", "experiment", "decision", "open_loop"],
+      "definition": "The source provides the reason to create or perform the target."
+    },
+    "generalizes": {
+      "inverse": null,
+      "domain": ["concept", "claim", "experiment"],
+      "range": ["concept", "claim", "experiment", "procedure"],
+      "definition": "The source extends the target beyond its earlier scope."
+    },
+    "refines": {
+      "inverse": null,
+      "domain": ["concept", "claim", "procedure", "experiment", "decision"],
+      "range": ["concept", "claim", "procedure", "experiment", "decision"],
+      "definition": "The source makes the target more precise without replacing its core intent."
+    },
+    "depends_on": {
+      "inverse": null,
+      "domain": ["concept", "claim", "procedure", "experiment", "decision", "open_loop", "memory_card", "map_of_content"],
+      "range": ["source_record", "project", "concept", "claim", "procedure", "experiment", "decision", "open_loop"],
+      "definition": "The source relies on the target's validity or availability."
+    },
+    "supersedes": {
+      "inverse": null,
+      "domain": ["claim", "procedure", "experiment", "decision"],
+      "range": ["claim", "procedure", "experiment", "decision"],
+      "definition": "The source replaces the target as the current authoritative version."
+    }
+  }
+}

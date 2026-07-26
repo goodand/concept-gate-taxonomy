@@ -1,0 +1,163 @@
+{"count": 1, "keyword": "20/20", "node_ids": ["exp-e2-2-2-invariant"], "normalized_keyword": "20/20"}
+{"count": 1, "keyword": "3/20", "node_ids": ["exp-e2-2-1-vocabulary"], "normalized_keyword": "3/20"}
+{"count": 1, "keyword": "A_ONLY", "node_ids": ["exp-e2-2-3-ablation"], "normalized_keyword": "a_only"}
+{"count": 2, "keyword": "A_REPO", "node_ids": ["exp-e2-4-repo-contract", "loop-e2-4-execution"], "normalized_keyword": "a_repo"}
+{"count": 1, "keyword": "abstain", "node_ids": ["proc-literature-first-research"], "normalized_keyword": "abstain"}
+{"count": 1, "keyword": "adaptive screening", "node_ids": ["exp-e2-3-generalization"], "normalized_keyword": "adaptive screening"}
+{"count": 1, "keyword": "as-of date", "node_ids": ["concept-problem-status-claim"], "normalized_keyword": "as-of date"}
+{"count": 1, "keyword": "atomic notes", "node_ids": ["proc-vault-ingestion"], "normalized_keyword": "atomic notes"}
+{"count": 1, "keyword": "B_ONLY", "node_ids": ["exp-e2-2-3-ablation"], "normalized_keyword": "b_only"}
+{"count": 1, "keyword": "backlink index", "node_ids": ["concept-typed-semantic-edge"], "normalized_keyword": "backlink index"}
+{"count": 1, "keyword": "C_ONLY", "node_ids": ["exp-e2-2-3-ablation"], "normalized_keyword": "c_only"}
+{"count": 1, "keyword": "canonical file", "node_ids": ["concept-symlink-classification-view"], "normalized_keyword": "canonical file"}
+{"count": 1, "keyword": "canonical home", "node_ids": ["mem-vault-operating-rule"], "normalized_keyword": "canonical home"}
+{"count": 2, "keyword": "canonical storage", "node_ids": ["dec-vault-storage-graph", "moc-vault-root"], "normalized_keyword": "canonical storage"}
+{"count": 1, "keyword": "claim abstain repair", "node_ids": ["concept-abstain-repair-contract"], "normalized_keyword": "claim abstain repair"}
+{"count": 1, "keyword": "classification view", "node_ids": ["concept-symlink-classification-view"], "normalized_keyword": "classification view"}
+{"count": 2, "keyword": "cold context", "node_ids": ["concept-context-isolation", "loop-e2-4-execution"], "normalized_keyword": "cold context"}
+{"count": 2, "keyword": "commit provenance", "node_ids": ["concept-repo-derived-evidence", "dec-repo-evidence-source"], "normalized_keyword": "commit provenance"}
+{"count": 1, "keyword": "complete state", "node_ids": ["exp-e2-2-2-invariant"], "normalized_keyword": "complete state"}
+{"count": 1, "keyword": "complete-state contract", "node_ids": ["concept-complete-state-contract"], "normalized_keyword": "complete-state contract"}
+{"count": 2, "keyword": "concept-gate-taxonomy", "node_ids": ["project-ontology-reasoner-mcp", "src-repo-experiment-files-2026-07"], "normalized_keyword": "concept-gate-taxonomy"}
+{"count": 1, "keyword": "conflicting evidence", "node_ids": ["concept-evidence-sufficiency"], "normalized_keyword": "conflicting evidence"}
+{"count": 1, "keyword": "context contamination", "node_ids": ["concept-context-isolation"], "normalized_keyword": "context contamination"}
+{"count": 1, "keyword": "context coverage", "node_ids": ["src-conversation-context-2026-07"], "normalized_keyword": "context coverage"}
+{"count": 1, "keyword": "contextual_usage", "node_ids": ["concept-feature-type-vocabulary"], "normalized_keyword": "contextual_usage"}
+{"count": 2, "keyword": "CONTRACT_REPO", "node_ids": ["exp-e2-4-repo-contract", "loop-e2-4-execution"], "normalized_keyword": "contract_repo"}
+{"count": 2, "keyword": "CONTROL_REPO", "node_ids": ["exp-e2-4-repo-contract", "loop-e2-4-execution"], "normalized_keyword": "control_repo"}
+{"count": 1, "keyword": "conversation provenance", "node_ids": ["src-conversation-context-2026-07"], "normalized_keyword": "conversation provenance"}
+{"count": 1, "keyword": "date-bound claim", "node_ids": ["claim-open-status-date-bound"], "normalized_keyword": "date-bound claim"}
+{"count": 1, "keyword": "decision schema", "node_ids": ["src-repo-experiment-files-2026-07"], "normalized_keyword": "decision schema"}
+{"count": 1, "keyword": "decoy resistance", "node_ids": ["exp-e2-3-generalization"], "normalized_keyword": "decoy resistance"}
+{"count": 2, "keyword": "design only", "node_ids": ["claim-e2-4-design-only", "exp-e2-4-repo-contract"], "normalized_keyword": "design only"}
+{"count": 1, "keyword": "destructive repair", "node_ids": ["concept-complete-state-contract"], "normalized_keyword": "destructive repair"}
+{"count": 1, "keyword": "deterministic scorer", "node_ids": ["loop-e2-4-scorer-fixtures"], "normalized_keyword": "deterministic scorer"}
+{"count": 1, "keyword": "direct support", "node_ids": ["concept-evidence-sufficiency"], "normalized_keyword": "direct support"}
+{"count": 1, "keyword": "directed positive control", "node_ids": ["exp-e2-2-1-vocabulary"], "normalized_keyword": "directed positive control"}
+{"count": 1, "keyword": "domain range validation", "node_ids": ["concept-typed-semantic-edge"], "normalized_keyword": "domain range validation"}
+{"count": 1, "keyword": "E2 experiments", "node_ids": ["src-conversation-context-2026-07"], "normalized_keyword": "e2 experiments"}
+{"count": 1, "keyword": "E2 progression", "node_ids": ["mem-experiment-progression"], "normalized_keyword": "e2 progression"}
+{"count": 1, "keyword": "E2.2.1", "node_ids": ["exp-e2-2-1-vocabulary"], "normalized_keyword": "e2.2.1"}
+{"count": 1, "keyword": "E2.2.2", "node_ids": ["exp-e2-2-2-invariant"], "normalized_keyword": "e2.2.2"}
+{"count": 1, "keyword": "E2.2.3", "node_ids": ["exp-e2-2-3-ablation"], "normalized_keyword": "e2.2.3"}
+{"count": 1, "keyword": "E2.3", "node_ids": ["exp-e2-3-generalization"], "normalized_keyword": "e2.3"}
+{"count": 1, "keyword": "E2.3 result", "node_ids": ["claim-global-invariant-generalizes"], "normalized_keyword": "e2.3 result"}
+{"count": 3, "keyword": "E2.4", "node_ids": ["dec-e2-screening-policy", "dec-repo-evidence-source", "exp-e2-4-repo-contract"], "normalized_keyword": "e2.4"}
+{"count": 1, "keyword": "E2.4 execution", "node_ids": ["loop-e2-4-execution"], "normalized_keyword": "e2.4 execution"}
+{"count": 1, "keyword": "E2.4 fixtures", "node_ids": ["loop-e2-4-scorer-fixtures"], "normalized_keyword": "e2.4 fixtures"}
+{"count": 1, "keyword": "E2.4 status", "node_ids": ["claim-e2-4-design-only"], "normalized_keyword": "e2.4 status"}
+{"count": 1, "keyword": "edge review", "node_ids": ["proc-vault-ingestion"], "normalized_keyword": "edge review"}
+{"count": 1, "keyword": "essential_feature", "node_ids": ["concept-feature-type-vocabulary"], "normalized_keyword": "essential_feature"}
+{"count": 2, "keyword": "evidence audit", "node_ids": ["concept-evidence-sufficiency", "proc-evidence-first-decision"], "normalized_keyword": "evidence audit"}
+{"count": 2, "keyword": "evidence contract", "node_ids": ["mem-experiment-progression", "moc-ontology-reasoner-mcp"], "normalized_keyword": "evidence contract"}
+{"count": 1, "keyword": "evidence packet", "node_ids": ["concept-repo-derived-evidence"], "normalized_keyword": "evidence packet"}
+{"count": 1, "keyword": "evidence sufficiency", "node_ids": ["concept-evidence-sufficiency"], "normalized_keyword": "evidence sufficiency"}
+{"count": 1, "keyword": "evidence-first", "node_ids": ["proc-evidence-first-decision"], "normalized_keyword": "evidence-first"}
+{"count": 1, "keyword": "exact excerpt", "node_ids": ["concept-repo-derived-evidence"], "normalized_keyword": "exact excerpt"}
+{"count": 1, "keyword": "experiment progression", "node_ids": ["moc-ontology-reasoner-mcp"], "normalized_keyword": "experiment progression"}
+{"count": 1, "keyword": "experiment README", "node_ids": ["src-repo-experiment-files-2026-07"], "normalized_keyword": "experiment readme"}
+{"count": 1, "keyword": "faceted navigation", "node_ids": ["concept-symlink-classification-view"], "normalized_keyword": "faceted navigation"}
+{"count": 1, "keyword": "factor sufficiency", "node_ids": ["exp-e2-2-3-ablation"], "normalized_keyword": "factor sufficiency"}
+{"count": 1, "keyword": "feature identity", "node_ids": ["concept-global-feature-type-invariant"], "normalized_keyword": "feature identity"}
+{"count": 1, "keyword": "FeatureType", "node_ids": ["concept-feature-type-vocabulary"], "normalized_keyword": "featuretype"}
+{"count": 1, "keyword": "final decision", "node_ids": ["proc-evidence-first-decision"], "normalized_keyword": "final decision"}
+{"count": 2, "keyword": "format-first storage", "node_ids": ["dec-vault-storage-graph", "moc-vault-architecture"], "normalized_keyword": "format-first storage"}
+{"count": 1, "keyword": "full-set preservation", "node_ids": ["concept-complete-state-contract"], "normalized_keyword": "full-set preservation"}
+{"count": 1, "keyword": "functional", "node_ids": ["concept-feature-type-vocabulary"], "normalized_keyword": "functional"}
+{"count": 1, "keyword": "generalization claim", "node_ids": ["claim-global-invariant-generalizes"], "normalized_keyword": "generalization claim"}
+{"count": 1, "keyword": "global consistency", "node_ids": ["exp-e2-2-2-invariant"], "normalized_keyword": "global consistency"}
+{"count": 1, "keyword": "global consistency rule", "node_ids": ["concept-global-feature-type-invariant"], "normalized_keyword": "global consistency rule"}
+{"count": 1, "keyword": "global feature-type invariant", "node_ids": ["concept-global-feature-type-invariant"], "normalized_keyword": "global feature-type invariant"}
+{"count": 2, "keyword": "global invariant", "node_ids": ["claim-global-invariant-generalizes", "mem-experiment-progression"], "normalized_keyword": "global invariant"}
+{"count": 1, "keyword": "global invariant generalization", "node_ids": ["exp-e2-3-generalization"], "normalized_keyword": "global invariant generalization"}
+{"count": 1, "keyword": "global state normalization", "node_ids": ["concept-global-feature-type-invariant"], "normalized_keyword": "global state normalization"}
+{"count": 1, "keyword": "goodand/concept-gate-taxonomy", "node_ids": ["dec-repo-evidence-source"], "normalized_keyword": "goodand/concept-gate-taxonomy"}
+{"count": 2, "keyword": "hallucination mitigation", "node_ids": ["claim-open-status-date-bound", "concept-literature-first"], "normalized_keyword": "hallucination mitigation"}
+{"count": 1, "keyword": "has-a", "node_ids": ["concept-is-a-vs-part-of"], "normalized_keyword": "has-a"}
+{"count": 1, "keyword": "hidden oracle", "node_ids": ["loop-e2-4-scorer-fixtures"], "normalized_keyword": "hidden oracle"}
+{"count": 1, "keyword": "invariant check", "node_ids": ["proc-evidence-first-decision"], "normalized_keyword": "invariant check"}
+{"count": 1, "keyword": "is-a", "node_ids": ["concept-is-a-vs-part-of"], "normalized_keyword": "is-a"}
+{"count": 1, "keyword": "keyword normalization", "node_ids": ["proc-vault-ingestion"], "normalized_keyword": "keyword normalization"}
+{"count": 1, "keyword": "knowledge ingestion", "node_ids": ["moc-vault-architecture"], "normalized_keyword": "knowledge ingestion"}
+{"count": 1, "keyword": "knowledge vault", "node_ids": ["moc-vault-root"], "normalized_keyword": "knowledge vault"}
+{"count": 1, "keyword": "literature evidence", "node_ids": ["claim-open-status-date-bound"], "normalized_keyword": "literature evidence"}
+{"count": 1, "keyword": "literature search", "node_ids": ["proc-literature-first-research"], "normalized_keyword": "literature search"}
+{"count": 1, "keyword": "literature-first", "node_ids": ["concept-literature-first"], "normalized_keyword": "literature-first"}
+{"count": 1, "keyword": "literature-first workflow", "node_ids": ["proc-literature-first-research"], "normalized_keyword": "literature-first workflow"}
+{"count": 1, "keyword": "locational", "node_ids": ["concept-feature-type-vocabulary"], "normalized_keyword": "locational"}
+{"count": 1, "keyword": "mandatory abstention", "node_ids": ["concept-abstain-repair-contract"], "normalized_keyword": "mandatory abstention"}
+{"count": 1, "keyword": "MCP", "node_ids": ["project-ontology-reasoner-mcp"], "normalized_keyword": "mcp"}
+{"count": 1, "keyword": "MCP context isolation", "node_ids": ["concept-context-isolation"], "normalized_keyword": "mcp context isolation"}
+{"count": 1, "keyword": "MCP evaluation", "node_ids": ["moc-ontology-reasoner-mcp"], "normalized_keyword": "mcp evaluation"}
+{"count": 1, "keyword": "MCP isolation", "node_ids": ["src-conversation-context-2026-07"], "normalized_keyword": "mcp isolation"}
+{"count": 2, "keyword": "memory card", "node_ids": ["mem-experiment-progression", "mem-vault-operating-rule"], "normalized_keyword": "memory card"}
+{"count": 1, "keyword": "missing evidence", "node_ids": ["concept-abstain-repair-contract"], "normalized_keyword": "missing evidence"}
+{"count": 1, "keyword": "missing scorer", "node_ids": ["claim-e2-4-design-only"], "normalized_keyword": "missing scorer"}
+{"count": 1, "keyword": "missing trials", "node_ids": ["claim-e2-4-design-only"], "normalized_keyword": "missing trials"}
+{"count": 1, "keyword": "MixRig", "node_ids": ["concept-global-feature-type-invariant"], "normalized_keyword": "mixrig"}
+{"count": 2, "keyword": "MOC", "node_ids": ["moc-ontology-reasoner-mcp", "moc-vault-architecture"], "normalized_keyword": "moc"}
+{"count": 1, "keyword": "N=10", "node_ids": ["dec-e2-screening-policy"], "normalized_keyword": "n=10"}
+{"count": 1, "keyword": "next experiment", "node_ids": ["mem-experiment-progression"], "normalized_keyword": "next experiment"}
+{"count": 1, "keyword": "no duplication", "node_ids": ["concept-symlink-classification-view"], "normalized_keyword": "no duplication"}
+{"count": 1, "keyword": "not executed", "node_ids": ["claim-e2-4-design-only"], "normalized_keyword": "not executed"}
+{"count": 1, "keyword": "Obsidian backlink", "node_ids": ["moc-vault-root"], "normalized_keyword": "obsidian backlink"}
+{"count": 1, "keyword": "Obsidian backlinks", "node_ids": ["dec-vault-storage-graph"], "normalized_keyword": "obsidian backlinks"}
+{"count": 1, "keyword": "OFAT ablation", "node_ids": ["exp-e2-2-3-ablation"], "normalized_keyword": "ofat ablation"}
+{"count": 2, "keyword": "ontology", "node_ids": ["moc-ontology-reasoner-mcp", "project-ontology-reasoner-mcp"], "normalized_keyword": "ontology"}
+{"count": 1, "keyword": "open", "node_ids": ["concept-problem-status-claim"], "normalized_keyword": "open"}
+{"count": 1, "keyword": "open problem", "node_ids": ["concept-literature-first"], "normalized_keyword": "open problem"}
+{"count": 1, "keyword": "open problem database", "node_ids": ["proc-literature-first-research"], "normalized_keyword": "open problem database"}
+{"count": 1, "keyword": "open problem status", "node_ids": ["claim-open-status-date-bound"], "normalized_keyword": "open problem status"}
+{"count": 1, "keyword": "packet-only", "node_ids": ["concept-evidence-sufficiency"], "normalized_keyword": "packet-only"}
+{"count": 1, "keyword": "paraphrase invariance", "node_ids": ["exp-e2-3-generalization"], "normalized_keyword": "paraphrase invariance"}
+{"count": 1, "keyword": "part-of", "node_ids": ["concept-is-a-vs-part-of"], "normalized_keyword": "part-of"}
+{"count": 1, "keyword": "problem status", "node_ids": ["concept-problem-status-claim"], "normalized_keyword": "problem status"}
+{"count": 1, "keyword": "protocol bounded", "node_ids": ["claim-global-invariant-generalizes"], "normalized_keyword": "protocol bounded"}
+{"count": 1, "keyword": "provenance validator", "node_ids": ["loop-e2-4-scorer-fixtures"], "normalized_keyword": "provenance validator"}
+{"count": 1, "keyword": "reasoner", "node_ids": ["project-ontology-reasoner-mcp"], "normalized_keyword": "reasoner"}
+{"count": 1, "keyword": "reasoning contract", "node_ids": ["concept-abstain-repair-contract"], "normalized_keyword": "reasoning contract"}
+{"count": 1, "keyword": "relative symlink", "node_ids": ["concept-symlink-classification-view"], "normalized_keyword": "relative symlink"}
+{"count": 1, "keyword": "repairability", "node_ids": ["concept-abstain-repair-contract"], "normalized_keyword": "repairability"}
+{"count": 1, "keyword": "repaired_concepts", "node_ids": ["concept-complete-state-contract"], "normalized_keyword": "repaired_concepts"}
+{"count": 1, "keyword": "repo provenance", "node_ids": ["src-repo-experiment-files-2026-07"], "normalized_keyword": "repo provenance"}
+{"count": 1, "keyword": "repo-derived evidence", "node_ids": ["concept-repo-derived-evidence"], "normalized_keyword": "repo-derived evidence"}
+{"count": 1, "keyword": "repo-grounded evidence", "node_ids": ["exp-e2-4-repo-contract"], "normalized_keyword": "repo-grounded evidence"}
+{"count": 1, "keyword": "repository-only evidence", "node_ids": ["dec-repo-evidence-source"], "normalized_keyword": "repository-only evidence"}
+{"count": 1, "keyword": "research context", "node_ids": ["concept-literature-first"], "normalized_keyword": "research context"}
+{"count": 1, "keyword": "resolved", "node_ids": ["concept-problem-status-claim"], "normalized_keyword": "resolved"}
+{"count": 1, "keyword": "retrieval", "node_ids": ["concept-literature-first"], "normalized_keyword": "retrieval"}
+{"count": 1, "keyword": "schema minItems", "node_ids": ["exp-e2-2-2-invariant"], "normalized_keyword": "schema minitems"}
+{"count": 1, "keyword": "screened not confirmed", "node_ids": ["claim-global-invariant-generalizes"], "normalized_keyword": "screened not confirmed"}
+{"count": 1, "keyword": "screening", "node_ids": ["dec-e2-screening-policy"], "normalized_keyword": "screening"}
+{"count": 1, "keyword": "semantic authority", "node_ids": ["mem-vault-operating-rule"], "normalized_keyword": "semantic authority"}
+{"count": 1, "keyword": "semantic constraints", "node_ids": ["loop-e2-4-scorer-fixtures"], "normalized_keyword": "semantic constraints"}
+{"count": 2, "keyword": "semantic graph", "node_ids": ["concept-typed-semantic-edge", "moc-vault-architecture"], "normalized_keyword": "semantic graph"}
+{"count": 1, "keyword": "semantic obligation", "node_ids": ["project-ontology-reasoner-mcp"], "normalized_keyword": "semantic obligation"}
+{"count": 1, "keyword": "social_treatment", "node_ids": ["concept-feature-type-vocabulary"], "normalized_keyword": "social_treatment"}
+{"count": 1, "keyword": "solution attempt gate", "node_ids": ["proc-literature-first-research"], "normalized_keyword": "solution attempt gate"}
+{"count": 2, "keyword": "source confinement", "node_ids": ["concept-context-isolation", "concept-repo-derived-evidence"], "normalized_keyword": "source confinement"}
+{"count": 1, "keyword": "source policy", "node_ids": ["dec-repo-evidence-source"], "normalized_keyword": "source policy"}
+{"count": 1, "keyword": "stable ID", "node_ids": ["concept-typed-semantic-edge"], "normalized_keyword": "stable id"}
+{"count": 1, "keyword": "structural composition", "node_ids": ["concept-is-a-vs-part-of"], "normalized_keyword": "structural composition"}
+{"count": 1, "keyword": "structural preservation", "node_ids": ["concept-complete-state-contract"], "normalized_keyword": "structural preservation"}
+{"count": 2, "keyword": "structural_composition", "node_ids": ["concept-feature-type-vocabulary", "exp-e2-2-1-vocabulary"], "normalized_keyword": "structural_composition"}
+{"count": 1, "keyword": "subagent enrichment", "node_ids": ["proc-vault-ingestion"], "normalized_keyword": "subagent enrichment"}
+{"count": 1, "keyword": "sufficiency gate", "node_ids": ["proc-evidence-first-decision"], "normalized_keyword": "sufficiency gate"}
+{"count": 1, "keyword": "symlink classification", "node_ids": ["mem-vault-operating-rule"], "normalized_keyword": "symlink classification"}
+{"count": 1, "keyword": "symlink view", "node_ids": ["moc-vault-root"], "normalized_keyword": "symlink view"}
+{"count": 1, "keyword": "symlink views", "node_ids": ["dec-vault-storage-graph"], "normalized_keyword": "symlink views"}
+{"count": 1, "keyword": "taxonomy DAG", "node_ids": ["concept-is-a-vs-part-of"], "normalized_keyword": "taxonomy dag"}
+{"count": 1, "keyword": "threshold 0.90", "node_ids": ["dec-e2-screening-policy"], "normalized_keyword": "threshold 0.90"}
+{"count": 1, "keyword": "tool output separation", "node_ids": ["concept-context-isolation"], "normalized_keyword": "tool output separation"}
+{"count": 1, "keyword": "topology generalization", "node_ids": ["exp-e2-3-generalization"], "normalized_keyword": "topology generalization"}
+{"count": 1, "keyword": "tree classification", "node_ids": ["moc-vault-architecture"], "normalized_keyword": "tree classification"}
+{"count": 1, "keyword": "trial data", "node_ids": ["src-repo-experiment-files-2026-07"], "normalized_keyword": "trial data"}
+{"count": 1, "keyword": "two-failure futility stop", "node_ids": ["dec-e2-screening-policy"], "normalized_keyword": "two-failure futility stop"}
+{"count": 2, "keyword": "typed edge", "node_ids": ["concept-typed-semantic-edge", "moc-vault-root"], "normalized_keyword": "typed edge"}
+{"count": 1, "keyword": "typed edge ledger", "node_ids": ["dec-vault-storage-graph"], "normalized_keyword": "typed edge ledger"}
+{"count": 1, "keyword": "typed graph", "node_ids": ["mem-vault-operating-rule"], "normalized_keyword": "typed graph"}
+{"count": 1, "keyword": "uncertain", "node_ids": ["concept-problem-status-claim"], "normalized_keyword": "uncertain"}
+{"count": 1, "keyword": "uncertainty", "node_ids": ["claim-open-status-date-bound"], "normalized_keyword": "uncertainty"}
+{"count": 1, "keyword": "vault architecture", "node_ids": ["src-conversation-context-2026-07"], "normalized_keyword": "vault architecture"}
+{"count": 1, "keyword": "vault ingestion", "node_ids": ["proc-vault-ingestion"], "normalized_keyword": "vault ingestion"}
+{"count": 1, "keyword": "vocabulary exposure", "node_ids": ["exp-e2-2-1-vocabulary"], "normalized_keyword": "vocabulary exposure"}

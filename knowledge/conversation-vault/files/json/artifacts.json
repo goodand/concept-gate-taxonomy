@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "artifacts": [
+    {
+      "id": "artifact-source-coverage-snapshot",
+      "title": "Available Context Snapshot",
+      "file": "files/text/available-context-snapshot.txt",
+      "summary": "현재 대화·repo source coverage와 복원 한계를 기록한다.",
+      "keywords": ["source coverage", "provenance", "context limit"],
+      "generated": false
+    },
+    {
+      "id": "artifact-conversation-extract",
+      "title": "Conversation Context Extract",
+      "file": "files/json/conversation_extract.json",
+      "summary": "현재 제공된 프로젝트 대화 흐름을 구조화 event로 저장한다.",
+      "keywords": ["conversation extract", "timeline", "project context"],
+      "generated": false
+    },
+    {
+      "id": "artifact-node-types",
+      "title": "Node Type Registry",
+      "file": "files/json/node_types.json",
+      "summary": "semantic node type과 허용 status를 정의한다.",
+      "keywords": ["node type", "ontology", "routing"],
+      "generated": false
+    },
+    {
+      "id": "artifact-relation-types",
+      "title": "Relation Type Registry",
+      "file": "files/json/relation_types.json",
+      "summary": "typed edge relation의 정의와 domain/range를 제한한다.",
+      "keywords": ["relation type", "domain", "range", "typed edge"],
+      "generated": false
+    },
+    {
+      "id": "artifact-manifest-schema",
+      "title": "Manifest JSON Schema",
+      "file": "files/json/manifest.schema.json",
+      "summary": "manifest JSONL record의 구조를 정의한다.",
+      "keywords": ["manifest", "JSON Schema", "sha256"],
+      "generated": false
+    },
+    {
+      "id": "artifact-edge-schema",
+      "title": "Typed Edge JSON Schema",
+      "file": "files/json/edge.schema.json",
+      "summary": "edge ID, endpoint, relation, evidence, rationale의 구조를 정의한다.",
+      "keywords": ["edge schema", "JSON Schema", "semantic graph"],
+      "generated": false
+    },
+    {
+      "id": "artifact-registry",
+      "title": "Artifact Registry",
+      "file": "files/json/artifacts.json",
+      "summary": "semantic node가 아닌 canonical·generated 파일의 stable metadata를 보존한다.",
+      "keywords": ["artifact registry", "stable ID", "file metadata"],
+      "generated": false
+    },
+    {
+      "id": "artifact-edge-ledger",
+      "title": "Accepted Typed Edge Ledger",
+      "file": "files/jsonl/edges.jsonl",
+      "summary": "main-agent 검토를 통과한 비계층 의미 관계의 권위 원장이다.",
+      "keywords": ["edges.jsonl", "accepted edge", "semantic authority"],
+      "generated": false
+    },
+    {
+      "id": "artifact-build-script",
+      "title": "Vault Builder and Validator",
+      "file": "files/python/build_vault.py",
+      "summary": "manifest, keyword graph, backlink index, symlink views를 만들고 무결성을 검사한다.",
+      "keywords": ["builder", "validator", "symlink", "backlink"],
+      "generated": false
+    },
+    {
+      "id": "artifact-build-requirements",
+      "title": "Vault Builder Requirements",
+      "file": "files/text/requirements.txt",
+      "summary": "vault builder의 Python dependency를 기록한다.",
+      "keywords": ["PyYAML", "requirements", "Python"],
+      "generated": false
+    },
+    {
+      "id": "artifact-backlink-index",
+      "title": "Generated Backlink Index",
+      "file": "files/markdown/backlink-index.md",
+      "summary": "typed edge의 inbound/outbound 관계를 Obsidian 링크로 투영한다.",
+      "keywords": ["backlink index", "generated view", "Obsidian"],
+      "generated": true
+    },
+    {
+      "id": "artifact-keyword-index",
+      "title": "Generated Keyword Index",
+      "file": "files/jsonl/keyword_index.jsonl",
+      "summary": "정규화 keyword와 연결 node ID를 검색 가능한 JSONL로 제공한다.",
+      "keywords": ["keyword index", "JSONL", "search"],
+      "generated": true
+    },
+    {
+      "id": "artifact-node-table",
+      "title": "Generated Node Table",
+      "file": "files/csv/nodes.csv",
+      "summary": "semantic node를 분석하기 쉬운 CSV table로 투영한다.",
+      "keywords": ["node table", "CSV", "search"],
+      "generated": true
+    },
+    {
+      "id": "artifact-edge-table",
+      "title": "Generated Edge Table",
+      "file": "files/csv/edges.csv",
+      "summary": "typed edge ledger를 분석하기 쉬운 CSV table로 투영한다.",
+      "keywords": ["edge table", "CSV", "graph"],
+      "generated": true
+    },
+    {
+      "id": "artifact-keyword-edge-table",
+      "title": "Generated Keyword Edge Table",
+      "file": "files/csv/keyword_edges.csv",
+      "summary": "subagent·main-agent가 선정한 keyword의 파일 공출현과 explicit edge 연결 강도를 집계한다.",
+      "keywords": ["keyword graph", "cooccurrence", "CSV", "graph enrichment"],
+      "generated": true
+    }
+  ]
+}

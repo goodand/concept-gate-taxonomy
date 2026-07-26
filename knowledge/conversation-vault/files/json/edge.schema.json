@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Conversation Vault Typed Edge",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "from", "relation", "to", "confidence", "evidence", "rationale"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "from": {"type": "string", "minLength": 1},
+    "relation": {"type": "string", "minLength": 1},
+    "to": {"type": "string", "minLength": 1},
+    "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+    "evidence": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "rationale": {"type": "string", "minLength": 1},
+    "proposed_by": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "review_status": {"type": "string", "enum": ["accepted", "rejected", "provisional"]}
+  }
+}

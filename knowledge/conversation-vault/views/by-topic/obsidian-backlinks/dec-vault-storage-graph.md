@@ -1,0 +1,1 @@
+../../../files/markdown/dec-vault-storage-graph.md

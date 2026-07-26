@@ -1,0 +1,1 @@
+../../../files/markdown/concept-global-feature-type-invariant.md

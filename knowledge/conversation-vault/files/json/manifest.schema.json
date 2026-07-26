@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Conversation Vault Manifest Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "record_kind", "file", "format", "sha256", "summary", "keywords"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "record_kind": {"type": "string", "enum": ["semantic_node", "artifact"]},
+    "node_type": {"type": ["string", "null"]},
+    "title": {"type": ["string", "null"]},
+    "status": {"type": ["string", "null"]},
+    "file": {"type": "string", "minLength": 1},
+    "format": {"type": "string", "minLength": 1},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "summary": {"type": "string"},
+    "keywords": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "source_scope": {
+      "type": "array",
+      "items": {"type": "string"},
+      "uniqueItems": true
+    },
+    "generated": {"type": "boolean"}
+  }
+}

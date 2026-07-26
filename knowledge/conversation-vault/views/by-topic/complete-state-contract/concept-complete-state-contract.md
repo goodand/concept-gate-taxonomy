@@ -1,0 +1,1 @@
+../../../files/markdown/concept-complete-state-contract.md

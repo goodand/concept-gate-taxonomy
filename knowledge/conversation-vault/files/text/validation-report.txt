@@ -1,0 +1,12 @@
+PASS
+semantic_nodes=36
+typed_edges=105
+registered_artifacts=15
+json=valid
+wikilinks=resolved
+symlinks=resolved_and_internal
+relation_domain_range=valid
+relation_cycles=absent
+duplicate_edge_triples=absent
+manifest_hashes=valid
+canonical_storage=files_only

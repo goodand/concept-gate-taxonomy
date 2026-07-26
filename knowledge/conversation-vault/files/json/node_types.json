@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "principle": "Directories classify storage format; semantic node types classify meaning.",
+  "node_types": {
+    "source_record": {
+      "definition": "A preserved input or provenance record before downstream interpretation.",
+      "allowed_statuses": ["captured", "partial", "superseded"]
+    },
+    "project": {
+      "definition": "A durable scope that owns goals, artifacts, experiments, and decisions.",
+      "allowed_statuses": ["active", "paused", "completed"]
+    },
+    "concept": {
+      "definition": "A canonical term or idea used across claims, procedures, and experiments.",
+      "allowed_statuses": ["active", "deprecated"]
+    },
+    "claim": {
+      "definition": "A proposition whose support, conflict, date, or confidence can be evaluated.",
+      "allowed_statuses": ["supported", "provisional", "uncertain", "rejected", "superseded"]
+    },
+    "procedure": {
+      "definition": "A reusable workflow, contract, gate, or evaluation rule.",
+      "allowed_statuses": ["active", "draft", "deprecated"]
+    },
+    "experiment": {
+      "definition": "A preregistered, executed, or designed empirical evaluation.",
+      "allowed_statuses": ["completed", "screened", "designed", "planned", "stopped"]
+    },
+    "decision": {
+      "definition": "An explicit selection among alternatives, with rationale and current validity.",
+      "allowed_statuses": ["active", "provisional", "superseded"]
+    },
+    "open_loop": {
+      "definition": "An unresolved task, question, or validation obligation.",
+      "allowed_statuses": ["open", "blocked", "closed"]
+    },
+    "memory_card": {
+      "definition": "A compact durable memory derived from canonical nodes, not a new source of truth.",
+      "allowed_statuses": ["active", "superseded"]
+    },
+    "map_of_content": {
+      "definition": "A navigational view that links canonical notes without owning their facts.",
+      "allowed_statuses": ["active"]
+    }
+  }
+}
