@@ -6,7 +6,7 @@ working from another PC, workspace, or session.
 When a request depends on project history, experiment decisions, ontology
 terminology, or prior evidence, read these files before acting:
 
-1. `knowledge/conversation-vault/HANDOFF.md`
+1. `knowledge/CONVERSATION_VAULT_HANDOFF.md`
 2. `knowledge/conversation-vault/files/markdown/vault-readme.md`
 3. `knowledge/conversation-vault/files/markdown/moc-ontology-reasoner-mcp.md`
 4. `knowledge/conversation-vault/files/jsonl/manifest.jsonl`
@@ -33,4 +33,3 @@ To validate or regenerate the vault after editing canonical files:
 ```bash
 python3 knowledge/conversation-vault/scripts/build-vault.py --check
 ```
-

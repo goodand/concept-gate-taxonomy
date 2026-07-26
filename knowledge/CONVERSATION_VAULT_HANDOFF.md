@@ -13,7 +13,7 @@ symlink classification views.
 4. `files/jsonl/manifest.jsonl`
 5. `files/jsonl/edges.jsonl`
 6. `files/text/validation-report.txt`
-7. `../../docs/HANDOFF.md` for the live branch-specific E2 experiment state
+7. `../docs/HANDOFF.md` for the live branch-specific E2 experiment state
 
 ## Authority and status
 
@@ -47,4 +47,3 @@ creates duplicate authority.
 - Project: `goodand/concept-gate-taxonomy`
 - Base branch at publication: `codex/e2.4-contract-repo-design`
 - Vault validation result at publication: `PASS`
-
