@@ -1,6 +1,7 @@
 import hashlib
 import importlib.util
 import json
+import re
 from pathlib import Path
 
 
@@ -105,6 +106,46 @@ def test_server_response_is_reproducible_from_run_pipeline_input():
         observed = cert_core.run_and_certify(packet["run_pipeline_input"])
         expected = packet["server_response"]
         assert _project_server_response(observed, expected) == expected, path.name
+
+
+# Model-facing metadata must not name a decision/verdict or state an expectation.
+# `evidence_packet_schema.json` says hidden-oracle fields must not reach the model,
+# but extraction_note/locator ARE shipped inside evidence_items and so are model-facing.
+# fixture_conflicting.json once carried "CONTRACT_REPO's correct behavior is still to
+# abstain ... the expected contract_verdict is loosened to ..." in an extraction_note,
+# which handed the model its answer and invalidated that fixture's smoke result.
+# Bare "repair" is deliberately NOT listed: ev5's source commit genuinely discusses
+# "an available repair value", so the word is unavoidable in describing it.
+_VERDICT_TOKENS = (
+    "accept_report",
+    "abstain",
+    "sufficient_consistent",
+    "sufficient_repairable",
+    "insufficient_evidence",
+    "conflicting_evidence",
+    "out_of_scope",
+)
+_EXPECTATION_PHRASES = re.compile(
+    r"correct behavior|expected (contract_)?verdict|should abstain|hidden oracle|정답|기대 판정",
+    re.IGNORECASE,
+)
+
+
+def test_model_facing_metadata_does_not_leak_the_oracle():
+    for path in _fixture_paths():
+        packet = _load_json(path)
+        for item in packet["evidence_items"]:
+            for field in ("extraction_note", "locator"):
+                value = item.get(field, "")
+                leaked = [t for t in _VERDICT_TOKENS if t in value]
+                assert not leaked, (
+                    f"{path.name} {item['evidence_id']}.{field} names a decision/verdict "
+                    f"{leaked} -- this field is shipped to the model"
+                )
+                assert not _EXPECTATION_PHRASES.search(value), (
+                    f"{path.name} {item['evidence_id']}.{field} states an expected outcome "
+                    f"-- this field is shipped to the model"
+                )
 
 
 def test_sufficient_repairable_single_repair_yields_clean_pass():

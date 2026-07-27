@@ -52,7 +52,7 @@
       "locator": "commit 4017aff subject+body excerpt",
       "text": "E2.2's directed_repair_pc fixture\n(dir1_directed) failed 0/10 because the prompt/schema never exposed\nstructural_composition (or the other FeatureType vocabulary) as an available\nrepair value.",
       "text_sha256": "2fa372c697447141bbab3b6339f17034959f38c1732791b826c58a2dcb0640e4",
-      "extraction_note": "E2.2.1's design commit directly attributes the directed-PC failure to vocabulary non-exposure. NOTE (added after independent review, agent a8f54937bc27c7215): this is a causal/empirical claim about a debugging narrative, not a FeatureType/ontological classification claim -- the reviewer correctly flagged that ev5/ev6 conflict on a fact, not on rigidity/is-a-vs-has-a semantics. Kept as-is because it is still a genuine, real, directly-opposed pair of statements about the same referent, and CONTRACT_REPO's correct behavior is still to abstain rather than force a decision -- but the expected contract_verdict is loosened to 'abstain via insufficient_evidence, conflicting_evidence, or out_of_scope (any of the three)', not strictly 'conflicting_evidence', since reasonable graders can disagree on which of the three applies when the conflict is extra-ontological."
+      "extraction_note": "E2.2.1's design commit message. Attributes the directed-PC fixture's 0/10 failure to the prompt/schema not exposing structural_composition or the rest of the FeatureType vocabulary as an available repair value."
     },
     {
       "evidence_id": "ev6",
@@ -61,7 +61,7 @@
       "locator": "commit 559f61f subject+body excerpt",
       "text": "Root-cause analysis of E2.2.1's trial reports found the real\ngap was two unstated structural contracts, not vocabulary",
       "text_sha256": "0c6b91e35469494037585c479de6d63fea7d00320b003c3adc4feb9aa72ded12",
-      "extraction_note": "E2.2.2's design commit directly and explicitly states the real gap was 'not vocabulary' -- directly opposes ev5 on the same referent. Same caveat as ev5's note: this is a narrative/causal conflict, not a FeatureType-semantics conflict; see ev5's note for the full post-review reasoning."
+      "extraction_note": "E2.2.2's design commit message, one commit later than ev5. States that root-cause analysis of E2.2.1's trial reports found the real gap was two unstated structural contracts, not vocabulary -- addressing the same referent (the directed-PC failure cause) as ev5 and reaching the opposite attribution."
     }
   ],
   "server_response": {
