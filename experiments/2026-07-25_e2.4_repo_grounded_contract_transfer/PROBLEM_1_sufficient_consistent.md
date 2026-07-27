@@ -362,7 +362,7 @@ insufficient_evidence`.** 그러나 자세히 보면 evidence 자체의 문제�
    선택할 수 있다"는 한 문장을 스모크 트라이얼 프롬프트에 추가
    설명했다(트라이얼별 프롬프트에만 반영, `contract_prompt.md` 원본
    파일 자체는 아직 수정 안 함 — 원본 파일 개정 여부는 사용자 결정
-   필요, §7.7 참조).
+   필요, §17 참조. 2026-07-27 갱신: §17에서 정식 병합 완료).
 
 `test_protocol.py` 재실행: **3 passed** (필러 제거 후에도 구조/해시/
 재현성 전부 유지).
@@ -529,3 +529,186 @@ skills-catalog 정정은 사용자 승인 하에 진행(승인됨, 별도 실행
 거쳤던 독립 리뷰(fresh subagent) + smoke test(N≥3)는 아직 실행되지
 않았다. `sufficient_repairable`을 다시 "해결됨"으로 표시하려면 같은
 절차를 거쳐야 한다.
+
+## 13. 4차 독립 리뷰 (2026-07-27, 다른 세션이 커밋한 c0e3bbb에 대한 재검증)
+
+§12의 재구성판(`낫`/`칼`/`철`, `ev4`=R6b 테스트 docstring 인용)에 대해
+독립 리뷰를 실제로 실행했다. **REJECT** — 두 가지 진짜 결함 발견:
+
+1. **필러 feature 리스크가 미해결 상태로 남아 있었다**: `농기구식별자`
+   (낫)와 `도구`(칼) 둘 다 `evidence_refs: []`. `sufficient_consistent`의
+   §7.5에서 실측된 것과 동일한 패턴(packet 안에 evidence 없는 feature가
+   하나라도 있으면 5/5 abstain)이 재현될 위험이 검증 안 된 채 남아 있었다.
+2. **`ev4`가 절차적 서술이지 긍정적 존재론 단언이 아니었다**: R6b
+   docstring("재료 feature는 is-a DAG에 불참")은 essential_feature를
+   배제할 뿐 structural_composition을 적극적으로 확정하지 않는다 —
+   `sufficient_consistent`의 `ev10`("구성 부분이다")이 통과한 기준보다
+   약하다.
+
+### 수정 (직접 검증, `_cert_core.run_and_certify` 실측)
+
+- `낫`의 필러(`농기구식별자`) 제거 — `철`=essential_feature 하나만 남김.
+  실측: server_response 불변(`PASS_WITH_WARNING`, 동일 MixRig) — 안전.
+- `칼`의 필러(`도구`)는 제거 불가로 확인 — 실측 결과 `Coverage Gate`
+  ("parents of 낫", 0%, uncovered: `['철']`) + `PreDAG Signature Gate`
+  ("칼": essential 없음) 두 게이트가 동시에 걸려 상태가 `FAIL`로
+  악화됨(단순 경고가 아니라 하드 실패). 그대로 유지.
+- `ev4`를 R6b의 docstring 대신 **테스트의 실제 입력 데이터**(lines
+  138-142)로 교체: `{"feature": "철", "type": "structural_composition",
+  "evidence": "철을 재료로 만든다", "relation_hint": "material_of"}`.
+  이 텍스트는 (a) "철을 재료로 만든다"라는 평문 재료-구성 단언과
+  (b) `relation_hint: "material_of"`라는 구조화 태그를 이 특정
+  feature 인스턴스에 직접 결박한다 — 번역 추론이 전혀 필요 없어
+  `ev10`보다도 더 명시적인 결박이라는 게 재검증에서 확인됨.
+
+### 5차 독립 리뷰 (같은 날, 재수정본에 대한 재검증)
+
+**두 수정 다 정확함을 확인**: `ev4`의 바이트 일치, R6b가 이 fixture보다
+13일 전(`8c4cd34`, 2026-07-12)에 이미 존재·통과 중임을 `git blame`으로
+직접 확인, `server_response` 재현 확인. 필러 제거 실험도 3가지 변형
+(둘 다 제거/낫만 제거/현행 유지) 전부 직접 실행해 재확인.
+
+**그러나 새로운(4번째) 결함 발견**: 유일하게 evidence로 충분한 repair
+경로(`낫`의 `철`을 `structural_composition`으로 통일)를 실제로
+`repaired_concepts`로 만들어 다시 파이프라인에 넣으면, `낫`에 essential
+feature가 하나도 안 남아 **하드 FAIL**(`Coverage Gate`: "parents of
+칼", 0%, uncovered: `['도구']` + `PreDAG Signature Gate`: "낫": essential
+없음)이 난다는 게 실측으로 확인됨.
+
+**판단**: 이 실험(E2.4)의 `README.md` 채점 의무 목록은 `repaired_concepts`를
+실제 파이프라인에 재투입해 검증하는 것을 요구하지 않는다(다른 어떤
+"해결된" class도 이 재검증을 하지 않음 — 기존 관례와 일치). 따라서 이건
+채점을 깨뜨리지 않지만, fixture의 "repair가 실제로 유효한 최종 상태를
+만든다"는 개념적 전제를 흐린다는 점은 정직하게 남겨둔다 — `낫`에 실제
+저장소 근거가 있는 두 번째 essential feature를 찾는 건(합성 도메인이라
+불가능에 가까움) 또 다른 fixture 재구성을 요구하므로, 대신 **이 한계를
+명시적으로 문서화하고 범위 밖으로 취급**하기로 결정(이미 계약이
+요구하지 않는 것을 명시화하는 것이라 새 설계 변경이 아님).
+
+**남은 진짜 미해결 질문**(리뷰어가 명시, smoke test로만 답할 수 있음):
+`칼`의 `도구`(evidence_refs: [])가 `sufficient_consistent` 때처럼
+`repair` 판정 전체를 막을지는 아직 실측 안 됨 — 계약 문구(README
+scoring obligations, `decision_schema.json`의 semantic_constraints)는
+"바뀐 feature만 evidence 필요"라고 읽히지만, 실제 모델이 그렇게 좁게
+읽는지는 다음 smoke test가 답한다.
+
+## 14. N=5 smoke test 결과 (2026-07-27) — 4/5 완료, 전부 abstain, 새로운 핵심 발견
+
+`낫`/`칼`/`철` 재구성판(§13, ev2/ev3/ev4, 필러 수정 완료, 독립 리뷰 4회
+통과)으로 N=5 smoke test를 실행했다. **4/5 완료, 3/5는 세션 한도 API
+오류로 실패**(실제 데이터 아님 — 카운트 제외). 완료된 4/4가 **전부
+동일하게 `decision=abstain`, `contract_verdict=insufficient_evidence`**.
+
+**`칼`의 `도구`(§13에서 우려한 필러 리스크) 문제는 해소됨**: 4/4 전부
+`도구`를 별도로 `insufficient`로 정직하게 표시했지만, 이게 `철`의
+repair/판단을 막지는 않는다고 4/4가 일관되게 판단했다 — 필러 리스크에
+대한 새 프롬프트 문구("repair 판정은 실제로 바뀌는 feature에 대한
+evidence sufficiency만 요구한다")가 효과가 있었다.
+
+**그러나 진짜, 더 근본적인 문제가 4/4 만장일치로 나타났다**: 칼의
+철=structural_composition은 ev3+ev4로 `sufficient`라고 4/4가 정확히
+판단했다. 하지만 **낫의 철=essential_feature를 같은 type으로 통일하는
+repair는 4/4 전부가 거부**했다 — 정확한 이유(4개 rationale 전부 동일한
+논리): packet 안에 `낫`을 직접 언급하는 evidence_item이 하나도 없고,
+"칼과 feature 이름이 같으니 낫도 같은 관계(material_of)일 것"이라는
+추론은 `extraction_policy.disallowed_sources`("파일명/심볼명만으로 하는
+추론 금지")가 명시적으로 금지하는 **name-based 추론**에 해당한다고
+4/4가 스스로 인용해 판단했다.
+
+**이 발견의 의미**: 이건 이 실험 세션에서 사용자와 논의했던 "계약
+의미론 질문"(Rule 4의 전역 invariant 판정이 Rule 2/3과 같은 엄격한
+인스턴스-결박 기준을 요구하는가)에 대한 **실측 답**이다 — 4/4 만장일치로
+"그렇다"(엄격한 기준 적용)로 나왔다. 즉 이 실험이 지금까지 가정해온
+`sufficient_repairable`의 설계 전제("한쪽 concept만 강하게 evidence하고,
+같은 feature 이름 + 전역 invariant를 근거로 다른 concept에 그 type을
+전이시켜 repair를 이끌어낸다")는, 이 모델의 실제 판단 기준으로는
+**구조적으로 repair를 만들어내지 못한다** — evidence가 아무리 좋아져도,
+한쪽 concept에만 결박된 증거로는 안 된다.
+
+**아직 결정 안 됨(사용자 결정 필요)**:
+1. `낫`의 철에도 독립적인 instance-bound evidence를 별도로 찾아
+   추가할지(카페린/손잡이처럼 우연히 존재하는 사례가 필요 — 낫이라는
+   합성 개념에 그런 사례가 있을 가능성은 낮음, 난이도 높음).
+2. 이 발견을 `sufficient_repairable`의 hidden oracle이 애초에 잘못
+   설정됐다는 증거로 받아들이고 class 설계 자체를 재검토할지.
+3. 실패한 trial 3/5를 다시 돌려 N=5 유효 데이터를 채울지(4/4 만장일치라
+   결론이 바뀔 가능성은 낮지만, 엄격도 기준상 깨끗하게 채우는 게 맞음).
+
+## 15. 평가 목표 교체 (2026-07-27): single-concept evidence-conflict로 재설계
+
+사용자(외부 실험 설계 논의 경유) 결정: 위 3가지 옵션 중 어느 것도
+택하지 않고, **평가 목표 자체를 좁혔다** — `sufficient_repairable`을
+cross-concept invariant/MixRig 검증에서 **완전히 분리**하고, "기존
+instance-bound evidence가 현재 feature type과 직접 충돌하며, 지정된
+단일 repair 후 clean PASS가 되는가"만 검증하는 single-concept
+시나리오로 재정의했다. cross-concept invariant 검증이 필요하면 별도
+fixture/후속 실험으로 미룬다(§14의 4/4 abstain 발견은 그 후속 실험을
+위한 유효한 근거로 보존됨 — 폐기되지 않음).
+
+**재구축**: `낫`/`칼`/`철`/MixRig 구조를 완전히 제거하고, E2.2.1(2026-
+07-24, `experiments/2026-07-24_e2.2.1_directed_pc_vocabulary_fix/
+fixture.json`, line 20)의 이미 동결된 evidence를 재사용 —
+concept `돌체`, feature `바퀴`(essential_feature로 지정돼 있지만 evidence
+"돌체의 바퀴는 돌체 몸체의 구성 부분이다"가 직접 반박), feature `갑종`
+(essential_feature, 필러, repair 후에도 essential 축 유지용). 이 evidence
+텍스트는 E2.2.1보다도 더 이전(E2.2, 2026-07-23, commit `49f030b`)에
+동결된 것을 그대로 재사용한 것 — 이 세션이나 이 fixture를 위해 새로
+쓴 문장이 아니다(자기인용 위험 없음).
+
+**결정론적 고정(회귀 테스트)**: `test_protocol.py`에
+`test_sufficient_repairable_single_repair_yields_clean_pass` 추가 —
+(1) pre-repair 상태(바퀴=essential_feature, 갑종=essential_feature)가
+`run_and_certify`로 clean `PASS`(anti_patterns/composition_issues 없음)임을
+고정, (2) 지정된 단일 repair(바퀴→structural_composition, 갑종 불변)를
+적용한 post-repair 상태도 마찬가지로 clean `PASS`임을 고정 — §13에서
+`낫`/`칼` 구조가 겪었던 "repair 후 하드 FAIL" 회귀가 이 재설계에서는
+발생하지 않음을 실제로 검증. 전체 `test_protocol.py`: **4 passed**
+(기존 3개 + 신규 1개).
+
+**아직 안 한 것**: Rule 3의 실제 LLM 판정(evidence audit이 direct_support로
+분류되고 repair가 나오는지)은 회귀 테스트로 고정할 수 있는 대상이
+아니다(결정론적 코드가 아니라 모델 판단) — 이건 기존 절차대로 독립
+리뷰 + smoke test로 별도 검증한다.
+
+## 16. 독립 리뷰 + N=5 smoke test 최종 결과 (2026-07-27) — 해결
+
+**독립 리뷰**: ACCEPT. provenance(E2.2 commit `49f030b` → E2.2.1 →
+이 fixture, 전부 byte-identical 확인), Rule 2 적합성(ev10과 동일
+템플릿), 결정론적 검증(pytest 4개 + `run_and_certify` 직접 호출로
+pre/post 둘 다 clean PASS) 전부 리뷰어가 직접 재현·확인. 잔여 리스크
+2가지 지적:
+1. `갑종` 필러가 §7.5(같은 concept 내 필러, 5/5 abstain)와 더 유사한
+   패턴이라 이번 재설계에서는 미검증 — smoke test로 직접 답해야 함.
+2. `run_pipeline_input.바퀴.evidence`가 `ev1.text`와 동일해 self-citation
+   외형을 재현 — 즉시 수정: 필러 문자열("바퀴가 항목에 기록되어
+   있다")로 분리, `test_protocol.py`의 신규 회귀 테스트도 동일하게
+   갱신, 재검증 통과(4 passed).
+
+**N=5 smoke test**: **5/5 전부 `decision=repair`,
+`contract_verdict=sufficient_repairable`.** `갑종` 필러(evidence_refs:
+[])는 5/5 전부에서 `바퀴`의 repair 판단을 막지 않았다 — 리뷰어가
+우려한 §7.5 패턴 재발은 발생하지 않았다. 5개 trial 전부 독립적으로
+"ev1은 명시적 부분-전체(구성 부분) 서술이라 direct_support, 이는
+essential_feature가 아니라 structural_composition을 지지, 따라서
+sufficient_repairable"이라는 동일한 근거로 수렴했다. 한 trial은
+extraction_note의 결론성 서술을 "신뢰하지 않고 원문 text 필드만으로
+독립 재확인했다"고 명시 — 의도한 rigor가 실제로 작동함을 보여줌.
+
+**결론**: `sufficient_repairable` 재검증 완료, 문제 없음. 완료 기준
+4개(구조 검증/해시 일치/독립 리뷰 통과/smoke 5/5) 전부 충족.
+
+## 17. 정리 항목 반영 완료 (2026-07-27)
+
+독립 리뷰가 지적한 사소한 문제 3가지, 전부 이 커밋에서 처리:
+1. **완료**: `contract_prompt.md` rule 5에 "repair 판정은 실제로 바뀌는
+   feature만 evidence sufficiency를 요구한다"는 문구, rule 7에
+   "server_response.status가 PASS가 아니어도 feature-type 판정과
+   무관하면 accept_report 가능"이라는 문구를 정식 병합했다. 지금까지는
+   모든 smoke test 프롬프트에 이 두 문구를 매번 수동으로 추가해 왔을
+   뿐, frozen 파일 자체는 갱신 안 돼 있었다 — 이제 frozen 파일 자체가
+   실제로 검증된 규칙을 반영한다(둘 다 N=5/N=7 smoke test로 이미 실증됨).
+2. **완료**: `OPERATIONS_PLAN.md`의 "sufficient_repairable" 절을 갱신 —
+   폐기된 `낫`/`칼`/`철` MixRig 설계를 "실패한 중간 시도"로, `돌체`/
+   `바퀴` 재구성을 최종 채택 상태로 명확히 구분해 서술.
+3. **완료**: 이 문서의 §7.6 안에 있던 존재하지 않는 §7.7 참조를 §17로
+   정정.

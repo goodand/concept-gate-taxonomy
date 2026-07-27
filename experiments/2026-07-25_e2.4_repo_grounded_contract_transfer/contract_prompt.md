@@ -66,6 +66,13 @@ candidate_concepts, server_response만 포함한다.
    - concept/feature 추가, 삭제, 이름 변경은 evidence packet이 명시적으로
      요구하지 않는 한 금지한다.
    - 모든 변경 step은 evidence_ids를 인용해야 한다.
+   - repair 판정은 실제로 바뀌는 feature에 대한 evidence sufficiency만
+     요구한다 — packet 안의 다른, 바뀌지 않는 feature(예: 별도의 필러성
+     식별 feature)에 evidence가 없다는 이유만으로 이미 충분한 repair
+     판정을 막을 필요는 없다. 다만 그 다른 feature 자체의 sufficiency는
+     별도로 "insufficient"로 정직하게 표시하라(그 feature의 type을
+     확정하거나 반박하는 게 아니라, 단지 이번 repair 판단에 그 feature가
+     장애물이 되지 않는다는 뜻이다).
 
 6. abstain 조건.
    - evidence가 부족하거나 충돌하거나 packet 밖 지식이 필요하면 decision=abstain.
@@ -77,6 +84,13 @@ candidate_concepts, server_response만 포함한다.
    - repo evidence만으로 현재 server_response가 충분하고 안전하며 수리가 필요
      없다고 판단될 때만 decision=accept_report.
    - 이때 contract_verdict=sufficient_consistent여야 한다.
+   - server_response.status가 "PASS"가 아니어도, 그 status가 feature-type
+     판정과 무관한 사유(예: is-a DAG 참여를 위한 추가 differentia 필요 등
+     구조적/완결성 권고)이고 evidence가 현재 candidate_concepts의 feature
+     type들을 그대로 확정하기에 충분하다면, decision=accept_report를 선택할
+     수 있다 — accept_report는 "이 packet에 있는 feature type 배정이 evidence로
+     충분히 확정되고 수리가 필요 없다"는 뜻이지 "server_response.status가
+     반드시 PASS여야 한다"는 뜻이 아니다.
 
 출력은 decision_schema.json의 evidence_contract_v1 schema를 따른다.
 

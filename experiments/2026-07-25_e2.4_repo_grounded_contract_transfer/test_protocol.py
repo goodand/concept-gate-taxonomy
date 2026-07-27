@@ -105,3 +105,50 @@ def test_server_response_is_reproducible_from_run_pipeline_input():
         observed = cert_core.run_and_certify(packet["run_pipeline_input"])
         expected = packet["server_response"]
         assert _project_server_response(observed, expected) == expected, path.name
+
+
+def test_sufficient_repairable_single_repair_yields_clean_pass():
+    """Pins fixture_sufficient_repairable.json's intended Rule 3 repair:
+    돌체's 바퀴 (essential_feature, evidence states 구성 부분/part-whole)
+    should repair to structural_composition, keeping 갑종 as essential so
+    the concept still has an essential axis post-repair. Both pre-repair
+    (as shipped in run_pipeline_input) and post-repair states must be a
+    clean PASS with no anti-patterns -- this is the deterministic half of
+    the Rule 3 sufficiency claim; the LLM admissibility/sufficiency
+    judgment itself is verified separately via independent review and a
+    live CONTRACT_REPO smoke test, not by this test.
+    """
+    cert_core = _load_cert_core()
+    path = HERE / "fixture_sufficient_repairable.json"
+    packet = _load_json(path)
+
+    pre = packet["run_pipeline_input"]
+    assert pre == [
+        {
+            "name": "돌체",
+            "features": [
+                {
+                    "feature": "바퀴",
+                    "type": "essential_feature",
+                    "evidence": "바퀴가 항목에 기록되어 있다",
+                },
+                {
+                    "feature": "갑종",
+                    "type": "essential_feature",
+                    "evidence": "갑종이(가) 항목에 기록되어 있다",
+                },
+            ],
+        }
+    ]
+
+    pre_observed = cert_core.run_and_certify(pre)
+    assert pre_observed["status"] == "PASS"
+    assert pre_observed["anti_patterns"] == []
+    assert pre_observed["composition_issues"] == []
+
+    post = json.loads(json.dumps(pre))
+    post[0]["features"][0]["type"] = "structural_composition"
+    post_observed = cert_core.run_and_certify(post)
+    assert post_observed["status"] == "PASS"
+    assert post_observed["anti_patterns"] == []
+    assert post_observed["composition_issues"] == []

@@ -293,41 +293,69 @@ semantic class 전부 해결·검증 완료 — Phase 3(freeze)로 넘어갈 준
 `ev2`/`ev3`가 `완제품유닛B`라는 구체 concept을 언급하지 않는다는 별도
 쟁점이 있어 재검증 진행 중.
 
-**`sufficient_repairable` instance-binding 결함 해결 (2026-07-27)**:
-독립 리뷰(2차, 별도 세션)가 위 별도 쟁점을 확인 — `ev2`/`ev3`는 일반
-어휘 정의일 뿐 `완제품유닛B`/`재료`라는 구체 instance에 결박되지
-않는다(`sufficient_consistent`가 `ev9`만으론 부족해 `ev10`을 요구했던
-것과 같은 패턴). 제안된 수정(같은 fixture의 `run_pipeline_input` 문장을
-`ev4`로 자동 승격)은 self-citation이라 기각 — 대신 저장소에 이미
-존재하는 독립·동결 소스인 `test_semantic_regressions.py`의
-`test_r6b_material_feature_not_in_isa_dag`(concept `칼`, feature `철`,
-`type=structural_composition`, `relation_hint=material_of`, docstring이
-"재료 feature(structural + material_of hint)는 is-a DAG에 불참"이라고
-instance 단위로 직접 서술)를 채택.
+**`sufficient_repairable` instance-binding 결함 → 1차 재구성(낫/칼/철,
+이후 폐기) → 2차 재구성(돌체/바퀴, 최종 채택) (2026-07-27)**:
+
+독립 리뷰(2차)가 위 별도 쟁점을 확인 — `ev2`/`ev3`는 일반 어휘 정의일
+뿐 `완제품유닛B`/`재료`라는 구체 instance에 결박되지 않는다
+(`sufficient_consistent`가 `ev9`만으론 부족해 `ev10`을 요구했던 것과
+같은 패턴). 1차 재구성은 `완제품유닛A`/`완제품유닛B`/`재료`를 `낫`/
+`칼`/`철`로 바꾸고, `test_semantic_regressions.py`의
+`test_r6b_material_feature_not_in_isa_dag`(concept `칼`, feature `철`)를
+`ev4`로 인용해 instance-binding을 확보했다 — 이 시도 자체는 독립
+리뷰를 통과했다(자기인용 아님, 죽은 코드 아님, provenance 확인됨).
+
+**그러나 N=5 smoke test에서 1차 재구성(낫/칼/철, MixRig 기반)은
+4/4(1개는 API 세션 한도로 실패, 데이터 아님) 전부 `abstain`으로
+나왔다** — 정확한 이유: `칼`의 `철`=structural_composition은 evidence로
+충분히 확정됐지만, **동일 feature 이름을 공유한다는 이유만으로 `낫`의
+`철`에 그 판정을 전이시키는 것은 모델이 스스로 `extraction_policy.
+disallowed_sources`("심볼명만으로 하는 추론 금지")를 인용하며 거부**했다.
+이는 이 실험에서 논의된 "Rule 4(전역 invariant)가 Rule 2/3(인스턴스
+결박)와 같은 엄격도를 요구하는가"라는 계약 의미론 질문에 대한 실측
+답(4/4, "그렇다")이었다. 이 발견 자체는 폐기하지 않고 보존됨 —
+cross-concept invariant를 다시 검증하려면 이 발견을 근거로 별도
+fixture/후속 실험을 설계해야 한다.
+
+**최종 결정(외부 실험 설계 논의 경유)**: cross-concept invariant/MixRig
+검증을 이 fixture에서 완전히 분리하고, "기존 instance-bound evidence가
+현재 feature type과 직접 충돌하며, 지정된 단일 repair 후 clean PASS가
+되는가"만 검증하는 single-concept 시나리오로 평가 목표 자체를 좁혔다.
+`낫`/`칼`/`철`/MixRig 구조를 완전히 제거하고, E2.2(2026-07-23, commit
+`49f030b`) → E2.2.1(2026-07-24)에서 이미 동결·재사용된 evidence를 다시
+재사용 — concept `돌체`, feature `바퀴`(essential_feature로 지정돼
+있지만 evidence "돌체의 바퀴는 돌체 몸체의 구성 부분이다"가 직접 반박),
+feature `갑종`(essential_feature 필러, repair 후에도 essential 축 유지용).
 
 조치:
-- `fixture_sufficient_repairable.json`을 `완제품유닛A`/`완제품유닛B`/
-  `재료`에서 `낫`/`칼`/`철`로 재구성 — `칼`의 `도구`/`철` feature는 R6b의
-  정의와 텍스트까지 완전히 동일. `낫`은 `철`을 essential_feature로
-  잘못 기록한 대조 concept(기존 `완제품유닛A` 역할).
-- `evidence_items`에 `ev4` 추가(R6b 발췌, source_kind `test`,
-  instance-bound). `candidate_concepts.칼.철.evidence_refs = ["ev3",
-  "ev4"]` — `ev3`(일반 규칙) + `ev4`(instance 결박), `sufficient_consistent`의
-  `ev9`+`ev10` 패턴과 동일한 구조.
-- `server_response`를 `_cert_core.run_and_certify(run_pipeline_input)`
-  실제 재실행으로 재관측: `PASS_WITH_WARNING`, `MixRig` anti-pattern
-  (subject `철`, involved `[낫, 칼]`) — 기존 `완제품유닛A`/`완제품유닛B`
-  결과와 구조적으로 동일.
-- 별도 발견: `cg_input_linter.py`의 fallback dict(`hint_to_feature_type`
-  import 실패 시에만 쓰이는 경로)가 `material_of`를 `essential_feature`로
-  매핑해 canonical `RELATION_HINT_TYPE`과 불일치 — `structural_composition`으로
-  수정.
-- 검증: `test_protocol.py`(3 passed), `test_semantic_regressions.py`
+- `fixture_sufficient_repairable.json`을 `돌체`/`바퀴`/`갑종`으로 완전히
+  재작성. `run_pipeline_input`의 `바퀴` evidence는 필러 문자열로
+  분리(ev1과 동일 텍스트 재사용 금지 — self-citation 방지).
+- `test_protocol.py`에 `test_sufficient_repairable_single_repair_
+  yields_clean_pass` 추가 — pre-repair(essential_feature)와 post-repair
+  (structural_composition, 갑종 불변) 둘 다 `_cert_core.run_and_certify`로
+  clean `PASS`임을 회귀 테스트로 고정.
+- 별도 발견(이 재구성과 독립): `cg_input_linter.py`의 fallback dict
+  (`hint_to_feature_type` import 실패 시에만 쓰이는 경로)가 `material_of`를
+  `essential_feature`로 매핑해 canonical `RELATION_HINT_TYPE`과 불일치 —
+  `structural_composition`으로 수정(낫/칼/철 재구성 때 발견, 돌체/바퀴
+  전환 후에도 유효한 수정이라 유지).
+- `contract_prompt.md` rule 5(필러가 repair 판단을 막지 않음)와 rule 7
+  (server_response.status가 PASS가 아니어도 feature-type 판정과 무관하면
+  accept_report 가능)에 그동안 smoke test 프롬프트에만 수동으로 추가해온
+  문구를 정식 병합 — 두 rule 다 실제 smoke test에서 검증된 채로 이제
+  frozen 파일 자체에 반영됨.
+- 검증: `test_protocol.py`(4 passed), `test_semantic_regressions.py`
   (8 passed, R6/R6b 포함), `qa_v7.py`(101/101) 전부 통과. `test_server.py`는
-  이 환경에 `fastmcp` 미설치로 실패 — 내 변경 전에도 동일하게 실패함을
+  이 환경에 `fastmcp` 미설치로 실패 — 변경 전에도 동일하게 실패함을
   `git stash`로 확인(무관한 환경 이슈).
+- 독립 리뷰(3차, 이 돌체/바퀴 재구성 대상): ACCEPT. provenance
+  byte-identical 확인(E2.2 commit `49f030b` → E2.2.1 → 이 fixture),
+  Rule 2 적합성 확인, 결정론적 pre/post 검증 확인. 잔여 리스크 2개
+  지적(필러 미검증, run_pipeline_input 자기인용 외형) — 둘 다 즉시 수정.
+- **N=5 smoke test(최종)**: 5/5 전부 `decision=repair`,
+  `contract_verdict=sufficient_repairable`. 필러(`갑종`, evidence_refs
+  없음)는 5/5 전부에서 `바퀴` repair 판단을 막지 않았다.
 
-**남은 것**: 구조 검증은 통과했지만, `sufficient_consistent`가 거쳤던
-독립 리뷰(fresh subagent) + smoke test(N≥3)는 아직 이 재구성판에 대해
-실행되지 않았다 — `sufficient_repairable`을 다시 "해결됨"으로 표시하기
-전에 같은 절차를 거쳐야 한다.
+**결론**: `sufficient_repairable` 재검증 완료, 해결됨. E2.4의 4개
+semantic class 전부 독립 리뷰 + smoke test(각 5/5 또는 7/7) 검증 완료.
