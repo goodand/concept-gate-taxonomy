@@ -479,3 +479,53 @@ skills-catalog 정정은 사용자 승인 하에 진행(승인됨, 별도 실행
 "해결됨"으로 표시돼 smoke test까지 통과했지만, 이 근거 자체가 3차
 시도와 같은 결함을 안고 있을 가능성이 있다. 재검토 여부는 사용자
 결정 필요 — 이 세션은 임의로 손대지 않았다.
+
+## 12. §11 해결 (2026-07-27): 죽은 코드 우려는 기각, instance-binding 결함은 확인 후 수정
+
+독립 재검증(3차, 별도 세션) 결과:
+
+- **죽은 코드 우려는 기각**: §10과 동일한 근거(`concept_gate_v7.py:350`,
+  `cg_input_linter.py:15` 직접 import, R6/R6b/`qa_v7.py` I8 통과)로 `ev3`은
+  죽은 코드가 아님을 재확인.
+- **그러나 별도의, 진짜 결함을 확인**: `ev2`/`ev3`는 둘 다 일반 어휘
+  정의("material_of 관계 범주는 structural_composition이다")일 뿐
+  `완제품유닛B`나 `재료`라는 구체 concept/feature를 전혀 언급하지 않는다.
+  `run_pipeline_input`의 `재료` feature에는 `relation_hint` 필드조차
+  없어 "재료"(feature 이름)와 "material_of"(어휘 용어)의 연결이 순전히
+  번역적 추론이다. 이건 `sufficient_consistent`가 이미 결정적으로 확인한
+  실패 패턴과 동일하다: 일반 정의(`ev9`) 하나만으론 `indirect_context`이고,
+  concept/feature 이름을 직접 명시하는 instance-bound 문장(`ev10`)이
+  있어야 `direct_support`/`sufficient`에 도달했다.
+- **기각된 수정안**: 같은 fixture의 `run_pipeline_input` 문장("재료는
+  완제품유닛B의 구성 재료이다")을 그대로 `evidence_items`에 `ev4`로
+  승격하는 안은 self-citation이라 기각 — 이 fixture 자신이 만든 입력
+  문장을 이 fixture 자신의 근거로 재인용하는 것은, `sufficient_consistent`
+  4차 시도에서 이미 기각된 `ev7`/`ev8` 패턴(같은 canonical 예시의
+  자기 인용)보다도 더 직접적인 순환이다.
+- **채택된 수정**: 저장소에 이미 존재하는 독립·동결 소스를 재사용.
+  `test_semantic_regressions.py::test_r6b_material_feature_not_in_isa_dag`
+  (commit `d581d53`에 이미 존재, 이 fixture와 무관하게 작성·통과 중인
+  회귀 테스트)가 concept `칼`, feature `철`을 명시하고, `type=
+  structural_composition`과 `relation_hint=material_of`를 이 특정
+  feature에 함께 결박하며, docstring이 "재료 feature(structural +
+  material_of hint)는 is-a DAG에 불참"이라고 이 instance의 온톨로지적
+  성격을 직접 서술한다. `완제품유닛A`/`완제품유닛B`/`재료`를 `낫`/
+  `칼`/`철`로 재구성해 `칼`의 `도구`/`철` feature 정의를 R6b와 완전히
+  일치시키고, `ev4`(R6b 발췌, `source_kind: "test"`)를 신설해 `ev3`
+  (일반 규칙) + `ev4`(instance 결박)로 `sufficient_consistent`의
+  `ev9`+`ev10` 구조를 그대로 재현했다.
+- **부수 수정**: `cg_input_linter.py`의 fallback dict(`hint_to_feature_type`
+  import 실패 시에만 쓰이는 방어 경로)가 `material_of`를
+  `essential_feature`로 매핑해 canonical `RELATION_HINT_TYPE`과
+  불일치하던 것을 `structural_composition`으로 정정.
+- **검증**: `test_protocol.py`(구조/해시/`server_response` 재현성,
+  3 passed), `test_semantic_regressions.py`(R6/R6b 포함 8 passed),
+  `qa_v7.py`(101/101, I8 포함) 전부 통과. `server_response`는
+  `_cert_core.run_and_certify(run_pipeline_input)` 실제 재실행으로
+  얻은 관측값(`PASS_WITH_WARNING`, `MixRig` on `철`, involved
+  `[낫, 칼]`)으로 갱신.
+
+**남은 것**: 이 재구성판은 구조 검증만 통과했다 — `sufficient_consistent`가
+거쳤던 독립 리뷰(fresh subagent) + smoke test(N≥3)는 아직 실행되지
+않았다. `sufficient_repairable`을 다시 "해결됨"으로 표시하려면 같은
+절차를 거쳐야 한다.

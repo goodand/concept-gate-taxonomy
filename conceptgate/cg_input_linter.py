@@ -23,7 +23,7 @@ except Exception:  # pragma: no cover - graceful fallback for copied files
             "member_of": "structural_composition",
             "subcollection_of": "structural_composition",
             "subquantity_of": "structural_composition",
-            "material_of": "essential_feature",
+            "material_of": "structural_composition",
             "phase_of": "contextual_usage",
             "located_in": "locational",
         }

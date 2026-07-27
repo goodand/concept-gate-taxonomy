@@ -292,3 +292,42 @@ semantic class 전부 해결·검증 완료 — Phase 3(freeze)로 넘어갈 준
 §10 참조. `sufficient_repairable` 자체는 (죽은 코드 문제는 아니지만)
 `ev2`/`ev3`가 `완제품유닛B`라는 구체 concept을 언급하지 않는다는 별도
 쟁점이 있어 재검증 진행 중.
+
+**`sufficient_repairable` instance-binding 결함 해결 (2026-07-27)**:
+독립 리뷰(2차, 별도 세션)가 위 별도 쟁점을 확인 — `ev2`/`ev3`는 일반
+어휘 정의일 뿐 `완제품유닛B`/`재료`라는 구체 instance에 결박되지
+않는다(`sufficient_consistent`가 `ev9`만으론 부족해 `ev10`을 요구했던
+것과 같은 패턴). 제안된 수정(같은 fixture의 `run_pipeline_input` 문장을
+`ev4`로 자동 승격)은 self-citation이라 기각 — 대신 저장소에 이미
+존재하는 독립·동결 소스인 `test_semantic_regressions.py`의
+`test_r6b_material_feature_not_in_isa_dag`(concept `칼`, feature `철`,
+`type=structural_composition`, `relation_hint=material_of`, docstring이
+"재료 feature(structural + material_of hint)는 is-a DAG에 불참"이라고
+instance 단위로 직접 서술)를 채택.
+
+조치:
+- `fixture_sufficient_repairable.json`을 `완제품유닛A`/`완제품유닛B`/
+  `재료`에서 `낫`/`칼`/`철`로 재구성 — `칼`의 `도구`/`철` feature는 R6b의
+  정의와 텍스트까지 완전히 동일. `낫`은 `철`을 essential_feature로
+  잘못 기록한 대조 concept(기존 `완제품유닛A` 역할).
+- `evidence_items`에 `ev4` 추가(R6b 발췌, source_kind `test`,
+  instance-bound). `candidate_concepts.칼.철.evidence_refs = ["ev3",
+  "ev4"]` — `ev3`(일반 규칙) + `ev4`(instance 결박), `sufficient_consistent`의
+  `ev9`+`ev10` 패턴과 동일한 구조.
+- `server_response`를 `_cert_core.run_and_certify(run_pipeline_input)`
+  실제 재실행으로 재관측: `PASS_WITH_WARNING`, `MixRig` anti-pattern
+  (subject `철`, involved `[낫, 칼]`) — 기존 `완제품유닛A`/`완제품유닛B`
+  결과와 구조적으로 동일.
+- 별도 발견: `cg_input_linter.py`의 fallback dict(`hint_to_feature_type`
+  import 실패 시에만 쓰이는 경로)가 `material_of`를 `essential_feature`로
+  매핑해 canonical `RELATION_HINT_TYPE`과 불일치 — `structural_composition`으로
+  수정.
+- 검증: `test_protocol.py`(3 passed), `test_semantic_regressions.py`
+  (8 passed, R6/R6b 포함), `qa_v7.py`(101/101) 전부 통과. `test_server.py`는
+  이 환경에 `fastmcp` 미설치로 실패 — 내 변경 전에도 동일하게 실패함을
+  `git stash`로 확인(무관한 환경 이슈).
+
+**남은 것**: 구조 검증은 통과했지만, `sufficient_consistent`가 거쳤던
+독립 리뷰(fresh subagent) + smoke test(N≥3)는 아직 이 재구성판에 대해
+실행되지 않았다 — `sufficient_repairable`을 다시 "해결됨"으로 표시하기
+전에 같은 절차를 거쳐야 한다.
