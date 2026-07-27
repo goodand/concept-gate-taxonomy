@@ -39,7 +39,19 @@ not be included in model prompts"라고 명시하는데, 그 규칙을 이 fixtu
 1. 양쪽 `extraction_note`를 인용 텍스트가 무엇을 말하는지만 서술하도록
    재작성(리뷰 이력·agent ID·기대 판정 전부 제거). `text_sha256`은 `text`만
    해싱하므로 무결성에는 영향 없음 — `test_protocol.py` 통과 유지 확인.
-2. 나머지 3개 fixture 동일 스캔 — 전부 clean.
+2. ~~나머지 3개 fixture 동일 스캔 — 전부 clean.~~
+   **⚠️ 이 서술은 거짓이었다 (2026-07-28 정정).** 당시 스캔이
+   decision/`contract_verdict` enum만 검사하고 `admissibility` enum과
+   sufficiency 어휘를 빠뜨려서 clean으로 잘못 판정했다. 실제로 나머지 3개
+   fixture **전부** 유출한다 — `insufficient.ev4`("should classify this as
+   indirect_context or ambiguous, never direct_support"),
+   `sufficient_repairable.ev1`("the evidence supports structural_composition,
+   not essential_feature" — **목표 type 직접 지정, ev5보다 강한 유출**),
+   `sufficient_consistent.ev9/ev10`(admissibility 등급 + sufficiency 논증
+   조립). `sufficient_repairable.ev1.locator`도 300자 신뢰도 변론을 담는다.
+   같은 기준을 적용하면 **E2.4의 인증 class는 3개가 아니라 0개**다.
+   전체 목록·근본 원인·수정 요구사항은
+   [`DIRECTIVE_model_facing_surface_redesign.md`](DIRECTIVE_model_facing_surface_redesign.md).
 3. **기계적 가드 추가**: `test_protocol.py::test_model_facing_metadata_does_not_leak_the_oracle`.
    `extraction_note`/`locator`에서 decision·contract_verdict enum 토큰과
    기대 표명 구문(`correct behavior`, `expected contract_verdict`,

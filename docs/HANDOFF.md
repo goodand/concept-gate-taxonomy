@@ -57,7 +57,23 @@ repair/abstain 계약)을 쓰는 CONTRACT_REPO가, 이 저장소 자체의 실�
 코드/문서에서 추출한 evidence 위에서, legacy 3지선다 스키마보다 evidence
 불충분/충돌을 더 잘 잡아내는지.
 
-**유효 커버리지: 3 class** (`conflicting`은 미확보로 종결 — 아래 참조)
+> ⚠️ **2026-07-28 정정 — 아래 "3 class 검증 완료"를 그대로 믿지 마라.**
+> 후속 독립 리뷰에서 **4개 fixture 전부**가 `extraction_note`(모델-facing
+> 필드)로 판정 정보를 유출하고 있음이 확인됐다. 특히
+> `sufficient_repairable.ev1`은 "the evidence supports
+> structural_composition, not essential_feature"로 **repair 목표 type을
+> 직접 지정**한다 — `conflicting`의 유출보다 강하다. 같은 기준을 적용하면
+> **현재 인증된 class는 3개가 아니라 0개**다. 아래 7/7·5/5·5/5 수치는
+> "유출 상태에서 관측됨"으로 읽어야 한다.
+>
+> 근본 원인과 수정 요구사항은
+> [`DIRECTIVE_model_facing_surface_redesign.md`](../experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/DIRECTIVE_model_facing_surface_redesign.md)
+> — 설계 권한자 결정 대기 중. 핵심: **커밋된 payload 빌더가 존재하지 않아**
+> 모든 payload가 손으로 만든 블랙리스트 projection이었다.
+
+**표기상 유효 커버리지: 3 class** (`conflicting`은 미확보로 종결 — 아래 참조).
+**단 위 정정에 따라 실질 인증은 0 class이며, 표기는 지시서 Q3 결정에
+종속된다.**
 
 | class | 정답 | fixture 내용 | 검증 수준 |
 |---|---|---|---|
