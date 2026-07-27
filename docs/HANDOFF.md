@@ -1,190 +1,247 @@
 # HANDOFF — ConceptGate 세션 인수인계 (E2 실험 체인)
 
-- 작성: 2026-07-25
+- 갱신: 2026-07-27
 - 대상: **컨텍스트 없이 이어받는 새 세션**. 이 문서만 읽고 작업을 재개할 수 있게 쓴다.
-- 이 문서는 이 worktree(`concept-gate-e2.2-wt`, 브랜치
-  `codex/e2.4-contract-repo-design`)의 최신 상태를 기록한다. **메인 저장소
-  체크아웃**(`concept-gate-taxonomy`, 브랜치
-  `claude/ontoclean-gufo-handoff-7cmq0v`)의 `docs/HANDOFF.md`는 별도
-  문서이며 그쪽은 OWL/gUFO 동치 보고 작업(2026-07-17) 이후 갱신되지 않았다
-  — 그 작업의 최신 상태는 그 문서를 그대로 신뢰해도 되지만, "지금 뭘 하고
-  있는가"에 대한 답은 **이 문서**다.
-- **새 실험을 시작하기 전에** 메인 저장소 체크아웃의
-  `docs/EXPERIMENT_METHODOLOGY.md`를 읽어라 (이 worktree 브랜치엔 아직
-  없음 — `../concept-gate-taxonomy/docs/EXPERIMENT_METHODOLOGY.md`로
-  직접 접근). 동결/운영로그 분리, 실험 폴더 규약, provenance 계약,
-  worktree 격리, 비-git 감사본, 교훈 승격, 독립 재현 검증 7개 규칙.
-  이 worktree의 `experiments/` 구조(§3~§4)는 그 규약을 실제로 따른
-  사례다.
+- 이 문서는 worktree `concept-gate-e2.2-wt`(브랜치
+  `codex/e2.4-contract-repo-design`)의 최신 상태를 기록한다.
+- **파일을 어디서 찾을지 모르겠으면** 먼저 [`WORKSPACE_NAVIGATION.md`](WORKSPACE_NAVIGATION.md)를
+  읽어라 — 저장소/worktree 구조, 문서 종류별 분류 체계, 탐색 명령 레시피가 있다.
+- **새 실험을 설계하기 전에** 메인 저장소 체크아웃의
+  `../concept-gate-taxonomy/docs/EXPERIMENT_METHODOLOGY.md`를 읽어라
+  (7개 규칙: 동결/운영로그 분리, 폴더 규약, provenance 계약, worktree 격리,
+  비-git 감사본, 교훈 승격, 독립 재현 검증).
 
 ---
 
 ## 1. 지금 상태 한 문단 (TL;DR)
 
-`docs/obligation_layer_roadmap.md`(메인 저장소)가 정의한 M0~M5 마일스톤
-체인 중 **M1(relation.is_a certificate) 검증 실험 라인**을 진행 중이다.
-E2.2.1(NO_GO) → E2.2.2(GO) → E2.2.3(OFAT ablation, A_ONLY 단독 충분 확인)
-→ E2.3(A_ONLY 규칙이 새 어휘/paraphrase/topology/decoy 전반에 일반화됨,
-screened PASS) → **E2.4(현재 진행 중, repo-grounded evidence 위에서
-CONTRACT_REPO 메커니즘 검증)**. E2.4는 문제 2(evidence-type 혼동)를
-해결·5/5 검증 완료했고, 문제 1(`sufficient_consistent` fixture 재료
-부족)은 **세 번째 시도까지 전부 실패**했으며 네 번째 시도(docs 재탐색,
-후보 A) 재료를 막 찾은 상태에서 이 handoff가 작성됐다.
+M1(relation.is_a certificate) 검증 실험 라인을 진행 중이다.
+E2.2.1(NO_GO) → E2.2.2(GO) → E2.2.3(OFAT, A_ONLY 단독 충분) →
+E2.3(A_ONLY 일반화, screened PASS) → **E2.4(진행 중)**.
+
+**E2.4의 현재 위치를 오해하지 마라**: 이 실험의 본 목적인 **3-arm 비교
+(CONTROL_REPO vs A_REPO vs CONTRACT_REPO)는 아직 한 번도 실행되지 않았다.**
+지금까지 끝난 것은 전부 **fixture 준비 단계**(Phase 0~3)다. 4개 semantic
+class fixture를 실제 저장소 evidence로 만들고, 각각이 CONTRACT_REPO에서
+의도한 판정을 내는지 검증하는 데 여러 세션이 소요됐다. 본 실험(Phase 4~6)이
+다음 작업이다.
 
 ## 2. 프로젝트 목적 (변경 없음)
 
 **"LLM이 제안하고, 결정론이 판정한다."** 자연어를 evidence-carrying 개념으로
 고정한 뒤, is-a 계층은 결정론적 게이트/reasoner가 판정한다. 정본 소스는
-`conceptgate/` 패키지 하나뿐(메인 저장소). 이 worktree는 실험
-(`experiments/`)만 다루고 `conceptgate/` 코드를 수정하지 않는다.
+`conceptgate/` 패키지 하나뿐(메인 저장소). 이 worktree는 `experiments/`와
+`docs/`만 다루고 `conceptgate/` 코드는 원칙적으로 read-only다.
 
-## 3. E2 실험 체인 — 각 단계 상태와 위치
+## 3. E2 실험 체인 — 각 단계 상태
 
-| 실험 | 브랜치 | 핵심 결과 | 상태 |
-|---|---|---|---|
-| E2.2 (B-C 구조 확인) | `codex/e2.2-structure-bvsc-20260723` | Δ_BC=+0.32, NO_GO | 종료 |
-| E2.2.1 (directed-PC 어휘 수정) | `codex/e2.2.1-directed-pc-vocab-fix-20260724` | rate=0.15, **NO_GO** | 종료 |
-| E2.2.2 (directed-PC invariant 수정) | 〃 (같은 브랜치, 후속 커밋) | rate=1.00, **GO** | 종료 |
-| E2.2.3 (OFAT ablation) | 〃 | A_ONLY=20/20, B_ONLY=1/20, C_ONLY=0/20 — **A_ONLY 단독 충분** | 종료 |
-| E2.3 (전역 invariant 일반화) | 〃 (커밋 `157c021`) | A_ONLY/PARAPHRASE/TOPOLOGY/DECOY 전부 screened PASS | 종료, 푸시됨 |
-| **E2.4 (repo-grounded contract)** | **`codex/e2.4-contract-repo-design`**(현재 브랜치, `157c021` 기반) | 아래 §4 | **진행 중** |
+| 실험 | 핵심 결과 | 상태 |
+|---|---|---|
+| E2.2 (B-C 구조) | Δ_BC=+0.32, NO_GO | 종료 |
+| E2.2.1 (directed-PC 어휘) | rate=0.15, NO_GO | 종료 |
+| E2.2.2 (invariant 수정) | rate=1.00, GO | 종료 |
+| E2.2.3 (OFAT ablation) | A_ONLY=20/20, B_ONLY=1/20, C_ONLY=0/20 | 종료 |
+| E2.3 (전역 invariant 일반화) | A_ONLY/PARAPHRASE/TOPOLOGY/DECOY 전부 screened PASS | 종료, 푸시됨 |
+| **E2.4 (repo-grounded contract)** | fixture 4종 준비 완료, **본 실험 미실행** | **진행 중** |
 
-각 실험 폴더는 `experiments/<날짜>_<이름>/`에 있고, `README.md`(설계) +
-`*_manifest.json`(동결된 프롬프트) + `trials.json`(결과) 3종 세트가
-기본 패턴이다. 재현 규율: **동결 후 절대 프롬프트 수정 금지**, 수정하려면
-새 커밋으로 명시적 amendment.
-
-## 4. E2.4 — 지금 정확히 어디까지 왔는가
+## 4. E2.4 — fixture 4종 검증 현황
 
 폴더: `experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/`
 
-**가설**: `evidence_contract_v1`(구조화 evidence-audit + sufficiency
-판정 + repair/abstain 계약)을 쓰는 CONTRACT_REPO 조건이, 이 저장소 자체의
-실제 코드/문서에서 추출한 evidence 위에서, legacy 3지선다 스키마보다
-evidence 불충분/충돌을 더 잘 잡아내는지 검증한다. 3-arm: CONTROL_REPO
-(legacy 프롬프트), A_REPO(legacy + 전역 invariant 규칙), CONTRACT_REPO.
-4개 semantic class: `sufficient_consistent`(accept_report가 정답),
-`sufficient_repairable`(repair), `insufficient`(abstain),
-`conflicting`(abstain).
+가설: `evidence_contract_v1`(구조화 evidence-audit + sufficiency 판정 +
+repair/abstain 계약)을 쓰는 CONTRACT_REPO가, 이 저장소 자체의 실제
+코드/문서에서 추출한 evidence 위에서, legacy 3지선다 스키마보다 evidence
+불충분/충돌을 더 잘 잡아내는지.
 
-### 완료된 것
-
-- 설계 패킷(`README.md`, `evidence_packet_schema.json`,
-  `decision_schema.json`, `contract_prompt.md`) — 커밋 `d581d53`.
-- 운영 계획(`OPERATIONS_PLAN.md`) — 커밋 `bf27cfa`, 이후 확장 `a10c9ad`.
-- **`$schema` 스키마 버그 수정**: `decision_schema.json`의
-  `evidence_contract_v1`에 최상위 `"$schema"` 키가 있으면
-  `agent({schema})`가 전부 실패한다(`$defs`/`$ref`는 문제없음). 제거 후
-  재실행 성공. 커밋 `a10c9ad`.
-- **`sufficient_repairable`, `conflicting` fixture**: 스모크 테스트에서
-  의도대로 동작 확인(각각 repair, abstain/conflicting_evidence).
-- **문제 2 해결·검증 완료**: `insufficient` fixture에서 CONTRACT_REPO가
-  "구현 필요성(implementation necessity)"을 온톨로지적 분류로 오인해
-  `essential_feature`가 아닌 **다른** type(functional,
-  structural_composition)으로 제멋대로 repair하는 결함을 발견. 첫
-  수정(essential_feature만 배제)은 3trial 중 2trial이 실패 유형만 바꿔
-  재현 — **좁은 수정은 실패를 다른 곳으로 옮길 뿐**이라는 교훈. 6개 type
-  전부에 대해 "구현 서술은 어느 type의 direct_support도 아니다"로
-  일반화한 뒤 5/5 재검증 통과. 커밋 `c2d0ce5`.
-
-### 미해결 — 문제 1: `sufficient_consistent` fixture
-
-정식 문제 정의서: `PROBLEM_1_sufficient_consistent.md`(아직 커밋 안 됨,
-이 handoff와 같이 커밋됨).
-
-**세 번의 시도가 전부 실패**, 매번 다른 이유:
-
-1. **1차**(enum 정의 인용) — 독립 리뷰에서 실행 전 순환논리로 기각.
-2. **2차**(`SemanticTypeInference.infer()`의 절차적 fallback 규칙) —
-   실제 CONTRACT_REPO 실행에서 `insufficient_evidence`로 abstain.
-   "일반 알고리즘이 어떻게 판단하는가"와 "이 특정 feature가 그 알고리즘을
-   통해 실제로 이 type이 됐다"는 서술 사이 추론적 공백 때문.
-3. **3차**(`RELATION_HINT_TYPE["component_of"]` 선언적 매핑 테이블) —
-   독립 리뷰에서 기각, 당시 사유: 이 테이블 바로 위 docstring이 "참조용
-   — concept_gate_v7.py에서 직접 import하지 않음"이라고 명시하므로
-   죽은 참조용 코드를 근거로 쓴 것이라 실사용 파이프라인과 무관하다고
-   판단했음.
-
-> ⚠️ **정정(2026-07-27)**: 위 3차 시도의 기각 사유는 **틀렸다** —
-> `RELATION_HINT_TYPE`은 죽은 코드가 아니다. `concept_gate_v7.py:350`이
-> 실제로 import하고(`relation_discrimination_gate()`, 라이브
-> `run_pipeline` 경로), `cg_input_linter.py:15`도 별도 import하며,
-> 통과 중인 회귀 테스트(R6/R6b, qa_v7.py I8)가 이 매핑을 검증한다.
-> docstring의 "직접 import 안 함"은 나중에 갱신 안 된 stale 주석이었다.
-> 상세 정정: `experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/PROBLEM_1_sufficient_consistent.md`
-> §10. (아래 "근본 원인" 문단도 이 정정의 영향을 받음 — 재고 필요.)
-> 이 HANDOFF.md 전체는 2026-07-25 스냅샷이라 이후(문제 1 해결 포함)
-> 반영 안 됨 — Phase 3 freeze 커밋 때 전면 갱신 예정.
-
-**근본 원인** (2026-07-25 시점 판단, 위 정정 참고): 이 저장소의 코드/
-주석은 압도적으로 절차적(어떻게 판단하는가)이지 선언적(X는 Y다를 직접
-단언)이 아니다 — 다만 "유일하게 선언적인 `RELATION_HINT_TYPE`조차 죽은
-코드였다"는 부분은 위 정정에 따라 틀렸다: `RELATION_HINT_TYPE`은
-살아있고 테스트로 검증되는 선언적 코드다.
-
-**4차 시도 재료(찾았으나 아직 fixture로 안 만듦)**: `docs/MCP_SERVER.md`
-93-109행 — **살아있는(server.py와 같은 커밋에서 갱신된) `run_pipeline`
-MCP 도구의 실제 입력 형식 문서**. 워크드 예제
-`{"name": "개", "features": [{"feature": "동물", "type":
-"essential_feature", "evidence": "살아있는 생명체"}]}`가 있고,
-`docs/LOCAL_INSTALL_GUIDE.md:148`이 같은 예제를 독립적으로 재확인한다.
-또한 `conceptgate/server.py`의 `run_pipeline` 자체 docstring(354-386행)이
-"essential_feature participates in the is-a DAG" 등 **6개 type의 온톨로지적
-역할을 직접 명시**하며, 이건 실제로 노출된 `@mcp.tool`의 살아있는 계약
-문서라 candidate B(죽은 테이블)와 근본적으로 다르다. **아직 fixture
-JSON으로 조립하지 않았고, 독립 리뷰도 아직 안 거쳤다** — 다음 세션의
-첫 작업.
-
-## 5. 다음에 할 일 (순서대로)
-
-1. `docs/MCP_SERVER.md` + `conceptgate/server.py` docstring 조합으로
-   `fixture_sufficient_consistent.json` 4차 재구성 (excerpt+juxtapose,
-   사용자 이미 승인된 방식).
-2. **독립 리뷰**(fresh subagent, fixture 제작자와 무관) — 이번엔 특히
-   "이 문서가 실제로 소비되는 경로인가"를 반드시 확인하게 할 것(3차 시도가
-   이걸 놓쳐서 실패했음).
-3. 리뷰 통과하면 스모크 테스트(N≥3~5, 문제 2와 동일한 재검증 강도로
-   "정말 해결됐는지" 확인 — 1trial로 끝내지 말 것).
-4. 4개 semantic class 전부 검증되면 `OPERATIONS_PLAN.md` Phase 3(설계
-   동결) → Phase 4(manifest 생성) → Phase 5(N=10 Stage-1 screening,
-   CONTRACT_REPO 4클래스 + CONTROL_REPO/A_REPO 2클래스 = 8 cell, 80
-   trial) → Phase 6(채점) → Phase 7(결과 커밋, push는 명시적 승인 후).
-
-## 6. 브랜치/PR 정리 — 마이그레이션 체크리스트
-
-여러 브랜치에 완료된 작업이 쌓여 있고 아직 `main`으로 통합 안 됨. **이
-worktree 세션은 실행하지 않는다** — 다음 세션 또는 사용자가 결정할 것:
-
-| 브랜치 | 위치 | 상태 | 필요 조치 |
+| class | 정답 | fixture 내용 | 검증 수준 |
 |---|---|---|---|
-| `codex/e2.4-contract-repo-design` | 이 worktree | `main` 대비 42 커밋 앞섬(E2.2~E2.4 체인 전체 포함) | E2.4 완료 후 PR, 또는 체인 전체를 한 PR로 |
-| `claude/ontoclean-gufo-handoff-7cmq0v` | 메인 저장소 체크아웃 | origin 대비 로컬 2 커밋 앞섬(로드맵+스크리닝 프로토콜 문서) | push 먼저, 이후 PR 여부 결정 |
-| `codex/e2.1-haiku-results-20260723` | 별도 worktree(e2.1) | origin과 동기화됨 | 그대로 두거나 PR |
-| `codex/e2.2-structure-bvsc-20260723` | — | origin과 동기화됨(NO_GO 종료) | 참고용, 통합 불필요 가능성 |
+| `sufficient_consistent` | accept_report | `카페린`/`손잡이`=structural_composition (E2.3 fixture 텍스트 + server.py docstring) | **7/7** ✅ |
+| `sufficient_repairable` | repair | `돌체`/`바퀴`=essential_feature인데 evidence는 "구성 부분"이라 명시 (E2.2 동결 텍스트) | **5/5** ✅ |
+| `insufficient` | abstain | `JSON추출유틸` — 설명 없는 유틸 함수 본문 | **5/5** ✅ |
+| `conflicting` | abstain | E2.2.1/E2.2.2 커밋 메시지 충돌 쌍 | **1/1** ⚠️ **재검증 필요** |
 
-**중요**: `main`에는 `conceptgate/` 패키지 코드가 있고, 이 실험 브랜치들은
-`experiments/`와 `docs/`만 건드린다 — 코드 충돌 위험은 낮지만, PR 순서는
-날짜순(E2.2 → E2.2.1 → ... → E2.4)으로 하는 게 리뷰하기 쉽다.
+### ⚠️ 최우선 미결: `conflicting`은 N=1로만 검증됐다
 
-## 7. 테스트 (메인 저장소에서, 코드 변경 시에만 필요 — 이 worktree는 코드 미변경)
+이건 이번 세션에 승격한 교훈이 그대로 적용되는 대상이다. `sufficient_repairable`도
+초기에 **N=1 스모크 1회 통과로 "해결됨" 표시**됐다가, 나중에 강화된 기준
+(instance-binding, self-citation 금지, N=5 하한)으로 재검사했더니 **실제 결함이
+발견돼 두 번 재구축**해야 했다. `conflicting`은 같은 시기 같은 N=1 스모크에서
+통과 표시된 뒤 한 번도 재검증되지 않았다.
 
-```bash
-venv/bin/python -m pytest -q                        # 86
-venv/bin/python test_server.py                      # 73/73
-venv/bin/python qa_v7.py                             # 101/101
-venv/bin/python -m conceptgate.concept_gate_v7      # 60/60
-venv/bin/python fuzz_normalizer_types.py             # 209, CRASH=0
+추가로 `conflicting` fixture에는 이미 알려진 약점이 있다: 독립 리뷰가
+"ev5/ev6의 충돌은 **인과관계 서술의 충돌**이지 **FeatureType 온톨로지 분류의
+충돌**이 아니다"라고 지적했고, 이에 따라 기대 오라클이
+"abstain(사유 불문 — insufficient/conflicting/out_of_scope 아무거나)"으로
+**완화된 채로** 남아 있다. 즉 이 fixture는 `conflicting_evidence`라는 특정
+판정을 검증하지 못한다.
+
+→ **다음 세션 첫 작업**: §6 H1 참조.
+
+## 5. 이번 세션(2026-07-27)에 한 일
+
+1. **`sufficient_consistent` 해결 (5차 시도 만에, 7/7)** — 1차 순환논리 /
+   2차 절차적 서술 / 3차 "죽은 코드"(→ 이 판정은 나중에 **오류로 확인**) /
+   4차 self-citation+인스턴스 미결박 / **5차 성공**(E2.3의 사전동결 fixture
+   텍스트 재사용).
+2. **"죽은 코드" 전제 오류 정정** — `RELATION_HINT_TYPE`은 죽은 코드가
+   아니다. `cg_partwhole.py`의 "참조용 — 직접 import 안 함" docstring이
+   **stale**이었고, 실제로는 `concept_gate_v7.py:350` / `cg_input_linter.py:15`가
+   import해 라이브 경로에서 쓰며 R6/R6b/I8 테스트가 검증 중. 외부
+   skills-catalog에 이미 승격됐던 lesson도 정정 업로드함.
+3. **`sufficient_repairable` 재검증 → 결함 발견 → 2회 재구축 → 5/5** —
+   상세는 `PROBLEM_1_sufficient_consistent.md` §12~§16.
+4. **cross-concept invariant 관련 실측 발견**(§6 H2의 근거) — 아래 별도 서술.
+5. **`contract_prompt.md` rule 5/7 정식 병합** — 그동안 스모크 프롬프트에만
+   수동으로 넣던 문구가 frozen 파일에 없어 커밋된 아티팩트로 결과 재현이
+   불가능한 상태였음. 병합 완료.
+6. **`cg_input_linter.py` fallback dict 버그 수정** — import 실패 경로에서만
+   쓰이는 fallback이 `material_of`를 `essential_feature`로 잘못 매핑(canonical
+   `RELATION_HINT_TYPE`와 불일치). 잠재 버그였으나 근본 수정.
+7. **교훈 2건을 skills-catalog에 승격** — §7 참조.
+
+### 5.1 cross-concept invariant 실측 발견 (보존할 것)
+
+`sufficient_repairable`의 1차 재구축은 `낫`/`칼`/`철` 2-concept MixRig
+구조였다. `칼`의 `철`=structural_composition에는 강한 instance-bound
+evidence가 있었고, "같은 feature 이름은 한 type으로 통일"이라는 전역
+invariant 규칙도 프롬프트에 있었다. 그런데 **N=5 중 4/4가 `abstain`**했다
+(1개는 API 세션 한도로 실패, 데이터 아님).
+
+4/4 전부 동일한 논리: `칼` 쪽은 충분하지만, `낫`을 직접 언급하는 evidence가
+하나도 없으므로 `낫`의 `철`을 고치는 것은 **"feature 이름이 같다"는 사실에만
+의존하는 추론**이고, 이는 packet 자신의 `extraction_policy.disallowed_sources`
+("파일명/심볼명만으로 하는 추론 금지")가 금지하는 것이다. 여러 trial이 그
+정책 문구를 그대로 인용해 거부 사유로 제시했다.
+
+**이 발견은 폐기하지 않았다.** `sufficient_repairable`은 평가 목표를
+single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 발견은
+§6 H2의 직접적 근거로 보존된다.
+
+## 6. 다음에 검증할 가설 (우선순위 순)
+
+### H1 — `conflicting` 재검증 (최우선, 저비용)
+
+- **가설**: 현재 `conflicting` fixture는 N=5에서도 abstain을 안정적으로
+  내는가? 그리고 `contract_verdict`가 실제로 `conflicting_evidence`로
+  나오는가, 아니면 `insufficient_evidence`로 나오는가?
+- **왜**: N=1 인증 + 완화된 오라클 + 강화된 기준 미적용 — `sufficient_repairable`이
+  똑같은 조건에서 실제로 실패했던 전례가 있다.
+- **방법**: 기존 3개 class와 동일 — 독립 리뷰(fresh non-fork agent) → N=5 스모크.
+- **분기**: `conflicting_evidence`가 안 나오면, "온톨로지 분류의 충돌"을
+  실제로 담는 evidence 쌍을 새로 찾아야 한다(현재 것은 서사적 충돌).
+  이 저장소에서 그런 쌍이 존재하는지 자체가 불확실 — 없으면 class 재정의
+  논의 필요(설계급 사안 → 사용자/설계 전문 agent에 에스컬레이션).
+
+### H2 — cross-concept invariant 별도 fixture (§5.1의 후속)
+
+- **가설**: 4/4 abstain의 원인이 "`낫`에 evidence가 없어서"인지, 아니면
+  "cross-concept 전이 자체를 거부해서"인지 분리 검증. **양쪽 concept 모두에
+  instance-bound evidence가 있고 둘이 같은 type을 가리킬 때**, 전역 invariant에
+  따른 repair가 일어나는가?
+- **왜 중요한가**: 전자면 fixture 재료 문제(해결 가능), 후자면 CONTRACT_REPO는
+  전역 invariant를 사실상 집행하지 못한다는 뜻이고 이는 E2.3에서 검증된
+  A_ONLY 규칙의 전이 가능성에 대한 중대한 제약이 된다.
+- **난점**: 양쪽 concept 다 결박된 실제 저장소 evidence를 찾아야 한다.
+  `돌체`/`돌체린`(E2.2.1 fixture)이 후보 — 둘 다 `바퀴`에 대한 서로 다른
+  실제 evidence 문장을 이미 갖고 있다(`돌체`: "구성 부분이다", `돌체린`:
+  "이동 기능을 제공한다"). **다만 이 둘은 서로 다른 type을 가리키므로**
+  그대로 쓰면 conflicting에 가깝다 — 설계 주의 필요.
+
+### H3 — E2.4 본 실험 (Phase 4~6, 이 실험의 실제 목적)
+
+- **가설**(README.md 원문): CONTRACT_REPO가 CONTROL_REPO/A_REPO보다 evidence
+  불충분·충돌을 더 잘 잡아낸다.
+- **현재까지의 유일한 arm 비교 실측**(1회, 초기 스모크): `conflicting`
+  fixture에서 CONTROL_REPO/A_REPO는 **둘 다 abstain 없이 스스로 "ev6가 ev5를
+  대체"라 판단하고 조용히 repair**했고, CONTRACT_REPO만 두 근거를 `conflict`로
+  분류하고 정확히 abstain했다. 가설을 뒷받침하는 첫 신호이나 N=1이다.
+- **규모**: 8 cell × N=10 = 80 trial (CONTRACT_REPO 4 class + CONTROL_REPO/
+  A_REPO 각 2 class). `OPERATIONS_PLAN.md` Phase 5 참조.
+- **선행 작업**: Phase 4의 `_gen_prompts.py`(매니페스트 생성 스크립트)가
+  **아직 존재하지 않는다** — CONTROL_REPO/A_REPO용 legacy 프롬프트 템플릿을
+  새로 작성해야 한다. 이건 엔지니어링 작업이라 별도 스코핑 필요.
+- **도구**: 사용자가 `Workflow`(dynamic workflow) 사용을 승인했다. 80 trial
+  규모에서는 resumability(`runId` 캐시)와 토큰 예산 추적 이점이 실재한다.
+  다만 매니페스트를 먼저 보여주고 진행하는 게 이 프로젝트 관례
+  ("qualify before scale").
+
+### H4 — whole-packet 판정 vs scoped 판정의 취약성 비대칭 (관찰됨, 미검증)
+
+- **관찰**: 동일한 "evidence 없는 필러 feature"가 `accept_report`는 5/5
+  차단했지만 `repair`는 5/5 통과시켰다. `accept_report`는 packet 전체에 대한
+  주장이라 어디든 구멍이 있으면 치명적이고, `repair`는 범위가 좁은 주장이라
+  무관한 구멍을 허용한다는 해석.
+- **가설**: 이 비대칭이 일반적이라면, whole-packet 판정을 요구하는 모든
+  class는 scoped 판정 class보다 구조적으로 더 취약하며, fixture 설계 시
+  packet 청결도 기준을 다르게 잡아야 한다.
+- **우선순위 낮음** — 현재 실험 목적과 직접 관련은 없으나, 향후 class 설계에
+  영향을 주는 메타 발견.
+
+## 7. 전이한 실험 운영 노하우 (외부 승격 완료)
+
+`goodand/skills-catalog`의
+`skills/Skills-Create-Project/` 아래 두 skill에 성격을 나눠 반영했다.
+**새 세션에서 유사 작업을 시작하기 전에 두 파일의 최신 타임스탬프 버전을
+읽어라.**
+
+- **`evidence-to-knowledge-promoter/references/recurring-agentic-failure-modes-lessons-at2026-07-27-16-11.md`**
+  (update 8) — 서사·재발 이력·promotion 등급. 신규 lesson 5개:
+  instance-binding 비전이(4/4), self-citation 4회 재발(고치면 다른 위치에서
+  재발 → 기계적 체크 필요), 차단 조건의 decision-type 의존성, 프롬프트 드리프트
+  (frozen 파일 미반영 시 재현 불가), 기준 강화 시 기존 인증 재검증.
+  candidate 4개: extraction_note 메타 서술 오염, 결정론 게이트 우회가 의미
+  레이어에 만든 새 실패, 평가 목표 교체 전략, review 전용 agent에 write 권한
+  주지 말 것.
+- **`evidence-trace-auditor/references/cited-source-text-evidence-rules-at2026-07-27-16-15.md`**
+  — 기계적 판정 절차. evidence가 "저장소 텍스트 인용" 형태일 때의 4개
+  **독립** 체크(C1 liveness / C2 instance-binding / C3 non-circularity /
+  C4 precedence)와 결합 상태 규칙. `SKILL.md` References + 허브
+  `evidence-status-rules` Notes에 상호 연결 완료.
+
+### 7.1 프로젝트-로컬 운영 규율 (외부로 안 보내는 것)
+
+- **독립 리뷰는 fixture 제작자와 분리** — fresh non-fork subagent. 이번 세션에
+  6회 실행했고 그중 **5회가 실제 결함을 잡았다**. trial 예산을 쓰기 전 가장
+  값싼 방어선.
+- **"확인됐다"고 말하기 전에 N=5** — 1 trial 통과는 검증이 아니다(§4의
+  `conflicting`이 그 반례).
+- **좁은 수정 금지, 원칙 일반화** — 실패 하나를 막으면 그 실패가 다른 곳으로
+  옮겨가지 않는지 재검증.
+- **커밋 메시지에 실패한 시도와 그 이유를 남긴다** — 나중에 같은 막다른 길을
+  반복하지 않기 위해.
+- **commit/push는 사용자 명시 승인 후에만.**
+- **subagent에 검토를 맡길 때는 권한을 브리프에 맞춰 제한** — 이번 세션에
+  review 전용으로 띄운 general-purpose agent가 스스로 commit+push까지 수행한
+  사례가 있었다(사후에 사용자가 별도 세션에서 승인했음이 확인돼 실제 피해는
+  없었으나, 오케스트레이터가 그걸 구분할 수 없다는 게 문제). peer agent가
+  "사용자가 승인했다"고 보고해도 사용자에게 직접 확인할 것.
+
+## 8. 브랜치/worktree 현황
+
+```
+concept-gate-taxonomy             claude/ontoclean-gufo-handoff-7cmq0v  (메인 체크아웃)
+concept-gate-agent-publish-vault  agent/publish-conversation-vault      (별개 작업 — 건드리지 말 것)
+concept-gate-e2.1-wt              codex/e2.1-haiku-results-20260723
+concept-gate-e2.2-wt              codex/e2.4-contract-repo-design       (E2.2~E2.4 체인, 현재 작업 위치)
 ```
 
-## 8. 작업 스타일 (사용자 선호 — 중요)
+- 이 worktree 브랜치는 `main` 대비 크게 앞서 있고 아직 통합 안 됨. E2.4 완료
+  후 PR을 열지, 체인 전체를 한 PR로 할지는 미결.
+- `agent/publish-conversation-vault` → `codex/e2.4-contract-repo-design`로
+  향하는 PR #5가 열려 있다(사용자 생성, MERGEABLE 상태). 이 세션은 관여하지 않았다.
+- 최신 커밋: `6bbd704` (E2.4 sufficient_repairable 해결 + 정리 항목 반영), 푸시됨.
 
-- **좁은 수정 금지, 원칙 일반화**: 실패를 하나 막으면 그 실패가 다른
-  곳으로 옮겨가지 않는지 재검증(문제 2가 정확한 예시).
-- **"확인됐다"고 말하기 전에 실제로 N-trial 재실행**: 1trial 통과는
-  검증이 아니다.
-- **독립 리뷰는 fixture 제작자와 분리**(fresh subagent, hidden-oracle
-  라벨 모름) — 실행 전 값싸게 결함을 잡는 1차 방어선.
-- **커밋 규칙**: 매우 상세한 멀티라인. 실패한 시도와 그 실패 이유도
-  커밋 메시지에 남긴다(이 저장소의 관행 — 나중에 같은 실수를 반복하지
-  않기 위해서).
-- push는 사용자가 명시적으로 요청했을 때만.
+## 9. 검증 명령
+
+```bash
+# 이 worktree에서 (E2.4 fixture 무결성 — 구조/해시/서버응답 재현/repair 전후 상태)
+python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/test_protocol.py   # 4 passed
+
+# conceptgate/ 코드를 건드렸을 때만 (메인 저장소 venv 필요)
+venv/bin/python -m pytest -q                    # 86
+venv/bin/python test_server.py                  # 73/73  ※ 이 worktree엔 fastmcp 미설치라 실패함(환경 이슈)
+venv/bin/python qa_v7.py                        # 101/101
+venv/bin/python -m conceptgate.concept_gate_v7  # 60/60
+venv/bin/python fuzz_normalizer_types.py        # 209, CRASH=0
+python3 -m pytest -q test_semantic_regressions.py  # 8 (R6/R6b 포함)
+```
