@@ -16,7 +16,7 @@
 | [2026-07-24_e2.2.2_directed_pc_invariant_fix](2026-07-24_e2.2.2_directed_pc_invariant_fix/) | 진짜 원인은 어휘가 아니라 미명시 구조 계약(전역 feature-type invariant + complete-state) 아닌가? (E2.2.2) | rate=1.00, **GO**. 20/20. E2.2.1의 "어휘" 진단이 틀렸음을 확인 |
 | [2026-07-25_e2.2.3_directed_pc_ablation](2026-07-25_e2.2.3_directed_pc_ablation/) | E2.2.2의 복합 수정 중 어느 요소가 실제로 효과를 냈는가? (OFAT ablation) | A_ONLY=20/20, B_ONLY=1/20, C_ONLY=0/20 — **A(전역 invariant 규칙) 단독으로 충분** |
 | [2026-07-25_e2.3_global_invariant_generalization](2026-07-25_e2.3_global_invariant_generalization/) | A_ONLY의 효과가 fixture 특유의 문장 효과인가, 일반화되는 추론 계약인가? | CONTROL 0/2, A_ONLY 10/10, PARAPHRASE 9/10, TOPOLOGY 9/10, DECOY 10/10 — 전부 screened PASS |
-| [2026-07-25_e2.4_repo_grounded_contract_transfer](2026-07-25_e2.4_repo_grounded_contract_transfer/) | 구조화 evidence 계약(CONTRACT_REPO)이 **이 저장소 자체의 실제 코드/문서** evidence 위에서 claim/abstain/repair 경계를 지키는가? | **진행 중 — 본 3-arm 실험 미실행.** fixture 4종 준비 완료(consistent 7/7, repairable 5/5, insufficient 5/5, conflicting 1/1 ⚠️재검증 필요). 상태는 `docs/HANDOFF.md` §4 참조 |
+| [2026-07-25_e2.4_repo_grounded_contract_transfer](2026-07-25_e2.4_repo_grounded_contract_transfer/) | 구조화 evidence 계약(CONTRACT_REPO)이 **이 저장소 자체의 실제 코드/문서** evidence 위에서 claim/abstain/repair 경계를 지키는가? | **진행 중 — 본 3-arm 실험 미실행.** 유효 커버리지 **3 class**(consistent 7/7, repairable 5/5, insufficient 5/5). `conflicting`은 "현 저장소의 live·동등강도 evidence로 구성 가능한 fixture 미확보"로 종결(schema class는 유지) — `PROBLEM_2_conflicting.md`. 상태는 `docs/HANDOFF.md` §4 참조 |
 
 ## 채점 원칙
 

@@ -1,6 +1,9 @@
 # 문제 정의서 — `conflicting` class: 오라클 유출로 기존 검증 무효 + class 자체의 구성 가능성 의문
 
-- 상태: 미해결. H1(`docs/HANDOFF.md` §6) 진행 중 작성.
+- 상태: **종결(미확보로 확정)**. 오라클 유출은 수정·가드 완료, N=5 실측
+  완료, 처리 방향 사용자 결정 완료(§5.2). `conflicting_evidence`는 "현
+  저장소의 live·동등강도 evidence로 구성 가능한 fixture 미확보"로 표시하고,
+  E2.4는 유효 커버리지 **3 class**로 보고한다. Schema의 class는 유지.
 - 작성: 2026-07-27
 - 관련 파일: `fixture_conflicting.json`, `contract_prompt.md`,
   `decision_schema.json`, `evidence_packet_schema.json`, `test_protocol.py`
@@ -148,11 +151,154 @@ instance-bound이며, 이 E2.4 fixture와 무관하게 먼저 존재했다(C3/C4
   "권위가 확정되지 않은 상충 출처"로 재정의한다. `README.md`의 class 표와
   `decision_schema.json`의 constraint 수정이 필요 → 설계급.
 
+## 5.1 N=5 스모크 실측 결과 (2026-07-27, 유출 제거 후)
+
+§5의 선택지 (A)를 실행했다. 유출이 제거된 packet으로 N=5.
+
+| trial | decision | contract_verdict | ev5/ev6 admissibility |
+|---|---|---|---|
+| 1 | abstain | `insufficient_evidence` | out_of_scope / conflict |
+| 2 | abstain | `insufficient_evidence` | out_of_scope / out_of_scope |
+| 3 | abstain | `insufficient_evidence` | out_of_scope / conflict |
+| 4 | abstain | **`conflicting_evidence`** | conflict / conflict |
+| 5 | abstain | `insufficient_evidence` | out_of_scope / conflict |
+
+**`decision`은 5/5 안정적으로 `abstain`. 그러나 `contract_verdict`는
+불안정하다 — 4× `insufficient_evidence`, 1× `conflicting_evidence`.**
+
+### 왜 verdict가 갈리는가 — 계약 텍스트의 해석 여지
+
+4/5(trial 1,2,3,5)는 §3에서 도출한 것과 **독립적으로 동일한 엄격 해석**에
+도달했다. trial 5가 이를 가장 명확히 언어화했다:
+
+> "이 충돌은 selected_type을 직접 지지하는 두 evidence 간 충돌이 아니라
+> **사실 귀인 충돌**이므로 contract_verdict를 conflicting_evidence로 만들지는
+> 않지만, insufficiency를 더욱 강화한다."
+
+즉 "두 텍스트가 사실 관계에서 서로 모순된다"와 "두 텍스트가 양립 불가능한
+**type**을 각각 직접 지지한다"를 구분하고, 후자만 `conflicting_evidence`로
+본 것이다. 이건 `semantic_constraints`의 "conflicting direct evidence **of
+equal strength**"와 규칙 3의 "양립 불가능한 **selected_type을 직접 지지하는**
+evidence"에 부합한다.
+
+trial 4만 느슨하게 읽어 `conflicting_evidence`를 냈고, **그 응답 안에
+내적 비일관성이 있다** — ev5/ev6를 둘 다 `conflict`로 두고
+`conflicting_evidence`를 선택했으면서, 같은 응답에서 "neither provides
+direct_support for any FeatureType"이라고 명시한다. 양쪽이 direct_support가
+아니면 계약 정의상 `conflicting_evidence`가 성립하지 않는다.
+
+**결론: verdict 불안정의 원인은 fixture가 아니라 계약 문구다.** 규칙 3이
+`conflicting`을 "type 수준 충돌"로 한정한다는 것이 `semantic_constraints`에는
+있지만 규칙 3 본문에는 충분히 못박혀 있지 않아, 소수 판정이 "사실 충돌"로
+읽을 여지가 남는다.
+
+### 채점에 대한 함의
+
+`OPERATIONS_PLAN.md` Phase 6은 "단순 `decision` 일치가 아니라 기대
+`contract_verdict`와의 일치"로 채점하도록 규정한다. 따라서:
+
+- 오라클을 `conflicting_evidence`로 두면 → **1/5 (0.20)**, threshold 0.90에
+  크게 미달
+- 오라클을 `insufficient_evidence`로 두면 → **4/5 (0.80)**, 역시 0.90 미달
+  (`docs/experiment_screening_protocol.md` 기준으로 escalate 구간)
+
+**어느 쪽을 오라클로 잡아도 threshold를 넘지 못한다.** 이전 세션이 오라클을
+"abstain이면 3개 verdict 아무거나 허용"으로 완화한 것은 정당한 채점 선택이
+아니라 **이 불안정성을 은폐한 것**이었음이 실측으로 확인됐다(그 완화 문구가
+동시에 §2의 오라클 유출이기도 했다).
+
+### 부수 확인 — 계약이 표면 유사성 함정을 실제로 막았다
+
+여러 trial이 두 가지 유혹을 명시적으로 거부했다:
+1. ev5에 `structural_composition` 문자열이 등장하지만 "스키마에 노출되지
+   않았던 enum 값에 대한 어휘적 언급"이므로 type 근거가 아니라고 판단
+   (한 trial은 이를 "심볼명 기반 추론이라 금지"라고 정책을 직접 인용)
+2. ev6의 "structural **contracts**"는 프롬프트/스키마 계약이지 taxonomy의
+   부분-전체(`structural_composition`)가 아니라고 명확히 구분
+
+이건 규칙 2의 전문용어 규율이 의도대로 작동한다는 독립적 방증이다 —
+`conflicting` class 자체는 미커버지만, 메커니즘의 이 부분은 재확인됐다.
+
+### 정리
+
+- §5 (A) **완료**. `conflicting` class는 이 fixture로 **실질적으로 미커버**다.
+  정직한 다수 판정은 `insufficient_evidence`이며, 이는 §3의 사전 논증과
+  실측이 일치한 결과다.
+- E2.4의 4개 class 중 `conflicting`만 여전히 미해결. 나머지 3개는 각각
+  7/7, 5/5, 5/5로 검증됨.
+- **새로 드러난 별도 사안**: 규칙 3의 `conflicting` 정의를 `semantic_constraints`
+  수준으로 명확히 하지 않으면, 설령 진짜 conflicting fixture를 만들어도
+  verdict가 갈릴 수 있다. 이건 fixture 문제와 독립적인 **계약 문구 개정
+  사안**(설계급)이다.
+
+## 5.2 결정 (2026-07-27, 사용자) — 미확보로 표시하고 별도 실험으로 분리
+
+§5.1의 실측(다수 4/5가 `insufficient_evidence`)에 따라 사전에 정한 판정
+규칙대로 **현 fixture는 `conflicting` class를 검증하지 못한 것으로 확정**한다.
+그에 대한 처리는 다음과 같이 결정됐다.
+
+1. **문서-코드 쌍(§4)으로 즉시 대체하지 않는다.** (B)를 지금 실행하지 않는다.
+2. `conflicting_evidence`를 **"현 저장소의 live·동등강도 evidence로 구성
+   가능한 fixture 미확보"**로 표시한다. 실패가 아니라 **미확보(未確保)**다 —
+   메커니즘이 이 verdict를 낼 수 없다는 주장이 아니고, 이 저장소에서 그
+   조건을 만족하는 재료를 찾지 못했다는 기록이다.
+3. **E2.4의 유효 커버리지를 3개 class로 보고한다**
+   (`sufficient_consistent` 7/7, `sufficient_repairable` 5/5,
+   `insufficient` 5/5).
+4. **Schema의 class 자체는 유지한다** — `decision_schema.json`의
+   `contract_verdict` enum에서 `conflicting_evidence`를 제거하지 않는다.
+   계약이 그 verdict를 표현할 수 있다는 사실과, 이 실험이 그것을 검증하는
+   fixture를 확보했다는 사실은 별개다.
+5. **stale 문서 대 live 코드의 충돌(§4)은 `source_authority_unresolved`
+   계열의 별도 실험으로 분리한다.** §4에서 확보한 재료(문서
+   `phase_a_implementation_packet.md:102`의 "철은 칼의 재료 →
+   essential_feature" 대 R6b/`cg_partwhole.py`의 `structural_composition`,
+   인스턴스까지 `칼`/`철`로 일치)는 폐기하지 않고 그 실험의 출발점으로
+   보존한다. 그 실험이 묻는 질문은 이 실험의 것과 다르다 — "동등강도
+   충돌에서 보류하는가"가 아니라 **"권위가 확정되지 않은 상충 출처를 만났을
+   때 독단으로 해결하지 않는가"**다.
+
+### 이 결정이 H3(본 3-arm 실험)에 미치는 영향 — 반드시 반영 필요
+
+`OPERATIONS_PLAN.md` Phase 5의 커버리지 설계는 CONTROL_REPO/A_REPO에
+**`sufficient_consistent` + "가장 어려운 class인 `conflicting`"** 2개를
+배정했다. `conflicting`이 빠지면:
+
+- **arm 비교의 최고 신호 셀이 사라진다.** 이 실험 전체를 동기부여한 유일한
+  arm 비교 관측(초기 스모크에서 CONTROL/A_REPO는 조용히 repair, CONTRACT_REPO만
+  abstain)이 바로 `conflicting` fixture에서 나온 것이다 — 그리고 그 관측은
+  오라클 유출이 있던 packet에서 얻은 것이므로 **그 자체도 재현이 필요한
+  상태**다.
+- abstain-target class 중 남는 것은 `insufficient` 하나뿐이다. arm 비교를
+  "정답이 abstain인 class"에 집중시키려면 이제 그 하나에 의존해야 한다.
+- → Phase 5 커버리지 재설계가 선행돼야 한다. `conflicting` 자리에
+  `insufficient`를 넣을지, `sufficient_repairable`을 넣을지, 또는
+  `insufficient` 단독에 N을 늘릴지는 설계 결정이다.
+
 ## 6. 완료 기준 (Definition of Done)
 
 - 오라클 유출 제거 + 기계적 가드 — **완료**
-- 유출 제거 후 독립 리뷰 통과 — 미완(세션 한도)
-- N=5 스모크에서 안정적 abstain 확인 — 미완
-- `contract_verdict`가 실제로 무엇으로 나오는지 실측 기록 — 미완
-- `conflicting_evidence` 자체를 검증하는 fixture 확보, **또는** §5의 (B)/(C)
-  중 하나를 사용자 결정으로 채택 — 미완
+- N=5 스모크에서 안정적 abstain 확인 — **완료** (decision 5/5 abstain)
+- `contract_verdict`가 실제로 무엇으로 나오는지 실측 기록 — **완료** (§5.1,
+  4× insufficient_evidence / 1× conflicting_evidence, 불안정)
+- (A)/(B)/(C) 중 처리 방향 결정 — **완료** (§5.2, 미확보 표시 + 별도 실험
+  분리)
+- 유출 제거 후 독립 리뷰 — 진행 중. 이 리뷰의 남은 가치는 대체 후보 판정이
+  아니라(그건 §5.2로 분리됨) **유출 가드의 우회 가능성**과
+  **`sufficient_repairable`의 scope note가 같은 종류의 유출인지**에 대한
+  판단이다. 결과 도착 시 반영한다.
+
+**이 문서 기준의 H1은 종료.** `conflicting`은 "미확보"로 확정 표시되고,
+E2.4는 유효 커버리지 3 class로 보고된다.
+
+### 이 문서에서 파생돼 다른 곳으로 넘어간 미결 사안
+
+1. **`source_authority_unresolved` 계열 별도 실험** — §4의 재료로 §5.2-5의
+   질문("권위 미확정 상충 출처를 독단으로 해결하지 않는가")을 검증. 이
+   실험의 범위 밖.
+2. **규칙 3의 `conflicting` 정의 명확화** (설계급) — `semantic_constraints`는
+   "equal strength direct evidence"를 요구하는데 규칙 3 본문은 그만큼
+   못박지 않아 소수 판정이 "사실 충돌"로 읽을 여지가 있다(§5.1). 위 별도
+   실험이나 향후 conflicting fixture를 만들기 **전에** 정리하는 게 맞다.
+3. **Phase 5 커버리지 재설계** (§5.2 하단) — arm 비교의 최고 신호 셀이
+   사라진 것에 대한 대응.

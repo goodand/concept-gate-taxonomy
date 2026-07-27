@@ -210,6 +210,25 @@ repair했다. 동일 evidence에서 CONTRACT_REPO만 두 근거를 `conflict`로
 명시 분류하고 정확히 abstain했다 — 계약 구조가 실제로 판단 경계를
 안정화한다는 이 실험의 핵심 가설을 직접 뒷받침하는 첫 실측 증거.
 
+> ⚠️ **정정 주석 (2026-07-27, H1)**: 위 "핵심 검증 결과"는 이 실험 전체를
+> 동기부여한 관측이지만, **오라클 유출이 있던 packet에서 얻은 것**이다
+> (`fixture_conflicting.json`의 `extraction_note`에 "CONTRACT_REPO's correct
+> behavior is still to abstain..."이 들어 있었고, 이 필드는 모델에 전달된다 —
+> `PROBLEM_2_conflicting.md` §2).
+>
+> 다만 유출의 방향을 따져보면 이 관측이 **유출로 설명되지는 않는다**: 유출
+> 문구는 "보류가 옳다"는 쪽을 가리켰는데 legacy arm들은 그럼에도 repair를
+> 강행했다. 즉 유출은 legacy의 overclaim을 만들어낸 원인이 아니라 오히려
+> 그것을 억제해야 했을 텍스트였다. (legacy 스키마의 선택지는
+> `report_done`/`repair`/`request_evidence`로 `abstain` 어휘 자체가 없어
+> 유출 문구가 그들의 선택지에 직접 매핑되지도 않는다.)
+>
+> 그럼에도 이 관측은 **N=1이고, 그 fixture는 이제 커버리지에서 제외됐다**
+> (§"문제 정의" 이후 절 참조 — `conflicting`은 미확보로 종결). 따라서:
+> - 이 관측을 E2.4의 결론으로 인용하면 안 된다. 재현이 필요하다.
+> - 재현할 fixture가 `conflicting`이 아니게 됐으므로, arm 비교를 어느 class로
+>   할지가 열린 문제다(Phase 5 커버리지 재설계, `docs/HANDOFF.md` §6 H1c).
+
 ## 문제 정의 (N=10 본 실행 전 해결 필요)
 
 **문제 1 — `sufficient_consistent`가 구조적으로 어려움 — 2026-07-27 해결됨,
@@ -357,5 +376,36 @@ feature `갑종`(essential_feature 필러, repair 후에도 essential 축 유지
   `contract_verdict=sufficient_repairable`. 필러(`갑종`, evidence_refs
   없음)는 5/5 전부에서 `바퀴` repair 판단을 막지 않았다.
 
-**결론**: `sufficient_repairable` 재검증 완료, 해결됨. E2.4의 4개
-semantic class 전부 독립 리뷰 + smoke test(각 5/5 또는 7/7) 검증 완료.
+**결론**: `sufficient_repairable` 재검증 완료, 해결됨.
+
+## `conflicting` 미확보로 종결 + 유효 커버리지 3 class 확정 (2026-07-27, H1)
+
+H1(`docs/HANDOFF.md` §6)을 실행한 결과, 위 "4개 class 전부 검증 완료"라는
+표현은 **틀렸다** — `conflicting`은 N=1 인증이었고 그 N=1이 오라클 유출
+상태에서 얻어진 것이었다. 상세 전문은
+`PROBLEM_2_conflicting.md`. 요약:
+
+1. **오라클 유출 발견·수정**: `fixture_conflicting.json`의
+   `extraction_note`(모델-facing 필드)에 기대 verdict가 그대로 적혀 있었다.
+   `evidence_packet_schema.json` 자신이 금지한 것을 위반. 제거 후
+   `test_protocol.py`에 **기계적 가드**(`test_model_facing_metadata_does_not_leak_the_oracle`)
+   추가 — 음성 대조로 옛 유출 텍스트를 실제로 검출하는지 확인.
+2. **유출 제거 후 N=5 실측**: `decision` 5/5 `abstain`(안정), 그러나
+   `contract_verdict` 불안정 — `insufficient_evidence` ×4,
+   `conflicting_evidence` ×1. Phase 6은 verdict 일치로 채점하므로
+   **어느 쪽을 오라클로 잡아도 threshold 0.90 미달**(0.20 또는 0.80).
+   원인은 fixture가 아니라 계약 문구(규칙 3이 "동등강도 direct_support"를
+   `semantic_constraints`만큼 못박지 않음).
+3. **결정(사용자)**: `conflicting_evidence`를 **"현 저장소의 live·동등강도
+   evidence로 구성 가능한 fixture 미확보"**로 표시. **유효 커버리지 3 class**
+   (`sufficient_consistent` 7/7, `sufficient_repairable` 5/5,
+   `insufficient` 5/5). **Schema의 class 자체는 유지**(enum 미변경, 실제
+   확인함). stale 문서 대 live 코드 충돌은 `source_authority_unresolved`
+   계열 별도 실험으로 분리.
+
+**Phase 5 커버리지 재설계 필요**: 기존 설계는 CONTROL_REPO/A_REPO에
+`sufficient_consistent` + `conflicting`을 배정했다. `conflicting`이 빠지면
+arm 비교의 최고 신호 셀이 사라지고, abstain-target class는 `insufficient`
+하나만 남는다. 또한 위 "핵심 검증 결과" 절의 유일한 arm 비교 관측도 그
+fixture에서 나온 것이라 재현 대상이 됐다(그 절의 정정 주석 참조).
+**본 실행(Phase 5) 전에 이 재설계와 규칙 3 명확화가 선행돼야 한다.**
