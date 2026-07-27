@@ -100,13 +100,27 @@ evidence 불충분/충돌을 더 잘 잡아내는지 검증한다. 3-arm: CONTRO
    "일반 알고리즘이 어떻게 판단하는가"와 "이 특정 feature가 그 알고리즘을
    통해 실제로 이 type이 됐다"는 서술 사이 추론적 공백 때문.
 3. **3차**(`RELATION_HINT_TYPE["component_of"]` 선언적 매핑 테이블) —
-   독립 리뷰에서 기각, **더 나쁜 이유로**: 이 테이블 바로 위 docstring이
-   "참조용 — concept_gate_v7.py에서 직접 import하지 않음"이라고 명시한다.
-   즉 **죽은 참조용 코드**를 근거로 쓴 것이라 실사용 파이프라인과 무관.
+   독립 리뷰에서 기각, 당시 사유: 이 테이블 바로 위 docstring이 "참조용
+   — concept_gate_v7.py에서 직접 import하지 않음"이라고 명시하므로
+   죽은 참조용 코드를 근거로 쓴 것이라 실사용 파이프라인과 무관하다고
+   판단했음.
 
-**근본 원인**: 이 저장소의 코드/주석은 압도적으로 절차적(어떻게
-판단하는가)이지 선언적(X는 Y다를 직접 단언)이 아니다. 유일하게 선언적인
-`RELATION_HINT_TYPE`조차 죽은 코드였다.
+> ⚠️ **정정(2026-07-27)**: 위 3차 시도의 기각 사유는 **틀렸다** —
+> `RELATION_HINT_TYPE`은 죽은 코드가 아니다. `concept_gate_v7.py:350`이
+> 실제로 import하고(`relation_discrimination_gate()`, 라이브
+> `run_pipeline` 경로), `cg_input_linter.py:15`도 별도 import하며,
+> 통과 중인 회귀 테스트(R6/R6b, qa_v7.py I8)가 이 매핑을 검증한다.
+> docstring의 "직접 import 안 함"은 나중에 갱신 안 된 stale 주석이었다.
+> 상세 정정: `experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/PROBLEM_1_sufficient_consistent.md`
+> §10. (아래 "근본 원인" 문단도 이 정정의 영향을 받음 — 재고 필요.)
+> 이 HANDOFF.md 전체는 2026-07-25 스냅샷이라 이후(문제 1 해결 포함)
+> 반영 안 됨 — Phase 3 freeze 커밋 때 전면 갱신 예정.
+
+**근본 원인** (2026-07-25 시점 판단, 위 정정 참고): 이 저장소의 코드/
+주석은 압도적으로 절차적(어떻게 판단하는가)이지 선언적(X는 Y다를 직접
+단언)이 아니다 — 다만 "유일하게 선언적인 `RELATION_HINT_TYPE`조차 죽은
+코드였다"는 부분은 위 정정에 따라 틀렸다: `RELATION_HINT_TYPE`은
+살아있고 테스트로 검증되는 선언적 코드다.
 
 **4차 시도 재료(찾았으나 아직 fixture로 안 만듦)**: `docs/MCP_SERVER.md`
 93-109행 — **살아있는(server.py와 같은 커밋에서 갱신된) `run_pipeline`

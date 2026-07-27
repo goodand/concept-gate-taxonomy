@@ -17,6 +17,18 @@
     ],
     "outside_knowledge_policy": "forbidden"
   },
+  "run_pipeline_input": [
+    {
+      "name": "JSON추출유틸",
+      "features": [
+        {
+          "feature": "코드블록처리방식",
+          "type": "essential_feature",
+          "evidence": "코드블록 처리 방식이 항목에 기록되어 있다"
+        }
+      ]
+    }
+  ],
   "candidate_concepts": [
     {
       "name": "JSON추출유틸",

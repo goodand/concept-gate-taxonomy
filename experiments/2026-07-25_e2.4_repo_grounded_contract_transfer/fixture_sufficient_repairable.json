@@ -17,6 +17,38 @@
     ],
     "outside_knowledge_policy": "forbidden"
   },
+  "run_pipeline_input": [
+    {
+      "name": "완제품유닛A",
+      "features": [
+        {
+          "feature": "재료",
+          "type": "essential_feature",
+          "evidence": "재료가 항목에 기록되어 있다"
+        },
+        {
+          "feature": "갑식별자",
+          "type": "essential_feature",
+          "evidence": "갑식별자가 항목에 기록되어 있다"
+        }
+      ]
+    },
+    {
+      "name": "완제품유닛B",
+      "features": [
+        {
+          "feature": "재료",
+          "type": "structural_composition",
+          "evidence": "재료는 완제품유닛B의 구성 재료이다"
+        },
+        {
+          "feature": "을식별자",
+          "type": "essential_feature",
+          "evidence": "을식별자가 항목에 기록되어 있다"
+        }
+      ]
+    }
+  ],
   "candidate_concepts": [
     {
       "name": "완제품유닛A",

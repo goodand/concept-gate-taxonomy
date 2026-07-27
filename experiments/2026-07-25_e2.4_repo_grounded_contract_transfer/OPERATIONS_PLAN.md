@@ -90,6 +90,10 @@ deterministic floor만" 정신을 fixture 제작에도 적용).
   (`python3 -m jsonschema` 또는 동등한 검증 스크립트).
 - 각 `evidence_items[].text_sha256`이 `text`의 실제 sha256과 일치.
 - `extraction_policy.allowed_sources`에 없는 `source_path`가 없는지.
+- `run_pipeline_input`을 `_cert_core.run_and_certify()`로 재실행했을 때
+  `server_response`가 재현되는지. `candidate_concepts`는 모델-facing
+  evidence packet이라 `evidence_refs`를 쓰고, `run_pipeline` 입력이
+  아니므로 둘을 혼동하면 안 된다.
 
 ### Phase 2 — 독립 리뷰 (원칙 3+4+7)
 
@@ -208,7 +212,10 @@ repair했다. 동일 evidence에서 CONTRACT_REPO만 두 근거를 `conflict`로
 
 ## 문제 정의 (N=10 본 실행 전 해결 필요)
 
-**문제 1 — `sufficient_consistent`가 구조적으로 어려움**: 리뷰에서 잡힌
+**문제 1 — `sufficient_consistent`가 구조적으로 어려움 — 2026-07-27 해결됨,
+아래는 당시 문제 정의 그대로 유지(이력용).** 최종 해결 경위는 위
+"문제 1 해결 (2026-07-27)" 절과 `PROBLEM_1_sufficient_consistent.md`
+참조. 리뷰에서 잡힌
 순환논리를 고쳤는데도 CONTRACT_REPO는 여전히 insufficient로 판정했다.
 이유: 텍스트가 "알고리즘이 어떻게 판단하는가"를 서술할 뿐 "이 feature는
 essential이다"를 직접 선언하지 않는다. 이 저장소의 코드/주석은 대부분
@@ -230,3 +237,58 @@ fixture 결함이 아니라 **evidence가 진짜로 주제 무관(out_of_scope)�
 것 자체는 essential_feature 증거가 아니다") 막고 재검증할지. (a)는 raw
 baseline, (b)는 prompt-engineering 개입 후 재측정 — 둘 다 유효한
 실험이지만 다른 질문에 답한다. 사용자 결정 대기.
+
+## Phase 1 하네스 보강 (2026-07-26)
+
+Fixture 관리 결함을 하나 발견해 먼저 닫았다. `candidate_concepts`는
+`evidence_refs`를 담는 모델 입력 표면인데, 기존 문서 표현은
+`server_response`가 이 객체에서 직접 관측된 것처럼 읽혔다. 실제
+`run_pipeline`은 feature별 inline `evidence` 문자열을 요구하므로, 이 둘을
+분리하지 않으면 `server_response` 재현 검증이 불가능하다.
+
+조치:
+- `evidence_packet_schema.json`에 `run_pipeline_input`을 필수 필드로 추가.
+- 4개 `fixture_*.json`에 실제 `run_pipeline` 입력을 명시.
+- `test_protocol.py` 추가. 현재 검증 항목: 필수 shape, sha256, evidence_refs,
+  `candidate_concepts`와 `run_pipeline_input`의 이름/feature/type alignment,
+  그리고 `_cert_core.run_and_certify(run_pipeline_input)` 기반
+  `server_response` 재현.
+
+검증 명령:
+
+```bash
+python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/test_protocol.py
+```
+
+현재 결과: `3 passed`.
+
+## 문제 1(`sufficient_consistent`) 해결 (2026-07-27)
+
+5차 시도(카페린/손잡이/`structural_composition`, evidence는 E2.3의
+사전등록 fixture 텍스트 + `server.py`의 라이브 docstring 조합)로
+독립 리뷰 통과 후 N=5 smoke test 실행 → 필러 essential_feature가
+evidence 없이 있어 5/5 전부 abstain하는 결함 발견 → 필러 제거 +
+`server_response`를 실제 `NEEDS_CORRECTION` 관측값으로 교정 → 재검증
+7/7(소규모 확인 2 + 공식 재실행 5) 전부 `accept_report`/
+`sufficient_consistent`. 상세 기록은
+`PROBLEM_1_sufficient_consistent.md` §7.4-7.6, §11 참조. E2.4의 4개
+semantic class 전부 해결·검증 완료 — Phase 3(freeze)로 넘어갈 준비가
+됐다.
+
+**부수 발견 및 정정(2026-07-27)**: `fixture_sufficient_repairable.json`의
+`ev3`이 `RELATION_HINT_TYPE`을 인용하는 게 죽은 코드 근거 아니냐는
+의심으로 재검토를 시작했으나, **이 "죽은 코드" 전제 자체가 틀렸다는 게
+재검증에서 드러났다.** `cg_partwhole.py`의 모듈 docstring("참조용 —
+직접 import 안 함")은 **stale(갱신 안 된 옛 주석)**이다 —
+`concept_gate_v7.py:350`이 `hint_to_feature_type`을 실제로 import해
+`relation_discrimination_gate()`에서 쓰고, 이 게이트는 `server.py`의
+라이브 `run_pipeline`이 호출하는 `run()` 경로 안에 있다.
+`cg_input_linter.py:15`도 별도로 import해 매 호출마다 lint에 쓴다.
+`test_semantic_regressions.py`의 R6/R6b, `qa_v7.py`의 I8 테스트가 이
+매핑을 검증하며 현재 통과 중이다. 즉 **오늘 `sufficient_consistent`의
+3차 시도(candidate B, `RELATION_HINT_TYPE["component_of"]`)를 기각한
+근거("죽은 참조용 코드")는 stale 주석을 실제 import 그래프 확인 없이
+그대로 믿은 오류였다** — 상세 정정은 `PROBLEM_1_sufficient_consistent.md`
+§10 참조. `sufficient_repairable` 자체는 (죽은 코드 문제는 아니지만)
+`ev2`/`ev3`가 `완제품유닛B`라는 구체 concept을 언급하지 않는다는 별도
+쟁점이 있어 재검증 진행 중.

@@ -131,6 +131,21 @@ concept/feature/relation needing more support.
   `evidence_contract_v1` schema.
 - `contract_prompt.md`: prompt block for CONTRACT_REPO.
 
+## Fixture Precondition Contract
+
+Each `fixture_*.json` has two concept surfaces:
+
+- `run_pipeline_input`: exact concept JSON submitted to `_cert_core.run_and_certify`
+  to produce `server_response`.
+- `candidate_concepts`: model-facing packet surface. It mirrors names,
+  features, and types from `run_pipeline_input`, but cites `evidence_refs`
+  instead of inline `evidence` strings.
+
+`test_protocol.py` must pass before any smoke or screening run. It verifies
+fixture shape, evidence hash integrity, evidence-ref integrity,
+`candidate_concepts`/`run_pipeline_input` surface alignment, and
+`server_response` reproducibility.
+
 ## Scoring Obligations
 
 The future scorer should not rely on self-reported success. It must check:

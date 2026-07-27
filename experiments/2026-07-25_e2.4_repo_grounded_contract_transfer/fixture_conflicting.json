@@ -17,6 +17,18 @@
     ],
     "outside_knowledge_policy": "forbidden"
   },
+  "run_pipeline_input": [
+    {
+      "name": "directed_pc_실패원인_설명",
+      "features": [
+        {
+          "feature": "vocabulary_기여도",
+          "type": "essential_feature",
+          "evidence": "vocabulary 기여도 설명이 항목에 기록되어 있다"
+        }
+      ]
+    }
+  ],
   "candidate_concepts": [
     {
       "name": "directed_pc_실패원인_설명",

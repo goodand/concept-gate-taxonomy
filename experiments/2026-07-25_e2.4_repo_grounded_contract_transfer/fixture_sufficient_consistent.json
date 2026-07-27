@@ -17,38 +17,55 @@
     ],
     "outside_knowledge_policy": "forbidden"
   },
-  "candidate_concepts": [
+  "run_pipeline_input": [
     {
-      "name": "완제품유닛C",
+      "name": "카페린",
       "features": [
         {
-          "feature": "구성부품",
+          "feature": "손잡이",
+          "type": "structural_composition",
+          "evidence": "손잡이가 항목에 기록되어 있다"
+        }
+      ]
+    }
+  ],
+  "candidate_concepts": [
+    {
+      "name": "카페린",
+      "features": [
+        {
+          "feature": "손잡이",
           "type": "structural_composition",
           "evidence_refs": [
-            "ev7"
+            "ev9",
+            "ev10"
           ]
-        },
-        {
-          "feature": "병식별자",
-          "type": "essential_feature",
-          "evidence_refs": []
         }
       ]
     }
   ],
   "evidence_items": [
     {
-      "evidence_id": "ev7",
-      "source_path": "conceptgate/cg_partwhole.py",
+      "evidence_id": "ev9",
+      "source_path": "conceptgate/server.py",
       "source_kind": "code",
-      "locator": "line 37 (RELATION_HINT_TYPE dict entry)",
-      "text": "    \"component_of\":    \"structural_composition\",  # 구성요소-통합체 (has-a)",
-      "text_sha256": "5a4e6b9ff3cce7d8fef7389f4db685fbce89c193cec0c30e3b797ed686b86f4c",
-      "extraction_note": "Direct, explicit declarative mapping: component_of -> structural_composition. Unlike the discarded first two drafts of this fixture (circular FeatureType enum text; SemanticTypeInference.infer()'s procedural fallback rule, both rejected -- the enum by independent review as circular, the infer() rule by the CONTRACT_REPO smoke test as an inferential-step gap between 'how the algorithm decides' and 'this specific feature is thereby X'), this evidence is a bare declarative lookup-table entry with no algorithmic reasoning required: '구성부품' (component_of relation) maps directly and only to structural_composition, matching the concept's already-reported type exactly -- accept_report, not repair."
+      "locator": "lines 380-382 (run_pipeline docstring)",
+      "text": "    essential_feature participates in the is-a DAG.\n    structural_composition creates has-a composition edges (part-whole graph),\n    returned separately in the composition field.",
+      "text_sha256": "999ab5840c60293377b0258de08599ead0aac94094e23d58c9a6109fc0d7c82e",
+      "extraction_note": "Live @mcp.tool docstring (this repo's currently-registered run_pipeline tool, re-confirmed 2026-07-27) states that structural_composition denotes a part-whole (has-a) relation. This establishes the general ontological meaning of the type, but does not by itself name any specific feature -- kept as corroborating context, not sole support."
+    },
+    {
+      "evidence_id": "ev10",
+      "source_path": "experiments/2026-07-25_e2.3_global_invariant_generalization/fixture.json",
+      "source_kind": "fixture",
+      "locator": "fixtures[0].input_concepts[0].features[0].evidence (concept 카페린, feature 손잡이)",
+      "text": "카페린의 손잡이는 카페린 몸체의 구성 부분이다",
+      "text_sha256": "42379a2ef6c161f9467d78b0dd54c34cb03f7fe9cc114c08cb67d5f6a6e6a1a8",
+      "extraction_note": "Pre-registered fixture evidence string for concept 카페린's feature 손잡이, frozen in a sibling experiment's design commit (experiments/2026-07-25_e2.3_global_invariant_generalization) before any trial of that experiment executed. States in plain prose that 손잡이 IS a constituent part (구성 부분) of 카페린's body -- a direct, instance-bound assertion of a part-whole relation for this specific feature, independent of any type label. Combined with ev9's general definition of what structural_composition means, this binds the abstract type definition to this specific feature."
     }
   ],
   "server_response": {
-    "status": "PASS",
+    "status": "NEEDS_CORRECTION",
     "dag": {},
     "composition_issues": [],
     "anti_patterns": []
