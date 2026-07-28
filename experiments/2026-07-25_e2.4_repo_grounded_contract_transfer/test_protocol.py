@@ -245,6 +245,13 @@ def test_scorer_reproduces_the_five_step_procedure():
     """
     score = _load("e24_score_protocol", HERE / "_score.py")
 
+    payload = {
+        "candidate_concepts": [{"name": "c", "features": [
+            {"feature": "f", "type": "essential_feature", "evidence_refs": ["ev1"]}]}],
+        "evidence_items": [{"evidence_id": "ev1", "source_kind": "code", "text": "t"},
+                           {"evidence_id": "ev2", "source_kind": "code", "text": "t"}],
+    }
+
     def audit(*rows):
         return [{"evidence_id": e, "source_kind": "code", "admissibility": a,
                  "supported_type": t, "claim_strength": s,
@@ -254,65 +261,143 @@ def test_scorer_reproduces_the_five_step_procedure():
     def out(audit_rows, sufficiency, selected=None, **over):
         o = _valid_output()
         o["evidence_audit"] = audit_rows
-        o["feature_judgments"][0].update(sufficiency=sufficiency, selected_type=selected)
+        # The feature cites every audited item unless a case overrides it --
+        # sufficiency is derived per feature from what that feature cites.
+        o["feature_judgments"][0].update(
+            sufficiency=sufficiency, selected_type=selected,
+            evidence_ids=[r["evidence_id"] for r in audit_rows])
         o.update(over)
         return o
+
+    def conf(o):
+        return score.conformance(o, payload)
 
     ds, ic = "direct_support", "indirect_context"
     ess, comp = "essential_feature", "structural_composition"
 
-    # Step 3: a lone maximum is sufficient.
-    assert score.conformance(out(
-        audit(("ev1", ds, comp, "explicit", []), ("ev2", ds, comp, "weak", [])),
-        "sufficient", comp,
+    repairing = dict(
         decision="repair", contract_verdict="sufficient_repairable",
         repair_plan={"allowed": True, "steps": [], "reject_reason": None},
-        repaired_concepts=[], abstain={"required": False, "reason": "none",
-                                       "missing_evidence": []},
-    )) == []
-
-    # Step 5: no direct_support candidate at all.
-    assert score.conformance(out(
-        audit(("ev1", ic, None, "weak", [])), "insufficient")) == []
-
-    # Step 4: incompatible types tied at the maximum.
-    assert score.conformance(out(
-        audit(("ev1", ds, ess, "explicit", ["ev2"]), ("ev2", ds, comp, "explicit", ["ev1"])),
-        "conflicting",
+        repaired_concepts=[{"name": "c", "features": [
+            {"feature": "f", "type": "structural_composition", "evidence": "ev1"}]}],
+        abstain={"required": False, "reason": "none", "missing_evidence": []},
+    )
+    conflicting = dict(
         contract_verdict="conflicting_evidence",
         abstain={"required": True, "reason": "conflicting_evidence",
-                 "missing_evidence": []})) == []
+                 "missing_evidence": []},
+    )
+
+    # Step 3: a lone maximum is sufficient.
+    assert conf(out(
+        audit(("ev1", ds, comp, "explicit", []), ("ev2", ds, comp, "weak", [])),
+        "sufficient", comp, **repairing)) == []
+
+    # Step 5: no direct_support candidate at all.
+    assert conf(out(audit(("ev1", ic, None, "weak", [])), "insufficient")) == []
+
+    # Step 4: incompatible types tied at the maximum.
+    assert conf(out(
+        audit(("ev1", ds, ess, "explicit", ["ev2"]), ("ev2", ds, comp, "explicit", ["ev1"])),
+        "conflicting", **conflicting)) == []
 
     # A tie broken by plausibility contradicts the trial's own audit.
-    assert any("5-step" in v for v in score.conformance(out(
+    assert any("5-step" in v for v in conf(out(
         audit(("ev1", ds, ess, "explicit", []), ("ev2", ds, comp, "explicit", [])),
         "sufficient", ess)))
 
+    # Step 3 reached, but selected_type is not the type that won.
+    assert any("step 3 yields" in v for v in conf(out(
+        audit(("ev1", ds, comp, "explicit", [])), "sufficient", ess, **repairing)))
+
     # PROBLEM_2 §5.1 trial 4: conflict claimed between non-direct_support items.
-    bad = score.conformance(out(
+    bad = conf(out(
         audit(("ev1", ic, None, "weak", ["ev2"]), ("ev2", ic, None, "weak", ["ev1"])),
-        "conflicting",
-        contract_verdict="conflicting_evidence",
-        abstain={"required": True, "reason": "conflicting_evidence",
-                 "missing_evidence": []}))
+        "conflicting", **conflicting))
     assert any("non-direct_support" in v for v in bad)
     assert any("5-step" in v for v in bad)  # its own audit yields insufficient
 
     # Asymmetric conflict.
-    assert any("symmetric" in v for v in score.conformance(out(
+    assert any("symmetric" in v for v in conf(out(
         audit(("ev1", ds, ess, "explicit", ["ev2"]), ("ev2", ds, comp, "explicit", [])),
-        "conflicting",
-        contract_verdict="conflicting_evidence",
-        abstain={"required": True, "reason": "conflicting_evidence",
-                 "missing_evidence": []})))
+        "conflicting", **conflicting)))
+
+    # direct_support must name the type it supports.
+    assert any("no supported_type" in v for v in conf(out(
+        audit(("ev1", ds, None, "explicit", [])), "insufficient")))
 
     # Cross-field bookkeeping still applies.
-    assert any("repaired_concepts=null" in v for v in score.conformance(
+    assert any("repaired_concepts=null" in v for v in conf(
         out(audit(("ev1", ic, None, "weak", [])), "insufficient", repaired_concepts=[])))
-    assert any("outside_knowledge_used" in v for v in score.conformance(out(
+    assert any("outside_knowledge_used" in v for v in conf(out(
         audit(("ev1", ic, None, "weak", [])), "insufficient",
         evidence_scope={"source_policy": "packet_only", "used_evidence_ids": [],
                         "outside_knowledge_used": True})))
+
+    # Constraint 6: an id the payload never contained.
+    assert any("not in the payload" in v for v in conf(out(
+        audit(("ev1", ic, None, "weak", []), ("ev99", ic, None, "weak", [])),
+        "insufficient")))
+
+    # Constraint 4: a repair that silently drops part of the input.
+    assert any("dropped feature" in v for v in conf(out(
+        audit(("ev1", ds, comp, "explicit", [])), "sufficient", comp,
+        **{**repairing, "repaired_concepts": [{"name": "c", "features": []}]})))
+    assert any("dropped concept" in v for v in conf(out(
+        audit(("ev1", ds, comp, "explicit", [])), "sufficient", comp,
+        **{**repairing, "repaired_concepts": []})))
+
+
+def test_scorer_does_not_penalise_an_unrelated_filler_feature():
+    """Regression: conformance() used to derive sufficiency once over the whole
+    audit and compare it against every per-feature judgment.
+
+    contract_prompt.md rule 5 tells a trial to mark an evidence-free filler
+    feature insufficient while still repairing the feature that does have
+    evidence -- exactly the shape of fixture_sufficient_repairable.json (바퀴 has
+    ev1, 갑종 is filler). The packet-global derivation reported that
+    contract-following answer as a violation, which would have scored E24-F-02
+    at clean_rate 0 for doing what the contract demands.
+    """
+    score = _load("e24_score_filler", HERE / "_score.py")
+    fixture = _load_json(HERE / "fixture_sufficient_repairable.json")
+    manifest = surface.qualify_fixture(fixture, REPO_ROOT, run_tests=False)
+    payload = surface.build_model_payload(fixture, manifest)
+
+    out = {
+        "decision": "repair",
+        "contract_verdict": "sufficient_repairable",
+        "evidence_scope": {"source_policy": "packet_only",
+                           "used_evidence_ids": ["ev1"],
+                           "outside_knowledge_used": False},
+        "evidence_audit": [{"evidence_id": "ev1", "source_kind": "fixture",
+                            "admissibility": "direct_support",
+                            "supported_type": "structural_composition",
+                            "claim_strength": "explicit",
+                            "conflicts_with_evidence_ids": [], "rationale": "r"}],
+        "feature_judgments": [
+            {"concept": "돌체", "feature": "바퀴",
+             "original_type": "essential_feature", "sufficiency": "sufficient",
+             "selected_type": "structural_composition",
+             "evidence_ids": ["ev1"], "rationale": "r"},
+            {"concept": "돌체", "feature": "갑종",
+             "original_type": "essential_feature", "sufficiency": "insufficient",
+             "selected_type": None, "evidence_ids": [], "rationale": "filler"},
+        ],
+        "invariant_checks": [],
+        "repair_plan": {"allowed": True, "reject_reason": None,
+                        "steps": [{"concept": "돌체", "feature": "바퀴",
+                                   "from_type": "essential_feature",
+                                   "to_type": "structural_composition",
+                                   "evidence_ids": ["ev1"], "reason": "r"}]},
+        "repaired_concepts": [{"name": "돌체", "features": [
+            {"feature": "바퀴", "type": "structural_composition", "evidence": "ev1"},
+            {"feature": "갑종", "type": "essential_feature", "evidence": "none"}]}],
+        "abstain": {"required": False, "reason": "none", "missing_evidence": []},
+        "report": "r",
+    }
+    assert score.conformance(out, payload) == []
+    assert cohort.schema_errors(out, cohort.transport_schema()) == []
 
 
 def test_sufficient_repairable_single_repair_yields_clean_pass():
