@@ -127,14 +127,18 @@ def gates() -> list[tuple[str, list[str], Path, bool]]:
 
     # One interpreter per experiment: this is the isolation that makes the
     # duplicated frozen module names safe. cwd is the experiment directory so
-    # each suite sees the same working directory it was written against.
-    for test_file in sorted(ROOT.glob("experiments/*/test_protocol.py")):
-        experiment = test_file.parent.name
+    # each suite sees the same working directory it was written against, and
+    # the whole directory is collected -- an experiment that grows a second
+    # test file must not silently stop being covered.
+    experiment_dirs = sorted(
+        {p.parent for p in ROOT.glob("experiments/*/test_*.py")}
+    )
+    for directory in experiment_dirs:
         specs.append(
             (
-                f"experiment: {experiment}",
-                [PY, "-m", "pytest", "-q", "test_protocol.py"],
-                test_file.parent,
+                f"experiment: {directory.name}",
+                [PY, "-m", "pytest", "-q", "."],
+                directory,
                 True,
             )
         )
