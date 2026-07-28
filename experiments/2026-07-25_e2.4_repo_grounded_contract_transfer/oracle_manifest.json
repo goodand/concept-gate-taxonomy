@@ -1,0 +1,32 @@
+{
+  "experiment_id": "E2.4",
+  "note": "Hidden oracle. Never part of any model payload; the canonical builder cannot reach this file.",
+  "fixtures": {
+    "E24-F-04": {
+      "file": "fixture_conflicting.json",
+      "semantic_class": "conflicting",
+      "expected_decision": "abstain",
+      "expected_contract_verdict": "conflicting_evidence",
+      "status": "no_eligible_fixture",
+      "note": "Closed as unobtainable from live, equal-strength evidence in this repo (PROBLEM_2_conflicting.md §5.2). Excluded from the rerun cohort; the schema class is retained."
+    },
+    "E24-F-03": {
+      "file": "fixture_insufficient.json",
+      "semantic_class": "insufficient",
+      "expected_decision": "abstain",
+      "expected_contract_verdict": "insufficient_evidence"
+    },
+    "E24-F-01": {
+      "file": "fixture_sufficient_consistent.json",
+      "semantic_class": "sufficient_consistent",
+      "expected_decision": "accept_report",
+      "expected_contract_verdict": "sufficient_consistent"
+    },
+    "E24-F-02": {
+      "file": "fixture_sufficient_repairable.json",
+      "semantic_class": "sufficient_repairable",
+      "expected_decision": "repair",
+      "expected_contract_verdict": "sufficient_repairable"
+    }
+  }
+}

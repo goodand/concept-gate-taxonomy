@@ -1,18 +1,35 @@
-import hashlib
+"""Fixture-level self-checks for E2.4 (repo_evidence_fixture_v2).
+
+Structural guarantees about the model-facing surface live in test_surface.py.
+This file checks the fixtures themselves: that they satisfy the v2 schema, that
+the model-facing concept surface still mirrors what was actually submitted to
+the pipeline, that server_response is reproducible, and that the one designated
+repair leaves a clean pipeline state.
+"""
+
 import importlib.util
 import json
 import re
+import sys
 from pathlib import Path
 
-
 HERE = Path(__file__).resolve().parent
+REPO_ROOT = HERE.parent.parent
+
+
+def _load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+surface = _load("e24_surface_protocol", HERE / "_surface.py")
 
 
 def _load_cert_core():
-    spec = importlib.util.spec_from_file_location("cert_core", HERE / "_cert_core.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return _load("e24_cert_core", HERE / "_cert_core.py")
 
 
 def _fixture_paths():
@@ -27,44 +44,21 @@ def _project_server_response(response, expected):
     return {key: response.get(key) for key in expected}
 
 
-def test_fixtures_match_required_shape_and_hashes():
+def test_fixtures_satisfy_the_v2_schema():
+    """validate_fixture is the schema; there is no separate .json to drift from."""
     for path in _fixture_paths():
-        packet = _load_json(path)
-        assert packet["record_class"] == "repo_evidence_packet", path.name
-        assert packet["experiment_id"] == "E2.4", path.name
-        assert packet["repo"] == "goodand/concept-gate-taxonomy", path.name
-        assert packet["extraction_policy"]["outside_knowledge_policy"] == "forbidden"
-        assert isinstance(packet["run_pipeline_input"], list), path.name
-        assert isinstance(packet["candidate_concepts"], list), path.name
-        assert isinstance(packet["evidence_items"], list), path.name
-        assert isinstance(packet["server_response"], dict), path.name
+        surface.validate_fixture(_load_json(path))
 
-        evidence_ids = {item["evidence_id"] for item in packet["evidence_items"]}
 
-        for item in packet["evidence_items"]:
-            assert set(item) == {
-                "evidence_id",
-                "source_path",
-                "source_kind",
-                "locator",
-                "text",
-                "text_sha256",
-                "extraction_note",
-            }, path.name
-            actual_hash = hashlib.sha256(item["text"].encode()).hexdigest()
-            assert actual_hash == item["text_sha256"], path.name
+def test_fixtures_qualify_against_the_working_tree():
+    """Every cited excerpt must still resolve byte-for-byte where it claims to be.
 
-        for concept in packet["run_pipeline_input"]:
-            assert set(concept) == {"name", "features"}, path.name
-            for feature in concept["features"]:
-                assert set(feature) == {"feature", "type", "evidence"}, path.name
-                assert len(feature["evidence"]) >= 4, path.name
-
-        for concept in packet["candidate_concepts"]:
-            assert set(concept) == {"name", "features"}, path.name
-            for feature in concept["features"]:
-                assert set(feature) == {"feature", "type", "evidence_refs"}, path.name
-                assert set(feature["evidence_refs"]) <= evidence_ids, path.name
+    This is the check that would catch an evidence source being edited,
+    moved, or rewritten out from under a frozen fixture.
+    """
+    for path in _fixture_paths():
+        manifest = surface.qualify_fixture(_load_json(path), REPO_ROOT, run_tests=False)
+        assert manifest["status"] == "passed", (path.name, manifest["evidence_checks"])
 
 
 def test_candidate_concepts_match_run_pipeline_input_surface():
@@ -74,11 +68,8 @@ def test_candidate_concepts_match_run_pipeline_input_surface():
             {
                 "name": concept["name"],
                 "features": [
-                    {
-                        "feature": feature["feature"],
-                        "type": feature["type"],
-                    }
-                    for feature in concept["features"]
+                    {"feature": f["feature"], "type": f["type"]}
+                    for f in concept["features"]
                 ],
             }
             for concept in packet["candidate_concepts"]
@@ -87,11 +78,8 @@ def test_candidate_concepts_match_run_pipeline_input_surface():
             {
                 "name": concept["name"],
                 "features": [
-                    {
-                        "feature": feature["feature"],
-                        "type": feature["type"],
-                    }
-                    for feature in concept["features"]
+                    {"feature": f["feature"], "type": f["type"]}
+                    for f in concept["features"]
                 ],
             }
             for concept in packet["run_pipeline_input"]
@@ -108,14 +96,12 @@ def test_server_response_is_reproducible_from_run_pipeline_input():
         assert _project_server_response(observed, expected) == expected, path.name
 
 
-# Model-facing metadata must not name a decision/verdict or state an expectation.
-# `evidence_packet_schema.json` says hidden-oracle fields must not reach the model,
-# but extraction_note/locator ARE shipped inside evidence_items and so are model-facing.
-# fixture_conflicting.json once carried "CONTRACT_REPO's correct behavior is still to
-# abstain ... the expected contract_verdict is loosened to ..." in an extraction_note,
-# which handed the model its answer and invalidated that fixture's smoke result.
-# Bare "repair" is deliberately NOT listed: ev5's source commit genuinely discusses
-# "an available repair value", so the word is unavoidable in describing it.
+# Diagnostics only, per DESIGN_DECISION_surface_separation.md §7: the guard is
+# defense-in-depth and must never be the reason something is considered safe.
+# The enforcement is build_model_payload's whitelist construction, covered in
+# test_surface.py. This scans what the model actually receives rather than raw
+# fixture fields -- builder prose now lives in builder_metadata, which the
+# builder cannot reach, so scanning fixture text would prove nothing.
 _VERDICT_TOKENS = (
     "accept_report",
     "abstain",
@@ -124,28 +110,37 @@ _VERDICT_TOKENS = (
     "insufficient_evidence",
     "conflicting_evidence",
     "out_of_scope",
+    "direct_support",
+    "indirect_context",
 )
 _EXPECTATION_PHRASES = re.compile(
-    r"correct behavior|expected (contract_)?verdict|should abstain|hidden oracle|정답|기대 판정",
+    r"correct behavior|expected (contract_)?verdict|should abstain|hidden oracle|"
+    r"정답|기대 판정",
     re.IGNORECASE,
 )
 
 
-def test_model_facing_metadata_does_not_leak_the_oracle():
+def test_built_payload_carries_no_verdict_vocabulary():
     for path in _fixture_paths():
-        packet = _load_json(path)
-        for item in packet["evidence_items"]:
-            for field in ("extraction_note", "locator"):
-                value = item.get(field, "")
-                leaked = [t for t in _VERDICT_TOKENS if t in value]
-                assert not leaked, (
-                    f"{path.name} {item['evidence_id']}.{field} names a decision/verdict "
-                    f"{leaked} -- this field is shipped to the model"
-                )
-                assert not _EXPECTATION_PHRASES.search(value), (
-                    f"{path.name} {item['evidence_id']}.{field} states an expected outcome "
-                    f"-- this field is shipped to the model"
-                )
+        fixture = _load_json(path)
+        manifest = surface.qualify_fixture(fixture, REPO_ROOT, run_tests=False)
+        payload = surface.build_model_payload(fixture, manifest)
+
+        # `text` is verbatim repo content pinned by sha256 and re-verified by
+        # qualification, so it is excluded: a source file legitimately may
+        # discuss these terms, and an author cannot inject there without
+        # changing the repo itself.
+        scanned = surface.canonical_json(
+            {
+                "candidate_concepts": payload["candidate_concepts"],
+                "evidence_ids": [e["evidence_id"] for e in payload["evidence_items"]],
+                "source_kinds": [e["source_kind"] for e in payload["evidence_items"]],
+                "server_response": payload["server_response"],
+            }
+        )
+        leaked = [t for t in _VERDICT_TOKENS if t in scanned]
+        assert not leaked, f"{path.name}: verdict vocabulary in payload metadata {leaked}"
+        assert not _EXPECTATION_PHRASES.search(scanned), path.name
 
 
 def test_sufficient_repairable_single_repair_yields_clean_pass():
@@ -160,8 +155,7 @@ def test_sufficient_repairable_single_repair_yields_clean_pass():
     live CONTRACT_REPO smoke test, not by this test.
     """
     cert_core = _load_cert_core()
-    path = HERE / "fixture_sufficient_repairable.json"
-    packet = _load_json(path)
+    packet = _load_json(HERE / "fixture_sufficient_repairable.json")
 
     pre = packet["run_pipeline_input"]
     assert pre == [

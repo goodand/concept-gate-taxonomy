@@ -1,22 +1,8 @@
 {
-  "record_class": "repo_evidence_packet",
+  "fixture_version": "repo_evidence_fixture_v2",
   "experiment_id": "E2.4",
   "repo": "goodand/concept-gate-taxonomy",
-  "commit": "d581d53",
-  "extraction_policy": {
-    "allowed_sources": [
-      "conceptgate/ module names, function/class names, docstrings, explicit comments",
-      "docs/, reference/, experiments/ prose",
-      "tests and fixtures encoding expected behavior directly",
-      "commit messages copied verbatim with hash"
-    ],
-    "disallowed_sources": [
-      "general model knowledge about ontology/OWL/GUFO/software architecture",
-      "inference from file path or symbol name alone without a supporting text span",
-      "external repositories or papers"
-    ],
-    "outside_knowledge_policy": "forbidden"
-  },
+  "source_commit": "adf06b25a49125b84886c5c6cb437df9d10f1e9a",
   "run_pipeline_input": [
     {
       "name": "JSON추출유틸",
@@ -43,15 +29,18 @@
       ]
     }
   ],
-  "evidence_items": [
+  "evidence_sources": [
     {
       "evidence_id": "ev4",
-      "source_path": "conceptgate/concept_gate_v7.py",
       "source_kind": "code",
-      "locator": "lines 556-560 (def extract_json_block)",
+      "source_ref": {
+        "kind": "file_lines",
+        "path": "conceptgate/concept_gate_v7.py",
+        "start_line": 556,
+        "end_line": 560
+      },
       "text": "def extract_json_block(raw):\n    clean = re.sub(r'```(?:json)?\\s*', '', raw.strip()).replace('```', '').strip()\n    s, e = clean.find('{'), clean.rfind('}')\n    if s < 0 or e < 0: raise ValueError(\"JSON 블록 없음\")\n    return clean[s:e+1]",
-      "text_sha256": "8e3952d6b471de91b776d684e15645c05b1fad7e08d1249ed914229ed193b641",
-      "extraction_note": "Bare function body with no docstring or explanatory comment. Does not state what semantic role code-block-stripping plays for the concept -- audit should classify this as indirect_context or ambiguous, never direct_support for any specific FeatureType."
+      "text_sha256": "8e3952d6b471de91b776d684e15645c05b1fad7e08d1249ed914229ed193b641"
     }
   ],
   "server_response": {
@@ -59,5 +48,17 @@
     "dag": {},
     "composition_issues": [],
     "anti_patterns": []
+  },
+  "builder_metadata": {
+    "evidence_notes": {
+      "ev4": "Bare function body with no docstring or explanatory comment. Does not state what semantic role code-block-stripping plays for the concept -- audit should classify this as indirect_context or ambiguous, never direct_support for any specific FeatureType."
+    },
+    "change_history": [
+      {
+        "date": "2026-07-28",
+        "change": "migrated from repo_evidence_packet v1",
+        "detail": "extraction_note moved out of the model-facing surface into builder_metadata; source_path+locator replaced by a source_ref tagged union; extraction_policy dropped (source restriction now lives in contract_prompt.md)."
+      }
+    ]
   }
 }

@@ -1,22 +1,8 @@
 {
-  "record_class": "repo_evidence_packet",
+  "fixture_version": "repo_evidence_fixture_v2",
   "experiment_id": "E2.4",
   "repo": "goodand/concept-gate-taxonomy",
-  "commit": "d581d53",
-  "extraction_policy": {
-    "allowed_sources": [
-      "conceptgate/ module names, function/class names, docstrings, explicit comments",
-      "docs/, reference/, experiments/ prose",
-      "tests and fixtures encoding expected behavior directly",
-      "commit messages copied verbatim with hash"
-    ],
-    "disallowed_sources": [
-      "general model knowledge about ontology/OWL/GUFO/software architecture",
-      "inference from file path or symbol name alone without a supporting text span",
-      "external repositories or papers"
-    ],
-    "outside_knowledge_policy": "forbidden"
-  },
+  "source_commit": "adf06b25a49125b84886c5c6cb437df9d10f1e9a",
   "run_pipeline_input": [
     {
       "name": "directed_pc_실패원인_설명",
@@ -44,24 +30,28 @@
       ]
     }
   ],
-  "evidence_items": [
+  "evidence_sources": [
     {
       "evidence_id": "ev5",
-      "source_path": "git commit 4017aff",
       "source_kind": "commit_message",
-      "locator": "commit 4017aff subject+body excerpt",
+      "source_ref": {
+        "kind": "commit",
+        "sha": "4017aff822b7d24cdc85f6c94fbdf3a640eaee0f",
+        "part": "body"
+      },
       "text": "E2.2's directed_repair_pc fixture\n(dir1_directed) failed 0/10 because the prompt/schema never exposed\nstructural_composition (or the other FeatureType vocabulary) as an available\nrepair value.",
-      "text_sha256": "2fa372c697447141bbab3b6339f17034959f38c1732791b826c58a2dcb0640e4",
-      "extraction_note": "E2.2.1's design commit message. Attributes the directed-PC fixture's 0/10 failure to the prompt/schema not exposing structural_composition or the rest of the FeatureType vocabulary as an available repair value."
+      "text_sha256": "2fa372c697447141bbab3b6339f17034959f38c1732791b826c58a2dcb0640e4"
     },
     {
       "evidence_id": "ev6",
-      "source_path": "git commit 559f61f",
       "source_kind": "commit_message",
-      "locator": "commit 559f61f subject+body excerpt",
+      "source_ref": {
+        "kind": "commit",
+        "sha": "559f61f4d9ba2db9394cbc999b35f0b257f60b83",
+        "part": "body"
+      },
       "text": "Root-cause analysis of E2.2.1's trial reports found the real\ngap was two unstated structural contracts, not vocabulary",
-      "text_sha256": "0c6b91e35469494037585c479de6d63fea7d00320b003c3adc4feb9aa72ded12",
-      "extraction_note": "E2.2.2's design commit message, one commit later than ev5. States that root-cause analysis of E2.2.1's trial reports found the real gap was two unstated structural contracts, not vocabulary -- addressing the same referent (the directed-PC failure cause) as ev5 and reaching the opposite attribution."
+      "text_sha256": "0c6b91e35469494037585c479de6d63fea7d00320b003c3adc4feb9aa72ded12"
     }
   ],
   "server_response": {
@@ -69,5 +59,18 @@
     "dag": {},
     "composition_issues": [],
     "anti_patterns": []
+  },
+  "builder_metadata": {
+    "evidence_notes": {
+      "ev5": "E2.2.1's design commit message. Attributes the directed-PC fixture's 0/10 failure to the prompt/schema not exposing structural_composition or the rest of the FeatureType vocabulary as an available repair value.",
+      "ev6": "E2.2.2's design commit message. States that root-cause analysis of E2.2.1's trial reports found the real gap was two unstated structural contracts, not vocabulary, addressing the same referent as ev5 and reaching the opposite attribution. PROVENANCE CORRECTION (2026-07-28): an earlier version of this note said 'one commit later than ev5'. That is wrong -- git log 4017aff..559f61f shows three commits, with ce3699a ('record 20-trial results -- NO_GO, rate=0.15') and d706152 in between. ce3699a matters: ev5's attribution had already been measured as failing before ev6 was written, which bears directly on whether the two are of equal strength."
+    },
+    "change_history": [
+      {
+        "date": "2026-07-28",
+        "change": "migrated from repo_evidence_packet v1",
+        "detail": "extraction_note moved out of the model-facing surface into builder_metadata; source_path+locator replaced by a source_ref tagged union; extraction_policy dropped (source restriction now lives in contract_prompt.md)."
+      }
+    ]
   }
 }
