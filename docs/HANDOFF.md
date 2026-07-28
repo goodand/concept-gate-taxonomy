@@ -30,12 +30,25 @@ class fixture를 실제 저장소 evidence로 만들고, 각각이 CONTRACT_REPO
 live·동등강도 evidence로 구성 가능한 fixture 미확보"로 종결됐다(§4). Schema의
 class 자체는 유지된다.
 
-> **2026-07-28 추가 — 표면 재설계 완료, 실행만 남음.** 오라클 유출을
-> 구조적으로 막는 v2 표면(3면 분리 + 화이트리스트 빌더)과 계약 문구 개정이
-> 끝나 커밋됐고, 17 trial **clean rerun cohort가 동결·커밋**됐다. 실행은
-> 전송 계층 문제로 다음 세션으로 넘어간다 — **절차 전체는 §11에 있다.**
-> **인증 상태는 여전히 0 class**이며, 기존 7/7·5/5·5/5는
-> `legacy_leaky.md`로 분리돼 인증·통계에서 제외됐다.
+> **2026-07-28 현재 (HEAD `e03f74a`) — 기술적 차단은 없다. 남은 것은 결정 하나다.**
+>
+> 오라클 유출을 구조적으로 막는 v2 표면(3면 분리 + 화이트리스트 빌더), 계약
+> 문구 개정, clean rerun cohort 동결이 끝나 커밋됐다. 그 뒤 **채점기에서
+> 결함 2건을 발견해 수정**했다 — 그중 하나는 계약이 *지시한* 필러 처리를
+> 위반으로 집계해 **가장 어렵게 확보한 class를 `clean_rate`=0으로 떨어뜨릴
+> 예정이었다**(§11, 등록부 DONE #13).
+>
+> **지금 실행을 막는 것은 표본 크기 확정 하나뿐이다** — 동결 코호트는
+> N=7/5/5인데 사전 등록 프로토콜은 N=10/cell이고 판정 밴드가 그 N에 맞춰
+> 보정돼 있다. 선택지와 귀결은
+> [`E2.4_ISSUE_REGISTER.md`](E2.4_ISSUE_REGISTER.md) **[GATE] G1**,
+> 실행 절차는 이 문서 **§11**.
+>
+> **인증 상태는 여전히 0 class**다. 기존 7/7·5/5·5/5는 `legacy_leaky.md`로
+> 분리돼 인증·통계에서 제외됐다 — 새 숫자와 비교하지 마라.
+>
+> 미결 사항 **전체 목록과 근거**는 [`E2.4_ISSUE_REGISTER.md`](E2.4_ISSUE_REGISTER.md)에
+> 있다(이 문서는 진입점, 등록부는 상세).
 
 ## 2. 프로젝트 목적 (변경 없음)
 
@@ -249,24 +262,44 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
 
 ## 7. 전이한 실험 운영 노하우 (외부 승격 완료)
 
-`goodand/skills-catalog`의
-`skills/Skills-Create-Project/` 아래 두 skill에 성격을 나눠 반영했다.
-**새 세션에서 유사 작업을 시작하기 전에 두 파일의 최신 타임스탬프 버전을
-읽어라.**
+`goodand/skills-catalog`에 **커밋 9개 / 신규 reference 10건 / 게이트 모듈 1개**,
+그리고 `SKILL.md`·허브 문서 8곳 repoint. `e5b5444`~`86cc8c2`.
 
-- **`evidence-to-knowledge-promoter/references/recurring-agentic-failure-modes-lessons-at2026-07-27-16-11.md`**
-  (update 8) — 서사·재발 이력·promotion 등급. 신규 lesson 5개:
-  instance-binding 비전이(4/4), self-citation 4회 재발(고치면 다른 위치에서
-  재발 → 기계적 체크 필요), 차단 조건의 decision-type 의존성, 프롬프트 드리프트
-  (frozen 파일 미반영 시 재현 불가), 기준 강화 시 기존 인증 재검증.
-  candidate 4개: extraction_note 메타 서술 오염, 결정론 게이트 우회가 의미
-  레이어에 만든 새 실패, 평가 목표 교체 전략, review 전용 agent에 write 권한
-  주지 말 것.
-- **`evidence-trace-auditor/references/cited-source-text-evidence-rules-at2026-07-27-16-15.md`**
-  — 기계적 판정 절차. evidence가 "저장소 텍스트 인용" 형태일 때의 4개
-  **독립** 체크(C1 liveness / C2 instance-binding / C3 non-circularity /
-  C4 precedence)와 결합 상태 규칙. `SKILL.md` References + 허브
-  `evidence-status-rules` Notes에 상호 연결 완료.
+> ⚠️ **먼저 읽을 경고 — 기존 문서 3건의 지침이 반증돼 정정됐다.**
+> 07-27 판(`-at2026-07-27-16-11`, `-at2026-07-27-16-15`)과
+> `-at2026-07-25-15-06`을 **직접 인용하지 마라.** 각각의 07-28 판이 supersede
+> 하며 그 안에 무엇이 왜 틀렸는지가 적혀 있다.
+
+정정된 3건:
+
+| 문서 | 무엇이 틀렸나 |
+|---|---|
+| `dynamic-workflow-...-knowhow` (update 2 → **3**) | `extraction_note`를 `strip_notes()` 헬퍼로 "프롬프트 만들기 전에 제거하라"고 **지침으로 승격**해 놨다. 그게 정확히 몇 주간 유출된 블랙리스트 방식이다. update 3이 화이트리스트 빌더로 교체 |
+| `recurring-...-lessons` (update 8 → **9**) | candidate `meta-commentary-inside-an-evidence-item`의 **fix가 종류부터 틀렸다** — 모델-facing 노트의 *내용*을 단속하라고 했으나, 실제 유출 문장들이 그 fix가 **허용하는** 형태였다 |
+| `cited-source-text-evidence-rules` (v1 → **v2**) | Auditor Notes 두 항목이 "감사자는 노트를 무시하고 원문만으로 판정하라"는 **규율 의존**이었다. 감사자가 무시할 수 있는지는 측정 대상이 아니고, 무시하도록 요구하는 설계가 결함이다 |
+
+### 7.0 신규·갱신 10건 (전부 `-at2026-07-28-*`)
+
+| 스킬 | 문서 | 핵심 |
+|---|---|---|
+| `evidence-to-knowledge-promoter` | `dynamic-workflow-...-knowhow` update 3 | 전송 계층 ceiling 3개, 표면 전체 해싱, freeze/record, 검증기 양방향 테스트 |
+| 〃 | `recurring-...-lessons` update 9 | lesson 24(+5)·candidate 15(+5). "설명으로 쓰인 안전장치는 이미 실패해 있었다" |
+| `evidence-trace-auditor` | `cited-source-text-evidence-rules` v2 | **판정 주체·시점**(C1/C4는 실행 전 하네스가, 결과를 감사자에게 넘기지 않는다), 표면 분리, 구조화 `source_ref`, qualification, 결합 규칙 |
+| `agent-task-packet` | `packet-surface-closure` | packet = model-facing surface. `render_prompt`는 이미 화이트리스트인데 **테스트가 비노출 23개 중 2개만 단언** |
+| `adversarial-verification-probe` | `checker-recall-and-precision` | **패턴 8 신설.** mutation은 recall만 측정, precision은 구조적으로 못 잡는다 |
+| `doc-code-sync-checker` | `generate-instead-of-detect` | "B를 지우고 A에서 재생성하면 바이트 동일한가" — 예면 탐지는 생성보다 약한 통제 |
+| `measurement-evaluation-orchestrator` | `bands-are-a-function-of-n` | 밴드는 `(rate, N)`의 함수. **§11의 G1이 여기서 나왔다** |
+| `baseline-diff-lab` | `surface-change-invalidates-the-baseline` | 같은 metric은 필요조건일 뿐. pre가 있는데 비교 불가능한 게 더 위험 |
+| `claim-verifier` | `self-authored-claims` | **Rule 6 신설.** 실행된 적 없는 검사는 `unverifiable`이지 `pass`가 아니다 |
+| `verification-decision-gate` | `pass-is-a-conjunction` | pass는 논리곱. 제약마다 집행 지점 명명, 기계 검사 불가는 리뷰어 배정 |
+
+### 7.2 카탈로그 저장소 자체의 결함도 고쳤다
+
+`integration-gate`에 **subflow 5** 추가 — skill 테스트를 skill마다 별도
+프로세스로 실행(`d16f41c`, `86cc8c2`). 그 저장소 README가 "알려진 이슈"로
+방치했던 루트 pytest 수집 실패를 닫았고, **그 수집 오류가 가리고 있던 실패
+2건**(pydantic 미설치 / cwd 의존)을 드러냈다. 이 프로젝트의
+`scripts/run_gates.py`와 같은 설계다.
 
 ### 7.1 프로젝트-로컬 운영 규율 (외부로 안 보내는 것)
 
@@ -308,12 +341,27 @@ concept-gate-e2.2-wt              codex/e2.4-contract-repo-design       (E2.2~E2
 python3 scripts/run_gates.py
 
 # E2.4 전체 self-check (표면 폐쇄 + fixture 무결성 + 채점기)
-python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/   # 32 passed
+python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/   # 33 passed
 
 # 코어만 (pytest.ini가 experiments/ 제외)
 python3 -m pytest -q
 python3 -m pytest -q test_semantic_regressions.py  # 8 (R6/R6b 포함)
 ```
+
+코호트 관련 명령 (전부 실험 폴더에서):
+
+```bash
+cd experiments/2026-07-25_e2.4_repo_grounded_contract_transfer
+
+python3 _cohort.py            # usage — agent/freeze/record 3개 모드를 보여준다
+python3 _cohort.py agent      # trial subject를 decision_schema.json에서 재생성 + 설치
+python3 _cohort.py freeze     # 동결: 정확한 바이트 + 해시 8종 + builder_commit, 결정론 검증
+python3 _cohort.py record     # trials_raw.json -> trials.json (표면 drift 시 거부)
+python3 _score.py             # class별 clean_rate, 밴드, escalate cell
+```
+
+`freeze`는 `e2.4-contract-decider.md`가 stale이면 **중단한다** — 스키마가
+두 곳에 있으므로(전송 제약 때문) 생성기를 먼저 돌려야 한다.
 
 이 worktree의 알려진 환경 공백(회귀 아님):
 - `fastmcp` 미설치 → `test_server.py` **BLOCKED**(러너가 분리 보고)
@@ -360,80 +408,164 @@ except ModuleNotFoundError as exc:
   아직 그대로다. 이 문장이 이 세션에 잘못된 "죽은 코드" 판정을 만들었고
   lesson은 정정됐으나 **코드 주석은 안 고쳐졌다.**
 
+### 10.3 `semantic_constraints` #11이 검사되지 않은 채 합격 처리된다 (설계 결정 필요)
+
+제약 11개 중 10개는 `_score.py`의 `conformance()`가 검사한다(#4·#6은
+`e03f74a`에서 추가). 남은 **#11 — "모델은 출처의 liveness나 우선순위를
+재판정하지 않는다"** 는 자연어 rationale을 읽어야 판정되므로 **어떤 검사기도
+커버할 수 없다.**
+
+문제는 그 리뷰가 **채점 흐름에 편입돼 있지 않다**는 것이다. 지금 코호트를
+돌려 `_score.py`를 실행하면 #11은 검사되지 않은 채 `clean`에 집계된다 —
+목록에 있다는 사실이 커버됐다는 인상을 준다.
+
+필요한 것: `_score.py` 이후에 독립 리뷰어가 각 trial의 rationale을 읽고
+"출처가 더 최신이다 / 아직 살아 있다 / 더 권위 있다"를 근거로 충돌을
+해결했는지 판정하는 단계. 그 판정을 `clean` 정의의 **네 번째 항**으로 넣는다.
+
+**코호트 실행 전에 결정할 것** — 실행 후에 추가하면 이미 나온 trial을 다시
+읽어야 하고, 그건 사후 기준 추가로 읽힐 수 있다. 상세는
+[`E2.4_ISSUE_REGISTER.md`](E2.4_ISSUE_REGISTER.md) **[OPEN] O1**.
+
 ---
 
-## 11. 다음 세션이 할 일 — clean rerun cohort 실행 (준비 완료, 실행만 남음)
 
-표면 재설계(v2 마이그레이션 + 계약 문구 §4/§5 + 동결)는 **끝났고 커밋됐다.**
-17 trial cohort도 **동결·커밋됐다.** 남은 것은 실행 하나다.
+## 11. 다음 세션이 할 일 — 코호트 실행 (결정 1건 후 즉시 가능)
 
-### 왜 지난 세션에서 실행하지 못했나 — 두 개의 전송 계층 차단
+표면 재설계(v2 마이그레이션 + 계약 문구 §4/§5 + 동결)와 코호트 동결은 **끝났고
+커밋됐다.** **기술적 차단은 없다.** 남은 것은 표본 크기 결정 하나다.
+
+### 11.0 첫 행동 — G1(표본 크기) 확정
+
+동결 코호트는 **N=7/5/5(17 trial)** 인데 사전 등록 Stage 1은 **N=10/cell**이고
+판정 밴드가 그 N에 맞춰 보정돼 있다. 프로토콜은 이 worktree에 없고 메인
+체크아웃(`../concept-gate-taxonomy/docs/experiment_screening_protocol.md`)에 있다.
+
+| N | 관측 | rate | 결과 |
+|---|---|---|---|
+| 5 | 4/5 | 0.800 | ambiguous — **밴드 폭이 trial 1개** |
+| 5 | 5/5 | 1.000 | PASS — 사실상 만장일치만 통과 |
+| 7 | 6/7 | **0.857** | **프로토콜 표에 이름이 없는 구간** |
+
+| 안 | 규모 | 귀결 |
+|---|---|---|
+| **ⓐ N=10/cell 재동결** (권장) | 30 trial | 프로토콜 정합. **아무 trial도 안 돌았으므로 재동결은 위반이 아니다** |
+| ⓑ 현 동결 유지 | 17 trial | 최저 비용. `protocol_deviation`으로 방출(구현됨) |
+| ⓒ N=20/cell | 60 trial | 강제 승격 조건 적용. 프로토콜의 비용 절감 취지와 반대 |
+
+**실행 전에 확정한다** — 실행 후 조정은 사후 기준 변경이다. ⓐ면 `_cohort.py`의
+`COHORT`를 `[("E24-F-01",10),("E24-F-02",10),("E24-F-03",10)]`로 바꾸고
+`freeze`를 다시 돌린다(결정론적이라 프롬프트 바이트는 동일, trial id만 늘어난다).
+
+함께 결정할 것: **§10.3 (#11 리뷰 단계를 채점 흐름에 넣을지)**. 넣지 않으면
+그 제약은 검사되지 않은 채 `clean`에 집계된다.
+
+### 11.1 지난 세션에 실행하지 못한 이유 (둘 다 해소)
 
 1. **agent registry는 세션 시작 시점에 고정된다.** trial subject
-   `e2.4-contract-decider`를 세션 도중에 만들었더니 `Agent`와 `Workflow`
-   양쪽에서 `agent type 'e2.4-contract-decider' not found`가 났다. 파일은
-   `~/.claude/agents/`와 실험 폴더 양쪽에 이미 설치돼 있으므로 **새 세션은
-   그냥 인식한다.**
+   `e2.4-contract-decider`를 세션 도중 만들었더니 `Agent`·`Workflow` 양쪽에서
+   `agent type not found`가 났다. → **해소됨.** 정의는
+   `~/.claude/agents/`와 실험 폴더 양쪽에 설치·커밋돼 있고 다음 세션은 인식한다.
 2. **structured-output 스키마 크기 한계.** `evidence_contract_v1`을
    `agent(..., {schema})`로 넘기면 전송 계층이 "output schema too large to
-   classify safely"로 거부한다(설명 제거 후 4.7KB에서도 동일). 그래서 출력
-   계약을 **trial subject의 system prompt로** 옮겼다. 동결 프롬프트는 원래
-   "출력은 ... evidence_contract_v1 schema를 따른다"라고만 하고 필드를 하나도
-   나열하지 않으므로, 이 이동은 `rendered_prompt_sha256`을 건드리지 않는다.
+   classify safely"로 거부한다(설명 제거 후 4.7KB에서도 동일). → **우회 완료.**
+   출력 계약을 **trial subject의 system prompt**로 옮겼다. 동결 프롬프트는
+   "출력은 ... evidence_contract_v1 schema를 따른다"고만 하고 필드를 하나도
+   나열하지 않으므로 `rendered_prompt_sha256`은 그대로다.
 
-   **대신 새로 드러난 사실을 기록한다**: output schema는 모델이 실제로 보는
-   표면의 일부인데 §6의 해시 목록이 그걸 덮지 않고 있었다. 그래서 trial
-   manifest에 `system_prompt_sha256`과 `presented_schema_sha256`을 추가했다.
+   이 이동이 §6 해시 목록의 구멍을 드러냈다 — output schema와 system prompt는
+   모델이 보는 표면인데 아무도 해싱하지 않았다. `system_prompt_sha256`과
+   `presented_schema_sha256`을 추가했다.
 
-**하지 않은 우회**: 이미 등록돼 있는 `e2.2-decider`(`tools: []`)로 대체할 수
-있었지만 쓰지 않았다. 그 system prompt는 E2.2용이라 `input_concepts`라는
-**이 payload에 존재하지 않는 키**를 지목한다. 인증 실행의 trial subject를
-다른 실험 것으로 바꾸는 것은 이 실험이 0 class로 되돌아간 바로 그 종류의
-표면 오염이다. 기다리는 편이 싸다.
+   ⚠️ **크기 한계값은 미상이다.** 이분 탐색을 시도했더니 안전 분류기가
+   "분류기 우회 시도"로 차단했다 — 기계적으로 타당한 지적이라 탐침을 중단했다.
+   스키마가 더 커지면 같은 벽에 부딪힌다.
 
-### 실행 절차
+**하지 않은 우회 (기록)**: 이미 등록된 `e2.2-decider`(`tools: []`)로 대체할 수
+있었지만 쓰지 않았다. 그 system prompt는 E2.2용이라 **이 payload에 존재하지
+않는 키 `input_concepts`**를 지목한다. 인증 실행의 trial subject를 다른 실험
+것으로 바꾸는 것은 이 실험을 0 class로 되돌린 바로 그 종류의 표면 오염이다.
+기다리는 편이 쌌다.
+
+### 11.2 그 뒤 채점기에서 결함 2건을 발견해 수정했다 (`e03f74a`)
+
+**동결만 믿고 실행했다면 잘못 채점됐다.**
+
+1. **채점기가 계약이 명령한 행동을 위반으로 집계.** `conformance()`가 5단계
+   sufficiency 절차를 **packet 전역**으로 1회 도출해 **모든 per-feature 판정**과
+   대조했다. 5단계는 본래 feature 하나의 `selected_type`을 정하는 절차다.
+   `contract_prompt.md` 규칙 5는 evidence 없는 필러 feature를 insufficient로
+   표시하라고 **지시**하는데, 그 지시를 따른 판정이 위반으로 잡혔다:
+   ```
+   돌체.갑종: sufficiency=insufficient but the trial's own audit
+              yields sufficient under the 5-step procedure
+   ```
+   인증이 `clean_rate` 기준이므로 **E24-F-02가 0/5로 떨어질 예정이었다** —
+   다섯 번 시도해 겨우 확보한 class다. → `feature_judgments[].evidence_ids`로
+   부분집합을 뽑아 **feature별** 도출로 수정.
+   테스트가 못 잡은 이유: 케이스 8개가 **전부 `feature_judgments` 1개**였다.
+2. **`_score.py`가 `record()`의 `schema_violations`를 안 읽었다** — 구조적으로
+   무효한 출력이 verdict 문자열만 맞아 인증에 집계될 수 있었다. → `clean`을
+   **verdict + 스키마 유효 + 계약 준수** 3중 논리곱으로.
+
+함께 추가: `semantic_constraints` #4·#6 검사(미구현이었다), `direct_support`인데
+`supported_type`이 null인 경우, `sufficient`인데 `selected_type`이 step 3 승자와
+불일치하는 경우.
+
+### 11.3 실행 절차
 
 ```bash
 cd experiments/2026-07-25_e2.4_repo_grounded_contract_transfer
 
-# 0. 동결본이 현재 파일과 일치하는지 (게이트가 이미 검사하지만 명시적으로)
-python3 -m pytest -q .          # 32 passed
+# 0. 동결본이 현재 파일과 일치하는지
+python3 -m pytest -q .          # 33 passed
 
-# 1. 17 trial 실행. 각 trial = agentType 'e2.4-contract-decider'(tools: [])에
+# 1. (ⓐ를 택했다면) COHORT 상수 수정 후 재동결
+python3 _cohort.py agent        # 스키마가 두 곳에 있으므로 생성기를 먼저
+python3 _cohort.py freeze       # stale이면 중단한다
+#    -> 커밋 후 실행 (동결은 실행 전에 커밋돼야 한다)
+
+# 2. trial 실행. 각 trial = agentType 'e2.4-contract-decider'(tools: [])에
 #    cohort_prompts.json의 rendered_prompts[fixture_id]를 그대로 전달.
 #    trial id는 cohort_prompts.json의 trials[].trial_id.
-#    결과를 {trial_id: <파싱된 JSON 객체>} 형태로 trials_raw.json에 저장.
+#    결과를 {trial_id: <파싱된 JSON 객체>}로 trials_raw.json에 저장.
 
-# 2. 기록 — 표면이 안 움직였는지 재확인하고 스키마 위반을 표시(제거하지 않음)
+# 3. 기록 — 표면 drift 재확인 + 스키마 위반 표시(제거하지 않음)
 python3 _cohort.py record
 
-# 3. 채점 — contract_verdict 일치 + 계약 준수, threshold 0.90
+# 4. 채점
 python3 _score.py
 ```
 
-동결 이후 fixture나 계약 문구가 바뀌었다면 `record`가 **거부한다**. 그때는
-cohort가 무효이므로 `freeze`부터 다시 한다.
+동결 이후 fixture나 계약 문구가 바뀌었다면 `record`가 **거부한다.** 그때는
+코호트가 무효이므로 `freeze`부터 다시 한다.
 
-### 채점 규약 (사전 등록됨, 실행 전에 읽어라)
+**전송 계층 실패를 데이터로 기록하지 마라**: workflow 결과의 `agents_done: 0`,
+`subagent_tokens: 0`, 수십 ms 소요는 **아무것도 모델에 도달하지 않았다**는
+뜻이다. 지난 세션에 17 agent가 45ms에 전멸한 적이 있다.
+
+### 11.4 채점 규약 (사전 등록됨, 실행 전에 읽어라)
 
 - `decision` 일치가 아니라 **`contract_verdict` 일치**로 채점한다
-  (OPERATIONS_PLAN Phase 6). PROBLEM_2 §5.1에서 `decision`은 5/5 안정인데
-  `contract_verdict`는 4-1로 갈렸다 — decision만 보면 불안정한 판정이
+  (`OPERATIONS_PLAN.md` Phase 6). `PROBLEM_2` §5.1에서 `decision`은 5/5
+  안정인데 `contract_verdict`는 4-1로 갈렸다 — decision만 보면 불안정한 판정이
   만장일치로 보인다.
-- 인증은 `clean_rate` 기준이다: 기대 verdict에 **계약을 어기지 않고**
-  도달한 비율. `_score.py`의 `conformance()`가 trial 자신의 evidence_audit로
-  5단계 절차를 다시 돌려, 자기 감사표가 자기 결론을 뒷받침하지 않는 trial을
-  잡아낸다.
-- **최대 유효 커버리지 3 class**, 실행 전 인증 상태 **0 class**.
+- 인증은 **`clean_rate`** 기준: 기대 verdict에 **스키마를 지키고 계약을 어기지
+  않고** 도달한 비율. `conformance()`가 trial 자신의 `evidence_audit`로 5단계를
+  다시 돌려, 자기 감사표가 자기 결론을 뒷받침하지 않는 trial을 잡아낸다.
+- 밴드는 사전 등록 3구간(`screened_PASS` / `ambiguous` / `screened_FAIL`).
+  중간 구간은 실패가 아니라 **Stage 2 증분 지시**다.
+- **최대 유효 커버리지 3 class**, 실행 전 인증 **0 class**.
 - `legacy_leaky.md`의 7/7·5/5·5/5는 인증 근거가 아니다. 새 숫자를 그것과
   비교하지 마라 — "재채점"도 "재현"도 아닌 **clean rerun cohort**다.
 
-### 산출물
+### 11.5 산출물
 
 | 파일 | 언제 | 내용 |
 |---|---|---|
-| `cohort_prompts.json` | 커밋됨 | 모델이 받을 정확한 바이트 + 7종 해시 |
-| `e2.4-contract-decider.md` | 커밋됨 | trial subject(`tools: []`), 스키마는 생성됨 |
+| `cohort_prompts.json` | 커밋됨 | 모델이 받을 정확한 바이트 + trial당 해시 8종(+`builder_commit`) |
+| `e2.4-contract-decider.md` | 커밋됨 | trial subject(`tools: []`), 스키마는 생성물 |
+| `oracle_manifest.json` | 커밋됨 | 숨은 오라클. 빌더는 접근하지 않는다 |
 | `trials_raw.json` | 실행 후 | `{trial_id: 출력}` |
 | `trials.json` | `record` 후 | manifest + 출력 + 스키마 위반 |
-| `cohort_score.json` | `_score.py` 후 | class별 clean_rate, escalate cell |
+| `cohort_score.json` | `_score.py` 후 | class별 clean_rate, 밴드, escalate cell, `protocol_deviation` |

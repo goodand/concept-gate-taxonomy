@@ -79,7 +79,7 @@ Project_in_progress/
 | `fixture_<class>.json` | E2.4식 — semantic class 하나당 파일 하나 |
 | `fixture.json` (단수) | E2.2/E2.3식 — 한 파일에 `fixtures[]` 배열 |
 | `PROBLEM_<n>_<slug>.md` | 정식 문제 정의서. 시도-실패 이력이 누적됨 |
-| `*-at2026-07-27-16-11.md` | skills-catalog 컨벤션. **타임스탬프가 클수록 최신**, 이전 버전을 supersede하지만 파일은 남김 |
+| `*-at2026-07-28-14-02.md` | skills-catalog 컨벤션. **타임스탬프가 클수록 최신**, 이전 버전을 supersede하지만 파일은 남김. supersede는 "더 많아짐"이 아니라 **"앞의 것이 틀렸을 수 있음"** 을 포함한다 — 07-28 판 3건이 각각 이전 판의 지침을 정정했다 |
 | `__pycache__/` | 무시 |
 
 ## 4. 탐색 레시피 — "X를 알고 싶다" → 실행할 명령
@@ -117,9 +117,32 @@ python3 -c "import json;d=json.load(open('experiments/<폴더>/trials.json'));pr
 ### 4.3 어떤 텍스트가 evidence로 쓸 만한지 검증 (C1~C4)
 
 `evidence-trace-auditor`의
-`cited-source-text-evidence-rules-at2026-07-27-16-15.md`에 정식 규칙이 있고,
-아래는 그 실행 명령이다. **네 체크는 독립이며 하나 통과가 다른 것을
+**`cited-source-text-evidence-rules-at2026-07-28-14-07.md`(v2)** 에 정식 규칙이
+있고, 아래는 그 실행 명령이다. **네 체크는 독립이며 하나 통과가 다른 것을
 보증하지 않는다.**
+
+> ⚠️ **v1(`-at2026-07-27-16-15.md`)을 인용하지 마라.** v2가 v1의 Auditor Notes
+> 두 항목을 **철회**했다 — "감사자는 노트를 무시하고 원문만으로 판정하라"는
+> 규율 의존 지침이었고, 실제로 유출된 문장들이 정확히 그 지침이 **허용하는**
+> 형태였다. C1~C4와 아래 명령은 v2에서도 그대로 유효하다.
+
+**v2가 추가한 것** (아래 명령만으로는 안 되는 부분):
+
+- **판정 주체와 시점** — C1(liveness)·C4(precedence)는 **실행 전 하네스**가
+  판정하고, 그 **결과를 감사자에게 넘기지 않는다.** 감사자는 `consulted_by`
+  같은 주장의 진위를 확인할 수 없으므로 그것을 주는 것은 또 하나의 오라클을
+  추가하는 것이고, 출처 서열을 암시해 감사자가 그걸로 충돌을 해결하려 든다.
+- **표면 분리가 C1~C4의 전제조건** — 인용자 노트가 감사자에게 도달하면 판정이
+  무의미하다. builder fixture / qualification manifest / audit payload 3면으로
+  나누고, payload는 **커밋된 화이트리스트 빌더** 하나가 만든다.
+- **구조화 `source_ref`** — 자유 텍스트 locator 금지(산문은 힌트가 숨는 곳).
+  `file_lines` / `symbol` / `test` / `commit` / `json_pointer` tagged union.
+- **qualification** — 매 실행마다 모든 ref를 해소해 인용문을 원본과 바이트
+  단위로 대조하고, 어긋나면 payload 생성을 **거부**한다.
+- **여러 item의 결합** — 충돌은 item 속성이 아니라 **관계**다. `admissibility`
+  enum에 `conflict`를 두지 말고 `conflicts_with_evidence_ids`로. 결합 판정은
+  5단계이며 **scope별로** 계산한다(전역 1회 계산은 계약을 지킨 판정을 위반으로
+  잡는다 — 이 프로젝트에서 실제로 발생).
 
 ```bash
 # C1 liveness — 실제로 소비되는 경로인가 (주석 자기서술 금지!)
@@ -167,13 +190,24 @@ gh api repos/$REPO/contents/$DIR/<파일명> --jq '.content' | base64 -d
 **항상 최신 타임스탬프 버전을 읽어라.** 이전 버전은 superseded이며, 실제로
 정정된 내용이 있다(예: dead-code lesson은 update 7에서 사실관계가 뒤집혔다).
 
-주요 위치 2곳:
-- `evidence-to-knowledge-promoter/references/recurring-agentic-failure-modes-lessons-at*.md`
-  — 실패 서사·재발 판정
-- `evidence-trace-auditor/references/cited-source-text-evidence-rules-at*.md`
-  — evidence 검증 기계적 절차
-- 같은 디렉터리의 `dynamic-workflow-experiment-design-knowhow-at*.md`
-  — Workflow 도구로 trial 대량 실행할 때의 노하우
+주요 위치 (전부 `skills/Skills-Create-Project/` 아래):
+
+| 스킬 / 파일 | 무엇을 볼 때 |
+|---|---|
+| `evidence-to-knowledge-promoter/.../recurring-agentic-failure-modes-lessons-at*.md` | 실패 서사·재발 판정 |
+| 〃 `/dynamic-workflow-experiment-design-knowhow-at*.md` | Workflow 도구로 trial 대량 실행 — **전송 계층 ceiling 3개 포함** |
+| `evidence-trace-auditor/.../cited-source-text-evidence-rules-at*.md` | evidence 검증 기계적 절차(C1~C4 + v2 추가분) |
+| `agent-task-packet/.../packet-surface-closure-at*.md` | subagent에게 넘기는 packet의 표면 폐쇄 |
+| `adversarial-verification-probe/.../checker-recall-and-precision-at*.md` | **검사기를 만들 때** — recall/precision 양방향 테스트, 분기 축 전수화 |
+| `doc-code-sync-checker/.../generate-instead-of-detect-at*.md` | 같은 규칙이 두 곳에 있을 때 — 탐지 vs 생성 판정 |
+| `measurement-evaluation-orchestrator/.../bands-are-a-function-of-n-at*.md` | N과 판정 밴드를 고정할 때 |
+| `baseline-diff-lab/.../surface-change-invalidates-the-baseline-at*.md` | before/after 비교 전 전제 확인 |
+| `claim-verifier/.../self-authored-claims-at*.md` | "X는 clean하다"류 자기 요약을 쓰기 전에 |
+| `verification-decision-gate/.../pass-is-a-conjunction-at*.md` | 합격 판정을 설계할 때 |
+
+카탈로그 저장소 자체의 통합 게이트에 **subflow 5**(skill 테스트를 skill마다
+별도 프로세스로)가 추가돼 있다 — 이 프로젝트의 `scripts/run_gates.py`와 같은
+설계이며, 근거는 `skills/integration-gate/README.md`.
 
 ### 4.6 과거 세션에서 뭘 했는지 (대화 로그)
 
@@ -205,8 +239,13 @@ git 이력)에서 재확인한다. 로그나 요약 텍스트는 근거가 아�
 
 1. `git worktree list` + `git status` + `git log --oneline -10` — 물리적 현재 위치
 2. 그 worktree의 `docs/HANDOFF.md` — 활성 상태와 다음 할 일
-3. 이 문서(`WORKSPACE_NAVIGATION.md`) §0 함정 3개
-4. 새 실험이면 `../concept-gate-taxonomy/docs/EXPERIMENT_METHODOLOGY.md`
-5. Workflow/trial 대량 실행이면 skills-catalog의 최신 knowhow 파일(§4.5)
-6. evidence fixture를 다룬다면 `cited-source-text-evidence-rules-at*.md`의
-   C1~C4
+3. **`docs/E2.4_ISSUE_REGISTER.md`** — 미결 전체 목록. HANDOFF가 진입점이고
+   이 등록부가 상세다. **`[GATE]` 항목이 있으면 그것부터** — 그게 진행을 막는
+   유일한 것이라는 뜻이다
+4. 이 문서(`WORKSPACE_NAVIGATION.md`) §0 함정 3개
+5. 새 실험이면 `../concept-gate-taxonomy/docs/EXPERIMENT_METHODOLOGY.md`
+6. Workflow/trial 대량 실행이면 skills-catalog의 최신 knowhow 파일(§4.5)
+7. evidence fixture를 다룬다면 `cited-source-text-evidence-rules-at*.md`의
+   C1~C4 — **v1이 아니라 최신본**(§4.3의 경고 참조)
+8. 검사기·채점기를 만들거나 고친다면 `checker-recall-and-precision-at*.md` —
+   통과 케이스만 테스트한 검사기는 recall이 미상이다
