@@ -1,0 +1,70 @@
+{
+  "cohort_version": "e2.4-clean-rerun-cohort-v1",
+  "threshold": 0.9,
+  "scored_on": "contract_verdict (OPERATIONS_PLAN.md Phase 6), gated on output-schema validity and contract conformance",
+  "per_fixture": {
+    "E24-F-01": {
+      "n": 10,
+      "expected_contract_verdict": "sufficient_consistent",
+      "expected_decision": "accept_report",
+      "verdict_hits": 10,
+      "verdict_rate": 1.0,
+      "decision_hits": 10,
+      "clean_hits": 10,
+      "clean_rate": 1.0,
+      "band": "screened_PASS",
+      "verdict_distribution": {
+        "sufficient_consistent": 10
+      },
+      "decision_distribution": {
+        "accept_report": 10
+      },
+      "conformance_violations": {},
+      "schema_violations": {}
+    },
+    "E24-F-02": {
+      "n": 10,
+      "expected_contract_verdict": "sufficient_repairable",
+      "expected_decision": "repair",
+      "verdict_hits": 10,
+      "verdict_rate": 1.0,
+      "decision_hits": 10,
+      "clean_hits": 10,
+      "clean_rate": 1.0,
+      "band": "screened_PASS",
+      "verdict_distribution": {
+        "sufficient_repairable": 10
+      },
+      "decision_distribution": {
+        "repair": 10
+      },
+      "conformance_violations": {},
+      "schema_violations": {}
+    },
+    "E24-F-03": {
+      "n": 10,
+      "expected_contract_verdict": "insufficient_evidence",
+      "expected_decision": "abstain",
+      "verdict_hits": 10,
+      "verdict_rate": 1.0,
+      "decision_hits": 10,
+      "clean_hits": 10,
+      "clean_rate": 1.0,
+      "band": "screened_PASS",
+      "verdict_distribution": {
+        "insufficient_evidence": 10
+      },
+      "decision_distribution": {
+        "abstain": 10
+      },
+      "conformance_violations": {},
+      "schema_violations": {}
+    }
+  },
+  "escalate_cells": [],
+  "certified_classes": 3,
+  "max_attainable_classes": 3,
+  "excluded": {
+    "E24-F-04": "no eligible fixture; see PROBLEM_2_conflicting.md 5.2"
+  }
+}
