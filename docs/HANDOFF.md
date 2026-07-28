@@ -21,34 +21,33 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(진행 중)**.
 
 **E2.4의 현재 위치를 오해하지 마라**: 이 실험의 본 목적인 **3-arm 비교
 (CONTROL_REPO vs A_REPO vs CONTRACT_REPO)는 아직 한 번도 실행되지 않았다.**
-지금까지 끝난 것은 전부 **fixture 준비 단계**(Phase 0~3)다. 4개 semantic
-class fixture를 실제 저장소 evidence로 만들고, 각각이 CONTRACT_REPO에서
-의도한 판정을 내는지 검증하는 데 여러 세션이 소요됐다. 본 실험(Phase 4~6)이
-다음 작업이며, **그 전에 H1b/H1c(§6) 두 개의 설계급 선행 과제가 있다.**
+**fixture 준비 단계(Phase 0~3)는 2026-07-28에 완료·인증됐다** — 3개
+semantic class 전부 clean rerun cohort(N=10/cell)로 3/3 인증. 본 실험
+(Phase 4~6)이 다음 작업이며, **그 전에 H1c(§6, 등록부 D3) 커버리지 재설계와
+`_gen_prompts.py`(부재) 스코핑 두 선행 과제가 있다.**
 
 **유효 커버리지는 4 class가 아니라 3 class다** — `conflicting`은 "현 저장소의
 live·동등강도 evidence로 구성 가능한 fixture 미확보"로 종결됐다(§4). Schema의
 class 자체는 유지된다.
 
-> **2026-07-28 현재 (HEAD `e03f74a`) — 기술적 차단은 없다. 남은 것은 결정 하나다.**
+> **2026-07-28 현재 (HEAD `b2a4181`) — fixture 검증 완료, 3/3 class 인증.**
 >
 > 오라클 유출을 구조적으로 막는 v2 표면(3면 분리 + 화이트리스트 빌더), 계약
-> 문구 개정, clean rerun cohort 동결이 끝나 커밋됐다. 그 뒤 **채점기에서
-> 결함 2건을 발견해 수정**했다 — 그중 하나는 계약이 *지시한* 필러 처리를
-> 위반으로 집계해 **가장 어렵게 확보한 class를 `clean_rate`=0으로 떨어뜨릴
-> 예정이었다**(§11, 등록부 DONE #13).
+> 문구 개정, 채점기 결함 2건 수정을 거쳐 clean rerun cohort를 **N=10/cell(30
+> trial)로 실행했다.** 결과: **E24-F-01·02·03 전부 clean 10/10,
+> screened_PASS.** `protocol_deviation` 없음(N=10이 Stage 1과 정합). 실질
+> 검증도 통과 — E24-F-02는 10/10 전부 필러 feature `갑종`을 정직하게
+> `insufficient`로 표시하며 `바퀴`만 repair했고, E24-F-03은 10/10 전부
+> evidence를 `indirect_context`로 정확히 분류했다. 상세는 §11, 등록부 [DONE] #21.
 >
-> **지금 실행을 막는 것은 표본 크기 확정 하나뿐이다** — 동결 코호트는
-> N=7/5/5인데 사전 등록 프로토콜은 N=10/cell이고 판정 밴드가 그 N에 맞춰
-> 보정돼 있다. 선택지와 귀결은
-> [`E2.4_ISSUE_REGISTER.md`](E2.4_ISSUE_REGISTER.md) **[GATE] G1**,
-> 실행 절차는 이 문서 **§11**.
+> 실행 중 22/30 trial이 API **세션 사용 한도**로 실패했다(컨텍스트 윈도우
+> 토큰과 별개 지표) — 전송 실패라 데이터로 기록하지 않고, 한도 리셋 후 그
+> 22개만 재실행해 병합했다.
 >
-> **인증 상태는 여전히 0 class**다. 기존 7/7·5/5·5/5는 `legacy_leaky.md`로
-> 분리돼 인증·통계에서 제외됐다 — 새 숫자와 비교하지 마라.
->
-> 미결 사항 **전체 목록과 근거**는 [`E2.4_ISSUE_REGISTER.md`](E2.4_ISSUE_REGISTER.md)에
-> 있다(이 문서는 진입점, 등록부는 상세).
+> **다음 결정은 [DESIGN]으로 이동했다** — 기술적 차단은 없다. §10.3(제약
+> #11 리뷰 단계, 지금 넣으려면 이미 인증된 30 trial의 rationale을 재검토)과
+> §6 D3(H3 커버리지 재설계)가 남았다. 전체 목록은
+> [`E2.4_ISSUE_REGISTER.md`](E2.4_ISSUE_REGISTER.md).
 
 ## 2. 프로젝트 목적 (변경 없음)
 
@@ -77,42 +76,35 @@ repair/abstain 계약)을 쓰는 CONTRACT_REPO가, 이 저장소 자체의 실�
 코드/문서에서 추출한 evidence 위에서, legacy 3지선다 스키마보다 evidence
 불충분/충돌을 더 잘 잡아내는지.
 
-> ⚠️ **2026-07-28 정정 — 아래 "3 class 검증 완료"를 그대로 믿지 마라.**
-> 후속 독립 리뷰에서 **4개 fixture 전부**가 `extraction_note`(모델-facing
-> 필드)로 판정 정보를 유출하고 있음이 확인됐다. 특히
-> `sufficient_repairable.ev1`은 "the evidence supports
-> structural_composition, not essential_feature"로 **repair 목표 type을
-> 직접 지정**한다 — `conflicting`의 유출보다 강하다. 같은 기준을 적용하면
-> **현재 인증된 class는 3개가 아니라 0개**다. 아래 7/7·5/5·5/5 수치는
-> "유출 상태에서 관측됨"으로 읽어야 한다.
->
-> 근본 원인과 수정 요구사항은
-> [`DIRECTIVE_model_facing_surface_redesign.md`](../experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/DIRECTIVE_model_facing_surface_redesign.md)
-> — 설계 권한자 결정 대기 중. 핵심: **커밋된 payload 빌더가 존재하지 않아**
-> 모든 payload가 손으로 만든 블랙리스트 projection이었다.
+> ✅ **2026-07-28 — 3 class 실제로 검증 완료 (`b2a4181`).**
+> 위 가설이 최초 표적으로 삼았던 유출 경로는 v2 표면 재설계(3면 분리 +
+> 화이트리스트 빌더, `efda916`~`78a2dd3`)로 구조적으로 닫혔고, 그 위에서
+> **clean rerun cohort N=10/cell(30 trial)을 실행해 3/3 class를 인증했다.**
+> 검증은 verdict 문자열 일치뿐 아니라 **실질 확인**까지 거쳤다 — E24-F-02는
+> 10/10 전부 필러 feature `갑종`을 `insufficient`로 정직하게 표시하며 `바퀴`만
+> repair(계약 규칙 5가 요구하는 정확한 패턴), E24-F-03은 10/10 전부 evidence를
+> `indirect_context`로 정확히 분류. 상세는 §11, `cohort_score.json`,
+> 등록부 [DONE] #21.
 
-**표기상 유효 커버리지: 3 class** (`conflicting`은 미확보로 종결 — 아래 참조).
-**단 위 정정에 따라 실질 인증은 0 class이며, 표기는 지시서 Q3 결정에
-종속된다.**
+**불투명 ID 규율(2026-07-28)**: 실행 시에는 class 이름 대신
+`E24-F-01`~`E24-F-04`를 쓴다. 프롬프트를 조립하면서 "sufficient_repairable"을
+볼 수 있는 운영자는 유출을 한 번의 실수 거리에 두고 있는 셈이다. 매핑은
+`oracle_manifest.json`에 있고 빌더는 그 파일에 접근하지 않는다.
 
-> **불투명 ID 규율(2026-07-28)**: 실행 시에는 class 이름 대신
-> `E24-F-01`~`E24-F-04`를 쓴다. 프롬프트를 조립하면서 "sufficient_repairable"을
-> 볼 수 있는 운영자는 유출을 한 번의 실수 거리에 두고 있는 셈이다. 매핑은
-> `oracle_manifest.json`에 있고 빌더는 그 파일에 접근하지 않는다.
-
-| class | ID | 정답 | fixture 내용 | 검증 수준 |
+| class | ID | 정답 | fixture 내용 | 인증 (N=10/cell, 2026-07-28) |
 |---|---|---|---|---|
-| `sufficient_consistent` | E24-F-01 | accept_report | `카페린`/`손잡이`=structural_composition (E2.3 fixture 텍스트 + server.py docstring) | ~~7/7~~ → **legacy_leaky, 0** |
-| `sufficient_repairable` | E24-F-02 | repair | `돌체`/`바퀴`=essential_feature인데 evidence는 "구성 부분"이라 명시 (E2.2 동결 텍스트) | ~~5/5~~ → **legacy_leaky, 0** |
-| `insufficient` | E24-F-03 | abstain | `JSON추출유틸` — 설명 없는 유틸 함수 본문 | ~~5/5~~ → **legacy_leaky, 0** |
+| `sufficient_consistent` | E24-F-01 | accept_report | `카페린`/`손잡이`=structural_composition (E2.3 fixture 텍스트 + server.py docstring) | **10/10 clean, screened_PASS** |
+| `sufficient_repairable` | E24-F-02 | repair | `돌체`/`바퀴`=essential_feature인데 evidence는 "구성 부분"이라 명시 (E2.2 동결 텍스트) | **10/10 clean, screened_PASS** |
+| `insufficient` | E24-F-03 | abstain | `JSON추출유틸` — 설명 없는 유틸 함수 본문 | **10/10 clean, screened_PASS** |
 | `conflicting` | E24-F-04 | abstain | E2.2.1/E2.2.2 커밋 메시지 충돌 쌍 | **미확보(종결)**, cohort 제외 |
 
-취소선 수치는 유출된 v1 payload에서 관측된 것이라 인증 근거가 아니다. 제외
-사유는 각 fixture별로
+이전(유출 상태) 실측이었던 7/7·5/5·5/5는 인증 근거가 아니었고
 [`legacy_leaky.md`](../experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/legacy_leaky.md)에
-기록돼 있다. E24-F-04의 N=5는 유출 제거 **후**에 돌았지만 정본 빌더를 거치지
-않아 함께 제외되며, 다만 그 실행이 찾아낸 계약 문구 결함은 §5 개정으로
-반영됐다(그 결함은 이제 스키마상 표현 불가능하다).
+항목별 제외 사유와 함께 남아 있다. **위 표의 새 숫자와 그 legacy 숫자를
+비교하지 마라** — 우연히 둘 다 만장일치지만, legacy는 유출 payload를,
+새 숫자는 화이트리스트 빌더를 거친 payload를 쟀다. E24-F-04는 유출 제거 후
+N=5가 돌았으나 정본 빌더 미경유로 함께 제외됐고, 그 실행이 찾아낸 계약 문구
+결함은 §5 개정으로 반영됐다(이제 스키마상 표현 불가능).
 
 ### `conflicting` — 미확보로 종결 (2026-07-27, H1 결과)
 
@@ -232,6 +224,11 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
 
 ### H3 — E2.4 본 실험 (Phase 4~6, 이 실험의 실제 목적)
 
+- **2026-07-28 갱신**: CONTRACT_REPO 쪽 fixture 3개가 이제 N=10/cell clean
+  rerun cohort로 **인증**됐다(§4, §11). H3가 CONTRACT_REPO 셀에 쓸 수 있는
+  것은 더 이상 N=1 유출 스모크가 아니라 이 인증된 fixture다. 다만 아래
+  선행 작업(`_gen_prompts.py`)과 D3(등록부, arm 비교 커버리지 재설계)는
+  여전히 미해결이라 H3 자체는 아직 못 돈다.
 - **가설**(README.md 원문): CONTRACT_REPO가 CONTROL_REPO/A_REPO보다 evidence
   불충분·충돌을 더 잘 잡아낸다.
 - **현재까지의 유일한 arm 비교 실측**(1회, 초기 스모크): `conflicting`
@@ -430,37 +427,57 @@ except ModuleNotFoundError as exc:
 ---
 
 
-## 11. 다음 세션이 할 일 — 코호트 실행 (결정 1건 후 즉시 가능)
+## 11. 코호트 실행 완료 — 3/3 class 인증 (2026-07-28, `b2a4181`)
 
-표면 재설계(v2 마이그레이션 + 계약 문구 §4/§5 + 동결)와 코호트 동결은 **끝났고
-커밋됐다.** **기술적 차단은 없다.** 남은 것은 표본 크기 결정 하나다.
+표면 재설계(v2 마이그레이션 + 계약 문구 §4/§5 + 동결)와 코호트 동결·실행이
+**전부 끝났다.** 아래는 그 경위와, 실행 중 발생한 두 가지 실측(세션 한도,
+실질 검증 결과)의 기록이다.
 
-### 11.0 첫 행동 — G1(표본 크기) 확정
+### 11.0 G1(표본 크기) 확정 및 실행 결과
 
-동결 코호트는 **N=7/5/5(17 trial)** 인데 사전 등록 Stage 1은 **N=10/cell**이고
-판정 밴드가 그 N에 맞춰 보정돼 있다. 프로토콜은 이 worktree에 없고 메인
-체크아웃(`../concept-gate-taxonomy/docs/experiment_screening_protocol.md`)에 있다.
+동결 코호트는 원래 **N=7/5/5(17 trial)** 였는데 사전 등록 Stage 1은
+**N=10/cell**이고 판정 밴드가 그 N에 맞춰 보정돼 있어(프로토콜은 이 worktree에
+없고 메인 체크아웃 `../concept-gate-taxonomy/docs/experiment_screening_protocol.md`에
+있음), **ⓐ N=10/cell로 재동결**했다(`737405a`). 재동결은 결정론적이라
+`rendered_prompt_sha256`은 세 fixture 모두 이전과 바이트 동일 — trial id만
+늘어났다.
 
-| N | 관측 | rate | 결과 |
-|---|---|---|---|
-| 5 | 4/5 | 0.800 | ambiguous — **밴드 폭이 trial 1개** |
-| 5 | 5/5 | 1.000 | PASS — 사실상 만장일치만 통과 |
-| 7 | 6/7 | **0.857** | **프로토콜 표에 이름이 없는 구간** |
+30 trial 실행 결과(`b2a4181`):
 
-| 안 | 규모 | 귀결 |
-|---|---|---|
-| **ⓐ N=10/cell 재동결** (권장) | 30 trial | 프로토콜 정합. **아무 trial도 안 돌았으므로 재동결은 위반이 아니다** |
-| ⓑ 현 동결 유지 | 17 trial | 최저 비용. `protocol_deviation`으로 방출(구현됨) |
-| ⓒ N=20/cell | 60 trial | 강제 승격 조건 적용. 프로토콜의 비용 절감 취지와 반대 |
+```
+E24-F-01 (sufficient_consistent)  10/10 clean  screened_PASS
+E24-F-02 (sufficient_repairable)  10/10 clean  screened_PASS
+E24-F-03 (insufficient)           10/10 clean  screened_PASS
 
-**실행 전에 확정한다** — 실행 후 조정은 사후 기준 변경이다. ⓐ면 `_cohort.py`의
-`COHORT`를 `[("E24-F-01",10),("E24-F-02",10),("E24-F-03",10)]`로 바꾸고
-`freeze`를 다시 돌린다(결정론적이라 프롬프트 바이트는 동일, trial id만 늘어난다).
+certified 3/3 classes. protocol_deviation: 없음 (N=10 정합)
+conformance_violations: 0   schema_violations: 0  (전체 30 trial)
+```
 
-함께 결정할 것: **§10.3 (#11 리뷰 단계를 채점 흐름에 넣을지)**. 넣지 않으면
-그 제약은 검사되지 않은 채 `clean`에 집계된다.
+**실행 중 발생한 일 — 세션 사용 한도(전송 실패, trial 데이터 아님)**:
+30 trial을 한 번에 실행했을 때 22개가 `"You've hit your session limit ·
+resets 11:40pm (Asia/Seoul)"`로 실패했다. 이것은 **컨텍스트 윈도우 토큰과
+별개인 API 세션 사용량 한도**이며, `agents_error` 카운트가 0이 아니고
+`subagent_tokens`는 정상적으로 소비된 상태였다(8개는 실제로 성공). 실패한
+22개를 trial 데이터로 기록하지 않고, 리셋 시각을 확인(`date` 명령으로
+경과 확인)한 뒤 **그 22개만** 별도 batch로 재실행해 22/22 성공, 두 batch를
+병합해 30/30을 확보했다. 전체를 다시 30개 도는 대신 실패분만 재시도한 것은
+이미 성공한 8개를 버리지 않기 위함이다.
 
-### 11.1 지난 세션에 실행하지 못한 이유 (둘 다 해소)
+**검증은 verdict 문자열 일치만으로 끝내지 않았다** — legacy 유출 실행도
+7/7·5/5·5/5로 "clean해 보였던" 전례가 있어, 같은 착시를 피하려 30 trial
+전수를 실질 확인했다:
+
+- E24-F-02(가장 어렵게 확보한 class): **10/10 전부**가 필러 feature `갑종`을
+  `insufficient`로 정직하게 표시하며 `바퀴`만 `structural_composition`으로
+  repair — `contract_prompt.md` 규칙 5가 요구하는 정확한 패턴이자, `e03f74a`의
+  채점기 수정이 지키려 한 바로 그 판정. `repaired_concepts`는 `갑종`을
+  원본 타입 그대로 보존해 제약 4(repair는 입력 전체를 실어 나른다)를
+  구조적으로 충족했다.
+- E24-F-03: 표본 확인한 trial 전부가 evidence를 `direct_support`가 아니라
+  `indirect_context`로 분류 — 구현 서술일 뿐 온톨로지적 성격을 명시하지
+  않는다는 규칙 2의 판별을 정확히 적용했다.
+
+### 11.1 지난 세션에 실행하지 못했던 이유 (둘 다 해소, 이번 세션에 실행 완료)
 
 1. **agent registry는 세션 시작 시점에 고정된다.** trial subject
    `e2.4-contract-decider`를 세션 도중 만들었더니 `Agent`·`Workflow` 양쪽에서
@@ -512,7 +529,7 @@ except ModuleNotFoundError as exc:
 `supported_type`이 null인 경우, `sufficient`인데 `selected_type`이 step 3 승자와
 불일치하는 경우.
 
-### 11.3 실행 절차
+### 11.3 실행 절차 (참고용 — N=10/cell 코호트에 실제로 적용해 성공함)
 
 ```bash
 cd experiments/2026-07-25_e2.4_repo_grounded_contract_transfer
@@ -543,6 +560,12 @@ python3 _score.py
 **전송 계층 실패를 데이터로 기록하지 마라**: workflow 결과의 `agents_done: 0`,
 `subagent_tokens: 0`, 수십 ms 소요는 **아무것도 모델에 도달하지 않았다**는
 뜻이다. 지난 세션에 17 agent가 45ms에 전멸한 적이 있다.
+
+**변종 하나 더(2026-07-28 실측)**: `subagent_tokens`가 정상 소비되고 일부
+trial은 실제로 성공했는데, 나머지가 `"session limit, resets HH:MMpm (TZ)"`로
+실패하는 경우 — 이것도 전송 실패이지 데이터가 아니다. 전체를 재실행하지 말고,
+**리셋 시각을 확인한 뒤 실패한 trial id만** 별도 batch로 재실행해 이미 성공한
+것과 병합한다.
 
 ### 11.4 채점 규약 (사전 등록됨, 실행 전에 읽어라)
 
