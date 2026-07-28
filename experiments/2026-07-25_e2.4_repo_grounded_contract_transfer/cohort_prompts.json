@@ -1,7 +1,7 @@
 {
   "cohort_version": "e2.4-clean-rerun-cohort-v1",
   "note": "Frozen model-facing surface. Committed before any trial ran. The prompt text here is exactly what the model received; rendered_prompt_sha256 in each trial pins it.",
-  "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+  "builder_commit": "270d2354b85a82cece838205860824315727aa07",
   "rendered_prompts": {
     "E24-F-01": "너는 MCP 클라이언트 agent다.\n\n입력은 repo-derived evidence packet이다. 이 packet은\ngoodand/concept-gate-taxonomy 저장소의 특정 commit에서 추출된 evidence_items,\ncandidate_concepts, server_response만 포함한다.\n\n이 packet의 evidence item은 실행 전 provenance/eligibility 검증을\n통과했다. 모델은 출처의 liveness나 우선순위를 재판정하지 않는다.\n\n모델의 책임은 evidence text가 해당 concept/feature의 온톨로지적\n성격을 명시적으로 지지하는지, 그리고 evidence 간 의미 충돌이\n있는지를 판정하는 것이다.\n\n너의 목표는 정답을 추측하는 것이 아니라, evidence packet만으로 현재 상태를\n확정할 수 있는지, 보류해야 하는지, 또는 수리해야 하는지를 계약에 맞게\n판정하는 것이다.\n\n절대 규칙:\n\n1. packet 밖 지식 사용 금지.\n   - 일반 온톨로지 지식, OWL/GUFO 배경지식, 코드베이스에 대한 기억, 이전 대화\n     맥락을 사용하지 마라.\n   - evidence_items에 없는 정보가 필요하면 abstain해야 한다.\n   - 어떤 출처가 더 최신인지, 더 권위 있는지, 아직 살아있는 코드인지를\n     추론하지 마라. 그 판정은 이미 끝났고 너의 범위가 아니다.\n\n2. final decision 전에 evidence audit을 먼저 수행하라.\n   - 각 관련 evidence item을 direct_support, indirect_context, ambiguous,\n     out_of_scope 중 하나로 분류한다. \"충돌\"은 item 하나의 속성이 아니라\n     item 사이의 관계이므로 이 분류에 들어가지 않는다 — 충돌은\n     conflicts_with_evidence_ids로 표현한다.\n   - direct_support만 sufficiency를 만들 수 있다.\n   - 파일명, 심볼명, 테스트명은 단독으로 direct_support가 아니다. 명시 텍스트가\n     있어야 한다.\n   - **essential_feature, contextual_usage, locational, functional,\n     social_treatment, structural_composition 6개는 전부 이 taxonomy가\n     정의하는 전문 용어다. 각각 일상어로 비슷하게 들리는 단어와 다르다**\n     (essential_feature≠\"필수적\", functional≠\"기능이 있다\",\n     structural_composition≠\"구조를 가진 코드\"). **어떤 코드가 무엇을\n     하는지(implementation: 무엇을 검증하는지, 어떤 알고리즘을 쓰는지,\n     왜 그렇게 짰는지)를 서술하는 것은, 그 자체로는 6개 type 중 어느\n     것에 대해서도 direct_support가 아니다.** direct_support가 되려면\n     텍스트가 그 feature의 **온톨로지적 성격**(is-a를 형성하는\n     분류적 속성인가essential / 맥락에 따라 달라지는가contextual /\n     장소-영역 관계인가locational / UFO 의미의 역할인가functional /\n     사회적·법적 처우인가social / 부분-전체 관계인가structural)을\n     **명시적으로 서술**해야 한다. \"이 코드가 X를 검증/처리/구현한다\"류의\n     구현 서술만 있고 그 X의 온톨로지적 성격을 말하는 문장이 없으면,\n     6개 type 중 어느 것으로도 repair하지 말고 evidence 전체를\n     out_of_scope 또는 indirect_context로 분류하여 insufficient로\n     abstain하라 — \"그나마 이 type이 제일 그럴듯하다\"는 식으로 아무\n     type이나 골라 repair하는 것은 금지된다.\n\n3. sufficiency를 먼저 판정하라. 아래 5단계를 순서대로 그대로 적용한다.\n   1) direct_support로 분류한 evidence만 후보로 취한다. indirect_context,\n      ambiguous, out_of_scope는 아무리 많아도 sufficiency를 만들지 못한다.\n   2) 후보를 supported_type별로 묶고, 각 type이 도달한 최고 claim_strength를\n      구한다. 강도 순서는 explicit > implicit > weak > none이다.\n   3) 최고 강도에 도달한 type이 정확히 하나면 sufficient이고, selected_type은\n      그 type이다.\n   4) 양립 불가능한 둘 이상의 type이 최고 강도에서 동률이면 conflicting이다.\n      이때 각 evidence의 conflicts_with_evidence_ids에 반대쪽 evidence의 id를\n      적고, selected_type은 null로 둔다. 한쪽이 더 그럴듯하다는 이유로\n      동률을 깨지 마라 — 강도가 같으면 충돌이다.\n   5) direct_support 후보가 하나도 없으면 insufficient다.\n   - 어느 단계에서도 \"그나마 제일 가까운 type\"을 고르지 마라. 3)에서 단독\n     최고 강도가 나오지 않으면 4) 또는 5)로 간다.\n\n4. 전역 feature-type invariant를 적용하되, sufficiency가 먼저다.\n   - 같은 feature 이름이 여러 concept에 있으면 하나의 type으로 통일되어야 한다.\n   - 그러나 target type을 evidence만으로 충분히 고를 수 없으면 repair하지 말고\n     abstain한다.\n   - local evidence가 그 concept 하나에는 그럴듯해도, shared feature 전체의\n     invariant를 깨는 결론은 허용되지 않는다.\n\n5. repair는 충분하고 수리 가능한 경우에만 한다.\n   - decision=repair는 contract_verdict=sufficient_repairable일 때만 허용된다.\n   - repair_plan.allowed=true여야 한다.\n   - repaired_concepts에는 input의 모든 concept과 모든 feature를 포함한다.\n   - concept/feature 추가, 삭제, 이름 변경은 evidence packet이 명시적으로\n     요구하지 않는 한 금지한다.\n   - 모든 변경 step은 evidence_ids를 인용해야 한다.\n   - repair 판정은 실제로 바뀌는 feature에 대한 evidence sufficiency만\n     요구한다 — packet 안의 다른, 바뀌지 않는 feature(예: 별도의 필러성\n     식별 feature)에 evidence가 없다는 이유만으로 이미 충분한 repair\n     판정을 막을 필요는 없다. 다만 그 다른 feature 자체의 sufficiency는\n     별도로 \"insufficient\"로 정직하게 표시하라(그 feature의 type을\n     확정하거나 반박하는 게 아니라, 단지 이번 repair 판단에 그 feature가\n     장애물이 되지 않는다는 뜻이다).\n\n6. abstain 조건.\n   - evidence가 부족하거나 충돌하거나 packet 밖 지식이 필요하면 decision=abstain.\n   - abstain.required=true로 두고, missing_evidence에 어떤 concept/feature/relation\n     근거가 더 필요한지 적는다.\n   - abstain일 때 repaired_concepts는 null이고 repair_plan.allowed=false다.\n\n7. accept_report 조건.\n   - repo evidence만으로 현재 server_response가 충분하고 안전하며 수리가 필요\n     없다고 판단될 때만 decision=accept_report.\n   - 이때 contract_verdict=sufficient_consistent여야 한다.\n   - server_response.status가 \"PASS\"가 아니어도, 그 status가 feature-type\n     판정과 무관한 사유(예: is-a DAG 참여를 위한 추가 differentia 필요 등\n     구조적/완결성 권고)이고 evidence가 현재 candidate_concepts의 feature\n     type들을 그대로 확정하기에 충분하다면, decision=accept_report를 선택할\n     수 있다 — accept_report는 \"이 packet에 있는 feature type 배정이 evidence로\n     충분히 확정되고 수리가 필요 없다\"는 뜻이지 \"server_response.status가\n     반드시 PASS여야 한다\"는 뜻이 아니다.\n\n출력은 decision_schema.json의 evidence_contract_v1 schema를 따른다.\n\npayload:\n{\"candidate_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence_refs\": [\"ev9\", \"ev10\"]}]}], \"evidence_items\": [{\"evidence_id\": \"ev9\", \"source_kind\": \"code\", \"text\": \"    essential_feature participates in the is-a DAG.\\n    structural_composition creates has-a composition edges (part-whole graph),\\n    returned separately in the composition field.\"}, {\"evidence_id\": \"ev10\", \"source_kind\": \"fixture\", \"text\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}], \"server_response\": {\"status\": \"NEEDS_CORRECTION\", \"dag\": {}, \"composition_issues\": [], \"anti_patterns\": []}}\n",
     "E24-F-02": "너는 MCP 클라이언트 agent다.\n\n입력은 repo-derived evidence packet이다. 이 packet은\ngoodand/concept-gate-taxonomy 저장소의 특정 commit에서 추출된 evidence_items,\ncandidate_concepts, server_response만 포함한다.\n\n이 packet의 evidence item은 실행 전 provenance/eligibility 검증을\n통과했다. 모델은 출처의 liveness나 우선순위를 재판정하지 않는다.\n\n모델의 책임은 evidence text가 해당 concept/feature의 온톨로지적\n성격을 명시적으로 지지하는지, 그리고 evidence 간 의미 충돌이\n있는지를 판정하는 것이다.\n\n너의 목표는 정답을 추측하는 것이 아니라, evidence packet만으로 현재 상태를\n확정할 수 있는지, 보류해야 하는지, 또는 수리해야 하는지를 계약에 맞게\n판정하는 것이다.\n\n절대 규칙:\n\n1. packet 밖 지식 사용 금지.\n   - 일반 온톨로지 지식, OWL/GUFO 배경지식, 코드베이스에 대한 기억, 이전 대화\n     맥락을 사용하지 마라.\n   - evidence_items에 없는 정보가 필요하면 abstain해야 한다.\n   - 어떤 출처가 더 최신인지, 더 권위 있는지, 아직 살아있는 코드인지를\n     추론하지 마라. 그 판정은 이미 끝났고 너의 범위가 아니다.\n\n2. final decision 전에 evidence audit을 먼저 수행하라.\n   - 각 관련 evidence item을 direct_support, indirect_context, ambiguous,\n     out_of_scope 중 하나로 분류한다. \"충돌\"은 item 하나의 속성이 아니라\n     item 사이의 관계이므로 이 분류에 들어가지 않는다 — 충돌은\n     conflicts_with_evidence_ids로 표현한다.\n   - direct_support만 sufficiency를 만들 수 있다.\n   - 파일명, 심볼명, 테스트명은 단독으로 direct_support가 아니다. 명시 텍스트가\n     있어야 한다.\n   - **essential_feature, contextual_usage, locational, functional,\n     social_treatment, structural_composition 6개는 전부 이 taxonomy가\n     정의하는 전문 용어다. 각각 일상어로 비슷하게 들리는 단어와 다르다**\n     (essential_feature≠\"필수적\", functional≠\"기능이 있다\",\n     structural_composition≠\"구조를 가진 코드\"). **어떤 코드가 무엇을\n     하는지(implementation: 무엇을 검증하는지, 어떤 알고리즘을 쓰는지,\n     왜 그렇게 짰는지)를 서술하는 것은, 그 자체로는 6개 type 중 어느\n     것에 대해서도 direct_support가 아니다.** direct_support가 되려면\n     텍스트가 그 feature의 **온톨로지적 성격**(is-a를 형성하는\n     분류적 속성인가essential / 맥락에 따라 달라지는가contextual /\n     장소-영역 관계인가locational / UFO 의미의 역할인가functional /\n     사회적·법적 처우인가social / 부분-전체 관계인가structural)을\n     **명시적으로 서술**해야 한다. \"이 코드가 X를 검증/처리/구현한다\"류의\n     구현 서술만 있고 그 X의 온톨로지적 성격을 말하는 문장이 없으면,\n     6개 type 중 어느 것으로도 repair하지 말고 evidence 전체를\n     out_of_scope 또는 indirect_context로 분류하여 insufficient로\n     abstain하라 — \"그나마 이 type이 제일 그럴듯하다\"는 식으로 아무\n     type이나 골라 repair하는 것은 금지된다.\n\n3. sufficiency를 먼저 판정하라. 아래 5단계를 순서대로 그대로 적용한다.\n   1) direct_support로 분류한 evidence만 후보로 취한다. indirect_context,\n      ambiguous, out_of_scope는 아무리 많아도 sufficiency를 만들지 못한다.\n   2) 후보를 supported_type별로 묶고, 각 type이 도달한 최고 claim_strength를\n      구한다. 강도 순서는 explicit > implicit > weak > none이다.\n   3) 최고 강도에 도달한 type이 정확히 하나면 sufficient이고, selected_type은\n      그 type이다.\n   4) 양립 불가능한 둘 이상의 type이 최고 강도에서 동률이면 conflicting이다.\n      이때 각 evidence의 conflicts_with_evidence_ids에 반대쪽 evidence의 id를\n      적고, selected_type은 null로 둔다. 한쪽이 더 그럴듯하다는 이유로\n      동률을 깨지 마라 — 강도가 같으면 충돌이다.\n   5) direct_support 후보가 하나도 없으면 insufficient다.\n   - 어느 단계에서도 \"그나마 제일 가까운 type\"을 고르지 마라. 3)에서 단독\n     최고 강도가 나오지 않으면 4) 또는 5)로 간다.\n\n4. 전역 feature-type invariant를 적용하되, sufficiency가 먼저다.\n   - 같은 feature 이름이 여러 concept에 있으면 하나의 type으로 통일되어야 한다.\n   - 그러나 target type을 evidence만으로 충분히 고를 수 없으면 repair하지 말고\n     abstain한다.\n   - local evidence가 그 concept 하나에는 그럴듯해도, shared feature 전체의\n     invariant를 깨는 결론은 허용되지 않는다.\n\n5. repair는 충분하고 수리 가능한 경우에만 한다.\n   - decision=repair는 contract_verdict=sufficient_repairable일 때만 허용된다.\n   - repair_plan.allowed=true여야 한다.\n   - repaired_concepts에는 input의 모든 concept과 모든 feature를 포함한다.\n   - concept/feature 추가, 삭제, 이름 변경은 evidence packet이 명시적으로\n     요구하지 않는 한 금지한다.\n   - 모든 변경 step은 evidence_ids를 인용해야 한다.\n   - repair 판정은 실제로 바뀌는 feature에 대한 evidence sufficiency만\n     요구한다 — packet 안의 다른, 바뀌지 않는 feature(예: 별도의 필러성\n     식별 feature)에 evidence가 없다는 이유만으로 이미 충분한 repair\n     판정을 막을 필요는 없다. 다만 그 다른 feature 자체의 sufficiency는\n     별도로 \"insufficient\"로 정직하게 표시하라(그 feature의 type을\n     확정하거나 반박하는 게 아니라, 단지 이번 repair 판단에 그 feature가\n     장애물이 되지 않는다는 뜻이다).\n\n6. abstain 조건.\n   - evidence가 부족하거나 충돌하거나 packet 밖 지식이 필요하면 decision=abstain.\n   - abstain.required=true로 두고, missing_evidence에 어떤 concept/feature/relation\n     근거가 더 필요한지 적는다.\n   - abstain일 때 repaired_concepts는 null이고 repair_plan.allowed=false다.\n\n7. accept_report 조건.\n   - repo evidence만으로 현재 server_response가 충분하고 안전하며 수리가 필요\n     없다고 판단될 때만 decision=accept_report.\n   - 이때 contract_verdict=sufficient_consistent여야 한다.\n   - server_response.status가 \"PASS\"가 아니어도, 그 status가 feature-type\n     판정과 무관한 사유(예: is-a DAG 참여를 위한 추가 differentia 필요 등\n     구조적/완결성 권고)이고 evidence가 현재 candidate_concepts의 feature\n     type들을 그대로 확정하기에 충분하다면, decision=accept_report를 선택할\n     수 있다 — accept_report는 \"이 packet에 있는 feature type 배정이 evidence로\n     충분히 확정되고 수리가 필요 없다\"는 뜻이지 \"server_response.status가\n     반드시 PASS여야 한다\"는 뜻이 아니다.\n\n출력은 decision_schema.json의 evidence_contract_v1 schema를 따른다.\n\npayload:\n{\"candidate_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"essential_feature\", \"evidence_refs\": [\"ev1\"]}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence_refs\": []}]}], \"evidence_items\": [{\"evidence_id\": \"ev1\", \"source_kind\": \"fixture\", \"text\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}], \"server_response\": {\"status\": \"PASS\", \"dag\": {}, \"composition_issues\": [], \"anti_patterns\": []}}\n",
@@ -16,7 +16,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "23abdb5fc0d8118578eed6cd7779c7f8f763d3ba023268ae5352a966efabb85f",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-01",
@@ -36,7 +36,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "23abdb5fc0d8118578eed6cd7779c7f8f763d3ba023268ae5352a966efabb85f",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-01",
@@ -56,7 +56,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "23abdb5fc0d8118578eed6cd7779c7f8f763d3ba023268ae5352a966efabb85f",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-01",
@@ -76,7 +76,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "23abdb5fc0d8118578eed6cd7779c7f8f763d3ba023268ae5352a966efabb85f",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-01",
@@ -96,7 +96,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "23abdb5fc0d8118578eed6cd7779c7f8f763d3ba023268ae5352a966efabb85f",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-01",
@@ -116,7 +116,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "23abdb5fc0d8118578eed6cd7779c7f8f763d3ba023268ae5352a966efabb85f",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-01",
@@ -136,11 +136,71 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "23abdb5fc0d8118578eed6cd7779c7f8f763d3ba023268ae5352a966efabb85f",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-01",
         "replicate": 7,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-01-08",
+      "fixture_sha256": "45dc543bbac095d8a776680ff3a419fa6db02f811d894d458d5fa0dd1d25b6c1",
+      "qualification_sha256": "1fc68fa194d76bf50d1e541e0631a8b20cd2fd87da74e719bffa8fdb614af47c",
+      "payload_sha256": "e5be42f3601536630b8b07473400f923c4f86ebf5a72a588a3df7aae8d416244",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "23abdb5fc0d8118578eed6cd7779c7f8f763d3ba023268ae5352a966efabb85f",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-01",
+        "replicate": 8,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-01-09",
+      "fixture_sha256": "45dc543bbac095d8a776680ff3a419fa6db02f811d894d458d5fa0dd1d25b6c1",
+      "qualification_sha256": "1fc68fa194d76bf50d1e541e0631a8b20cd2fd87da74e719bffa8fdb614af47c",
+      "payload_sha256": "e5be42f3601536630b8b07473400f923c4f86ebf5a72a588a3df7aae8d416244",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "23abdb5fc0d8118578eed6cd7779c7f8f763d3ba023268ae5352a966efabb85f",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-01",
+        "replicate": 9,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-01-10",
+      "fixture_sha256": "45dc543bbac095d8a776680ff3a419fa6db02f811d894d458d5fa0dd1d25b6c1",
+      "qualification_sha256": "1fc68fa194d76bf50d1e541e0631a8b20cd2fd87da74e719bffa8fdb614af47c",
+      "payload_sha256": "e5be42f3601536630b8b07473400f923c4f86ebf5a72a588a3df7aae8d416244",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "23abdb5fc0d8118578eed6cd7779c7f8f763d3ba023268ae5352a966efabb85f",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-01",
+        "replicate": 10,
         "arm": "CONTRACT_REPO",
         "tool_access": "no_tools",
         "agent_type": "e2.4-contract-decider"
@@ -156,7 +216,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "ab369570a7e65f8744b2f6bf21b8e855f0d9746a6efec4e4b139890e6cd29d7c",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-02",
@@ -176,7 +236,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "ab369570a7e65f8744b2f6bf21b8e855f0d9746a6efec4e4b139890e6cd29d7c",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-02",
@@ -196,7 +256,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "ab369570a7e65f8744b2f6bf21b8e855f0d9746a6efec4e4b139890e6cd29d7c",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-02",
@@ -216,7 +276,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "ab369570a7e65f8744b2f6bf21b8e855f0d9746a6efec4e4b139890e6cd29d7c",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-02",
@@ -236,11 +296,111 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "ab369570a7e65f8744b2f6bf21b8e855f0d9746a6efec4e4b139890e6cd29d7c",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-02",
         "replicate": 5,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-02-06",
+      "fixture_sha256": "5b5911332ac5c76f1f10205d1519adf6ee6430492b4f5d3d7ff9703864978c2e",
+      "qualification_sha256": "eccdefab8c7e50b33653a9876cc699273ab86713c5e8b40477e215684ffadb30",
+      "payload_sha256": "4e7a94349753fa723e1027394bcddfd55b8dbfc6c337f29c4fa27b30ca73fc32",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "ab369570a7e65f8744b2f6bf21b8e855f0d9746a6efec4e4b139890e6cd29d7c",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-02",
+        "replicate": 6,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-02-07",
+      "fixture_sha256": "5b5911332ac5c76f1f10205d1519adf6ee6430492b4f5d3d7ff9703864978c2e",
+      "qualification_sha256": "eccdefab8c7e50b33653a9876cc699273ab86713c5e8b40477e215684ffadb30",
+      "payload_sha256": "4e7a94349753fa723e1027394bcddfd55b8dbfc6c337f29c4fa27b30ca73fc32",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "ab369570a7e65f8744b2f6bf21b8e855f0d9746a6efec4e4b139890e6cd29d7c",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-02",
+        "replicate": 7,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-02-08",
+      "fixture_sha256": "5b5911332ac5c76f1f10205d1519adf6ee6430492b4f5d3d7ff9703864978c2e",
+      "qualification_sha256": "eccdefab8c7e50b33653a9876cc699273ab86713c5e8b40477e215684ffadb30",
+      "payload_sha256": "4e7a94349753fa723e1027394bcddfd55b8dbfc6c337f29c4fa27b30ca73fc32",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "ab369570a7e65f8744b2f6bf21b8e855f0d9746a6efec4e4b139890e6cd29d7c",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-02",
+        "replicate": 8,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-02-09",
+      "fixture_sha256": "5b5911332ac5c76f1f10205d1519adf6ee6430492b4f5d3d7ff9703864978c2e",
+      "qualification_sha256": "eccdefab8c7e50b33653a9876cc699273ab86713c5e8b40477e215684ffadb30",
+      "payload_sha256": "4e7a94349753fa723e1027394bcddfd55b8dbfc6c337f29c4fa27b30ca73fc32",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "ab369570a7e65f8744b2f6bf21b8e855f0d9746a6efec4e4b139890e6cd29d7c",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-02",
+        "replicate": 9,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-02-10",
+      "fixture_sha256": "5b5911332ac5c76f1f10205d1519adf6ee6430492b4f5d3d7ff9703864978c2e",
+      "qualification_sha256": "eccdefab8c7e50b33653a9876cc699273ab86713c5e8b40477e215684ffadb30",
+      "payload_sha256": "4e7a94349753fa723e1027394bcddfd55b8dbfc6c337f29c4fa27b30ca73fc32",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "ab369570a7e65f8744b2f6bf21b8e855f0d9746a6efec4e4b139890e6cd29d7c",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-02",
+        "replicate": 10,
         "arm": "CONTRACT_REPO",
         "tool_access": "no_tools",
         "agent_type": "e2.4-contract-decider"
@@ -256,7 +416,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "2c8d2264f1e47bce9880598af2bca4a62ff0277c45d2d855d620b94446d693c1",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-03",
@@ -276,7 +436,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "2c8d2264f1e47bce9880598af2bca4a62ff0277c45d2d855d620b94446d693c1",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-03",
@@ -296,7 +456,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "2c8d2264f1e47bce9880598af2bca4a62ff0277c45d2d855d620b94446d693c1",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-03",
@@ -316,7 +476,7 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "2c8d2264f1e47bce9880598af2bca4a62ff0277c45d2d855d620b94446d693c1",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-03",
@@ -336,11 +496,111 @@
       "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
       "rendered_prompt_sha256": "2c8d2264f1e47bce9880598af2bca4a62ff0277c45d2d855d620b94446d693c1",
       "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
-      "builder_commit": "e40ecbf3e3ff90a9004d3573d58365b443093770",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
       "model": "claude-opus-5",
       "parameters": {
         "fixture_id": "E24-F-03",
         "replicate": 5,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-03-06",
+      "fixture_sha256": "b21fc13036ffa5354507a2ff83a275ae2978de00d54d2c8f33feb5e2feb49101",
+      "qualification_sha256": "6b25bf88e4b797eb6dc95ebfe2d9a5b0cc61bb0f621a226a232c5a50d3305b21",
+      "payload_sha256": "1211dc214af9ba1b8dc8875c11867d2abcd866cd539156a7867904f5f0b2ac55",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "2c8d2264f1e47bce9880598af2bca4a62ff0277c45d2d855d620b94446d693c1",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-03",
+        "replicate": 6,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-03-07",
+      "fixture_sha256": "b21fc13036ffa5354507a2ff83a275ae2978de00d54d2c8f33feb5e2feb49101",
+      "qualification_sha256": "6b25bf88e4b797eb6dc95ebfe2d9a5b0cc61bb0f621a226a232c5a50d3305b21",
+      "payload_sha256": "1211dc214af9ba1b8dc8875c11867d2abcd866cd539156a7867904f5f0b2ac55",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "2c8d2264f1e47bce9880598af2bca4a62ff0277c45d2d855d620b94446d693c1",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-03",
+        "replicate": 7,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-03-08",
+      "fixture_sha256": "b21fc13036ffa5354507a2ff83a275ae2978de00d54d2c8f33feb5e2feb49101",
+      "qualification_sha256": "6b25bf88e4b797eb6dc95ebfe2d9a5b0cc61bb0f621a226a232c5a50d3305b21",
+      "payload_sha256": "1211dc214af9ba1b8dc8875c11867d2abcd866cd539156a7867904f5f0b2ac55",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "2c8d2264f1e47bce9880598af2bca4a62ff0277c45d2d855d620b94446d693c1",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-03",
+        "replicate": 8,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-03-09",
+      "fixture_sha256": "b21fc13036ffa5354507a2ff83a275ae2978de00d54d2c8f33feb5e2feb49101",
+      "qualification_sha256": "6b25bf88e4b797eb6dc95ebfe2d9a5b0cc61bb0f621a226a232c5a50d3305b21",
+      "payload_sha256": "1211dc214af9ba1b8dc8875c11867d2abcd866cd539156a7867904f5f0b2ac55",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "2c8d2264f1e47bce9880598af2bca4a62ff0277c45d2d855d620b94446d693c1",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-03",
+        "replicate": 9,
+        "arm": "CONTRACT_REPO",
+        "tool_access": "no_tools",
+        "agent_type": "e2.4-contract-decider"
+      },
+      "system_prompt_sha256": "d1a28e28171e59895eaf07dfc73efdd65a8cee98a1355e9b7e8bece48c0cd52f",
+      "presented_schema_sha256": "e848926f58d731680d4503af8002d30e51dc4195cc21b136fcfd9f1d48f63d93"
+    },
+    {
+      "trial_id": "E24-R2-03-10",
+      "fixture_sha256": "b21fc13036ffa5354507a2ff83a275ae2978de00d54d2c8f33feb5e2feb49101",
+      "qualification_sha256": "6b25bf88e4b797eb6dc95ebfe2d9a5b0cc61bb0f621a226a232c5a50d3305b21",
+      "payload_sha256": "1211dc214af9ba1b8dc8875c11867d2abcd866cd539156a7867904f5f0b2ac55",
+      "contract_prompt_sha256": "6a99de6475811825b87d4576b8655dafca52081fb87352241eb88e185c9e2105",
+      "rendered_prompt_sha256": "2c8d2264f1e47bce9880598af2bca4a62ff0277c45d2d855d620b94446d693c1",
+      "decision_schema_sha256": "dae840b93c0e658e3b030eb2d68aa006317a091d8933ef4646b98514495386ca",
+      "builder_commit": "270d2354b85a82cece838205860824315727aa07",
+      "model": "claude-opus-5",
+      "parameters": {
+        "fixture_id": "E24-F-03",
+        "replicate": 10,
         "arm": "CONTRACT_REPO",
         "tool_access": "no_tools",
         "agent_type": "e2.4-contract-decider"

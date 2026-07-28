@@ -16,9 +16,12 @@ reproduction. The pre-migration prompts were never preserved byte-for-byte, and
 they were rendered from v1 fixtures that leaked the expected verdict through
 extraction_note. Nothing here is comparable to those numbers.
 
-Cohort composition -- 17 trials, opaque ids only:
+Cohort composition -- 30 trials, opaque ids only, matching Stage 1 of
+../../../concept-gate-taxonomy/docs/experiment_screening_protocol.md
+(N=10/cell; bands are calibrated for this N, not for the N=7/5/5 this
+cohort was first frozen at -- see E2.4_ISSUE_REGISTER.md [GATE] G1):
 
-    E24-F-01  x7    E24-F-02  x5    E24-F-03  x5
+    E24-F-01  x10    E24-F-02  x10    E24-F-03  x10
 
 E24-F-04 is excluded: closed as unobtainable from live, equal-strength evidence
 in this repo (PROBLEM_2_conflicting.md §5.2). The schema class is retained. Max
@@ -117,7 +120,7 @@ def agent_definition() -> str:
 
 # Opaque ids only. The oracle lives in oracle_manifest.json and is not read
 # here -- this file must stay runnable by an operator who cannot see it.
-COHORT = [("E24-F-01", 7), ("E24-F-02", 5), ("E24-F-03", 5)]
+COHORT = [("E24-F-01", 10), ("E24-F-02", 10), ("E24-F-03", 10)]
 
 FIXTURE_FILES = {
     "E24-F-01": "fixture_sufficient_consistent.json",
