@@ -1,6 +1,6 @@
 # HANDOFF — ConceptGate 세션 인수인계 (E2 실험 체인)
 
-- 갱신: 2026-07-27
+- 갱신: 2026-07-28
 - 대상: **컨텍스트 없이 이어받는 새 세션**. 이 문서만 읽고 작업을 재개할 수 있게 쓴다.
 - 이 문서는 worktree `concept-gate-e2.2-wt`(브랜치
   `codex/e2.4-contract-repo-design`)의 최신 상태를 기록한다.
@@ -285,14 +285,58 @@ concept-gate-e2.2-wt              codex/e2.4-contract-repo-design       (E2.2~E2
 ## 9. 검증 명령
 
 ```bash
-# 이 worktree에서 (E2.4 fixture 무결성 — 구조/해시/서버응답 재현/repair 전후 상태)
-python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/test_protocol.py   # 4 passed
+# 전체 게이트 (단일 진입점 — 실험별 프로세스 분리 포함)
+python3 scripts/run_gates.py
 
-# conceptgate/ 코드를 건드렸을 때만 (메인 저장소 venv 필요)
-venv/bin/python -m pytest -q                    # 86
-venv/bin/python test_server.py                  # 73/73  ※ 이 worktree엔 fastmcp 미설치라 실패함(환경 이슈)
-venv/bin/python qa_v7.py                        # 101/101
-venv/bin/python -m conceptgate.concept_gate_v7  # 60/60
-venv/bin/python fuzz_normalizer_types.py        # 209, CRASH=0
+# E2.4 fixture 무결성만 빠르게
+python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/test_protocol.py   # 5 passed
+
+# 코어만 (pytest.ini가 experiments/ 제외)
+python3 -m pytest -q
 python3 -m pytest -q test_semantic_regressions.py  # 8 (R6/R6b 포함)
 ```
+
+이 worktree의 알려진 환경 공백(회귀 아님):
+- `fastmcp` 미설치 → `test_server.py` **BLOCKED**(러너가 분리 보고)
+- `owlready2` 미설치 → `test_cg_obligations.py::test_registered_handlers_resolve`
+  가 **FAIL**. 이 저장소는 이미 optional-dep 스킵 관례
+  (`pytest.importorskip("owlready2", ...)`, `test_cg_owl.py` 등 3곳)를 쓰는데
+  이 테스트만 따르지 않아 스킵 대신 실패한다. **기존 결함**(변경 전에도 동일,
+  `git stash`로 확인). 제안 수정은 아래 §10.
+
+## 10. 미결 — 승인 대기 (범위 밖이라 손대지 않음)
+
+### 10.1 `test_cg_obligations.py::test_registered_handlers_resolve` (core, 1줄 수정 제안)
+
+이 테스트는 `OBLIGATION_REGISTRY`의 핸들러 dotted path를 실제로 import해
+registry-코드 drift를 잡는다. 핸들러 중 하나가 `owlready2`를 요구하는 모듈에
+있어서, 그 의존성이 없으면 **스킵이 아니라 실패**한다. 저장소의 다른 3곳은
+`pytest.importorskip("owlready2", ...)`로 스킵한다 — 이 테스트만 관례를
+벗어나 있고, 그래서 맨손 checkout에서 게이트가 red다.
+
+단순히 파일 상단에 `importorskip`을 걸면 **안 된다** — 같은 파일의 나머지
+24개가 통과 중이라 전부 스킵돼버린다. 또 무조건 `ModuleNotFoundError`를
+스킵하면 이 테스트의 존재 이유(drift 탐지)가 죽는다. 제안은 **알려진 선택적
+의존성일 때만** 스킵:
+
+```python
+try:
+    obj = importlib.import_module("conceptgate." + parts[0])
+except ModuleNotFoundError as exc:
+    if exc.name in {"owlready2"}:
+        pytest.skip(f"{exc.name} 미설치 (선택 의존성) — {name} 핸들러 검증 생략")
+    raise          # conceptgate.X 자체가 없으면 = 진짜 drift, 계속 실패시킨다
+```
+
+**core 테스트 파일이라 승인 없이 수정하지 않았다.** 대안은 `owlready2`를
+설치하는 것.
+
+### 10.2 `conceptgate/` 라이브 버그 2건 (E2.4가 read-only로 취급)
+
+- `has_part`/`part_of`가 `RELATION_HINT_TYPE`에 없어
+  `relation_discrimination_gate`가 `essential_feature`+`has_part`를 is-a DAG에
+  통과시킨다. `docs/MCP_SERVER.md`와 `server.py`의 클라이언트 가이드는 반대로
+  안내한다.
+- `cg_partwhole.py:7-8`의 stale docstring("참조용 — 직접 import하지 않음")이
+  아직 그대로다. 이 문장이 이 세션에 잘못된 "죽은 코드" 판정을 만들었고
+  lesson은 정정됐으나 **코드 주석은 안 고쳐졌다.**

@@ -72,15 +72,36 @@ Subtree 갱신: `git subtree pull --prefix vendor/obo-relations https://github.c
 - `vendor/` -- git subtrees (see Subtree Registry)
 - `docs/` -- Implementation packets and documentation
 
-### 테스트 5종 (전부 그린이어야 머지)
+### 머지 게이트 — 단일 진입점
 
 ```bash
-venv/bin/python -m pytest -q                        # 86
-venv/bin/python test_server.py                      # 73/73
-venv/bin/python qa_v7.py                            # 101/101
-venv/bin/python -m conceptgate.concept_gate_v7      # 60/60 (인라인)
-venv/bin/python fuzz_normalizer_types.py            # 209, CRASH=0
+venv/bin/python scripts/run_gates.py     # 전부 그린이어야 머지
 ```
+
+러너가 실행하는 것:
+
+| 게이트 | 내용 |
+|---|---|
+| core pytest | `pytest -q` (루트, `experiments/` 제외) |
+| experiment × N | `experiments/*/test_protocol.py`를 **실험마다 별도 프로세스**로 |
+| test_server.py | MCP 서버 (fastmcp 필요) |
+| qa_v7.py | 101/101 |
+| concept_gate_v7 인라인 | 60/60 |
+| fuzz_normalizer_types.py | 209, CRASH=0 |
+
+**왜 단일 스크립트인가**: 실험 폴더들은 동결 규율상 `_cert_core.py`(6개
+바이트동일)·`evaluate.py`(10개)·`_gen_prompts.py`(7개)를 같은 모듈명으로
+중복 보유한다. 이걸 한 인터프리터에 모아 돌리면 먼저 로드된 쪽이
+`sys.modules`를 선점해 **다른 실험이 남의 evaluator로 조용히 실행된다**
+(실제로 발생했던 결함). 실험별 프로세스 분리가 유일하게 확장 가능한
+해법이고, 새 실험은 아무 조치도 필요 없다. 상세 근거는
+`scripts/run_gates.py` 헤더 주석.
+
+**PASS / FAIL / BLOCKED**: 선택적 의존성(`fastmcp`, `owlready2`) 미설치로
+게이트가 **시작조차 못 하면** BLOCKED로 분리 보고하고 exit code에 반영하지
+않는다. 테스트가 실행된 뒤 실패한 것은 실패 메시지가 모듈 누락을 언급해도
+FAIL이다 — 그러지 않으면 환경 의존 테스트 하나가 같은 suite의 실제 회귀를
+가린다.
 
 ## Key Architecture
 

@@ -91,7 +91,15 @@ cat docs/HANDOFF.md                                  # 이 worktree의 활성 �
 cat ../concept-gate-taxonomy/docs/EXPERIMENT_METHODOLOGY.md   # 방법론 7규칙
 git log --oneline -15                                # 최근 작업 흐름
 git log --oneline -- experiments/<폴더>/             # 특정 실험의 이력
+python3 scripts/run_gates.py                         # 전체 머지 게이트 (단일 진입점)
 ```
+
+**게이트는 단일 스크립트다.** 맨손 `pytest`는 코어만 돌고(`pytest.ini`가
+`experiments/` 제외), 실험 self-check는 러너가 **실험마다 별도 프로세스**로
+돌린다 — 실험 폴더들이 동결 규율상 같은 모듈명(`_cert_core.py` 등)을 중복
+보유해서 한 인터프리터에 모으면 남의 모듈로 조용히 실행되기 때문이다.
+러너는 PASS/FAIL과 별개로 **BLOCKED**(선택적 의존성 미설치로 게이트가
+시작조차 못 함)를 분리 보고한다.
 
 ### 4.2 실험 하나를 이해하기
 
