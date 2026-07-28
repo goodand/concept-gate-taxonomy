@@ -1,6 +1,6 @@
 {
   "experiment_id": "E2.4",
-  "description": "Arm-to-schema companion for E2.4. CONTROL_REPO and A_REPO keep the legacy client decision shape used by E2.3 so their behavior remains comparable. CONTRACT_REPO uses evidence_contract_v1, a new schema that forces evidence audit, sufficiency judgment, invariant check, and abstain/repair bookkeeping before any final decision is interpretable. The schema is intentionally portable: cross-field conditions are listed as semantic_constraints and must be enforced by the scorer, because the workflow transport may not support advanced JSON Schema conditionals.",
+  "description": "Arm-to-schema companion for E2.4. CONTROL_REPO and A_REPO keep the legacy client decision shape used by E2.3 so their behavior remains comparable. CONTRACT_REPO uses evidence_contract_v1, a new schema that forces evidence audit, sufficiency judgment, invariant check, and abstain/repair bookkeeping before any final decision is interpretable. Version e2.4-decision-schema-v2 (2026-07-28): admissibility lost 'conflict' (a relation, now conflicts_with_evidence_ids), evidence_audit reports source_kind rather than source_path because the v2 model payload carries no paths, and the sufficiency rule is stated as an explicit five-step procedure shared verbatim with contract_prompt.md rule 3. The schema is intentionally portable: cross-field conditions are listed as semantic_constraints and must be enforced by the scorer, because the workflow transport may not support advanced JSON Schema conditionals.",
   "arm_schema_map": {
     "CONTROL_REPO": "legacy_decision",
     "A_REPO": "legacy_decision",
@@ -12,9 +12,12 @@
     "decision=abstain requires contract_verdict in {insufficient_evidence, conflicting_evidence, out_of_scope}.",
     "decision=repair requires repair_plan.allowed=true and repaired_concepts to contain the complete input concept set.",
     "decision=abstain requires repair_plan.allowed=false, repaired_concepts=null, and abstain.required=true.",
-    "Every evidence id cited by evidence_scope.used_evidence_ids, feature_judgments.evidence_ids, invariant_checks.evidence_ids, or repair_plan.steps.evidence_ids must exist in evidence_packet.evidence_items.",
+    "Every evidence id cited by evidence_scope.used_evidence_ids, evidence_audit.evidence_id, evidence_audit.conflicts_with_evidence_ids, feature_judgments.evidence_ids, invariant_checks.evidence_ids, or repair_plan.steps.evidence_ids must exist in the payload's top-level evidence_items.",
     "outside_knowledge_used must be false for any passing CONTRACT_REPO trial.",
-    "A feature judgment can be sufficient only when it cites at least one direct_support evidence item for selected_type and no conflicting direct evidence of equal strength."
+    "Adjudication procedure (scorer enforces; the same five steps appear verbatim in contract_prompt.md rule 3): (1) consider only evidence_audit entries with admissibility=direct_support; (2) group them by supported_type and take each type's maximum claim_strength under the order explicit > implicit > weak > none; (3) if exactly one type attains the overall maximum, sufficiency=sufficient and selected_type is that type; (4) if two or more mutually incompatible types tie at the maximum, sufficiency=conflicting and selected_type=null; (5) if there are no direct_support candidates, sufficiency=insufficient.",
+    "sufficiency=conflicting requires the tied evidence items to reference each other through conflicts_with_evidence_ids, and that relation must be symmetric. A conflicting verdict asserted without a named counterpart is not scored as conflicting.",
+    "conflicts_with_evidence_ids may only name items whose admissibility is direct_support: an indirect or out_of_scope item cannot conflict with anything, because it never entered the candidate set in step 1.",
+    "The model does not adjudicate source liveness or precedence (see contract_prompt.md preamble); a rationale that decides between two items on the grounds that one source is newer, still in use, or more authoritative is out of contract and must be scored as such rather than credited as a conflict resolution."
   ],
   "variants": {
     "legacy_decision": {
@@ -220,26 +223,28 @@
               "additionalProperties": false,
               "required": [
                 "evidence_id",
-                "source_path",
+                "source_kind",
                 "admissibility",
                 "supported_type",
                 "claim_strength",
+                "conflicts_with_evidence_ids",
                 "rationale"
               ],
               "properties": {
                 "evidence_id": {
                   "type": "string"
                 },
-                "source_path": {
-                  "type": "string"
+                "source_kind": {
+                  "type": "string",
+                  "description": "Echo of the item's source_kind. Was source_path in v1; the model-facing payload no longer carries paths, so requiring one would force a fabrication."
                 },
                 "admissibility": {
                   "type": "string",
+                  "description": "A property of the item on its own. 'conflict' was removed in v2: a conflict is a relation between two items, and encoding it here made a relational state look like an item attribute. Use conflicts_with_evidence_ids instead.",
                   "enum": [
                     "direct_support",
                     "indirect_context",
                     "ambiguous",
-                    "conflict",
                     "out_of_scope"
                   ]
                 },
@@ -255,12 +260,20 @@
                 },
                 "claim_strength": {
                   "type": "string",
+                  "description": "Ordered explicit > implicit > weak > none. Only the maximum strength reached by each supported_type matters to the adjudication.",
                   "enum": [
                     "explicit",
                     "implicit",
                     "weak",
                     "none"
                   ]
+                },
+                "conflicts_with_evidence_ids": {
+                  "type": "array",
+                  "description": "Ids of evidence items in this same packet that directly support an incompatible supported_type at equal claim_strength. Empty when there is no such item. Conflict is symmetric: if ev1 lists ev2, ev2 must list ev1.",
+                  "items": {
+                    "type": "string"
+                  }
                 },
                 "rationale": {
                   "type": "string"

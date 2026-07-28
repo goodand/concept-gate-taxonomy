@@ -2,12 +2,31 @@ Use this block only for the CONTRACT_REPO arm. CONTROL_REPO and A_REPO
 should keep the legacy client-decision prompt shape so the arm comparison stays
 interpretable.
 
+**Prompt version: `e2.4-contract-prompt-v2` (2026-07-28).** Supersedes the
+pre-migration prompt. Trials run against the earlier text are archived under
+`legacy_leaky/` and are not comparable: they were rendered from v1 fixtures,
+whose `extraction_note` leaked the intended answer into the payload. The
+rendered text is hashed per trial as `rendered_prompt_sha256`, so which prompt
+produced which result is recoverable from the trial record rather than from
+this note. Changes in v2: liveness/precedence removed from model scope (§4),
+`conflict` removed from the per-item admissibility enum and replaced by the
+relational field `conflicts_with_evidence_ids` (§5), sufficiency restated as an
+explicit 5-step procedure (§5), and `source_path` replaced by `source_kind` in
+the audit because the model-facing payload no longer carries paths.
+
 ```
 너는 MCP 클라이언트 agent다.
 
 입력은 repo-derived evidence packet이다. 이 packet은
 goodand/concept-gate-taxonomy 저장소의 특정 commit에서 추출된 evidence_items,
 candidate_concepts, server_response만 포함한다.
+
+이 packet의 evidence item은 실행 전 provenance/eligibility 검증을
+통과했다. 모델은 출처의 liveness나 우선순위를 재판정하지 않는다.
+
+모델의 책임은 evidence text가 해당 concept/feature의 온톨로지적
+성격을 명시적으로 지지하는지, 그리고 evidence 간 의미 충돌이
+있는지를 판정하는 것이다.
 
 너의 목표는 정답을 추측하는 것이 아니라, evidence packet만으로 현재 상태를
 확정할 수 있는지, 보류해야 하는지, 또는 수리해야 하는지를 계약에 맞게
@@ -19,10 +38,14 @@ candidate_concepts, server_response만 포함한다.
    - 일반 온톨로지 지식, OWL/GUFO 배경지식, 코드베이스에 대한 기억, 이전 대화
      맥락을 사용하지 마라.
    - evidence_items에 없는 정보가 필요하면 abstain해야 한다.
+   - 어떤 출처가 더 최신인지, 더 권위 있는지, 아직 살아있는 코드인지를
+     추론하지 마라. 그 판정은 이미 끝났고 너의 범위가 아니다.
 
 2. final decision 전에 evidence audit을 먼저 수행하라.
    - 각 관련 evidence item을 direct_support, indirect_context, ambiguous,
-     conflict, out_of_scope 중 하나로 분류한다.
+     out_of_scope 중 하나로 분류한다. "충돌"은 item 하나의 속성이 아니라
+     item 사이의 관계이므로 이 분류에 들어가지 않는다 — 충돌은
+     conflicts_with_evidence_ids로 표현한다.
    - direct_support만 sufficiency를 만들 수 있다.
    - 파일명, 심볼명, 테스트명은 단독으로 direct_support가 아니다. 명시 텍스트가
      있어야 한다.
@@ -45,12 +68,20 @@ candidate_concepts, server_response만 포함한다.
      abstain하라 — "그나마 이 type이 제일 그럴듯하다"는 식으로 아무
      type이나 골라 repair하는 것은 금지된다.
 
-3. sufficiency를 먼저 판정하라.
-   - sufficient: 적어도 하나의 direct_support evidence가 selected_type을
-     명시적으로 지지하고, 동등한 직접 충돌 evidence가 없다.
-   - insufficient: evidence가 간접적, 약함, 누락, 또는 다의적이다.
-   - conflicting: 서로 양립 불가능한 selected_type을 직접 지지하는 evidence가
-     함께 있다.
+3. sufficiency를 먼저 판정하라. 아래 5단계를 순서대로 그대로 적용한다.
+   1) direct_support로 분류한 evidence만 후보로 취한다. indirect_context,
+      ambiguous, out_of_scope는 아무리 많아도 sufficiency를 만들지 못한다.
+   2) 후보를 supported_type별로 묶고, 각 type이 도달한 최고 claim_strength를
+      구한다. 강도 순서는 explicit > implicit > weak > none이다.
+   3) 최고 강도에 도달한 type이 정확히 하나면 sufficient이고, selected_type은
+      그 type이다.
+   4) 양립 불가능한 둘 이상의 type이 최고 강도에서 동률이면 conflicting이다.
+      이때 각 evidence의 conflicts_with_evidence_ids에 반대쪽 evidence의 id를
+      적고, selected_type은 null로 둔다. 한쪽이 더 그럴듯하다는 이유로
+      동률을 깨지 마라 — 강도가 같으면 충돌이다.
+   5) direct_support 후보가 하나도 없으면 insufficient다.
+   - 어느 단계에서도 "그나마 제일 가까운 type"을 고르지 마라. 3)에서 단독
+     최고 강도가 나오지 않으면 4) 또는 5)로 간다.
 
 4. 전역 feature-type invariant를 적용하되, sufficiency가 먼저다.
    - 같은 feature 이름이 여러 concept에 있으면 하나의 type으로 통일되어야 한다.
@@ -98,15 +129,30 @@ payload:
 {payload_json}
 ```
 
-## Minimal Payload Shape
+## Payload Shape
 
-The prompt generator should replace `{payload_json}` with:
+`{payload_json}` is filled by `_surface.render_prompt(fixture, manifest)`, which
+substitutes `_surface.build_model_payload(...)`. Do not assemble it by hand.
+The builder emits exactly these keys and nothing else:
 
 ```json
 {
-  "evidence_packet": "<repo_evidence_packet_v1 object>",
-  "server_response": "<same object as evidence_packet.server_response, repeated only if the execution harness expects the old prompt shape>"
+  "candidate_concepts": [ { "name": "...", "features": [ { "feature": "...", "type": "...", "evidence_refs": ["ev1"] } ] } ],
+  "evidence_items":     [ { "evidence_id": "ev1", "source_kind": "code", "text": "..." } ],
+  "server_response":    { "status": "...", "dag": {}, "composition_issues": [], "anti_patterns": [] }
 }
 ```
 
-Do not include hidden oracle labels in the model payload.
+There is no `source_path`, `locator`, `extraction_note`, `source_ref`,
+`text_sha256`, `fixture_version`, or `source_commit` in the payload. The audit
+therefore reports `source_kind`, not a path — the model has never seen a path
+and must not invent one.
+
+The exclusion is structural, not editorial: `build_model_payload` names the keys
+it emits and constructs each one field by field, so anything added to a fixture
+later is invisible to the model unless someone edits the builder. This replaced
+a v1 arrangement in which a single dict held both builder notes and the prompt
+source, and all four fixtures leaked their expected verdict through
+`extraction_note` for weeks while a schema `description` asserted they did not.
+`test_surface.py` proves the closure, including against the six real leak
+sentences kept as a positive-control corpus.
