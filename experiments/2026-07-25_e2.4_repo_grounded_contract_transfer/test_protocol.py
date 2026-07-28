@@ -26,6 +26,31 @@ def _load(name, path):
 
 
 surface = _load("e24_surface_protocol", HERE / "_surface.py")
+cohort = _load("e24_cohort_protocol", HERE / "_cohort.py")
+
+
+def _valid_output():
+    """A minimal output that satisfies evidence_contract_v1."""
+    return {
+        "decision": "abstain",
+        "contract_verdict": "insufficient_evidence",
+        "evidence_scope": {"source_policy": "packet_only", "used_evidence_ids": ["ev1"],
+                           "outside_knowledge_used": False},
+        "evidence_audit": [{"evidence_id": "ev1", "source_kind": "code",
+                            "admissibility": "indirect_context", "supported_type": None,
+                            "claim_strength": "weak", "conflicts_with_evidence_ids": [],
+                            "rationale": "r"}],
+        "feature_judgments": [{"concept": "c", "feature": "f",
+                               "original_type": "essential_feature",
+                               "sufficiency": "insufficient", "selected_type": None,
+                               "evidence_ids": ["ev1"], "rationale": "r"}],
+        "invariant_checks": [],
+        "repair_plan": {"allowed": False, "steps": [], "reject_reason": "insufficient"},
+        "repaired_concepts": None,
+        "abstain": {"required": True, "reason": "insufficient_evidence",
+                    "missing_evidence": [{"target": "c.f", "request": "r"}]},
+        "report": "r",
+    }
 
 
 def _load_cert_core():
@@ -141,6 +166,153 @@ def test_built_payload_carries_no_verdict_vocabulary():
         leaked = [t for t in _VERDICT_TOKENS if t in scanned]
         assert not leaked, f"{path.name}: verdict vocabulary in payload metadata {leaked}"
         assert not _EXPECTATION_PHRASES.search(scanned), path.name
+
+
+def test_trial_subject_definition_matches_the_decision_schema():
+    """The output contract exists in two places -- decision_schema.json and the
+    trial subject's system prompt -- because the transport cannot deliver a
+    schema this size through the structured-output channel. Two hand-maintained
+    copies drift, and a drift here scores trials against a contract the model
+    never saw, so the second copy is generated and this pins it.
+    """
+    committed = cohort.AGENT_FILE.read_text(encoding="utf-8")
+    assert committed == cohort.agent_definition(), (
+        "e2.4-contract-decider.md is stale; run `python3 _cohort.py agent`"
+    )
+    assert "tools: []" in committed, "the trial subject must have no tools"
+
+
+def test_frozen_cohort_still_matches_what_the_builder_produces():
+    """cohort_prompts.json is committed before any trial runs. If a fixture or
+    the contract text moves afterwards, the frozen bytes silently stop
+    describing what a rerun would send.
+    """
+    frozen = json.loads((HERE / "cohort_prompts.json").read_text())
+    contract = surface.load_contract_prompt(HERE / "contract_prompt.md")
+    for fixture_id, expected in frozen["rendered_prompts"].items():
+        fixture = _load_json(HERE / cohort.FIXTURE_FILES[fixture_id])
+        manifest = surface.qualify_fixture(fixture, REPO_ROOT, run_tests=False)
+        payload = surface.build_model_payload(fixture, manifest)
+        assert surface.render_prompt(contract, payload) == expected, fixture_id
+
+    presented = surface.sha256_of(cohort.transport_schema())
+    system = surface.sha256_of(cohort.agent_definition())
+    for trial in frozen["trials"]:
+        assert trial["presented_schema_sha256"] == presented, trial["trial_id"]
+        assert trial["system_prompt_sha256"] == system, trial["trial_id"]
+
+
+def test_output_validator_accepts_valid_and_names_each_defect():
+    """A validator that never rejects is worse than none: it turns an unchecked
+    artifact into one that looks checked. Each defect below is one the recorded
+    cohort could plausibly contain.
+    """
+    schema = cohort.transport_schema()
+    assert cohort.schema_errors(_valid_output(), schema) == []
+
+    def broken(mutate):
+        out = _valid_output()
+        mutate(out)
+        return cohort.schema_errors(out, schema)
+
+    # 'conflict' was removed from the admissibility enum in v2.
+    assert broken(lambda o: o["evidence_audit"][0].update(admissibility="conflict"))
+    # v1 field name; the payload no longer carries paths.
+    assert broken(lambda o: o["evidence_audit"][0].update(source_path="x"))
+    assert broken(lambda o: o["evidence_audit"][0].pop("conflicts_with_evidence_ids"))
+    assert broken(lambda o: o.update(decision="report_done"))  # legacy enum
+    assert broken(lambda o: o.update(contract_verdict="made_up"))
+    assert broken(lambda o: o.pop("invariant_checks"))
+    assert broken(lambda o: o["feature_judgments"][0].update(selected_type="not_a_type"))
+    assert broken(lambda o: o["evidence_scope"].update(outside_knowledge_used="no"))
+
+    # null is a legal selected_type; a bare string type is legal too.
+    assert cohort.schema_errors(
+        {**_valid_output(),
+         "feature_judgments": [{**_valid_output()["feature_judgments"][0],
+                                "selected_type": "structural_composition"}]},
+        schema,
+    ) == []
+
+
+def test_scorer_reproduces_the_five_step_procedure():
+    """conformance() re-derives sufficiency from the trial's own audit and flags
+    a trial whose conclusion its own evidence table does not support. That check
+    decides certification, so it is gated rather than trusted.
+
+    The tie case is the one PROBLEM_2 §5.1 trial 4 got wrong: it marked both
+    items conflicting while also stating neither was direct_support.
+    """
+    score = _load("e24_score_protocol", HERE / "_score.py")
+
+    def audit(*rows):
+        return [{"evidence_id": e, "source_kind": "code", "admissibility": a,
+                 "supported_type": t, "claim_strength": s,
+                 "conflicts_with_evidence_ids": list(c), "rationale": "r"}
+                for e, a, t, s, c in rows]
+
+    def out(audit_rows, sufficiency, selected=None, **over):
+        o = _valid_output()
+        o["evidence_audit"] = audit_rows
+        o["feature_judgments"][0].update(sufficiency=sufficiency, selected_type=selected)
+        o.update(over)
+        return o
+
+    ds, ic = "direct_support", "indirect_context"
+    ess, comp = "essential_feature", "structural_composition"
+
+    # Step 3: a lone maximum is sufficient.
+    assert score.conformance(out(
+        audit(("ev1", ds, comp, "explicit", []), ("ev2", ds, comp, "weak", [])),
+        "sufficient", comp,
+        decision="repair", contract_verdict="sufficient_repairable",
+        repair_plan={"allowed": True, "steps": [], "reject_reason": None},
+        repaired_concepts=[], abstain={"required": False, "reason": "none",
+                                       "missing_evidence": []},
+    )) == []
+
+    # Step 5: no direct_support candidate at all.
+    assert score.conformance(out(
+        audit(("ev1", ic, None, "weak", [])), "insufficient")) == []
+
+    # Step 4: incompatible types tied at the maximum.
+    assert score.conformance(out(
+        audit(("ev1", ds, ess, "explicit", ["ev2"]), ("ev2", ds, comp, "explicit", ["ev1"])),
+        "conflicting",
+        contract_verdict="conflicting_evidence",
+        abstain={"required": True, "reason": "conflicting_evidence",
+                 "missing_evidence": []})) == []
+
+    # A tie broken by plausibility contradicts the trial's own audit.
+    assert any("5-step" in v for v in score.conformance(out(
+        audit(("ev1", ds, ess, "explicit", []), ("ev2", ds, comp, "explicit", [])),
+        "sufficient", ess)))
+
+    # PROBLEM_2 §5.1 trial 4: conflict claimed between non-direct_support items.
+    bad = score.conformance(out(
+        audit(("ev1", ic, None, "weak", ["ev2"]), ("ev2", ic, None, "weak", ["ev1"])),
+        "conflicting",
+        contract_verdict="conflicting_evidence",
+        abstain={"required": True, "reason": "conflicting_evidence",
+                 "missing_evidence": []}))
+    assert any("non-direct_support" in v for v in bad)
+    assert any("5-step" in v for v in bad)  # its own audit yields insufficient
+
+    # Asymmetric conflict.
+    assert any("symmetric" in v for v in score.conformance(out(
+        audit(("ev1", ds, ess, "explicit", ["ev2"]), ("ev2", ds, comp, "explicit", [])),
+        "conflicting",
+        contract_verdict="conflicting_evidence",
+        abstain={"required": True, "reason": "conflicting_evidence",
+                 "missing_evidence": []})))
+
+    # Cross-field bookkeeping still applies.
+    assert any("repaired_concepts=null" in v for v in score.conformance(
+        out(audit(("ev1", ic, None, "weak", [])), "insufficient", repaired_concepts=[])))
+    assert any("outside_knowledge_used" in v for v in score.conformance(out(
+        audit(("ev1", ic, None, "weak", [])), "insufficient",
+        evidence_scope={"source_policy": "packet_only", "used_evidence_ids": [],
+                        "outside_knowledge_used": True})))
 
 
 def test_sufficient_repairable_single_repair_yields_clean_pass():

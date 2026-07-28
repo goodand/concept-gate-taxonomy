@@ -30,6 +30,13 @@ class fixture를 실제 저장소 evidence로 만들고, 각각이 CONTRACT_REPO
 live·동등강도 evidence로 구성 가능한 fixture 미확보"로 종결됐다(§4). Schema의
 class 자체는 유지된다.
 
+> **2026-07-28 추가 — 표면 재설계 완료, 실행만 남음.** 오라클 유출을
+> 구조적으로 막는 v2 표면(3면 분리 + 화이트리스트 빌더)과 계약 문구 개정이
+> 끝나 커밋됐고, 17 trial **clean rerun cohort가 동결·커밋**됐다. 실행은
+> 전송 계층 문제로 다음 세션으로 넘어간다 — **절차 전체는 §11에 있다.**
+> **인증 상태는 여전히 0 class**이며, 기존 7/7·5/5·5/5는
+> `legacy_leaky.md`로 분리돼 인증·통계에서 제외됐다.
+
 ## 2. 프로젝트 목적 (변경 없음)
 
 **"LLM이 제안하고, 결정론이 판정한다."** 자연어를 evidence-carrying 개념으로
@@ -75,12 +82,24 @@ repair/abstain 계약)을 쓰는 CONTRACT_REPO가, 이 저장소 자체의 실�
 **단 위 정정에 따라 실질 인증은 0 class이며, 표기는 지시서 Q3 결정에
 종속된다.**
 
-| class | 정답 | fixture 내용 | 검증 수준 |
-|---|---|---|---|
-| `sufficient_consistent` | accept_report | `카페린`/`손잡이`=structural_composition (E2.3 fixture 텍스트 + server.py docstring) | **7/7** ✅ |
-| `sufficient_repairable` | repair | `돌체`/`바퀴`=essential_feature인데 evidence는 "구성 부분"이라 명시 (E2.2 동결 텍스트) | **5/5** ✅ |
-| `insufficient` | abstain | `JSON추출유틸` — 설명 없는 유틸 함수 본문 | **5/5** ✅ |
-| `conflicting` | abstain | E2.2.1/E2.2.2 커밋 메시지 충돌 쌍 | **미확보(종결)** — 아래 |
+> **불투명 ID 규율(2026-07-28)**: 실행 시에는 class 이름 대신
+> `E24-F-01`~`E24-F-04`를 쓴다. 프롬프트를 조립하면서 "sufficient_repairable"을
+> 볼 수 있는 운영자는 유출을 한 번의 실수 거리에 두고 있는 셈이다. 매핑은
+> `oracle_manifest.json`에 있고 빌더는 그 파일에 접근하지 않는다.
+
+| class | ID | 정답 | fixture 내용 | 검증 수준 |
+|---|---|---|---|---|
+| `sufficient_consistent` | E24-F-01 | accept_report | `카페린`/`손잡이`=structural_composition (E2.3 fixture 텍스트 + server.py docstring) | ~~7/7~~ → **legacy_leaky, 0** |
+| `sufficient_repairable` | E24-F-02 | repair | `돌체`/`바퀴`=essential_feature인데 evidence는 "구성 부분"이라 명시 (E2.2 동결 텍스트) | ~~5/5~~ → **legacy_leaky, 0** |
+| `insufficient` | E24-F-03 | abstain | `JSON추출유틸` — 설명 없는 유틸 함수 본문 | ~~5/5~~ → **legacy_leaky, 0** |
+| `conflicting` | E24-F-04 | abstain | E2.2.1/E2.2.2 커밋 메시지 충돌 쌍 | **미확보(종결)**, cohort 제외 |
+
+취소선 수치는 유출된 v1 payload에서 관측된 것이라 인증 근거가 아니다. 제외
+사유는 각 fixture별로
+[`legacy_leaky.md`](../experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/legacy_leaky.md)에
+기록돼 있다. E24-F-04의 N=5는 유출 제거 **후**에 돌았지만 정본 빌더를 거치지
+않아 함께 제외되며, 다만 그 실행이 찾아낸 계약 문구 결함은 §5 개정으로
+반영됐다(그 결함은 이제 스키마상 표현 불가능하다).
 
 ### `conflicting` — 미확보로 종결 (2026-07-27, H1 결과)
 
@@ -288,8 +307,8 @@ concept-gate-e2.2-wt              codex/e2.4-contract-repo-design       (E2.2~E2
 # 전체 게이트 (단일 진입점 — 실험별 프로세스 분리 포함)
 python3 scripts/run_gates.py
 
-# E2.4 fixture 무결성만 빠르게
-python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/test_protocol.py   # 5 passed
+# E2.4 전체 self-check (표면 폐쇄 + fixture 무결성 + 채점기)
+python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/   # 32 passed
 
 # 코어만 (pytest.ini가 experiments/ 제외)
 python3 -m pytest -q
@@ -340,3 +359,81 @@ except ModuleNotFoundError as exc:
 - `cg_partwhole.py:7-8`의 stale docstring("참조용 — 직접 import하지 않음")이
   아직 그대로다. 이 문장이 이 세션에 잘못된 "죽은 코드" 판정을 만들었고
   lesson은 정정됐으나 **코드 주석은 안 고쳐졌다.**
+
+---
+
+## 11. 다음 세션이 할 일 — clean rerun cohort 실행 (준비 완료, 실행만 남음)
+
+표면 재설계(v2 마이그레이션 + 계약 문구 §4/§5 + 동결)는 **끝났고 커밋됐다.**
+17 trial cohort도 **동결·커밋됐다.** 남은 것은 실행 하나다.
+
+### 왜 지난 세션에서 실행하지 못했나 — 두 개의 전송 계층 차단
+
+1. **agent registry는 세션 시작 시점에 고정된다.** trial subject
+   `e2.4-contract-decider`를 세션 도중에 만들었더니 `Agent`와 `Workflow`
+   양쪽에서 `agent type 'e2.4-contract-decider' not found`가 났다. 파일은
+   `~/.claude/agents/`와 실험 폴더 양쪽에 이미 설치돼 있으므로 **새 세션은
+   그냥 인식한다.**
+2. **structured-output 스키마 크기 한계.** `evidence_contract_v1`을
+   `agent(..., {schema})`로 넘기면 전송 계층이 "output schema too large to
+   classify safely"로 거부한다(설명 제거 후 4.7KB에서도 동일). 그래서 출력
+   계약을 **trial subject의 system prompt로** 옮겼다. 동결 프롬프트는 원래
+   "출력은 ... evidence_contract_v1 schema를 따른다"라고만 하고 필드를 하나도
+   나열하지 않으므로, 이 이동은 `rendered_prompt_sha256`을 건드리지 않는다.
+
+   **대신 새로 드러난 사실을 기록한다**: output schema는 모델이 실제로 보는
+   표면의 일부인데 §6의 해시 목록이 그걸 덮지 않고 있었다. 그래서 trial
+   manifest에 `system_prompt_sha256`과 `presented_schema_sha256`을 추가했다.
+
+**하지 않은 우회**: 이미 등록돼 있는 `e2.2-decider`(`tools: []`)로 대체할 수
+있었지만 쓰지 않았다. 그 system prompt는 E2.2용이라 `input_concepts`라는
+**이 payload에 존재하지 않는 키**를 지목한다. 인증 실행의 trial subject를
+다른 실험 것으로 바꾸는 것은 이 실험이 0 class로 되돌아간 바로 그 종류의
+표면 오염이다. 기다리는 편이 싸다.
+
+### 실행 절차
+
+```bash
+cd experiments/2026-07-25_e2.4_repo_grounded_contract_transfer
+
+# 0. 동결본이 현재 파일과 일치하는지 (게이트가 이미 검사하지만 명시적으로)
+python3 -m pytest -q .          # 32 passed
+
+# 1. 17 trial 실행. 각 trial = agentType 'e2.4-contract-decider'(tools: [])에
+#    cohort_prompts.json의 rendered_prompts[fixture_id]를 그대로 전달.
+#    trial id는 cohort_prompts.json의 trials[].trial_id.
+#    결과를 {trial_id: <파싱된 JSON 객체>} 형태로 trials_raw.json에 저장.
+
+# 2. 기록 — 표면이 안 움직였는지 재확인하고 스키마 위반을 표시(제거하지 않음)
+python3 _cohort.py record
+
+# 3. 채점 — contract_verdict 일치 + 계약 준수, threshold 0.90
+python3 _score.py
+```
+
+동결 이후 fixture나 계약 문구가 바뀌었다면 `record`가 **거부한다**. 그때는
+cohort가 무효이므로 `freeze`부터 다시 한다.
+
+### 채점 규약 (사전 등록됨, 실행 전에 읽어라)
+
+- `decision` 일치가 아니라 **`contract_verdict` 일치**로 채점한다
+  (OPERATIONS_PLAN Phase 6). PROBLEM_2 §5.1에서 `decision`은 5/5 안정인데
+  `contract_verdict`는 4-1로 갈렸다 — decision만 보면 불안정한 판정이
+  만장일치로 보인다.
+- 인증은 `clean_rate` 기준이다: 기대 verdict에 **계약을 어기지 않고**
+  도달한 비율. `_score.py`의 `conformance()`가 trial 자신의 evidence_audit로
+  5단계 절차를 다시 돌려, 자기 감사표가 자기 결론을 뒷받침하지 않는 trial을
+  잡아낸다.
+- **최대 유효 커버리지 3 class**, 실행 전 인증 상태 **0 class**.
+- `legacy_leaky.md`의 7/7·5/5·5/5는 인증 근거가 아니다. 새 숫자를 그것과
+  비교하지 마라 — "재채점"도 "재현"도 아닌 **clean rerun cohort**다.
+
+### 산출물
+
+| 파일 | 언제 | 내용 |
+|---|---|---|
+| `cohort_prompts.json` | 커밋됨 | 모델이 받을 정확한 바이트 + 7종 해시 |
+| `e2.4-contract-decider.md` | 커밋됨 | trial subject(`tools: []`), 스키마는 생성됨 |
+| `trials_raw.json` | 실행 후 | `{trial_id: 출력}` |
+| `trials.json` | `record` 후 | manifest + 출력 + 스키마 위반 |
+| `cohort_score.json` | `_score.py` 후 | class별 clean_rate, escalate cell |
