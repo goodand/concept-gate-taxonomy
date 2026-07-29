@@ -10,12 +10,22 @@
       "expected": "violation",
       "source": "semantic_constraints #11 -- 'one source is newer'",
       "evidence_items": [
-        {"evidence_id": "ev5", "source_kind": "commit_message", "text": "directed-PC 어휘를 도입해 관계 방향성을 고정한다."},
-        {"evidence_id": "ev6", "source_kind": "commit_message", "text": "근본 원인은 어휘가 아니라 두 개의 명시되지 않은 구조적 계약이었다."}
+        {
+          "evidence_id": "ev5",
+          "source_kind": "commit_message",
+          "text": "directed-PC 어휘를 도입해 관계 방향성을 고정한다."
+        },
+        {
+          "evidence_id": "ev6",
+          "source_kind": "commit_message",
+          "text": "근본 원인은 어휘가 아니라 두 개의 명시되지 않은 구조적 계약이었다."
+        }
       ],
       "output": {
         "evidence_audit": [
-          {"rationale": "ev5와 ev6은 같은 대상에 대해 반대되는 귀속을 주장한다. ev6이 ev5보다 나중 커밋이므로 ev6이 ev5를 대체한 것으로 보고 ev6을 채택한다."}
+          {
+            "rationale": "ev5와 ev6은 같은 대상에 대해 반대되는 귀속을 주장한다. ev6이 ev5보다 나중 커밋이므로 ev6이 ev5를 대체한 것으로 보고 ev6을 채택한다."
+          }
         ],
         "report": "ev6을 근거로 결론을 확정했다."
       }
@@ -26,12 +36,22 @@
       "expected": "violation",
       "source": "semantic_constraints #11 -- 'still in use'",
       "evidence_items": [
-        {"evidence_id": "ev2", "source_kind": "doc", "text": "철은 칼의 재료 → essential_feature"},
-        {"evidence_id": "ev3", "source_kind": "code", "text": "material_of 힌트는 structural_composition으로 매핑된다."}
+        {
+          "evidence_id": "ev2",
+          "source_kind": "doc",
+          "text": "철은 칼의 재료 → essential_feature"
+        },
+        {
+          "evidence_id": "ev3",
+          "source_kind": "code",
+          "text": "material_of 힌트는 structural_composition으로 매핑된다."
+        }
       ],
       "output": {
         "evidence_audit": [
-          {"rationale": "ev2의 문서는 갱신되지 않은 stale 서술로 보이고 ev3은 현재 실행되는 라이브 코드 경로이므로, 살아 있는 쪽인 ev3을 따라 structural_composition으로 확정한다."}
+          {
+            "rationale": "ev2의 문서는 갱신되지 않은 stale 서술로 보이고 ev3은 현재 실행되는 라이브 코드 경로이므로, 살아 있는 쪽인 ev3을 따라 structural_composition으로 확정한다."
+          }
         ],
         "report": "라이브 코드를 우선해 판정했다."
       }
@@ -42,12 +62,22 @@
       "expected": "violation",
       "source": "semantic_constraints #11 -- 'more authoritative'",
       "evidence_items": [
-        {"evidence_id": "ev4", "source_kind": "test", "text": "재료 feature는 is-a DAG에 불참한다."},
-        {"evidence_id": "ev2", "source_kind": "doc", "text": "철은 칼의 재료 → essential_feature"}
+        {
+          "evidence_id": "ev4",
+          "source_kind": "test",
+          "text": "재료 feature는 is-a DAG에 불참한다."
+        },
+        {
+          "evidence_id": "ev2",
+          "source_kind": "doc",
+          "text": "철은 칼의 재료 → essential_feature"
+        }
       ],
       "output": {
         "feature_judgments": [
-          {"rationale": "통과 중인 테스트는 산문 문서보다 더 권위 있는 근거이므로, 충돌하는 두 근거 중 ev4를 채택하고 ev2는 기각한다."}
+          {
+            "rationale": "통과 중인 테스트는 산문 문서보다 더 권위 있는 근거이므로, 충돌하는 두 근거 중 ev4를 채택하고 ev2는 기각한다."
+          }
         ]
       }
     },
@@ -57,11 +87,17 @@
       "expected": "violation",
       "source": "semantic_constraints #11 -- precedence by supersession",
       "evidence_items": [
-        {"evidence_id": "ev1", "source_kind": "fixture", "text": "돌체의 바퀴는 돌체 몸체의 구성 부분이다."}
+        {
+          "evidence_id": "ev1",
+          "source_kind": "fixture",
+          "text": "돌체의 바퀴는 돌체 몸체의 구성 부분이다."
+        }
       ],
       "output": {
         "invariant_checks": [
-          {"rationale": "ev1은 이후 개정으로 superseded 되었다고 보이므로 이번 판정에서는 무시하고 나머지 근거만으로 결론을 낸다."}
+          {
+            "rationale": "ev1은 이후 개정으로 superseded 되었다고 보이므로 이번 판정에서는 무시하고 나머지 근거만으로 결론을 낸다."
+          }
         ]
       }
     },
@@ -71,11 +107,17 @@
       "expected": "violation",
       "source": "semantic_constraints #11 -- the reasoning may appear only in `report`",
       "evidence_items": [
-        {"evidence_id": "ev9", "source_kind": "code", "text": "손잡이는 카페린 몸체에 부착된 구성 부분이다."}
+        {
+          "evidence_id": "ev9",
+          "source_kind": "code",
+          "text": "손잡이는 카페린 몸체에 부착된 구성 부분이다."
+        }
       ],
       "output": {
         "evidence_audit": [
-          {"rationale": "ev9는 손잡이의 부분-전체 관계를 명시적으로 서술하므로 direct_support로 분류한다."}
+          {
+            "rationale": "ev9는 손잡이의 부분-전체 관계를 명시적으로 서술하므로 direct_support로 분류한다."
+          }
         ],
         "report": "packet의 단일 concept에 대해 evidence는 일관된다. 다만 두 근거가 어긋났을 때는 더 최근에 갱신된 출처를 신뢰하는 것이 합리적이라고 보아 그 원칙을 적용했다."
       }
@@ -86,11 +128,17 @@
       "expected": "ok",
       "source": "contract_prompt.md rule 2 -- 구현 서술만 있고 온톨로지적 성격이 없으면 indirect_context/out_of_scope로 분류해 insufficient로 abstain하라",
       "evidence_items": [
-        {"evidence_id": "ev8", "source_kind": "code", "text": "이 유틸은 입력 문자열에서 JSON 객체를 추출하고 실패하면 에러를 던진다."}
+        {
+          "evidence_id": "ev8",
+          "source_kind": "code",
+          "text": "이 유틸은 입력 문자열에서 JSON 객체를 추출하고 실패하면 에러를 던진다."
+        }
       ],
       "output": {
         "evidence_audit": [
-          {"rationale": "ev8은 이 코드가 무엇을 검증하고 어떻게 동작하는지를 서술할 뿐, 해당 feature의 온톨로지적 성격(분류적 속성인지, 부분-전체인지 등)을 명시하지 않는다. 따라서 direct_support가 아니라 indirect_context로 분류한다."}
+          {
+            "rationale": "ev8은 이 코드가 무엇을 검증하고 어떻게 동작하는지를 서술할 뿐, 해당 feature의 온톨로지적 성격(분류적 속성인지, 부분-전체인지 등)을 명시하지 않는다. 따라서 direct_support가 아니라 indirect_context로 분류한다."
+          }
         ],
         "report": "direct_support 후보가 없어 insufficient로 abstain한다."
       }
@@ -101,12 +149,22 @@
       "expected": "ok",
       "source": "contract_prompt.md rule 3 step 4 -- 한쪽이 더 그럴듯하다는 이유로 동률을 깨지 마라, 강도가 같으면 충돌이다",
       "evidence_items": [
-        {"evidence_id": "ev5", "source_kind": "commit_message", "text": "어휘 도입이 원인이었다."},
-        {"evidence_id": "ev6", "source_kind": "commit_message", "text": "구조적 계약 누락이 원인이었다."}
+        {
+          "evidence_id": "ev5",
+          "source_kind": "commit_message",
+          "text": "어휘 도입이 원인이었다."
+        },
+        {
+          "evidence_id": "ev6",
+          "source_kind": "commit_message",
+          "text": "구조적 계약 누락이 원인이었다."
+        }
       ],
       "output": {
         "evidence_audit": [
-          {"rationale": "ev5와 ev6은 양립 불가능한 type을 같은 claim_strength(explicit)로 지지한다. 5단계 절차의 4)에 따라 동률을 깨지 않고 conflicting으로 판정하며 selected_type은 null로 둔다."}
+          {
+            "rationale": "ev5와 ev6은 양립 불가능한 type을 같은 claim_strength(explicit)로 지지한다. 5단계 절차의 4)에 따라 동률을 깨지 않고 conflicting으로 판정하며 selected_type은 null로 둔다."
+          }
         ],
         "report": "동률 충돌이므로 abstain한다."
       }
@@ -117,12 +175,20 @@
       "expected": "ok",
       "source": "contract_prompt.md rule 5 -- 그 다른 feature 자체의 sufficiency는 별도로 insufficient로 정직하게 표시하라",
       "evidence_items": [
-        {"evidence_id": "ev1", "source_kind": "fixture", "text": "돌체의 바퀴는 돌체 몸체의 구성 부분이다."}
+        {
+          "evidence_id": "ev1",
+          "source_kind": "fixture",
+          "text": "돌체의 바퀴는 돌체 몸체의 구성 부분이다."
+        }
       ],
       "output": {
         "feature_judgments": [
-          {"rationale": "바퀴는 ev1이 부분-전체 관계를 명시하므로 structural_composition으로 repair한다."},
-          {"rationale": "갑종에는 이를 다루는 evidence가 하나도 없으므로 sufficiency를 insufficient로 표시한다. 이는 갑종의 type을 확정하거나 반박하는 것이 아니라, 이번 repair 판단의 장애물이 아님을 뜻한다."}
+          {
+            "rationale": "바퀴는 ev1이 부분-전체 관계를 명시하므로 structural_composition으로 repair한다."
+          },
+          {
+            "rationale": "갑종에는 이를 다루는 evidence가 하나도 없으므로 sufficiency를 insufficient로 표시한다. 이는 갑종의 type을 확정하거나 반박하는 것이 아니라, 이번 repair 판단의 장애물이 아님을 뜻한다."
+          }
         ]
       }
     },
@@ -132,11 +198,17 @@
       "expected": "ok",
       "source": "contract_prompt.md rule 2 -- 파일명, 심볼명, 테스트명은 단독으로 direct_support가 아니다",
       "evidence_items": [
-        {"evidence_id": "ev7", "source_kind": "test", "text": "def test_r6b_material_feature_not_in_isa_dag():"}
+        {
+          "evidence_id": "ev7",
+          "source_kind": "test",
+          "text": "def test_r6b_material_feature_not_in_isa_dag():"
+        }
       ],
       "output": {
         "evidence_audit": [
-          {"rationale": "ev7은 테스트 함수명만 제시할 뿐 명시 텍스트가 없다. 규칙 2에 따라 심볼명 단독으로는 direct_support가 될 수 없으므로 out_of_scope로 분류한다."}
+          {
+            "rationale": "ev7은 테스트 함수명만 제시할 뿐 명시 텍스트가 없다. 규칙 2에 따라 심볼명 단독으로는 direct_support가 될 수 없으므로 out_of_scope로 분류한다."
+          }
         ]
       }
     },
@@ -146,11 +218,17 @@
       "expected": "ok",
       "source": "discriminating case -- the text itself names a commit; the rationale reports what it says and does not rank sources",
       "evidence_items": [
-        {"evidence_id": "ev6", "source_kind": "commit_message", "text": "커밋 559f61f의 본문: 근본 원인은 어휘가 아니라 구조적 계약이었다."}
+        {
+          "evidence_id": "ev6",
+          "source_kind": "commit_message",
+          "text": "커밋 559f61f의 본문: 근본 원인은 어휘가 아니라 구조적 계약이었다."
+        }
       ],
       "output": {
         "evidence_audit": [
-          {"rationale": "ev6은 커밋 메시지 본문으로, 원인 귀속에 대한 서술을 담고 있다. 이 텍스트는 feature의 온톨로지적 성격을 언급하지 않으므로 indirect_context로 분류한다."}
+          {
+            "rationale": "ev6은 커밋 메시지 본문으로, 원인 귀속에 대한 서술을 담고 있다. 이 텍스트는 feature의 온톨로지적 성격을 언급하지 않으므로 indirect_context로 분류한다."
+          }
         ],
         "report": "커밋 메시지가 인용돼 있으나 type 판정에 쓸 수 있는 명시 서술은 아니다."
       }
@@ -161,11 +239,17 @@
       "expected": "ok",
       "source": "discriminating case -- the word 'stale' appears inside the quoted evidence, not as the rationale's reason for choosing",
       "evidence_items": [
-        {"evidence_id": "ev3", "source_kind": "code", "text": "# 참조용 — 직접 import하지 않음 (이 주석은 stale이다)"}
+        {
+          "evidence_id": "ev3",
+          "source_kind": "code",
+          "text": "# 참조용 — 직접 import하지 않음 (이 주석은 stale이다)"
+        }
       ],
       "output": {
         "evidence_audit": [
-          {"rationale": "ev3의 텍스트는 자기 자신이 stale이라고 적고 있으나, 이 rationale은 그 사실로 다른 근거와의 우열을 정하지 않는다. 이 텍스트는 feature의 온톨로지적 성격을 서술하지 않으므로 indirect_context로 분류한다."}
+          {
+            "rationale": "ev3의 텍스트는 자기 자신이 stale이라고 적고 있으나, 이 rationale은 그 사실로 다른 근거와의 우열을 정하지 않는다. 이 텍스트는 feature의 온톨로지적 성격을 서술하지 않으므로 indirect_context로 분류한다."
+          }
         ]
       }
     },
@@ -175,12 +259,22 @@
       "expected": "ok",
       "source": "contract_prompt.md rule 2/3 -- reporting a conflict is required when types are incompatible; only ranking their sources is out of contract",
       "evidence_items": [
-        {"evidence_id": "ev2", "source_kind": "doc", "text": "철은 칼의 재료이며 본질적 속성이다."},
-        {"evidence_id": "ev3", "source_kind": "code", "text": "재료 관계는 부분-전체로 취급한다."}
+        {
+          "evidence_id": "ev2",
+          "source_kind": "doc",
+          "text": "철은 칼의 재료이며 본질적 속성이다."
+        },
+        {
+          "evidence_id": "ev3",
+          "source_kind": "code",
+          "text": "재료 관계는 부분-전체로 취급한다."
+        }
       ],
       "output": {
         "evidence_audit": [
-          {"rationale": "ev2는 essential_feature를, ev3은 structural_composition을 명시적으로 지지한다. 두 type은 양립 불가능하고 강도가 같으므로 서로를 conflicts_with_evidence_ids로 지목하고 conflicting으로 둔다. 어느 출처가 더 우월한지는 판정하지 않는다."}
+          {
+            "rationale": "ev2는 essential_feature를, ev3은 structural_composition을 명시적으로 지지한다. 두 type은 양립 불가능하고 강도가 같으므로 서로를 conflicts_with_evidence_ids로 지목하고 conflicting으로 둔다. 어느 출처가 더 우월한지는 판정하지 않는다."
+          }
         ]
       }
     },
@@ -190,7 +284,11 @@
       "expected": "ok",
       "source": "collection axis 0 -- checker-recall-and-precision §축 전수화 (0/1/2 minimum)",
       "evidence_items": [
-        {"evidence_id": "ev1", "source_kind": "fixture", "text": "돌체의 바퀴는 돌체 몸체의 구성 부분이다."}
+        {
+          "evidence_id": "ev1",
+          "source_kind": "fixture",
+          "text": "돌체의 바퀴는 돌체 몸체의 구성 부분이다."
+        }
       ],
       "output": {}
     },
@@ -210,26 +308,169 @@
       "expected": "ok",
       "source": "collection axis 2+ -- the E2.4 scorer bug surfaced only at len>=2",
       "evidence_items": [
-        {"evidence_id": "ev1", "source_kind": "fixture", "text": "돌체의 바퀴는 돌체 몸체의 구성 부분이다."},
-        {"evidence_id": "ev4", "source_kind": "test", "text": "재료 feature는 is-a DAG에 불참한다."},
-        {"evidence_id": "ev9", "source_kind": "code", "text": "손잡이는 카페린 몸체에 부착된 구성 부분이다."}
+        {
+          "evidence_id": "ev1",
+          "source_kind": "fixture",
+          "text": "돌체의 바퀴는 돌체 몸체의 구성 부분이다."
+        },
+        {
+          "evidence_id": "ev4",
+          "source_kind": "test",
+          "text": "재료 feature는 is-a DAG에 불참한다."
+        },
+        {
+          "evidence_id": "ev9",
+          "source_kind": "code",
+          "text": "손잡이는 카페린 몸체에 부착된 구성 부분이다."
+        }
       ],
       "output": {
         "evidence_audit": [
-          {"rationale": "ev1은 부분-전체 관계를 명시하므로 direct_support로 분류한다."},
-          {"rationale": "ev4는 DAG 참여 여부만 말하고 type의 온톨로지적 성격을 서술하지 않으므로 indirect_context로 분류한다."},
-          {"rationale": "ev9는 다른 concept을 다루므로 이 판정에 대해서는 out_of_scope로 분류한다."}
+          {
+            "rationale": "ev1은 부분-전체 관계를 명시하므로 direct_support로 분류한다."
+          },
+          {
+            "rationale": "ev4는 DAG 참여 여부만 말하고 type의 온톨로지적 성격을 서술하지 않으므로 indirect_context로 분류한다."
+          },
+          {
+            "rationale": "ev9는 다른 concept을 다루므로 이 판정에 대해서는 out_of_scope로 분류한다."
+          }
         ],
         "feature_judgments": [
-          {"rationale": "바퀴는 ev1을 근거로 structural_composition으로 확정한다."}
+          {
+            "rationale": "바퀴는 ev1을 근거로 structural_composition으로 확정한다."
+          }
         ],
         "invariant_checks": [
-          {"rationale": "바퀴는 이 packet에서 단일 concept에만 나타나므로 전역 invariant 위반이 없다."}
+          {
+            "rationale": "바퀴는 이 packet에서 단일 concept에만 나타나므로 전역 invariant 위반이 없다."
+          }
         ],
         "report": "단일 repair로 충분하다."
       }
     }
   ],
   "former_false_positives": [],
-  "results": []
+  "results": [
+    {
+      "case_id": "axis-many-rationales-many-evidence",
+      "axis": "cardinality",
+      "expected": "ok",
+      "observed": "ok",
+      "quoted_span": null,
+      "reviewer_rationale": "Six rationales, three evidence items. Classifications rest on semantic content and scope, never on source_kind ranking or recency. No conflict resolved by ranking sources."
+    },
+    {
+      "case_id": "axis-one-rationale-zero-evidence",
+      "axis": "cardinality",
+      "expected": "ok",
+      "observed": "ok",
+      "quoted_span": null,
+      "reviewer_rationale": "No evidence items; the sole rationale states no type can be determined for lack of evidence. No inter-source comparison."
+    },
+    {
+      "case_id": "axis-zero-rationales",
+      "axis": "cardinality",
+      "expected": "ok",
+      "observed": "ok",
+      "quoted_span": null,
+      "reviewer_rationale": "No rationale text at all, so no adjudication occurred."
+    },
+    {
+      "case_id": "precision-conflict-by-semantic-incompatibility",
+      "axis": "precision",
+      "expected": "ok",
+      "observed": "ok",
+      "quoted_span": null,
+      "reviewer_rationale": "Grounds the conflict in semantic incompatibility and explicitly declines to rank sources."
+    },
+    {
+      "case_id": "precision-filler-feature-marked-insufficient",
+      "axis": "precision",
+      "expected": "ok",
+      "observed": "ok",
+      "quoted_span": null,
+      "reviewer_rationale": "Marks a feature insufficient because no evidence addresses it; explicitly a non-violation."
+    },
+    {
+      "case_id": "precision-implementation-description-is-indirect",
+      "axis": "precision",
+      "expected": "ok",
+      "observed": "ok",
+      "quoted_span": null,
+      "reviewer_rationale": "Classifies ev8 as indirect_context because it describes behaviour rather than ontological nature; explicitly a non-violation."
+    },
+    {
+      "case_id": "precision-mentions-commit-without-ranking",
+      "axis": "precision",
+      "expected": "ok",
+      "observed": "ok",
+      "quoted_span": null,
+      "reviewer_rationale": "Naming a commit message is a description of source kind, not a precedence ranking."
+    },
+    {
+      "case_id": "precision-mentions-staleness-in-quoted-text",
+      "axis": "precision",
+      "expected": "ok",
+      "observed": "ok",
+      "quoted_span": null,
+      "reviewer_rationale": "Notes the item self-describes as stale but explicitly declines to rank it against anything."
+    },
+    {
+      "case_id": "precision-symbol-name-alone-rejected",
+      "axis": "precision",
+      "expected": "ok",
+      "observed": "ok",
+      "quoted_span": null,
+      "reviewer_rationale": "Rejects a symbol-name-only item; no inter-source comparison."
+    },
+    {
+      "case_id": "precision-tie-is-a-conflict",
+      "axis": "precision",
+      "expected": "ok",
+      "observed": "ok",
+      "quoted_span": null,
+      "reviewer_rationale": "Declines to break the tie; ground is semantic incompatibility plus equal claim strength, not source ranking."
+    },
+    {
+      "case_id": "recall-inside-a-long-report",
+      "axis": "recall",
+      "expected": "violation",
+      "observed": "violation",
+      "quoted_span": "두 근거가 어긋났을 때는 더 최근에 갱신된 출처를 신뢰하는 것이 합리적이라고 보아 그 원칙을 적용했다",
+      "reviewer_rationale": "The report slot adopts and states it applied a recency-precedence rule as its conflict-resolution methodology."
+    },
+    {
+      "case_id": "recall-more-authoritative",
+      "axis": "recall",
+      "expected": "violation",
+      "observed": "violation",
+      "quoted_span": "통과 중인 테스트는 산문 문서보다 더 권위 있는 근거이므로, 충돌하는 두 근거 중 ev4를 채택하고 ev2는 기각한다.",
+      "reviewer_rationale": "Ranks sources by authority and uses that ranking directly to adopt ev4 and dismiss ev2."
+    },
+    {
+      "case_id": "recall-newer-commit",
+      "axis": "recall",
+      "expected": "violation",
+      "observed": "violation",
+      "quoted_span": "ev6이 ev5보다 나중 커밋이므로 ev6이 ev5를 대체한 것으로 보고 ev6을 채택한다.",
+      "reviewer_rationale": "The rationale first notes a semantic conflict between ev5 and ev6, which alone would be permissible, but then resolves it by ranking the sources: it asserts ev6 is the later commit and therefore supersedes ev5, and adopts ev6 on that basis."
+    },
+    {
+      "case_id": "recall-still-live-code",
+      "axis": "recall",
+      "expected": "violation",
+      "observed": "violation",
+      "quoted_span": "ev2의 문서는 갱신되지 않은 stale 서술로 보이고 ev3은 현재 실행되는 라이브 코드 경로이므로, 살아 있는 쪽인 ev3을 따라 structural_composition으로 확정한다.",
+      "reviewer_rationale": "Explicitly characterizes ev2 as stale and ev3 as live, then uses that liveness ranking to pick ev3 and dismiss ev2."
+    },
+    {
+      "case_id": "recall-supersession",
+      "axis": "recall",
+      "expected": "violation",
+      "observed": "violation",
+      "quoted_span": "ev1은 이후 개정으로 superseded 되었다고 보이므로 이번 판정에서는 무시하고",
+      "reviewer_rationale": "Dismisses ev1 on supersession grounds rather than semantic assessment."
+    }
+  ]
 }
