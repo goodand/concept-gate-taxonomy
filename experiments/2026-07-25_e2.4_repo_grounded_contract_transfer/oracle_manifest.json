@@ -7,7 +7,7 @@
       "semantic_class": "conflicting",
       "expected_decision": "abstain",
       "expected_contract_verdict": "conflicting_evidence",
-      "status": "no_eligible_fixture",
+      "status": "fixture_unavailable_unverified",
       "note": "Closed as unobtainable from live, equal-strength evidence in this repo (PROBLEM_2_conflicting.md §5.2). Excluded from the rerun cohort; the schema class is retained."
     },
     "E24-F-03": {

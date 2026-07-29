@@ -95,10 +95,14 @@ ORACLES = {
     "E24-F-03": {"semantic_class": "insufficient",
                  "expected_decision": "abstain",
                  "expected_contract_verdict": "insufficient_evidence"},
+    # status string is the one the 2026-07-29 operations directive prescribes
+    # ("fixture_unavailable_unverified"). It replaced an equivalent local
+    # coinage ("no_eligible_fixture") -- same meaning, but the directive's
+    # vocabulary is the one other sessions will grep for.
     "E24-F-04": {"semantic_class": "conflicting",
                  "expected_decision": "abstain",
                  "expected_contract_verdict": "conflicting_evidence",
-                 "status": "no_eligible_fixture",
+                 "status": "fixture_unavailable_unverified",
                  "note": "Closed as unobtainable from live, equal-strength evidence "
                          "in this repo (PROBLEM_2_conflicting.md §5.2). Excluded from "
                          "the rerun cohort; the schema class is retained."},

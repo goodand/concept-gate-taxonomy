@@ -168,6 +168,47 @@ def test_built_payload_carries_no_verdict_vocabulary():
         assert not _EXPECTATION_PHRASES.search(scanned), path.name
 
 
+def test_oracle_manifest_matches_the_migration_scripts_oracle_table():
+    """`oracle_manifest.json` and `_migrate_v1_to_v2.py`'s ORACLES table hold the
+    same expected answers in two places, and unlike the trial-subject schema the
+    manifest **cannot** be regenerated: the migration reads v1 keys
+    (`evidence_items`) that no longer exist, so re-running it would KeyError.
+
+    A generator that cannot run is not a drift guard, so this test is the guard.
+    It caught nothing when written -- it exists so that editing one copy without
+    the other fails here instead of silently scoring against a stale oracle.
+    """
+    migrate = _load("e24_migrate_protocol", HERE / "_migrate_v1_to_v2.py")
+    manifest = _load_json(HERE / "oracle_manifest.json")["fixtures"]
+
+    assert set(manifest) == set(migrate.ORACLES), (
+        "fixture id sets differ between oracle_manifest.json and ORACLES"
+    )
+    for fid, expected in migrate.ORACLES.items():
+        got = manifest[fid]
+        for key, value in expected.items():
+            assert got.get(key) == value, (
+                f"{fid}.{key}: manifest has {got.get(key)!r}, "
+                f"_migrate_v1_to_v2.py ORACLES has {value!r}"
+            )
+
+
+def test_unobtained_fixture_uses_the_directive_status_vocabulary():
+    """The 2026-07-29 operations directive prescribes
+    `fixture_unavailable_unverified` for a class whose fixture was never
+    obtained. An earlier local coinage ("no_eligible_fixture") meant the same
+    thing but is not what another session would grep for.
+    """
+    manifest = _load_json(HERE / "oracle_manifest.json")["fixtures"]
+    assert manifest["E24-F-04"]["status"] == "fixture_unavailable_unverified"
+    # The class stays in the schema; only its obtainability is marked.
+    assert manifest["E24-F-04"]["expected_contract_verdict"] == "conflicting_evidence"
+    schema = json.loads((HERE / "decision_schema.json").read_text())
+    verdicts = (schema["variants"]["evidence_contract_v1"]["schema"]
+                ["properties"]["contract_verdict"]["enum"])
+    assert "conflicting_evidence" in verdicts, "directive §1: keep the class in schema"
+
+
 def test_trial_subject_definition_matches_the_decision_schema():
     """The output contract exists in two places -- decision_schema.json and the
     trial subject's system prompt -- because the transport cannot deliver a
