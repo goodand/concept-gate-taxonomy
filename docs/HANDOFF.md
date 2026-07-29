@@ -89,7 +89,7 @@ class 자체는 유지된다.
 | E2.2.2 (invariant 수정) | rate=1.00, GO | 종료 |
 | E2.2.3 (OFAT ablation) | A_ONLY=20/20, B_ONLY=1/20, C_ONLY=0/20 | 종료 |
 | E2.3 (전역 invariant 일반화) | A_ONLY/PARAPHRASE/TOPOLOGY/DECOY 전부 screened PASS | 종료, 푸시됨 |
-| **E2.4 (repo-grounded contract)** | fixture 4종 준비 완료, **본 실험 미실행** | **진행 중** |
+| **E2.4 (repo-grounded contract)** | fixture 3 class 인증 + 제약 #11 리뷰 완료(4중 논리곱). **본 실험(H3) 미실행 — D3가 막고 있다** | **진행 중** |
 
 ## 4. E2.4 — fixture 4종 검증 현황
 
@@ -248,11 +248,11 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
 
 ### H3 — E2.4 본 실험 (Phase 4~6, 이 실험의 실제 목적)
 
-- **2026-07-28 갱신**: CONTRACT_REPO 쪽 fixture 3개가 이제 N=10/cell clean
-  rerun cohort로 **인증**됐다(§4, §11). H3가 CONTRACT_REPO 셀에 쓸 수 있는
-  것은 더 이상 N=1 유출 스모크가 아니라 이 인증된 fixture다. 다만 아래
-  선행 작업(`_gen_prompts.py`)과 D3(등록부, arm 비교 커버리지 재설계)는
-  여전히 미해결이라 H3 자체는 아직 못 돈다.
+- **2026-07-29 갱신**: CONTRACT_REPO 쪽 fixture 3개는 N=10/cell clean rerun
+  cohort로 인증됐고, **제약 #11 리뷰까지 끝나 인증이 4중 논리곱 위에 서 있다**
+  (§4, §11, 등록부 [DONE] #25). H3가 CONTRACT_REPO 셀에 쓸 것은 이 인증된
+  fixture다. **H3를 막는 것은 이제 D3 하나뿐이다** — 신규 trial 차단은
+  해제됐고, legacy arm 프롬프트 생성 경로는 D3 결정 뒤에 스코핑한다.
 - **가설**(README.md 원문): CONTRACT_REPO가 CONTROL_REPO/A_REPO보다 evidence
   불충분·충돌을 더 잘 잡아낸다.
 - **현재까지의 유일한 arm 비교 실측**(1회, 초기 스모크): `conflicting`
@@ -261,9 +261,12 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
   분류하고 정확히 abstain했다. 가설을 뒷받침하는 첫 신호이나 N=1이다.
 - **규모**: 8 cell × N=10 = 80 trial (CONTRACT_REPO 4 class + CONTROL_REPO/
   A_REPO 각 2 class). `OPERATIONS_PLAN.md` Phase 5 참조.
-- **선행 작업**: Phase 4의 `_gen_prompts.py`(매니페스트 생성 스크립트)가
-  **아직 존재하지 않는다** — CONTROL_REPO/A_REPO용 legacy 프롬프트 템플릿을
-  새로 작성해야 한다. 이건 엔지니어링 작업이라 별도 스코핑 필요.
+- **선행 작업**: CONTROL_REPO/A_REPO용 legacy 프롬프트 생성 경로가 없다.
+  ⚠️ 등록부·이 문서가 오랫동안 이를 "`_gen_prompts.py` 부재"로 적어 왔으나,
+  **E2.4는 그 구세대 방식을 쓰지 않는다** — 이 실험의 파이프라인은
+  `_surface.py`(빌더·qualification) + `_cohort.py`(agent/freeze/record) +
+  `_score.py`다. 따라서 필요한 것은 `_gen_prompts.py` 신설이 아니라 **기존
+  빌더를 legacy arm까지 확장하는 것**일 수 있다. 스코핑 시 이 전제부터 확인할 것.
 - **도구**: 사용자가 `Workflow`(dynamic workflow) 사용을 승인했다. 80 trial
   규모에서는 resumability(`runId` 캐시)와 토큰 예산 추적 이점이 실재한다.
   다만 매니페스트를 먼저 보여주고 진행하는 게 이 프로젝트 관례
@@ -286,10 +289,15 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
 `goodand/skills-catalog`에 **커밋 9개 / 신규 reference 10건 / 게이트 모듈 1개**,
 그리고 `SKILL.md`·허브 문서 8곳 repoint. `e5b5444`~`86cc8c2`.
 
-> ⚠️ **먼저 읽을 경고 — 기존 문서 3건의 지침이 반증돼 정정됐다.**
-> 07-27 판(`-at2026-07-27-16-11`, `-at2026-07-27-16-15`)과
-> `-at2026-07-25-15-06`을 **직접 인용하지 마라.** 각각의 07-28 판이 supersede
-> 하며 그 안에 무엇이 왜 틀렸는지가 적혀 있다.
+> ⚠️ **먼저 읽을 경고 — 아래 표의 07-28 판이 이미 최신본이 아니다.**
+>
+> 이 절은 07-28에 작성될 때 "전부 최신"이라 적었으나, **07-29 판이 3건
+> 올라와 있다**(§7.3). 07-27 판을 인용하지 말라는 원래 경고는 여전히 유효하고,
+> **거기에 07-28 판 2건도 supersede됐다는 사실이 추가된다.**
+>
+> **어떤 문서든 인용 전에 `gh api`로 타임스탬프를 직접 확인하라.**
+> `WORKSPACE_NAVIGATION.md` §3이 경고한 함정 — supersede는 "더 많아짐"이 아니라
+> **"앞의 것이 틀렸을 수 있음"** 을 포함한다 — 이 이 문서 자신에게 재발했다.
 
 정정된 3건:
 
@@ -299,7 +307,7 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
 | `recurring-...-lessons` (update 8 → **9**) | candidate `meta-commentary-inside-an-evidence-item`의 **fix가 종류부터 틀렸다** — 모델-facing 노트의 *내용*을 단속하라고 했으나, 실제 유출 문장들이 그 fix가 **허용하는** 형태였다 |
 | `cited-source-text-evidence-rules` (v1 → **v2**) | Auditor Notes 두 항목이 "감사자는 노트를 무시하고 원문만으로 판정하라"는 **규율 의존**이었다. 감사자가 무시할 수 있는지는 측정 대상이 아니고, 무시하도록 요구하는 설계가 결함이다 |
 
-### 7.0 신규·갱신 10건 (전부 `-at2026-07-28-*`)
+### 7.0 07-28 승격분 10건 — ⚠️ 이 중 2건은 이후 supersede됨 (§7.3 참조)
 
 | 스킬 | 문서 | 핵심 |
 |---|---|---|
@@ -321,6 +329,36 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
 방치했던 루트 pytest 수집 실패를 닫았고, **그 수집 오류가 가리고 있던 실패
 2건**(pydantic 미설치 / cwd 의존)을 드러냈다. 이 프로젝트의
 `scripts/run_gates.py`와 같은 설계다.
+
+### 7.3 현재 최신본 (2026-07-29 실측, `gh api` 조회)
+
+**§7.0 표의 07-28 판을 인용하기 전에 이 표를 먼저 보라.**
+
+| 파일 | 상태 |
+|---|---|
+| `evidence-to-knowledge-promoter/.../dynamic-workflow-...-knowhow-at2026-07-29-00-16.md` | **최신.** 07-28 판(update 3)을 supersede |
+| `evidence-to-knowledge-promoter/.../recurring-...-lessons-at2026-07-29-00-22.md` | **최신.** 07-28 판(update 9)을 supersede |
+| `adversarial-verification-probe/.../verifying-the-verifier-at2026-07-29-00-19.md` | **신규 — 패턴 9** |
+| `adversarial-verification-probe/.../checker-recall-and-precision-at2026-07-28-19-04.md` | 07-28이 여전히 최신 (패턴 8) |
+| `evidence-trace-auditor/.../cited-source-text-evidence-rules-at2026-07-28-14-07.md` | 07-28이 여전히 최신 (v2) |
+
+**패턴 9(`verifying-the-verifier`)는 이번 세션이 실제로 적용했다.** 요지: 위임된
+LLM 검증 agent도 검증기이고, **all-clean 보고는 유출 실행이 냈던 만장일치와 같은
+모양**이므로 그대로 받지 않는다. 결정적 체크를 **다른 방법·더 원시적인 데이터**로
+독립 재현하고, 위임된 스크립트를 재사용하지 않으며, "recall 재검증"과
+"precision 미검증"을 보고서에서 분리한다.
+
+D4의 `_verify_review_11.py`가 이 계약을 구현한 것이다 — LLM 판정이 아닌 어휘
+스캔, `trials.json`이 아닌 `trials_raw.json`, 그리고 **스캔 자신의 recall을 먼저
+측정**(v1이 4/5여서 어휘를 보강했다). 상세는 등록부 [DONE] #25.
+
+**조회 명령**:
+
+```bash
+REPO=goodand/skills-catalog
+BASE=skills/Skills-Create-Project
+gh api repos/$REPO/contents/$BASE/<skill>/references --jq '.[].name' | sort
+```
 
 ### 7.1 프로젝트-로컬 운영 규율 (외부로 안 보내는 것)
 
@@ -353,7 +391,9 @@ concept-gate-e2.2-wt              codex/e2.4-contract-repo-design       (E2.2~E2
   후 PR을 열지, 체인 전체를 한 PR로 할지는 미결.
 - `agent/publish-conversation-vault` → `codex/e2.4-contract-repo-design`로
   향하는 PR #5가 열려 있다(사용자 생성, MERGEABLE 상태). 이 세션은 관여하지 않았다.
-- 최신 커밋: D4 리뷰 실행 결과까지 커밋됨(미푸시). `git log --oneline -10`으로 확인.
+- **push 완료**: `e07460c..e76bdf0` (커밋 9개 — 지시문 원문 보존, D4 사전등록·검사기,
+  리뷰 표면 동결, H1a 설계 판정, 리뷰 결과 30/30, 독립 재현 도구, 재채점, 운영 로그).
+  로컬·원격 동기. `git log --oneline -12`로 확인.
 
 ## 9. 검증 명령
 
@@ -368,6 +408,18 @@ python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer
 python3 -m pytest -q
 python3 -m pytest -q test_semantic_regressions.py  # 8 (R6/R6b 포함)
 ```
+
+제약 #11 리뷰 상태 (D4 산출물):
+
+```bash
+cd experiments/2026-07-25_e2.4_repo_grounded_contract_transfer
+
+python3 _review_11.py status      # stage: complete / calibration: passed / unknown=0
+python3 _verify_review_11.py      # 독립 재현 — scan recall 5/5, cohort 0/30 hits
+```
+
+`_verify_review_11.py`는 **자기 측정에 실패하면 중단한다.** 어휘 스캔이 알려진
+위반을 못 잡는 상태에서 0히트는 아무 뜻이 없기 때문이다(실제로 v1이 4/5였다).
 
 코호트 관련 명령 (전부 실험 폴더에서):
 
