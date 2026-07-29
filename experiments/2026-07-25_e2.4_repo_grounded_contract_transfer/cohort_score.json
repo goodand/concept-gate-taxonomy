@@ -1,7 +1,17 @@
 {
   "cohort_version": "e2.4-clean-rerun-cohort-v1",
   "threshold": 0.9,
-  "scored_on": "contract_verdict (OPERATIONS_PLAN.md Phase 6), gated on output-schema validity and contract conformance",
+  "scored_on": "contract_verdict (OPERATIONS_PLAN.md Phase 6), gated on output-schema validity, contract conformance, and the constraint #11 rationale review",
+  "constraint_11_review": {
+    "state": "not_started",
+    "calibration": {
+      "state": "not_run",
+      "reason": "calibration corpus present but no results recorded"
+    },
+    "reviewed": 0,
+    "of": 30,
+    "note": "#11 cannot be checked mechanically (it requires reading a rationale), so it is scored by an independent reviewer. A trial with no review result counts as UNKNOWN and is excluded from clean_hits per directive §3 -- absence of a verification result blocks rather than passes."
+  },
   "per_fixture": {
     "E24-F-01": {
       "n": 10,
@@ -10,9 +20,13 @@
       "verdict_hits": 10,
       "verdict_rate": 1.0,
       "decision_hits": 10,
-      "clean_hits": 10,
-      "clean_rate": 1.0,
-      "band": "screened_PASS",
+      "clean_hits": 0,
+      "clean_rate": 0.0,
+      "band": "screened_FAIL",
+      "pre_review_clean_hits": 10,
+      "constraint_11_review": {
+        "unknown": 10
+      },
       "verdict_distribution": {
         "sufficient_consistent": 10
       },
@@ -29,9 +43,13 @@
       "verdict_hits": 10,
       "verdict_rate": 1.0,
       "decision_hits": 10,
-      "clean_hits": 10,
-      "clean_rate": 1.0,
-      "band": "screened_PASS",
+      "clean_hits": 0,
+      "clean_rate": 0.0,
+      "band": "screened_FAIL",
+      "pre_review_clean_hits": 10,
+      "constraint_11_review": {
+        "unknown": 10
+      },
       "verdict_distribution": {
         "sufficient_repairable": 10
       },
@@ -48,9 +66,13 @@
       "verdict_hits": 10,
       "verdict_rate": 1.0,
       "decision_hits": 10,
-      "clean_hits": 10,
-      "clean_rate": 1.0,
-      "band": "screened_PASS",
+      "clean_hits": 0,
+      "clean_rate": 0.0,
+      "band": "screened_FAIL",
+      "pre_review_clean_hits": 10,
+      "constraint_11_review": {
+        "unknown": 10
+      },
       "verdict_distribution": {
         "insufficient_evidence": 10
       },
@@ -61,10 +83,19 @@
       "schema_violations": {}
     }
   },
-  "escalate_cells": [],
-  "certified_classes": 3,
+  "escalate_cells": [
+    "E24-F-01",
+    "E24-F-02",
+    "E24-F-03"
+  ],
+  "certified_classes": 0,
   "max_attainable_classes": 3,
   "excluded": {
     "E24-F-04": "no eligible fixture; see PROBLEM_2_conflicting.md 5.2"
+  },
+  "certification_blocked": {
+    "reason": "constraint_11_reviewer_uncalibrated",
+    "detail": "The reviewer's recall and precision have not been measured against review_11_calibration.json. An unmeasured checker must not be cited as safety grounds (checker-recall-and-precision-at2026-07-28-19-04.md).",
+    "certified_classes_are_not_claimable": true
   }
 }
