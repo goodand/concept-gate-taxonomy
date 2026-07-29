@@ -33,6 +33,11 @@ cohort = importlib.util.module_from_spec(_spec)
 sys.modules["e24_cohort_score"] = cohort
 _spec.loader.exec_module(cohort)
 
+_rspec = importlib.util.spec_from_file_location("e24_review11_score", HERE / "_review_11.py")
+review11 = importlib.util.module_from_spec(_rspec)
+sys.modules["e24_review11_score"] = review11
+_rspec.loader.exec_module(review11)
+
 # experiment_screening_protocol.md Stage 1 (lives in the main checkout at
 # ../../../concept-gate-taxonomy/docs/, not in this worktree).
 THRESHOLD = 0.90
@@ -201,12 +206,20 @@ def main() -> int:
     for t in trials["trials"]:
         cells.setdefault(t["parameters"]["fixture_id"], []).append(t)
 
+    # Constraint #11 is the one semantic_constraint no checker can cover: it
+    # needs a rationale read. A trial with no review result is UNKNOWN, and the
+    # 2026-07-29 directive §3 requires UNKNOWN to block rather than pass, so an
+    # absent verdict is not a pass here. See DESIGN_D4_constraint_11_review.md.
+    reviews = review11.review_verdicts()
+    calibration = review11.calibration_status()
+
     report, escalate = {}, []
     for fixture_id, rows in sorted(cells.items()):
         exp = oracle[fixture_id]
         payload = payload_for(fixture_id)
         verdicts, decisions, viol, malformed = Counter(), Counter(), {}, {}
-        hits = decision_hits = clean = 0
+        review_counts = Counter()
+        hits = decision_hits = clean = pre_review_clean = 0
 
         for t in rows:
             out = t["output"]
@@ -225,7 +238,15 @@ def main() -> int:
             broke_schema = t.get("schema_violations") or []
             if broke_schema:
                 malformed[t["trial_id"]] = broke_schema
-            if verdict_ok and not bad and not broke_schema:
+
+            review = reviews.get(t["trial_id"], "unknown")
+            review_counts[review] += 1
+
+            mechanical_ok = verdict_ok and not bad and not broke_schema
+            # Kept separate so the drop caused by an unrun review is legible as
+            # "not yet verified" rather than looking like a scoring regression.
+            pre_review_clean += mechanical_ok
+            if mechanical_ok and review == "ok":
                 clean += 1
 
         n = len(rows)
@@ -239,6 +260,8 @@ def main() -> int:
             "clean_hits": clean,
             "clean_rate": round(clean / n, 3),
             "band": band(clean / n),
+            "pre_review_clean_hits": pre_review_clean,
+            "constraint_11_review": dict(review_counts),
             "verdict_distribution": dict(verdicts),
             "decision_distribution": dict(decisions),
             "conformance_violations": viol,
@@ -256,13 +279,34 @@ def main() -> int:
         "cohort_version": trials["cohort_version"],
         "threshold": THRESHOLD,
         "scored_on": "contract_verdict (OPERATIONS_PLAN.md Phase 6), gated on "
-                     "output-schema validity and contract conformance",
+                     "output-schema validity, contract conformance, and the "
+                     "constraint #11 rationale review",
+        "constraint_11_review": {
+            "state": review11.stage_status(reviews, trials["trials"])["stage"],
+            "calibration": calibration,
+            "reviewed": len(reviews),
+            "of": sum(len(rows) for rows in cells.values()),
+            "note": "#11 cannot be checked mechanically (it requires reading a "
+                    "rationale), so it is scored by an independent reviewer. A "
+                    "trial with no review result counts as UNKNOWN and is "
+                    "excluded from clean_hits per directive §3 -- absence of a "
+                    "verification result blocks rather than passes.",
+        },
         "per_fixture": report,
         "escalate_cells": escalate,
         "certified_classes": len(certified),
         "max_attainable_classes": 3,
         "excluded": trials.get("excluded", {}),
     }
+    if calibration["state"] != "passed":
+        out["certification_blocked"] = {
+            "reason": "constraint_11_reviewer_uncalibrated",
+            "detail": "The reviewer's recall and precision have not been measured "
+                      "against review_11_calibration.json. An unmeasured checker "
+                      "must not be cited as safety grounds "
+                      "(checker-recall-and-precision-at2026-07-28-19-04.md).",
+            "certified_classes_are_not_claimable": True,
+        }
     if off_protocol:
         out["protocol_deviation"] = {
             "cells": {f: report[f]["n"] for f in off_protocol},
@@ -279,11 +323,17 @@ def main() -> int:
         json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
 
+    if calibration["state"] != "passed":
+        print(f"  [BLOCKED] constraint #11 reviewer is uncalibrated "
+              f"({calibration['state']}); certified_classes below is not claimable\n")
+
     for fid, r in sorted(report.items()):
         mark = "ok  " if fid not in escalate else "ESC "
         print(f"  [{mark}] {fid}  clean {r['clean_hits']}/{r['n']} "
               f"({r['clean_rate']}, {r['band']})  verdict {r['verdict_hits']}/{r['n']}  "
               f"expected={r['expected_contract_verdict']}")
+        print(f"          #11 review: {dict(r['constraint_11_review'])}  "
+              f"(pre-review clean was {r['pre_review_clean_hits']}/{r['n']})")
         if r["verdict_distribution"]:
             print(f"          verdicts: {r['verdict_distribution']}")
         for tid, bad in r["schema_violations"].items():
