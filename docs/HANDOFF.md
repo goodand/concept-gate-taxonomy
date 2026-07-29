@@ -22,9 +22,13 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(진행 중)**.
 **E2.4의 현재 위치를 오해하지 마라**: 이 실험의 본 목적인 **3-arm 비교
 (CONTROL_REPO vs A_REPO vs CONTRACT_REPO)는 아직 한 번도 실행되지 않았다.**
 **fixture 준비 단계(Phase 0~3)는 2026-07-28에 완료·인증됐다** — 3개
-semantic class 전부 clean rerun cohort(N=10/cell)로 3/3 인증. 본 실험
-(Phase 4~6)이 다음 작업이며, **그 전에 D3(H1c) 커버리지 재설계가 선행돼야
-한다.** 2026-07-29 운영 지시로 걸렸던 D4·D5는 **해결됐다**(아래 참조).
+semantic class 전부 clean rerun cohort(N=10/cell)로 3/3 인증. 하지만 본 실험
+(Phase 4~6)을 그 native schema 그대로 돌릴 수는 없다 — **외부 설계 판정
+(2026-07-29, `DESIGN_DECISION_H3.md`)이 재정의를 요구했다**: legacy arm은
+`abstain`을 표현할 수 없어 비교가 성립하지 않는다. D3(H1c)는 이 판정으로
+**해소됐다**(3 class 완전 교차, D-H3-2). 2026-07-29 운영 지시로 걸렸던
+D4·D5도 **해결됐다**(아래 참조). 지금 남은 선행 작업은 세 arm 공통
+`action` 표면 구현이다(§H3 절 참조).
 
 **유효 커버리지는 4 class가 아니라 3 class다** — `conflicting`은 "현 저장소의
 live·동등강도 evidence로 구성 가능한 fixture 미확보"로 종결됐다(§4). Schema의
@@ -70,8 +74,9 @@ class 자체는 유지된다.
 > `UNKNOWN`인데 인증 발생) → 30 trial 전수 리뷰로 해결, **D5**(재실행 규모
 > 17 vs 30) → 단계적 조기중단 정책으로 해소.
 >
-> **신규 trial 차단은 해제됐다.** 다음 실행을 막는 것은 지시문이 아니라
-> D3(H1c) 커버리지 재설계다.
+> **신규 trial 차단은 해제됐다.** 다음 실행을 막는 것은 지시문도 D3(H1c)도
+> 아니다 — D3는 외부 설계 판정(D-H3-2)으로 해소됐다. 남은 것은 H3 공통
+> action 표면 구현이다(§H3 절 참조).
 
 ## 2. 프로젝트 목적 (변경 없음)
 
@@ -89,7 +94,7 @@ class 자체는 유지된다.
 | E2.2.2 (invariant 수정) | rate=1.00, GO | 종료 |
 | E2.2.3 (OFAT ablation) | A_ONLY=20/20, B_ONLY=1/20, C_ONLY=0/20 | 종료 |
 | E2.3 (전역 invariant 일반화) | A_ONLY/PARAPHRASE/TOPOLOGY/DECOY 전부 screened PASS | 종료, 푸시됨 |
-| **E2.4 (repo-grounded contract)** | fixture 3 class 인증 + 제약 #11 리뷰 완료(4중 논리곱). **본 실험(H3) 미실행 — D3가 막고 있다** | **진행 중** |
+| **E2.4 (repo-grounded contract)** | fixture 3 class 인증 + 제약 #11 리뷰 완료(4중 논리곱). **H3 재정의 필요(외부 판정) — 공통 action 표면 미구현** | **진행 중** |
 
 ## 4. E2.4 — fixture 4종 검증 현황
 
@@ -223,13 +228,15 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
   strength**"를 요구하나 `contract_prompt.md` 규칙 3 본문은 그만큼 명시하지
   않아, 소수 판정이 "사실 관계 충돌"로 읽는다(N=5에서 1/5). 향후 어떤
   conflicting fixture를 만들어도 이걸 먼저 정리하지 않으면 verdict가 갈린다.
-- **H1c (설계급, H3 선행) — Phase 5 커버리지 재설계**: 기존 설계는
+- **H1c — 【판정됨, 2026-07-29】 Phase 5 커버리지 재설계**: 기존 설계는
   CONTROL_REPO/A_REPO에 `sufficient_consistent` + `conflicting` 2개를
   배정했다. `conflicting`이 빠지면 **arm 비교의 최고 신호 셀이 사라진다** —
   이 실험 전체를 동기부여한 유일한 arm 비교 관측(legacy는 조용히 repair,
   CONTRACT_REPO만 abstain)이 바로 그 fixture에서 나왔고, **그 관측 자체도
   오라클 유출 packet에서 얻은 것이라 재현이 필요한 상태**다. abstain-target
-  class 중 남는 건 `insufficient` 하나뿐이다.
+  class 중 남는 건 `insufficient` 하나뿐이다. **외부 설계 판정(D-H3-2)**:
+  빈자리를 채우지 않고 3 class(`sufficient_consistent`/`sufficient_repairable`/
+  `insufficient`) × 3 arm 완전 교차. 등록부 [DESIGN] D3·D6 참조.
 
 ### H2 — cross-concept invariant 별도 fixture (§5.1의 후속)
 
@@ -246,29 +253,41 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
   "이동 기능을 제공한다"). **다만 이 둘은 서로 다른 type을 가리키므로**
   그대로 쓰면 conflicting에 가깝다 — 설계 주의 필요.
 
-### H3 — E2.4 본 실험 (Phase 4~6, 이 실험의 실제 목적)
+### H3 — E2.4 본 실험 (Phase 4~6, 이 실험의 실제 목적) — **【재정의 필요, 외부 판정 2026-07-29】**
 
-- **2026-07-29 갱신**: CONTRACT_REPO 쪽 fixture 3개는 N=10/cell clean rerun
-  cohort로 인증됐고, **제약 #11 리뷰까지 끝나 인증이 4중 논리곱 위에 서 있다**
-  (§4, §11, 등록부 [DONE] #25). H3가 CONTRACT_REPO 셀에 쓸 것은 이 인증된
-  fixture다. **H3를 막는 것은 이제 D3 하나뿐이다** — 신규 trial 차단은
-  해제됐고, legacy arm 프롬프트 생성 경로는 D3 결정 뒤에 스코핑한다.
-- **가설**(README.md 원문): CONTRACT_REPO가 CONTROL_REPO/A_REPO보다 evidence
-  불충분·충돌을 더 잘 잡아낸다.
-- **현재까지의 유일한 arm 비교 실측**(1회, 초기 스모크): `conflicting`
-  fixture에서 CONTROL_REPO/A_REPO는 **둘 다 abstain 없이 스스로 "ev6가 ev5를
-  대체"라 판단하고 조용히 repair**했고, CONTRACT_REPO만 두 근거를 `conflict`로
-  분류하고 정확히 abstain했다. 가설을 뒷받침하는 첫 신호이나 N=1이다.
-- **규모**: 8 cell × N=10 = 80 trial (CONTRACT_REPO 4 class + CONTROL_REPO/
-  A_REPO 각 2 class). `OPERATIONS_PLAN.md` Phase 5 참조.
-- **선행 작업**: CONTROL_REPO/A_REPO용 legacy 프롬프트 생성 경로가 없다.
-  ⚠️ 등록부·이 문서가 오랫동안 이를 "`_gen_prompts.py` 부재"로 적어 왔으나,
-  **E2.4는 그 구세대 방식을 쓰지 않는다** — 이 실험의 파이프라인은
-  `_surface.py`(빌더·qualification) + `_cohort.py`(agent/freeze/record) +
-  `_score.py`다. 따라서 필요한 것은 `_gen_prompts.py` 신설이 아니라 **기존
-  빌더를 legacy arm까지 확장하는 것**일 수 있다. 스코핑 시 이 전제부터 확인할 것.
-- **도구**: 사용자가 `Workflow`(dynamic workflow) 사용을 승인했다. 80 trial
-  규모에서는 resumability(`runId` 캐시)와 토큰 예산 추적 이점이 실재한다.
+- **판정 요지**: `DESIGN_REQUEST_H3.md`(9407bb1)에 대한 외부 설계 판정
+  (`DESIGN_DECISION_H3.md`)이 도착했다. **기존 native-schema 3-arm 실행은
+  승인하지 않는다** — legacy arm은 `abstain`을 표현할 수 없어, abstain
+  부재 관측이 "판단 안 함"인지 "표현 못 함"인지 분해되지 않는다. 상세는
+  등록부 [DESIGN] D6.
+- **수정된 가설**(README.md 원문 가설을 대체): 동일한 qualified evidence
+  payload와 동일한 공통 action 어휘가 주어졌을 때, CONTRACT_REPO_H3
+  인터페이스는 CONTROL_REPO_H3/A_REPO_H3보다 `insufficient` packet에서 더
+  자주 `defer`하며 sufficient packet에서의 false-defer를 늘리지 않는다.
+  ("불충분을 더 잘 잡아낸다"는 원 표현은 CONTRACT 진단 구조와 프롬프트
+  텍스트의 결합 효과를 가리키며, 두 요소는 이 실험에서 분해되지 않는다.)
+- **CONTRACT_REPO 쪽 fixture 3개는 인증돼 있다** — N=10/cell clean rerun
+  cohort + 제약 #11 리뷰(4중 논리곱, §4·§11, 등록부 [DONE] #25). **다만
+  이 인증은 pilot/assay 용도로만 쓸 수 있다** — 결과에 따라 선별된 재료라서
+  (`sufficient_consistent`의 1·2차 시도가 CONTRACT의 abstain 판정 때문에
+  기각된 이력, `PROBLEM_1_sufficient_consistent.md` §1) 확증 비교의
+  독립 test set이 아니다(D-H3-6).
+- **유일한 arm 비교 실측**(1회, 초기 스모크, `conflicting` fixture — 유출
+  packet 기반, 이후 코호트에서 제외됨)은 **판정에서 H3의 경험적 근거로
+  인정되지 않았다.** 재현 대상이 아니라 폐기 대상이다.
+- **규모**: 기존 8 cell × N=10 = 80 trial 설계는 승인되지 않았다. 승인된
+  것은 3 class × 3 arm × R=5 = **45 trial 비인증 pilot**. 확증 규모는
+  SESOI·다중성 제어·power·held-out fixture 수가 정해질 때까지 deferred.
+- **선행 작업**: `_gen_prompts.py` 신설이 아니다(이건 이미 정정됨 — E2.4
+  파이프라인은 `_surface.py`+`_cohort.py`+`_score.py`). 지금 필요한 것은
+  **세 arm 공통 `action: accept_report|repair|defer` 스키마 확장** +
+  기존 whitelist builder를 호출하는 **단일 H3 dispatcher**(D-H3-4). 구현
+  전 합격 게이트 10항이 있다(등록부 [DESIGN] D6).
+- **미판정 3건(Q1~Q3)**: 판정문 공통 `report` 필드가 object인데 현행
+  schema는 string; `cited_evidence_ids` 신설 범위 미정; CONTRACT 진단부
+  재배치가 제약 #11 리뷰 경로에 미치는 영향. 스키마 착수 전 확인 필요.
+- **도구**: 사용자가 `Workflow`(dynamic workflow) 사용을 승인했다. 45 trial
+  pilot에서도 resumability(`runId` 캐시)와 토큰 예산 추적 이점이 실재한다.
   다만 매니페스트를 먼저 보여주고 진행하는 게 이 프로젝트 관례
   ("qualify before scale").
 
