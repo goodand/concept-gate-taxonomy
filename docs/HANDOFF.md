@@ -23,15 +23,14 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(진행 중)**.
 (CONTROL_REPO vs A_REPO vs CONTRACT_REPO)는 아직 한 번도 실행되지 않았다.**
 **fixture 준비 단계(Phase 0~3)는 2026-07-28에 완료·인증됐다** — 3개
 semantic class 전부 clean rerun cohort(N=10/cell)로 3/3 인증. 본 실험
-(Phase 4~6)이 다음 작업이다. **다만 2026-07-29에 외부 운영 변경 지시를
-받아 신규 trial 실행이 일단 보류 중이며, 설계 판정 2건(D4·D5)이 남았다.**
+(Phase 4~6)이 다음 작업이며, **그 전에 D3(H1c) 커버리지 재설계가 선행돼야
+한다.** 2026-07-29 운영 지시로 걸렸던 D4·D5는 **해결됐다**(아래 참조).
 
 **유효 커버리지는 4 class가 아니라 3 class다** — `conflicting`은 "현 저장소의
 live·동등강도 evidence로 구성 가능한 fixture 미확보"로 종결됐다(§4). Schema의
 class 자체는 유지된다.
 
-> **2026-07-29 현재 (HEAD `a41727a`, cohort 실행 완료) — fixture 검증 3/3,
-> D4·D5 설계 판정 대기.**
+> **2026-07-29 현재 — fixture 검증 3/3 인증, 제약 #11 리뷰까지 완료.**
 >
 > 오라클 유출을 구조적으로 막는 v2 표면(3면 분리 + 화이트리스트 빌더), 계약
 > 문구 개정, 채점기 결함 2건 수정을 거쳐 clean rerun cohort를 **N=10/cell(30
@@ -45,36 +44,34 @@ class 자체는 유지된다.
 > 토큰과 별개 지표) — 전송 실패라 데이터로 기록하지 않고, 한도 리셋 후 그
 > 22개만 재실행해 병합했다.
 >
-> **2026-07-29 외부 운영 지시 수신 — 신규 trial 실행 차단, 설계 판정 2건 대기.**
-> 지시문의 8개 차단 조건은 전부 이미 충족돼 있으나, D4(제약 #11이 `UNKNOWN`인데
-> 인증 발생)와 D5(재실행 규모 17 vs 30 충돌)라는 설계 결정이 2개 남았다.
-> 신규 trial은 이 판정이 완료될 때까지 차단. 상세는
-> [`E2.4_ISSUE_REGISTER.md`](E2.4_ISSUE_REGISTER.md) §0(상태 요약)과 D4/D5.
+> **2026-07-29 — D4·D5 해결, 인증 3/3 확정.** 지시문의 8개 차단 조건은 전부
+> 충족돼 있었고, 남았던 설계 판정 2건도 처리됐다:
+>
+> - **D4** — 제약 #11을 독립 리뷰어(`e2.4-review-11`, `tools: []`)로 **30 trial
+>   전수 재검토**했다. 새 trial 없음. **30/30 `ok`, 위반 0, `unknown` 0.**
+>   `clean`이 4중 논리곱(verdict + 스키마 + 준수 + #11)이 되면서 인증이
+>   `certified 3/3`으로 복구됐다.
+> - **D5** — "17 vs 30 택일"이 아니라 **단계적 조기중단 정책**으로 해소.
+>   기존 30 trial은 재실행하지 않는다.
+>
+> 상세·검증 강도는 [`E2.4_ISSUE_REGISTER.md`](E2.4_ISSUE_REGISTER.md) [DONE] #25.
 
-> ## ⚠️ 2026-07-29 외부 운영 변경 지시 수신 — 이걸 먼저 읽어라
+> ## 2026-07-29 외부 운영 변경 지시 — 대응 완료 (이력)
 >
-> 외부 실험 설계 담당이 **E2.4 실행·평가 지시를 대체하는 운영 변경 지시**를
-> 보냈다. 핵심: *"지금은 수정된 프롬프트로 다시 돌려보는 단계가 아니라, 모델
-> 입력 경계가 구현과 테스트로 고정될 때까지 실행을 멈추는 단계입니다."*
+> 외부 실험 설계 담당이 E2.4 실행·평가 지시를 대체하는 운영 변경 지시를 보냈다.
+> 원문은 [`DIRECTIVE_2026-07-29_operations_change.md`](DIRECTIVE_2026-07-29_operations_change.md)에
+> 보존돼 있다.
 >
-> **지시문의 8개 차단 조건은 전부 이미 충족돼 있다** — 실측 대조표는 등록부 §0.
-> 금지 필드 14종의 payload 부재도 전수 확인했다. 지시문은 이 세션의 진행보다
-> 앞서 작성돼 "현재 인증된 class 수는 0"을 전제하지만 실측은 3/3이다.
-> **이 차이는 롤백 사유가 아니라 보고 사항이다.**
+> **8개 차단 조건은 전부 이미 충족돼 있었다** — 실측 대조표는 등록부 §0.
+> 금지 필드 14종의 payload 부재도 전수 확인했다. 지시문은 이 세션 진행보다
+> 앞서 작성돼 "현재 인증된 class 수는 0"을 전제했으나 실측은 3/3이었다.
 >
-> **진짜 어긋난 것 2건이 남아 설계 판정을 기다린다** (등록부 D4·D5):
+> **어긋났던 3건은 전부 처리됐다**: C1(명칭) 즉시 정합, **D4**(제약 #11이
+> `UNKNOWN`인데 인증 발생) → 30 trial 전수 리뷰로 해결, **D5**(재실행 규모
+> 17 vs 30) → 단계적 조기중단 정책으로 해소.
 >
-> - **D4 (중대)** — 지시문 §3은 "검증 결과가 없으면 `UNKNOWN`으로 기록하고
->   실행을 차단"하라고 요구한다. 제약 #11(liveness 재판정 금지)은 기계 검사가
->   불가능하고 리뷰가 채점 흐름에 없으므로, **3/3 인증은 #11이 `UNKNOWN`인
->   상태에서 나온 것**이다. 지시문이 실제로 잡아낸 유일한 실질 결함.
->   권장 (a): 기존 30 trial의 rationale 재검토 — **새 trial 불필요**
-> - **D5** — 지시문 §4의 "17 trials"와 사전등록 프로토콜 N=10/cell(=30)이
->   충돌한다. 30으로 실행한 근거는 등록부 D5. **임의 결정하지 않고 올렸다**
->   (지시문 §5 준수)
->
-> **D4·D5 판정 전까지 신규 trial을 실행하지 않는다.** ACK 회신문 전문은
-> 등록부 §0의 "ACK 회신" 블록에 있다.
+> **신규 trial 차단은 해제됐다.** 다음 실행을 막는 것은 지시문이 아니라
+> D3(H1c) 커버리지 재설계다.
 
 ## 2. 프로젝트 목적 (변경 없음)
 
@@ -356,7 +353,7 @@ concept-gate-e2.2-wt              codex/e2.4-contract-repo-design       (E2.2~E2
   후 PR을 열지, 체인 전체를 한 PR로 할지는 미결.
 - `agent/publish-conversation-vault` → `codex/e2.4-contract-repo-design`로
   향하는 PR #5가 열려 있다(사용자 생성, MERGEABLE 상태). 이 세션은 관여하지 않았다.
-- 최신 커밋: `a41727a` (docs(register): adversarially re-verify the 3/3 certification -- holds), 푸시됨.
+- 최신 커밋: D4 리뷰 실행 결과까지 커밋됨(미푸시). `git log --oneline -10`으로 확인.
 
 ## 9. 검증 명령
 
@@ -364,8 +361,8 @@ concept-gate-e2.2-wt              codex/e2.4-contract-repo-design       (E2.2~E2
 # 전체 게이트 (단일 진입점 — 실험별 프로세스 분리 포함)
 python3 scripts/run_gates.py
 
-# E2.4 전체 self-check (표면 폐쇄 + fixture 무결성 + 채점기)
-python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/   # 35 passed
+# E2.4 전체 self-check (표면 폐쇄 + fixture 무결성 + 채점기 + #11 리뷰)
+python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/   # 78 passed
 
 # 코어만 (pytest.ini가 experiments/ 제외)
 python3 -m pytest -q
@@ -447,10 +444,11 @@ except ModuleNotFoundError as exc:
 "출처가 더 최신이다 / 아직 살아 있다 / 더 권위 있다"를 근거로 충돌을
 해결했는지 판정하는 단계. 그 판정을 `clean` 정의의 **네 번째 항**으로 넣는다.
 
-**코호트는 이미 2026-07-28에 실행됐고, 그 결과 위에서 제약 #11 판정을
-소급 적용할지 결정이 필요하다.** 실행 완료 후에 추가하려면 이미 나온 30
-trial을 다시 읽어야 한다. 상세(권장 안 (a)·(b)·(c)는 등록부
-[`E2.4_ISSUE_REGISTER.md`](E2.4_ISSUE_REGISTER.md) **[DESIGN] D4** 참조.
+> ✅ **2026-07-29 해결됨.** 사용자가 (a)를 택했고 실행까지 마쳤다 — 독립
+> 리뷰어가 기존 30 trial의 rationale을 전수 재검토해 **30/30 `ok`**, `#11`이
+> `clean` 정의의 네 번째 항으로 편입됐다. `_score.py`는 이제 리뷰 결과가 없는
+> trial을 `UNKNOWN`으로 보고 `clean`에서 제외한다(지시문 §3). 사전등록은
+> `DESIGN_D4_constraint_11_review.md`, 실행 기록은 등록부 [DONE] #25.
 
 ---
 
@@ -563,7 +561,7 @@ resets 11:40pm (Asia/Seoul)"`로 실패했다. 이것은 **컨텍스트 윈도�
 cd experiments/2026-07-25_e2.4_repo_grounded_contract_transfer
 
 # 0. 동결본이 현재 파일과 일치하는지
-python3 -m pytest -q .          # 35 passed
+python3 -m pytest -q .          # 78 passed
 
 # 1. (ⓐ를 택했다면) COHORT 상수 수정 후 재동결
 python3 _cohort.py agent        # 스키마가 두 곳에 있으므로 생성기를 먼저
