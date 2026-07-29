@@ -1,0 +1,341 @@
+{
+  "experiment_id": "E2.4-H3",
+  "description": "H3 3-arm common-action schema. Per DESIGN_DECISION_H3.md D-H3-1/D-H3-3/D-H3-4: decision_schema.json (arm_schema_map, legacy_decision, evidence_contract_v1) is frozen and unmodified -- this file is new and additive. All three H3 arms share h3_common_action's four fields (action, repaired_concepts, cited_evidence_ids, report) as the sole primary-result surface (estimand is computed on `action` alone). CONTROL_REPO_H3 and A_REPO_H3 use h3_common_action verbatim -- per new_constraints, the only allowed difference between them is prompt rule text, not schema. CONTRACT_REPO_H3 adds one extra top-level object, contract_assessment, which carries everything evidence_contract_v1 had except `decision` (replaced by the common `action`, with abstain renamed defer) and `report` (already common). contract_assessment is an arm-internal diagnostic: per D-H3-3 it may not override or substitute for the common action field. See DESIGN_H3_common_action.md for the full rationale, including the three implementation assumptions (Q1-Q3) this file encodes.",
+  "arm_schema_map": {
+    "CONTROL_REPO_H3": "h3_common_action",
+    "A_REPO_H3": "h3_common_action",
+    "CONTRACT_REPO_H3": "h3_contract_action"
+  },
+  "semantic_constraints": [
+    "action=repair requires contract_assessment.contract_verdict=sufficient_repairable. (CONTRACT_REPO_H3 only; CONTROL_REPO_H3/A_REPO_H3 have no contract_assessment.)",
+    "action=accept_report requires contract_assessment.contract_verdict=sufficient_consistent. (CONTRACT_REPO_H3 only.)",
+    "action=defer requires contract_assessment.contract_verdict in {insufficient_evidence, conflicting_evidence, out_of_scope}. (CONTRACT_REPO_H3 only.)",
+    "action=repair requires repaired_concepts to contain the complete input concept set. For CONTRACT_REPO_H3 it additionally requires contract_assessment.repair_plan.allowed=true.",
+    "action=defer requires repaired_concepts=null. For CONTRACT_REPO_H3 it additionally requires contract_assessment.repair_plan.allowed=false and contract_assessment.abstain.required=true.",
+    "Every evidence id cited by the common cited_evidence_ids field (all three arms), or by contract_assessment.evidence_scope.used_evidence_ids, contract_assessment.evidence_audit[].evidence_id, contract_assessment.evidence_audit[].conflicts_with_evidence_ids, contract_assessment.feature_judgments[].evidence_ids, contract_assessment.invariant_checks[].evidence_ids, or contract_assessment.repair_plan.steps[].evidence_ids (CONTRACT_REPO_H3 only), must exist in the payload's top-level evidence_items.",
+    "contract_assessment.evidence_scope.outside_knowledge_used must be false for any passing CONTRACT_REPO_H3 trial.",
+    "Adjudication procedure (scorer enforces; unchanged in substance from decision_schema.json, field paths now under contract_assessment): (1) consider only contract_assessment.evidence_audit entries with admissibility=direct_support; (2) group them by supported_type and take each type's maximum claim_strength under the order explicit > implicit > weak > none; (3) if exactly one type attains the overall maximum, contract_assessment's sufficiency is sufficient and selected_type is that type; (4) if two or more mutually incompatible types tie at the maximum, sufficiency is conflicting and selected_type=null; (5) if there are no direct_support candidates, sufficiency is insufficient.",
+    "sufficiency=conflicting requires the tied evidence items in contract_assessment.evidence_audit to reference each other through conflicts_with_evidence_ids, and that relation must be symmetric. A conflicting verdict asserted without a named counterpart is not scored as conflicting.",
+    "contract_assessment.evidence_audit[].conflicts_with_evidence_ids may only name items whose admissibility is direct_support: an indirect or out_of_scope item cannot conflict with anything, because it never entered the candidate set in step 1.",
+    "The model does not adjudicate source liveness or precedence (see contract_prompt.md preamble, reused verbatim in the CONTRACT_REPO_H3 rendered prompt). Applies to CONTRACT_REPO_H3's contract_assessment rationale fields only -- CONTROL_REPO_H3 and A_REPO_H3 prompts carry no such instruction, so this constraint does not extend to them; whether legacy rule sets reason about liveness/recency at all is part of what H3 studies, not a confound to suppress.",
+    "cited_evidence_ids is a validity gate, not a scored primary outcome (D-H3-3, DESIGN_H3_common_action.md Q2): a schema-valid response must cite only evidence_id values present in the payload's evidence_items. The primary Delta estimand (P(defer | insufficient, CONTRACT_REPO_H3) - P(defer | insufficient, comparison arm)) is computed on `action` alone; cited_evidence_ids violations count toward invalid-output rate, a required secondary metric, not toward the primary estimand."
+  ],
+  "variants": {
+    "h3_common_action": {
+      "name": "client_decision_v7_e2.4_h3_common_action",
+      "description": "Shared response surface for all three H3 arms (CONTROL_REPO_H3, A_REPO_H3, and the common subset of CONTRACT_REPO_H3). This is the entire schema for CONTROL_REPO_H3 and A_REPO_H3 -- per DESIGN_DECISION_H3.md new_constraints, those two arms differ from each other only in prompt rule text, never in schema.",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "repaired_concepts", "cited_evidence_ids", "report"],
+        "$defs": {
+          "feature_type": {
+            "type": "string",
+            "enum": [
+              "essential_feature",
+              "contextual_usage",
+              "locational",
+              "functional",
+              "social_treatment",
+              "structural_composition"
+            ]
+          },
+          "concept": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "features"],
+            "properties": {
+              "name": { "type": "string" },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["feature", "type", "evidence"],
+                  "properties": {
+                    "feature": { "type": "string" },
+                    "type": { "$ref": "#/$defs/feature_type" },
+                    "evidence": {
+                      "type": "string",
+                      "description": "Evidence ids or a compact evidence summary from the supplied packet only."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "The sole primary-result field across all three H3 arms (D-H3-1, D-H3-3). accept_report/repair carry the same meaning as decision_schema.json's legacy_decision.decision and evidence_contract_v1.decision; defer replaces both request_evidence (legacy) and abstain (contract) with one common vocabulary item.",
+            "enum": ["accept_report", "repair", "defer"]
+          },
+          "repaired_concepts": {
+            "description": "null unless action=repair, in which case it must contain the complete input concept set (semantic_constraints).",
+            "anyOf": [
+              { "type": "array", "items": { "$ref": "#/$defs/concept" } },
+              { "type": "null" }
+            ]
+          },
+          "cited_evidence_ids": {
+            "type": "array",
+            "description": "Validity gate, not a scored primary outcome (semantic_constraints, Q2 in DESIGN_H3_common_action.md). Every id must exist in the payload's evidence_items.",
+            "items": { "type": "string" }
+          },
+          "report": {
+            "type": "string",
+            "description": "Free-text summary. Kept as a string, matching both legacy_decision.report and evidence_contract_v1.report (Q1 in DESIGN_H3_common_action.md)."
+          }
+        }
+      }
+    },
+    "h3_contract_action": {
+      "name": "client_decision_v7_e2.4_h3_contract_action",
+      "description": "CONTRACT_REPO_H3 schema: h3_common_action's four fields plus contract_assessment, an arm-internal diagnostic object. contract_assessment carries everything evidence_contract_v1 had except decision (now the common action, with abstain renamed defer) and report (already common). It may not override or substitute for the common action field (D-H3-3, semantic_constraints).",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["action", "repaired_concepts", "cited_evidence_ids", "report", "contract_assessment"],
+        "$defs": {
+          "feature_type": {
+            "type": "string",
+            "enum": [
+              "essential_feature",
+              "contextual_usage",
+              "locational",
+              "functional",
+              "social_treatment",
+              "structural_composition"
+            ]
+          },
+          "concept": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "features"],
+            "properties": {
+              "name": { "type": "string" },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["feature", "type", "evidence"],
+                  "properties": {
+                    "feature": { "type": "string" },
+                    "type": { "$ref": "#/$defs/feature_type" },
+                    "evidence": {
+                      "type": "string",
+                      "description": "Evidence ids or a compact evidence summary from the supplied packet only."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "The sole primary-result field (D-H3-1, D-H3-3). accept_report/repair/defer map onto the old decision enum's accept_report/repair/abstain one-to-one; contract_assessment.contract_verdict is diagnostic only and must not be scored as the primary outcome.",
+            "enum": ["accept_report", "repair", "defer"]
+          },
+          "repaired_concepts": {
+            "description": "null unless action=repair (semantic_constraints).",
+            "anyOf": [
+              { "type": "array", "items": { "$ref": "#/$defs/concept" } },
+              { "type": "null" }
+            ]
+          },
+          "cited_evidence_ids": {
+            "type": "array",
+            "description": "Validity gate, not a scored primary outcome (Q2 in DESIGN_H3_common_action.md).",
+            "items": { "type": "string" }
+          },
+          "report": {
+            "type": "string",
+            "description": "Free-text summary (Q1 in DESIGN_H3_common_action.md)."
+          },
+          "contract_assessment": {
+            "type": "object",
+            "additionalProperties": false,
+            "description": "Arm-internal diagnostic, unscored as a primary outcome (D-H3-3). Field content is unchanged from evidence_contract_v1 minus decision and report.",
+            "required": [
+              "contract_verdict",
+              "evidence_scope",
+              "evidence_audit",
+              "feature_judgments",
+              "invariant_checks",
+              "repair_plan",
+              "abstain"
+            ],
+            "properties": {
+              "contract_verdict": {
+                "type": "string",
+                "enum": [
+                  "sufficient_consistent",
+                  "sufficient_repairable",
+                  "insufficient_evidence",
+                  "conflicting_evidence",
+                  "out_of_scope"
+                ]
+              },
+              "evidence_scope": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["source_policy", "used_evidence_ids", "outside_knowledge_used"],
+                "properties": {
+                  "source_policy": { "type": "string", "enum": ["packet_only"] },
+                  "used_evidence_ids": { "type": "array", "items": { "type": "string" } },
+                  "outside_knowledge_used": { "type": "boolean" }
+                }
+              },
+              "evidence_audit": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "evidence_id",
+                    "source_kind",
+                    "admissibility",
+                    "supported_type",
+                    "claim_strength",
+                    "conflicts_with_evidence_ids",
+                    "rationale"
+                  ],
+                  "properties": {
+                    "evidence_id": { "type": "string" },
+                    "source_kind": {
+                      "type": "string",
+                      "description": "Echo of the item's source_kind. The model-facing payload carries no paths."
+                    },
+                    "admissibility": {
+                      "type": "string",
+                      "enum": ["direct_support", "indirect_context", "ambiguous", "out_of_scope"]
+                    },
+                    "supported_type": {
+                      "anyOf": [{ "$ref": "#/$defs/feature_type" }, { "type": "null" }]
+                    },
+                    "claim_strength": {
+                      "type": "string",
+                      "description": "Ordered explicit > implicit > weak > none.",
+                      "enum": ["explicit", "implicit", "weak", "none"]
+                    },
+                    "conflicts_with_evidence_ids": {
+                      "type": "array",
+                      "description": "Symmetric: if ev1 lists ev2, ev2 must list ev1.",
+                      "items": { "type": "string" }
+                    },
+                    "rationale": { "type": "string" }
+                  }
+                }
+              },
+              "feature_judgments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "concept",
+                    "feature",
+                    "original_type",
+                    "sufficiency",
+                    "selected_type",
+                    "evidence_ids",
+                    "rationale"
+                  ],
+                  "properties": {
+                    "concept": { "type": "string" },
+                    "feature": { "type": "string" },
+                    "original_type": { "$ref": "#/$defs/feature_type" },
+                    "sufficiency": {
+                      "type": "string",
+                      "enum": ["sufficient", "insufficient", "conflicting", "not_evaluated"]
+                    },
+                    "selected_type": {
+                      "anyOf": [{ "$ref": "#/$defs/feature_type" }, { "type": "null" }]
+                    },
+                    "evidence_ids": { "type": "array", "items": { "type": "string" } },
+                    "rationale": { "type": "string" }
+                  }
+                }
+              },
+              "invariant_checks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["feature", "involved_concepts", "status", "target_type", "evidence_ids", "rationale"],
+                  "properties": {
+                    "feature": { "type": "string" },
+                    "involved_concepts": { "type": "array", "items": { "type": "string" } },
+                    "status": {
+                      "type": "string",
+                      "enum": ["consistent", "violation_repairable", "underdetermined", "conflicting", "not_applicable"]
+                    },
+                    "target_type": {
+                      "anyOf": [{ "$ref": "#/$defs/feature_type" }, { "type": "null" }]
+                    },
+                    "evidence_ids": { "type": "array", "items": { "type": "string" } },
+                    "rationale": { "type": "string" }
+                  }
+                }
+              },
+              "repair_plan": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["allowed", "steps", "reject_reason"],
+                "properties": {
+                  "allowed": { "type": "boolean" },
+                  "steps": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["concept", "feature", "from_type", "to_type", "evidence_ids", "reason"],
+                      "properties": {
+                        "concept": { "type": "string" },
+                        "feature": { "type": "string" },
+                        "from_type": { "$ref": "#/$defs/feature_type" },
+                        "to_type": { "$ref": "#/$defs/feature_type" },
+                        "evidence_ids": { "type": "array", "items": { "type": "string" } },
+                        "reason": { "type": "string" }
+                      }
+                    }
+                  },
+                  "reject_reason": { "type": ["string", "null"] }
+                }
+              },
+              "abstain": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["required", "reason", "missing_evidence"],
+                "description": "Kept as 'abstain' inside contract_assessment even though the common action value is 'defer' -- this object is the arm-internal diagnostic detail behind that common action, not a competing vocabulary.",
+                "properties": {
+                  "required": { "type": "boolean" },
+                  "reason": {
+                    "type": "string",
+                    "enum": ["none", "insufficient_evidence", "conflicting_evidence", "out_of_scope", "schema_or_payload_error"]
+                  },
+                  "missing_evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["target", "request"],
+                      "properties": {
+                        "target": { "type": "string" },
+                        "request": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
