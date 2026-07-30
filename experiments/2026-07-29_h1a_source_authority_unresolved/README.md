@@ -188,7 +188,8 @@ rationale:          ...
 | 1 | **P1~P7 사전등록 확정** | ✅ `PREREGISTRATION.md` (`8def710`) |
 | 2 | 전용 스키마 `h1a_schema.json` | ✅ 두 arm 동일 variant, 닫힌 enum |
 | 5 | 행동 코더 + 양방향 테스트 + 동결 | ✅ `_coder.py`, `test_h1a_coder.py` 38 passed. **교정 18/18 통과** |
-| 3 | H1a 전용 `_surface.py` 사본 + fixture 제작 (칼/철) → **독립 리뷰** | **다음** |
+| 3a | H1a 전용 `_h1a_surface.py` 사본 + fixture 제작 (칼/철) | ✅ `20f7102`, 19 passed. qualification 통과, R6b 실제 실행 |
+| 3b | **독립 리뷰 (제작자와 분리)** | ⛔ **미완 — 재실행 필요.** 2026-07-30 1회 시도했으나 API 세션 한도로 에이전트가 파일을 읽기 전에 중단. **리뷰 소견 0건** |
 | 4 | 두 arm 프롬프트 생성 + byte-level diff 테스트 + 해시 동결 | 3 후 |
 | 6 | trial subject agent 정의·설치 | 4 후 |
 | 7 | **trial 실행** Stage A(10) → 하네스 점검 → Stage B(30) | 6 후 |
