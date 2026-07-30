@@ -158,15 +158,22 @@ rationale:          ...
 판정문은 `deferred: 없음`이지만 **"아래 사전등록 항목이 확정되기 전에는
 실행하지 않는다"** 는 단서를 달았다.
 
-| # | 항목 | 상태 |
+**→ 2026-07-30 전부 확정됨.** 전문은
+[`PREREGISTRATION.md`](PREREGISTRATION.md), trial 실행 전 커밋.
+
+| # | 항목 | 확정 내용 |
 |---|---|---|
-| **P1** | 시행 수(N) | 미정 |
-| **P2** | randomization | 미정 |
-| **P3** | 모델 parameters (모델명·temperature 등, 두 arm 동일) | 미정 |
-| **P4** | 제외 기준 | 미정 |
-| **P5** | **행동 코딩 규칙** (selection/deferral/invalid 판정 기준) | 미정 |
-| **P6** | **invalid-output 처리 규칙** | 미정 |
-| **P7** | **종료 기준** (인증 밴드를 안 쓰므로 별도 정의 필요) | 미정 |
+| **P1** | 시행 수(N) | **arm당 20, 총 40.** 인증 밴드가 없으므로 N은 합격선이 아니라 관측 해상도로만 정함(trial 1건 = 0.05) |
+| **P2** | randomization | 같은 replicate의 두 arm을 **bundle**로 묶어 동시 실행(cold subagent라 arm 순서 효과 없음). bundle 간 순서는 `sha256_blocked_sort`, seed `H1A-fixed-order-v1` |
+| **P3** | 모델 parameters | `claude-opus-5`, `tools: []`, cold subagent. **temperature는 이 transport에서 설정 불가** → 모른다는 사실을 기록하고, 절대 수준 대신 arm 간 대비만 보고 |
+| **P4** | 제외 기준 | **출력 내용 기반 제외 없음.** 전송·세션 실패만 재실행(outcome 아님), 미완성 bundle만 제외. 스키마 위반은 제외 대상이 **아님** |
+| **P5** | **행동 코딩 규칙** | **코더는 `rationale`을 읽지 않는다.** 구조 필드만으로 3분류. 헤지된 선택은 `selection`, 확신에 찬 보류는 `deferral`, 모순 조합은 `invalid`(관대한 해석 금지) |
+| **P6** | **invalid 처리** | 제3의 **행동 범주**. 분모에 포함(유효분모는 깨진 출력을 낸 arm을 보상 — E2.4 실측), `invalid_rate` 병기, 재실행·복구 금지 |
+| **P7** | **종료 기준** | **결과 방향에 따른 조기 종료 없음.** Stage A(10)는 하네스 4항만 점검하고 select/defer 분포를 보지 않음 → Stage B(30) |
+
+**§0에서 먼저 못박은 것**: H1a는 K=1이라 D-H3C-1이 판정한 구조와 같다 —
+추정 가능한 값은 `P(행동 | 고정 packet, 고정 arm, 고정 모델·파라미터)`뿐이고,
+**N을 늘려도 이 상한은 올라가지 않는다.** 허용 결론을 결과 보기 전에 고정했다.
 
 > **P5·P6이 가장 중요하다.** 정답이 없는 실험에서 유일한 판정 장치가 행동
 > 코더다. 그것이 **결과를 본 뒤에** 정해지면 이 실험은 아무것도 측정하지 못한다.
@@ -176,15 +183,19 @@ rationale:          ...
 
 ## 8. 다음 행동
 
-| # | 내용 | 세션 |
+| # | 내용 | 상태 |
 |---|---|---|
-| 1 | **P1~P7 사전등록 확정** — 특히 P5·P6 행동 코딩 규칙 | 지금 |
-| 2 | H1a 전용 `_surface.py` 사본 + 전용 스키마 파일 작성 | P1~P7 후 |
-| 3 | fixture 제작 (칼/철) → **독립 리뷰(제작자와 분리)** | 2 후 |
+| 1 | **P1~P7 사전등록 확정** | ✅ `PREREGISTRATION.md` (`8def710`) |
+| 2 | 전용 스키마 `h1a_schema.json` | ✅ 두 arm 동일 variant, 닫힌 enum |
+| 5 | 행동 코더 + 양방향 테스트 + 동결 | ✅ `_coder.py`, `test_h1a_coder.py` 38 passed. **교정 18/18 통과** |
+| 3 | H1a 전용 `_surface.py` 사본 + fixture 제작 (칼/철) → **독립 리뷰** | **다음** |
 | 4 | 두 arm 프롬프트 생성 + byte-level diff 테스트 + 해시 동결 | 3 후 |
-| 5 | 행동 코더 구현 + **양방향 테스트** + 동결 | 3과 병행 가능 |
-| 6 | trial subject agent 정의·설치 | 4·5 후 |
-| 7 | **trial 실행** | **6 이후 새 세션** (agent registry가 세션 시작에 고정, 등록부 [DONE] #17) |
+| 6 | trial subject agent 정의·설치 | 4 후 |
+| 7 | **trial 실행** Stage A(10) → 하네스 점검 → Stage B(30) | 6 후 |
+
+> [DONE] #17의 "agent registry가 세션 시작에 고정" 서술은 **이번 세션에서
+> 반증됐다** — E2.4 H3의 trial subject 3종을 세션 중간에 설치해 즉시
+> 사용했다. 7번을 새 세션으로 미룰 이유가 없다.
 
 ## 9. 초안에서 폐기된 것 (재론 방지용 기록)
 

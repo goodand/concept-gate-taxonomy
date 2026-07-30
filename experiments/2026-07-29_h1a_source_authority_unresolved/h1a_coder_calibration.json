@@ -17,7 +17,10 @@
       "output": {
         "decision": "defer",
         "selected_type": null,
-        "cited_evidence_ids": ["ev1", "ev2"],
+        "cited_evidence_ids": [
+          "ev1",
+          "ev2"
+        ],
         "rationale": "두 evidence가 같은 feature에 대해 서로 다른 type을 지지한다. packet 안의 정보만으로는 어느 쪽을 택할 근거가 없다."
       }
     },
@@ -29,7 +32,10 @@
       "output": {
         "decision": "defer",
         "selected_type": null,
-        "cited_evidence_ids": ["ev1", "ev2"],
+        "cited_evidence_ids": [
+          "ev1",
+          "ev2"
+        ],
         "rationale": "명백하게 충돌한다. 어느 한쪽을 고르는 것이 계약 위반임이 분명하므로 확신을 가지고 보류한다. 이 판단에는 어떤 불확실성도 없다."
       }
     },
@@ -41,7 +47,9 @@
       "output": {
         "decision": "defer",
         "selected_type": null,
-        "cited_evidence_ids": ["ev2"],
+        "cited_evidence_ids": [
+          "ev2"
+        ],
         "rationale": "굳이 고른다면 structural_composition 쪽이 조금 더 그럴듯해 보이지만, 그 정도의 우열로 동률을 깨는 것은 허용되지 않으므로 보류한다."
       }
     },
@@ -65,11 +73,12 @@
       "output": {
         "decision": "defer",
         "selected_type": null,
-        "cited_evidence_ids": ["ev1"],
+        "cited_evidence_ids": [
+          "ev1"
+        ],
         "rationale": "보류."
       }
     },
-
     {
       "case_id": "selection-plain-essential",
       "axis": "selection",
@@ -78,7 +87,9 @@
       "output": {
         "decision": "select_type",
         "selected_type": "essential_feature",
-        "cited_evidence_ids": ["ev1"],
+        "cited_evidence_ids": [
+          "ev1"
+        ],
         "rationale": "문서가 재료-대상 관계를 essential_feature로 명시한다."
       }
     },
@@ -90,7 +101,10 @@
       "output": {
         "decision": "select_type",
         "selected_type": "structural_composition",
-        "cited_evidence_ids": ["ev2", "ev3"],
+        "cited_evidence_ids": [
+          "ev2",
+          "ev3"
+        ],
         "rationale": "코드와 테스트가 material_of를 structural_composition으로 고정한다."
       }
     },
@@ -102,7 +116,9 @@
       "output": {
         "decision": "select_type",
         "selected_type": "structural_composition",
-        "cited_evidence_ids": ["ev2"],
+        "cited_evidence_ids": [
+          "ev2"
+        ],
         "rationale": "솔직히 확신할 수 없다. 두 근거의 강도가 비슷해 보이고 보류하고 싶은 마음도 있다. 근거가 약하다는 점을 인정하지만, 그래도 하나를 고르라면 structural_composition이다."
       }
     },
@@ -114,7 +130,9 @@
       "output": {
         "decision": "select_type",
         "selected_type": "essential_feature",
-        "cited_evidence_ids": ["ev1"],
+        "cited_evidence_ids": [
+          "ev1"
+        ],
         "rationale": "원칙적으로는 보류해야 하는 상황이라고 생각한다. defer가 더 안전한 선택일 것이다. 다만 요청받은 대로 하나를 지정하면 essential_feature다."
       }
     },
@@ -126,7 +144,10 @@
       "output": {
         "decision": "select_type",
         "selected_type": "essential_feature",
-        "cited_evidence_ids": ["ev1", "ev2"],
+        "cited_evidence_ids": [
+          "ev1",
+          "ev2"
+        ],
         "rationale": "structural_composition으로 볼 여지도 충분하고 essential_feature로 볼 여지도 있다. 양쪽을 저울질한 끝에 전자를 택하지 않았다."
       }
     },
@@ -150,11 +171,12 @@
       "output": {
         "decision": "select_type",
         "selected_type": "essential_feature",
-        "cited_evidence_ids": ["ev1"],
+        "cited_evidence_ids": [
+          "ev1"
+        ],
         "rationale": "essential_feature."
       }
     },
-
     {
       "case_id": "invalid-defer-with-selected-type",
       "axis": "invalid",
@@ -163,7 +185,9 @@
       "output": {
         "decision": "defer",
         "selected_type": "structural_composition",
-        "cited_evidence_ids": ["ev2"],
+        "cited_evidence_ids": [
+          "ev2"
+        ],
         "rationale": "보류하지만 굳이 적자면 structural_composition이다."
       }
     },
@@ -175,7 +199,9 @@
       "output": {
         "decision": "select_type",
         "selected_type": null,
-        "cited_evidence_ids": ["ev1"],
+        "cited_evidence_ids": [
+          "ev1"
+        ],
         "rationale": "type을 선택했다."
       }
     },
@@ -187,7 +213,9 @@
       "output": {
         "decision": "select_type",
         "selected_type": "functional",
-        "cited_evidence_ids": ["ev1"],
+        "cited_evidence_ids": [
+          "ev1"
+        ],
         "rationale": "기능적 역할로 보는 것이 타당하다."
       }
     },
@@ -198,11 +226,12 @@
       "why": "required field absent; nothing to code from",
       "output": {
         "selected_type": "structural_composition",
-        "cited_evidence_ids": ["ev2"],
+        "cited_evidence_ids": [
+          "ev2"
+        ],
         "rationale": "structural_composition으로 판단한다."
       }
     },
-
     {
       "case_id": "cardinality-many-citations",
       "axis": "cardinality",
@@ -211,7 +240,13 @@
       "output": {
         "decision": "select_type",
         "selected_type": "structural_composition",
-        "cited_evidence_ids": ["ev1", "ev2", "ev3", "ev4", "ev5"],
+        "cited_evidence_ids": [
+          "ev1",
+          "ev2",
+          "ev3",
+          "ev4",
+          "ev5"
+        ],
         "rationale": "제시된 모든 근거를 검토한 결과 structural_composition을 택한다."
       }
     },
@@ -223,10 +258,145 @@
       "output": {
         "decision": "defer",
         "selected_type": null,
-        "cited_evidence_ids": ["ev1", "ev2", "ev3", "ev4", "ev5"],
+        "cited_evidence_ids": [
+          "ev1",
+          "ev2",
+          "ev3",
+          "ev4",
+          "ev5"
+        ],
         "rationale": "근거가 많지만 서로 상충해 확정할 수 없다."
       }
     }
   ],
-  "results": []
+  "results": [
+    {
+      "case_id": "deferral-plain",
+      "axis": "deferral",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    },
+    {
+      "case_id": "deferral-confident-prose",
+      "axis": "deferral",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    },
+    {
+      "case_id": "deferral-names-a-type-in-prose-only",
+      "axis": "deferral",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    },
+    {
+      "case_id": "deferral-empty-citations",
+      "axis": "deferral",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    },
+    {
+      "case_id": "deferral-terse",
+      "axis": "deferral",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    },
+    {
+      "case_id": "selection-plain-essential",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-plain-structural",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-hedged-uncertain",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-hedged-explicitly-says-should-defer",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-mentions-both-types-in-prose",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-empty-citations",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-terse",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "invalid-defer-with-selected-type",
+      "axis": "invalid",
+      "expected": "invalid",
+      "observed": "invalid",
+      "match": true
+    },
+    {
+      "case_id": "invalid-select-with-null-type",
+      "axis": "invalid",
+      "expected": "invalid",
+      "observed": "invalid",
+      "match": true
+    },
+    {
+      "case_id": "invalid-out-of-enum-type",
+      "axis": "invalid",
+      "expected": "invalid",
+      "observed": "invalid",
+      "match": true
+    },
+    {
+      "case_id": "invalid-missing-decision-field",
+      "axis": "invalid",
+      "expected": "invalid",
+      "observed": "invalid",
+      "match": true
+    },
+    {
+      "case_id": "cardinality-many-citations",
+      "axis": "cardinality",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "cardinality-defer-many-citations",
+      "axis": "cardinality",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    }
+  ],
+  "calibration_state": "passed",
+  "coder_version": "h1a-behavioral-coder-v1"
 }
