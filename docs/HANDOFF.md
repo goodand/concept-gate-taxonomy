@@ -17,9 +17,33 @@
 
 M1(relation.is_a certificate) 검증 실험 라인을 진행 중이다.
 E2.2.1(NO_GO) → E2.2.2(GO) → E2.2.3(OFAT, A_ONLY 단독 충분) →
-E2.3(A_ONLY 일반화, screened PASS) → **E2.4(진행 중)**.
+E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중, 차단됨)**.
 
-**E2.4의 현재 위치를 오해하지 마라**: 이 실험의 본 목적인 **3-arm 비교
+> ## ⏱️ 지금 활성 작업은 E2.4가 아니라 **H1a**다
+>
+> **E2.4/H3는 2026-07-30 종료됐다**(존재 주장, D-H3C). 아래 §4·§11의 E2.4
+> 서술은 **완료된 이력**이지 할 일이 아니다.
+>
+> **현재 활성 실험**: `experiments/2026-07-29_h1a_source_authority_unresolved/`
+> — 계약문에서 liveness 재판정 금지 문장 하나를 뺐을 때 select/defer 행동이
+> 달라지는지 보는 2-arm 서술적 실험.
+>
+> **상태: 차단됨.** 설계 판정·사전등록·행동 코더는 끝났고 fixture도 만들었으나,
+> **독립 리뷰가 동결 부적합 판정**을 냈다(blocker 1 + major 5).
+>
+> **blocker**: 조작 대상인 금지 문장이 계약문에 **두 곳**에 있는데 설계는
+> 첫 번째만 지운다. 두 번째가 더 명시적이라 `PROHIBITION_REMOVED` arm이
+> 여전히 같은 행동을 금지한다 → **조작 무효.** 규정된 byte-level diff
+> 테스트는 이 상황을 **통과해버린다**.
+>
+> **다음 행동**: `DESIGN_REQUEST_H1a_manipulation_scope.md`를 외부 설계
+> 담당에게 전달(파일 하나로 자족형) → Q1 판정 대기. 판정 전에는 프롬프트
+> 생성·해시 동결·trial 실행 **불가**. 그 사이 [FIX] 9건은 적용 가능.
+>
+> 전체 목록·근거·검증 강도: [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md)
+> 리뷰 전문: [`feedback/h1a_fixture_review_20260730.md`](feedback/h1a_fixture_review_20260730.md)
+
+**E2.4의 위치(이력)**: 이 실험의 본 목적인 **3-arm 비교
 (CONTROL_REPO vs A_REPO vs CONTRACT_REPO)는 아직 한 번도 실행되지 않았다.**
 **fixture 준비 단계(Phase 0~3)는 2026-07-28에 완료·인증됐다** — 3개
 semantic class 전부 clean rerun cohort(N=10/cell)로 3/3 인증. 본 실험
@@ -100,7 +124,8 @@ class 자체는 유지된다.
 | E2.2.2 (invariant 수정) | rate=1.00, GO | 종료 |
 | E2.2.3 (OFAT ablation) | A_ONLY=20/20, B_ONLY=1/20, C_ONLY=0/20 | 종료 |
 | E2.3 (전역 invariant 일반화) | A_ONLY/PARAPHRASE/TOPOLOGY/DECOY 전부 screened PASS | 종료, 푸시됨 |
-| **E2.4 (repo-grounded contract)** | fixture 3 class 인증 + 제약 #11 리뷰 완료(4중 논리곱). **H3 존재 주장으로 종료**(D-H3C) — pilot 45 비인증, defer precision 0.00/0.00/1.00. 확증은 별도 과제로 분리 | **종료(존재 주장)** |
+| E2.4 (repo-grounded contract) | fixture 3 class 인증 + 제약 #11 리뷰 완료(4중 논리곱). **H3 존재 주장으로 종료**(D-H3C) — pilot 45 비인증, defer precision 0.00/0.00/1.00. 확증은 별도 과제 3건으로 분리 | 종료(존재 주장) |
+| **H1a (source_authority_unresolved)** | 설계 판정 7건 + 사전등록 P1~P7 + 코더 교정 18/18 완료. fixture 제작됨. **독립 리뷰에서 동결 부적합 — blocker 1 + major 5** | **진행 중, 차단됨** |
 
 ## 4. E2.4 — fixture 4종 검증 현황
 
@@ -170,7 +195,46 @@ ev5의 `structural_composition` 문자열은 "노출 안 된 enum 값 언급"이
 근거가 아니고, ev6의 "structural **contracts**"는 프롬프트 계약이지 taxonomy의
 부분-전체가 아니라고 구분. 규칙 2의 전문용어 규율은 의도대로 작동한다.
 
-## 5. 이번 세션(2026-07-27)에 한 일
+## 5. 세션 로그 (최신순)
+
+### 2026-07-30 — H3 종료, H1a 착수·차단
+
+1. **H3 확증 판정 수용 → E2.4 종료.** `DESIGN_DECISION_H3_CONFIRMATORY.md`가
+   **존재 주장으로 종료**를 판정. D-H3C-4가 요구한 recall/precision 쌍을
+   적용하자 단일 Δ가 감추던 것이 드러났다 — **세 arm의 defer 총량은 3·4·4로
+   거의 같고 차이는 조준이다**(precision 0.00 / 0.00 / **1.00**). 이 지표는
+   결과를 본 뒤 채택한 것이라 `post_hoc_metrics`로 표시되고 전용 테스트가
+   그 표시를 강제한다.
+2. **H1a 사전등록 P1~P7 확정 + 행동 코더 구현·교정.** 코더는 닫힌 enum
+   덕에 `rationale`을 읽지 않는 구조 매퍼다. 교정 코퍼스 18건을 `results`
+   빈 상태로 먼저 커밋 → **18/18 통과**, 뮤테이션 3종으로 코퍼스가 실제로
+   실패할 수 있음을 확인.
+3. **H1a fixture 제작 → 독립 리뷰 → 동결 부적합.** 별도 에이전트가
+   blocker 1 + major 5를 찾았다. **blocker의 원문은 제작 세션 컨텍스트에
+   이미 있었는데도 발견되지 않았다** — 제작자 자체 검토로는 나오지 않았을
+   결함이다.
+4. **설계 요청서 발송 준비** — `DESIGN_REQUEST_H1a_manipulation_scope.md`
+   (Q1 조작 범위 / Q2 null 식별가능성). 인용·실측 16/16 대조 검증.
+5. **`CLAUDE.md` 정리** — 1487→1135 est. 토큰. 삭제분 중 **2줄은 틀린
+   정보**였다(존재하지 않는 브랜치명, 이미 등록된 저장소를 "will be
+   registered separately"로 표기).
+
+**이 세션에서 확인된 운영 교훈 (skills-catalog 미승격 — candidate)**:
+
+- **제작자는 자기 산출물의 결함을 보지 못한다.** H1a blocker가 실증. 리뷰를
+  별도 에이전트로 돌리고 "제작자 테스트를 증거로 받지 말라"고 명시한 것이
+  결정적이었다.
+- **가드가 있어도 못 잡는 결함이 있다.** H1a의 byte-level diff 테스트는
+  중복 금지 문장을 **통과시킨다** — "diff가 무엇인가"를 볼 뿐 "동등한 것이
+  남았는가"를 보지 않기 때문. 가드의 존재가 아니라 **가드가 무엇을
+  주장하는지**를 봐야 한다.
+- **상수는 교란하지 않지만 상호작용한다.** "양 arm 동일 fixture라 안전하다"는
+  논증이 confounding에만 참이고 ceiling에는 거짓이라는 지적(H1a #14).
+
+> 승격은 하지 않았다 — 동일 문제가 최소 2회 독립 확인된 경우에만 검토하는
+> 규율이고, 위 3건은 1회성이다. 근거는 `H1A_ISSUE_REGISTER.md`에 있다.
+
+### 2026-07-27 세션
 
 1. **`sufficient_consistent` 해결 (5차 시도 만에, 7/7)** — 1차 순환논리 /
    2차 절차적 서술 / 3차 "죽은 코드"(→ 이 판정은 나중에 **오류로 확인**) /
@@ -220,15 +284,20 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
 
 **H1에서 파생된 새 항목 3개** — H1a는 아래 별도 실험, H1b/H1c는 H3 선행 과제:
 
-- **H1a (별도 실험) — `source_authority_unresolved`**: stale 문서와 live
-  코드가 같은 인스턴스에 대해 상충하는 type을 주장할 때, 클라이언트가
-  독단으로 해결하지 않고 보류하는가? 재료 확보됨:
-  `docs/phase_a_implementation_packet.md:102`("철은 칼의 재료 →
-  essential_feature", 고립·superseded 문서) 대
-  `test_semantic_regressions.py` R6b + `cg_partwhole.py`(`material_of` →
-  `structural_composition`, 통과 중). **인스턴스까지 `칼`/`철`로 정확히
-  일치**한다. 이건 E2.4의 "동등강도 충돌" 질문과 다른 질문이므로 별도
-  실험 폴더로 분리한다.
+- **H1a (별도 실험) — `source_authority_unresolved`** → **지금 활성 실험이며
+  차단 상태다. §1 상단 배너와 [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md)를
+  본다.** 아래는 착안 당시의 원 서술(이력):
+  문서와 live 코드가 같은 인스턴스에 대해 상충하는 type을 주장할 때,
+  클라이언트가 독단으로 해결하지 않고 보류하는가? **인스턴스까지 `칼`/`철`로
+  정확히 일치**한다.
+  - ⚠️ **원 서술의 "stale 문서"·"superseded"라는 표현을 실험 재료에 옮기지
+    마라.** 어느 쪽이 낡았는지는 **하네스와 사람이 아는 것**이고 모델에
+    도달하면 조작 변수가 오염된다(D-H1a-7, `PREREGISTRATION.md` §0).
+  - ⚠️ **code측 증거는 `cg_partwhole.py`가 아니다.** 그 줄은 칼도 철도
+    명명하지 않는 일반 매핑이라 독립 리뷰가 비대칭으로 지적했다. 올바른
+    증거는 `conceptgate/concept_gate_v7.py:1192` —
+    `(4) 재료-대상: 철은 칼의 재료 → structural_composition`으로,
+    문서 쪽과 **문장 줄기가 같고 type만 반대**다.
 - **H1b (설계급, H3 선행) — 규칙 3의 `conflicting` 정의 명확화**:
   `semantic_constraints`는 "conflicting direct evidence **of equal
   strength**"를 요구하나 `contract_prompt.md` 규칙 3 본문은 그만큼 명시하지
@@ -440,9 +509,10 @@ concept-gate-e2.2-wt              codex/e2.4-contract-repo-design       (E2.2~E2
   후 PR을 열지, 체인 전체를 한 PR로 할지는 미결.
 - `agent/publish-conversation-vault` → `codex/e2.4-contract-repo-design`로
   향하는 PR #5가 열려 있다(사용자 생성, MERGEABLE 상태). 이 세션은 관여하지 않았다.
-- **push 완료**: `e07460c..e76bdf0` (커밋 9개 — 지시문 원문 보존, D4 사전등록·검사기,
-  리뷰 표면 동결, H1a 설계 판정, 리뷰 결과 30/30, 독립 재현 도구, 재채점, 운영 로그).
-  로컬·원격 동기. `git log --oneline -12`로 확인.
+- **미푸시 커밋 16건** (2026-07-30 기준). H3 설계 요청·판정 반영, H3 공통
+  action 표면 구현·smoke·pilot 45, 확증 판정 수용, H1a 사전등록·코더·fixture,
+  독립 리뷰 기록, 설계 요청서. `git log --oneline origin/codex/e2.4-contract-repo-design..HEAD`로 확인.
+  **push는 사용자 승인 후에만.**
 
 ## 9. 검증 명령
 
@@ -452,6 +522,7 @@ python3 scripts/run_gates.py
 
 # E2.4 전체 self-check (표면 폐쇄 + fixture 무결성 + 채점기 + #11 리뷰)
 python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/   # 118 passed
+python3 -m pytest -q experiments/2026-07-29_h1a_source_authority_unresolved/         # 57 passed, 1 skipped
 
 # 코어만 (pytest.ini가 experiments/ 제외)
 python3 -m pytest -q
