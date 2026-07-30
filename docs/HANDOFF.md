@@ -1,6 +1,6 @@
 # HANDOFF — ConceptGate 세션 인수인계 (E2 실험 체인)
 
-- 갱신: 2026-07-29
+- 갱신: 2026-07-30
 - 대상: **컨텍스트 없이 이어받는 새 세션**. 이 문서만 읽고 작업을 재개할 수 있게 쓴다.
 - 이 문서는 worktree `concept-gate-e2.2-wt`(브랜치
   `codex/e2.4-contract-repo-design`)의 최신 상태를 기록한다.
@@ -22,13 +22,17 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(진행 중)**.
 **E2.4의 현재 위치를 오해하지 마라**: 이 실험의 본 목적인 **3-arm 비교
 (CONTROL_REPO vs A_REPO vs CONTRACT_REPO)는 아직 한 번도 실행되지 않았다.**
 **fixture 준비 단계(Phase 0~3)는 2026-07-28에 완료·인증됐다** — 3개
-semantic class 전부 clean rerun cohort(N=10/cell)로 3/3 인증. 하지만 본 실험
-(Phase 4~6)을 그 native schema 그대로 돌릴 수는 없다 — **외부 설계 판정
+semantic class 전부 clean rerun cohort(N=10/cell)로 3/3 인증. 본 실험
+(Phase 4~6)은 native schema 그대로는 돌릴 수 없었다 — **외부 설계 판정
 (2026-07-29, `DESIGN_DECISION_H3.md`)이 재정의를 요구했다**: legacy arm은
 `abstain`을 표현할 수 없어 비교가 성립하지 않는다. D3(H1c)는 이 판정으로
-**해소됐다**(3 class 완전 교차, D-H3-2). 2026-07-29 운영 지시로 걸렸던
-D4·D5도 **해결됐다**(아래 참조). 지금 남은 선행 작업은 세 arm 공통
-`action` 표면 구현이다(§H3 절 참조).
+**해소됐고**(3 class 완전 교차, D-H3-2), D4·D5도 **해결됐다**(아래 참조).
+
+**재정의된 H3는 실행까지 완료됐다** — 세 arm 공통 action 표면
+(`accept_report|repair|defer`)을 구현·동결하고 smoke 3건 + pilot 45건을
+돌렸다(§H3 절). **다만 이 pilot은 비인증이다**: 세 fixture가 CONTRACT
+결과로 선별된 재료라 독립 test set이 아니다(D-H3-6). 남은 선행 작업은
+**확증 실험 설계**이고, 그 실질적 병목은 held-out fixture 확보다.
 
 **유효 커버리지는 4 class가 아니라 3 class다** — `conflicting`은 "현 저장소의
 live·동등강도 evidence로 구성 가능한 fixture 미확보"로 종결됐다(§4). Schema의
@@ -74,9 +78,10 @@ class 자체는 유지된다.
 > `UNKNOWN`인데 인증 발생) → 30 trial 전수 리뷰로 해결, **D5**(재실행 규모
 > 17 vs 30) → 단계적 조기중단 정책으로 해소.
 >
-> **신규 trial 차단은 해제됐다.** 다음 실행을 막는 것은 지시문도 D3(H1c)도
-> 아니다 — D3는 외부 설계 판정(D-H3-2)으로 해소됐다. 남은 것은 H3 공통
-> action 표면 구현이다(§H3 절 참조).
+> **신규 trial 차단은 해제됐고, 재정의된 H3 pilot까지 실행됐다.** D3는 외부
+> 설계 판정(D-H3-2)으로 해소됐고 공통 action 표면도 구현·동결·실행 완료다.
+> 남은 것은 **확증 실험 설계**(held-out fixture·SESOI·다중성 제어·power,
+> D-H3-5 deferred)다(§H3 절 참조).
 
 ## 2. 프로젝트 목적 (변경 없음)
 
@@ -94,7 +99,7 @@ class 자체는 유지된다.
 | E2.2.2 (invariant 수정) | rate=1.00, GO | 종료 |
 | E2.2.3 (OFAT ablation) | A_ONLY=20/20, B_ONLY=1/20, C_ONLY=0/20 | 종료 |
 | E2.3 (전역 invariant 일반화) | A_ONLY/PARAPHRASE/TOPOLOGY/DECOY 전부 screened PASS | 종료, 푸시됨 |
-| **E2.4 (repo-grounded contract)** | fixture 3 class 인증 + 제약 #11 리뷰 완료(4중 논리곱). **H3 재정의 필요(외부 판정) — 공통 action 표면 미구현** | **진행 중** |
+| **E2.4 (repo-grounded contract)** | fixture 3 class 인증 + 제약 #11 리뷰 완료(4중 논리곱). **H3 재정의 후 pilot 완료 — Δ(defer\|insufficient)=+0.80, 단 비인증** | **진행 중** |
 
 ## 4. E2.4 — fixture 4종 검증 현황
 
@@ -253,7 +258,7 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
   "이동 기능을 제공한다"). **다만 이 둘은 서로 다른 type을 가리키므로**
   그대로 쓰면 conflicting에 가깝다 — 설계 주의 필요.
 
-### H3 — E2.4 본 실험 (Phase 4~6, 이 실험의 실제 목적) — **【재정의 필요, 외부 판정 2026-07-29】**
+### H3 — E2.4 본 실험 (Phase 4~6, 이 실험의 실제 목적) — **【재정의 후 pilot 완료, 비인증】**
 
 - **판정 요지**: `DESIGN_REQUEST_H3.md`(9407bb1)에 대한 외부 설계 판정
   (`DESIGN_DECISION_H3.md`)이 도착했다. **기존 native-schema 3-arm 실행은
@@ -276,20 +281,30 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
   packet 기반, 이후 코호트에서 제외됨)은 **판정에서 H3의 경험적 근거로
   인정되지 않았다.** 재현 대상이 아니라 폐기 대상이다.
 - **규모**: 기존 8 cell × N=10 = 80 trial 설계는 승인되지 않았다. 승인된
-  것은 3 class × 3 arm × R=5 = **45 trial 비인증 pilot**. 확증 규모는
-  SESOI·다중성 제어·power·held-out fixture 수가 정해질 때까지 deferred.
-- **선행 작업**: `_gen_prompts.py` 신설이 아니다(이건 이미 정정됨 — E2.4
-  파이프라인은 `_surface.py`+`_cohort.py`+`_score.py`). 지금 필요한 것은
-  **세 arm 공통 `action: accept_report|repair|defer` 스키마 확장** +
-  기존 whitelist builder를 호출하는 **단일 H3 dispatcher**(D-H3-4). 구현
-  전 합격 게이트 10항이 있다(등록부 [DESIGN] D6).
-- **미판정 3건(Q1~Q3)**: 판정문 공통 `report` 필드가 object인데 현행
-  schema는 string; `cited_evidence_ids` 신설 범위 미정; CONTRACT 진단부
-  재배치가 제약 #11 리뷰 경로에 미치는 영향. 스키마 착수 전 확인 필요.
-- **도구**: 사용자가 `Workflow`(dynamic workflow) 사용을 승인했다. 45 trial
-  pilot에서도 resumability(`runId` 캐시)와 토큰 예산 추적 이점이 실재한다.
-  다만 매니페스트를 먼저 보여주고 진행하는 게 이 프로젝트 관례
-  ("qualify before scale").
+  것은 3 class × 3 arm × R=5 = **45 trial 비인증 pilot**이며 **실행 완료**다.
+  확증 규모는 SESOI·다중성 제어·power·held-out fixture 수가 정해질 때까지
+  deferred.
+- **구현 완료**(`_h3.py`, `decision_schema_h3.json`, `test_h3.py`,
+  `_h3_score.py`, `test_h3_score.py`): 세 arm 공통 action 스키마 + 기존
+  whitelist builder를 호출하는 단일 dispatcher(D-H3-4). 합격 게이트 10항
+  전부 테스트로 매핑됨. **동결 파일은 한 바이트도 안 건드렸다** — A_REPO
+  규칙문은 E2.3 `_gen_prompts.py`에서, CONTRACT 규칙 1~7은
+  `contract_prompt.md`에서 앵커 추출로 바이트 재사용한다.
+- **Q1~Q3는 가정으로 진행**(판정 아님, `DESIGN_H3_common_action.md` §2):
+  `report`=string 유지, `cited_evidence_ids`=유효성 게이트,
+  pilot은 제약 #11 리뷰 미실행(비인증이므로). 사용자가 달리 보면 재동결
+  가능 — trial 데이터는 이미 있으므로 그때는 재실행이 필요하다.
+
+**pilot 결과(2026-07-30, 비인증)** — P(defer | insufficient):
+CONTROL 0/5, A 0/5, **CONTRACT 4/5** → Δ = **+0.80** (두 arm 모두 대비).
+specificity 유지(CONTRACT의 두 sufficient class false-defer 0/5), CONTRACT
+내부 action/verdict 일치 12/12, schema-invalid 5/45. D-H3-5 중단 조건
+6종 미발동. 독립 손 재집계로 교차검증 완료(패턴 9).
+
+⚠️ **우월성 주장 금지.** K=1(class당 fixture 1개)·R=5이고, 세 fixture는
+CONTRACT 결과로 선별된 재료다(D-H3-6). 결론은 "이 packet들에서 관측된 행동
+분포"로 한정된다. 부수 관측(비교 arm이 `sufficient_consistent`에서 대량
+false-defer — CONTROL 3/5, A 4/5)도 같은 한계를 공유한다.
 
 ### H4 — whole-packet 판정 vs scoped 판정의 취약성 비대칭 (관찰됨, 미검증)
 
@@ -421,7 +436,7 @@ concept-gate-e2.2-wt              codex/e2.4-contract-repo-design       (E2.2~E2
 python3 scripts/run_gates.py
 
 # E2.4 전체 self-check (표면 폐쇄 + fixture 무결성 + 채점기 + #11 리뷰)
-python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/   # 78 passed
+python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/   # 114 passed
 
 # 코어만 (pytest.ini가 experiments/ 제외)
 python3 -m pytest -q
@@ -632,7 +647,7 @@ resets 11:40pm (Asia/Seoul)"`로 실패했다. 이것은 **컨텍스트 윈도�
 cd experiments/2026-07-25_e2.4_repo_grounded_contract_transfer
 
 # 0. 동결본이 현재 파일과 일치하는지
-python3 -m pytest -q .          # 78 passed
+python3 -m pytest -q .          # 114 passed
 
 # 1. (ⓐ를 택했다면) COHORT 상수 수정 후 재동결
 python3 _cohort.py agent        # 스키마가 두 곳에 있으므로 생성기를 먼저
