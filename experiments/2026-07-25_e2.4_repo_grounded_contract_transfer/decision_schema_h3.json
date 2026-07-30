@@ -137,11 +137,11 @@
         "properties": {
           "action": {
             "type": "string",
-            "description": "The sole primary-result field (D-H3-1, D-H3-3). accept_report/repair/defer map onto the old decision enum's accept_report/repair/abstain one-to-one; contract_assessment.contract_verdict is diagnostic only and must not be scored as the primary outcome.",
+            "description": "The sole primary-result field across all three H3 arms (D-H3-1, D-H3-3). accept_report/repair carry the same meaning as decision_schema.json's legacy_decision.decision and evidence_contract_v1.decision; defer replaces both request_evidence (legacy) and abstain (contract) with one common vocabulary item.",
             "enum": ["accept_report", "repair", "defer"]
           },
           "repaired_concepts": {
-            "description": "null unless action=repair (semantic_constraints).",
+            "description": "null unless action=repair, in which case it must contain the complete input concept set (semantic_constraints).",
             "anyOf": [
               { "type": "array", "items": { "$ref": "#/$defs/concept" } },
               { "type": "null" }
@@ -149,12 +149,12 @@
           },
           "cited_evidence_ids": {
             "type": "array",
-            "description": "Validity gate, not a scored primary outcome (Q2 in DESIGN_H3_common_action.md).",
+            "description": "Validity gate, not a scored primary outcome (semantic_constraints, Q2 in DESIGN_H3_common_action.md). Every id must exist in the payload's evidence_items.",
             "items": { "type": "string" }
           },
           "report": {
             "type": "string",
-            "description": "Free-text summary (Q1 in DESIGN_H3_common_action.md)."
+            "description": "Free-text summary. Kept as a string, matching both legacy_decision.report and evidence_contract_v1.report (Q1 in DESIGN_H3_common_action.md)."
           },
           "contract_assessment": {
             "type": "object",
