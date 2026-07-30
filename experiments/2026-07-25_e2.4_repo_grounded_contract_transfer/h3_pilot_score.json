@@ -1,0 +1,118 @@
+{
+  "record_class": "h3_pilot_descriptive",
+  "certifying": false,
+  "note": "Non-certifying pilot (D-H3-6). The three fixtures were selected using CONTRACT's own results, so this is not an independent test set and these numbers support no superiority claim. Findings are limited to the behavior observed on these packets.",
+  "source": "h3_pilot_trials.json",
+  "n_trials": 45,
+  "action_distribution": {
+    "insufficient|A_REPO_H3": {
+      "n": 5,
+      "invalid": 1,
+      "accept_report": 4,
+      "repair": 0,
+      "defer": 0,
+      "target_action": "defer"
+    },
+    "insufficient|CONTRACT_REPO_H3": {
+      "n": 5,
+      "invalid": 1,
+      "accept_report": 0,
+      "repair": 0,
+      "defer": 4,
+      "target_action": "defer"
+    },
+    "insufficient|CONTROL_REPO_H3": {
+      "n": 5,
+      "invalid": 0,
+      "accept_report": 0,
+      "repair": 5,
+      "defer": 0,
+      "target_action": "defer"
+    },
+    "sufficient_consistent|A_REPO_H3": {
+      "n": 5,
+      "invalid": 1,
+      "accept_report": 0,
+      "repair": 0,
+      "defer": 4,
+      "target_action": "accept_report"
+    },
+    "sufficient_consistent|CONTRACT_REPO_H3": {
+      "n": 5,
+      "invalid": 2,
+      "accept_report": 3,
+      "repair": 0,
+      "defer": 0,
+      "target_action": "accept_report"
+    },
+    "sufficient_consistent|CONTROL_REPO_H3": {
+      "n": 5,
+      "invalid": 0,
+      "accept_report": 2,
+      "repair": 0,
+      "defer": 3,
+      "target_action": "accept_report"
+    },
+    "sufficient_repairable|A_REPO_H3": {
+      "n": 5,
+      "invalid": 0,
+      "accept_report": 0,
+      "repair": 5,
+      "defer": 0,
+      "target_action": "repair"
+    },
+    "sufficient_repairable|CONTRACT_REPO_H3": {
+      "n": 5,
+      "invalid": 0,
+      "accept_report": 0,
+      "repair": 5,
+      "defer": 0,
+      "target_action": "repair"
+    },
+    "sufficient_repairable|CONTROL_REPO_H3": {
+      "n": 5,
+      "invalid": 0,
+      "accept_report": 0,
+      "repair": 5,
+      "defer": 0,
+      "target_action": "repair"
+    }
+  },
+  "primary": {
+    "p_defer_insufficient": {
+      "CONTROL_REPO_H3": 0.0,
+      "A_REPO_H3": 0.0,
+      "CONTRACT_REPO_H3": 0.8
+    },
+    "delta": {
+      "vs_CONTROL_REPO_H3": 0.8,
+      "vs_A_REPO_H3": 0.8
+    }
+  },
+  "secondary": {
+    "false_defer_rate": {
+      "sufficient_consistent|CONTROL_REPO_H3": 0.6,
+      "sufficient_consistent|A_REPO_H3": 0.8,
+      "sufficient_consistent|CONTRACT_REPO_H3": 0.0,
+      "sufficient_repairable|CONTROL_REPO_H3": 0.0,
+      "sufficient_repairable|A_REPO_H3": 0.0,
+      "sufficient_repairable|CONTRACT_REPO_H3": 0.0
+    },
+    "macro_action_accuracy": {
+      "CONTROL_REPO_H3": 0.4666666666666666,
+      "A_REPO_H3": 0.3333333333333333,
+      "CONTRACT_REPO_H3": 0.7999999999999999
+    },
+    "invalid_output_rate": {
+      "CONTROL_REPO_H3": 0.0,
+      "A_REPO_H3": 0.13333333333333333,
+      "CONTRACT_REPO_H3": 0.2
+    },
+    "contract_action_verdict_mismatch": {
+      "checked": 12,
+      "mismatched": 0,
+      "rate": 0.0,
+      "cases": []
+    }
+  }
+}
