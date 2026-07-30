@@ -61,16 +61,10 @@ Subtree 갱신: `git subtree pull --prefix vendor/obo-relations https://github.c
 옛 코드로 돌아 *거짓 통과*가 났다. 그 실패 모드를 없애려고 단일 패키지로 합쳤다.
 새 모듈은 `conceptgate/`에 추가하면 wheel에 자동 포함된다(수동 목록 없음).
 
-- `conceptgate/concept_gate_v7.py` -- Core FCA-based concept lattice reasoner
-- `conceptgate/cg_partwhole.py` -- Part-whole adapter assembling vocabulary from vendor/obo-relations subtree
-- `conceptgate/cg_owl.py` -- OWL 2 DL serializer + HermiT classification (Java 필요)
-- `conceptgate/cg_normalizer.py` -- evidence-carrying 경계 어댑터 (단계 파이프라인)
-- `conceptgate/server.py` -- MCP server (FastMCP adapter). 실행: `python -m conceptgate.server`
-- `conceptgate/data/gufo.owl` -- gUFO endurants-only 서브셋 (형식 변환 사본, third_party/sources.lock.json에 해시 고정)
-- `qa_v7.py`, `test_*.py`, `fuzz_normalizer_types.py` -- 테스트 (repo 루트에서 실행)
-- `Dockerfile` -- 배포. JRE 포함 (HermiT가 Java를 요구하므로 Docker가 필수)
-- `vendor/` -- git subtrees (see Subtree Registry)
-- `docs/` -- Implementation packets and documentation
+각 모듈이 무엇인지는 그 파일의 docstring이 말한다. `Dockerfile`이 JRE를
+포함하는 이유만 여기 남긴다 — HermiT가 Java를 요구해서 Docker가 선택이 아니라
+필수다. `conceptgate/data/gufo.owl`은 형식 변환 사본이고 해시가
+`third_party/sources.lock.json`에 고정돼 있다.
 
 ### 머지 게이트 — 단일 진입점
 
@@ -103,19 +97,6 @@ venv/bin/python scripts/run_gates.py     # 전부 그린이어야 머지
 FAIL이다 — 그러지 않으면 환경 의존 테스트 하나가 같은 suite의 실제 회귀를
 가린다.
 
-## Key Architecture
-
-- `FeatureType`: ESSENTIAL, CONTEXTUAL, LOCATIONAL, FUNCTIONAL, SOCIAL, STRUCTURAL(has-a)
-- `ISA_ALLOWED_TYPES = {FeatureType.ESSENTIAL}` -- only ESSENTIAL creates DAG edges
-- `DAGReasoner.composition_view()` -- separate has-a graph (STRUCTURAL edges + UFO shareable detection)
-- `relation_hint` (LLM output) -- UFO vocabulary corrected via `cg_partwhole.hint_to_feature_type()`
-- `SemanticTypeInference` -- Korean-language keyword heuristic for feature type classification
-- `build_expansion_prompt()` -- LLM prompt generator for concept expansion
-- `parse_expansion_response()` -- LLM response parser
-- `DAGReasoner` -- builds DAG from essential_attrs subset inclusion
-
 ## Git
 
 - Do NOT commit without explicit permission
-- Branch: `claude/enable-remote-control-Lh6Di` (current working branch)
-- Target repo: `goodand/concept-gate-taxonomy` (will be registered separately)
