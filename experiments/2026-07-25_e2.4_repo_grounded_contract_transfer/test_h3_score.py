@@ -178,6 +178,57 @@ def test_false_defer_rate_covers_both_sufficient_classes():
     assert false_defer["sufficient_repairable|CONTRACT_REPO_H3"] == pytest.approx(0.0)
 
 
+# --- defer as a diagnostic positive (D-H3C-4) ----------------------------
+
+def test_precision_defer_counts_defers_across_all_classes():
+    """The denominator is every defer the arm made, not just the ones on the
+    target class -- otherwise precision is 1.0 by construction."""
+    trials = [
+        _trial("a", "E24-F-03", "CONTRACT_REPO_H3", "defer"),          # on target
+        _trial("b", "E24-F-01", "CONTRACT_REPO_H3", "defer"),          # false defer
+        _trial("c", "E24-F-02", "CONTRACT_REPO_H3", "repair"),
+    ]
+    d = score_mod.defer_diagnostics(score_mod.cells(trials, CLASSES))["CONTRACT_REPO_H3"]
+    assert d["defers_total"] == 2
+    assert d["defers_on_insufficient"] == 1
+    assert d["precision_defer"] == pytest.approx(0.5)
+    assert d["recall_defer"] == pytest.approx(1.0)
+
+
+def test_an_arm_that_defers_everywhere_is_caught_by_precision():
+    """Recall alone rewards indiscriminate deferral; the pair must not."""
+    trials = (
+        [_trial(f"i{i}", "E24-F-03", "A_REPO_H3", "defer") for i in range(5)]
+        + [_trial(f"c{i}", "E24-F-01", "A_REPO_H3", "defer") for i in range(5)]
+        + [_trial(f"r{i}", "E24-F-02", "A_REPO_H3", "defer") for i in range(5)]
+    )
+    d = score_mod.defer_diagnostics(score_mod.cells(trials, CLASSES))["A_REPO_H3"]
+    assert d["recall_defer"] == pytest.approx(1.0), "recall alone looks perfect"
+    assert d["precision_defer"] == pytest.approx(1 / 3), "precision exposes it"
+
+
+def test_an_arm_that_never_defers_yields_none_precision_not_zero():
+    """No defers means precision is undefined, not 0.0 -- an arm that never
+    fires the diagnostic has no precision to report."""
+    trials = [_trial(f"t{i}", "E24-F-03", "CONTROL_REPO_H3", "repair") for i in range(5)]
+    d = score_mod.defer_diagnostics(score_mod.cells(trials, CLASSES))["CONTROL_REPO_H3"]
+    assert d["defers_total"] == 0
+    assert d["precision_defer"] is None
+    assert d["recall_defer"] == pytest.approx(0.0)
+
+
+def test_defer_diagnostics_are_marked_post_hoc():
+    """D-H3C-4 allows this pair only descriptively on the existing cohort."""
+    path = HERE / "h3_pilot_trials.json"
+    if not path.exists():
+        pytest.skip("pilot not yet recorded")
+    result = score_mod.score(path)
+    assert result["post_hoc_metrics"], "the post-hoc marker must be present"
+    joined = " ".join(result["post_hoc_metrics"])
+    assert "defer_diagnostics" in joined
+    assert "retroactively" in joined
+
+
 # --- the non-certifying contract ----------------------------------------
 
 def test_score_output_is_marked_non_certifying():

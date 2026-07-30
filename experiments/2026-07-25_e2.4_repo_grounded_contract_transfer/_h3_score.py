@@ -154,6 +154,44 @@ def deltas(cell_map: dict) -> dict:
     return out
 
 
+def defer_diagnostics(cell_map: dict) -> dict:
+    """defer treated as a diagnostic positive: recall and precision as a pair.
+
+    D-H3C-4 (DESIGN_DECISION_H3_CONFIRMATORY.md): a single
+    Delta on P(defer | insufficient) cannot express both failure directions at
+    once, because the arms differ in *where* they defer rather than how much.
+    Recall alone rewards an arm that defers everywhere; precision alone rewards
+    one that defers almost never. Reported together, neither is gameable.
+
+        recall_defer    = P(defer | insufficient)
+        precision_defer = P(insufficient | defer)
+
+    POST HOC for the existing 45-trial pilot. This pair was adopted after the
+    pilot's results were seen, so per D-H3C-4 it must not be applied
+    retroactively as a confirmatory score -- it is descriptive here, and
+    becomes a pre-registered primary metric only from the next cohort onward.
+    """
+    out = {}
+    for arm in ARMS:
+        defers = 0
+        defers_on_target = 0
+        n_primary = 0
+        for (cls, cell_arm), cell in cell_map.items():
+            if cell_arm != arm:
+                continue
+            defers += cell["actions"]["defer"]
+            if cls == PRIMARY_CLASS:
+                defers_on_target += cell["actions"]["defer"]
+                n_primary += cell["n"]
+        out[arm] = {
+            "recall_defer": (defers_on_target / n_primary) if n_primary else None,
+            "precision_defer": (defers_on_target / defers) if defers else None,
+            "defers_total": defers,
+            "defers_on_insufficient": defers_on_target,
+        }
+    return out
+
+
 def secondary(trials: list[dict], cell_map: dict, classes: dict[str, str]) -> dict:
     false_defer = {}
     for cls in ("sufficient_consistent", "sufficient_repairable"):
@@ -197,6 +235,7 @@ def secondary(trials: list[dict], cell_map: dict, classes: dict[str, str]) -> di
             )
 
     return {
+        "defer_diagnostics": defer_diagnostics(cell_map),
         "false_defer_rate": false_defer,
         "macro_action_accuracy": macro,
         "invalid_output_rate": invalid_rate,
@@ -228,8 +267,37 @@ def score(path: Path) -> dict:
         "certifying": False,
         "note": "Non-certifying pilot (D-H3-6). The three fixtures were selected "
                 "using CONTRACT's own results, so this is not an independent test "
-                "set and these numbers support no superiority claim. Findings are "
-                "limited to the behavior observed on these packets.",
+                "set and these numbers support no superiority claim.",
+        "allowed_conclusion": (
+            "Existence-level, descriptive, conditional on a fixed packet, a fixed "
+            "model, and fixed parameters (D-H3C-1 = A, D-H3C-2 = existential). "
+            "Permitted: 'the contract interface elicited different defer behavior "
+            "from the comparison arms on this packet.' Not permitted: any "
+            "class-general, insufficient-general, or repo-derived-general "
+            "superiority claim -- those are not formally identified without a "
+            "sampling frame and independent held-out fixtures."
+        ),
+        "repo_derived_provenance": {
+            "note": "'repo-derived' does not mean the same thing for every class "
+                    "(D-H3C new_constraints). Stating it per class is mandatory.",
+            "insufficient": "actual repository source code",
+            "sufficient_consistent": "a synthetic sentence reused from a prior "
+                                     "experiment's frozen fixture (E2.3)",
+            "sufficient_repairable": "a synthetic sentence reused from a prior "
+                                     "experiment's frozen fixture (E2.2.1)",
+        },
+        "sampling_units": {
+            "R": 5, "R_meaning": "model-sampling repetitions of one fixed packet",
+            "K": 1, "K_meaning": "independent fixtures per class",
+            "warning": "R is not K (D-H3C new_constraints). Raising R sharpens the "
+                       "within-packet estimate and generalizes to nothing.",
+        },
+        "post_hoc_metrics": [
+            "secondary.defer_diagnostics -- the recall/precision pair was adopted "
+            "after these results were seen (D-H3C-4). Descriptive here; it is a "
+            "pre-registered primary metric only from the next cohort onward, and "
+            "must not be used retroactively as a confirmatory score."
+        ],
         "source": path.name,
         "n_trials": len(trials),
         "action_distribution": distribution,
@@ -261,6 +329,13 @@ def main() -> int:
         print(f"    Delta {name:16s} {'n/a' if value is None else f'{value:+.2f}'}")
 
     secondary_stats = result["secondary"]
+    print("\n  defer as a diagnostic positive  [POST HOC -- descriptive only, D-H3C-4]")
+    for arm, d in secondary_stats["defer_diagnostics"].items():
+        rec = "n/a" if d["recall_defer"] is None else f"{d['recall_defer']:.2f}"
+        pre = "n/a" if d["precision_defer"] is None else f"{d['precision_defer']:.2f}"
+        print(f"    {arm:20s} recall {rec}   precision {pre}   "
+              f"({d['defers_on_insufficient']}/{d['defers_total']} defers on target)")
+
     print("\n  secondary")
     for key, value in secondary_stats["false_defer_rate"].items():
         print(f"    false-defer {key:42s} {'n/a' if value is None else f'{value:.2f}'}")
@@ -274,8 +349,12 @@ def main() -> int:
         print(f"      {case['trial_id']}: action={case['action']} verdict={case['contract_verdict']}")
 
     print("\n  -> h3_pilot_score.json")
-    print("  Reminder: non-certifying. No superiority claim follows from these "
-          "numbers (D-H3-6).")
+    print("  Allowed conclusion (D-H3C-1=A, D-H3C-2=existential): existence-level "
+          "and descriptive,")
+    print("  conditional on a fixed packet, model, and parameters. No class-general "
+          "or repo-derived-general")
+    print("  superiority claim is identified without a sampling frame. R=5 is "
+          "model-sampling repetition, not K.")
     return 0
 
 

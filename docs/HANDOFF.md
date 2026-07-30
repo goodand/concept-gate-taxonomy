@@ -28,11 +28,13 @@ semantic class 전부 clean rerun cohort(N=10/cell)로 3/3 인증. 본 실험
 `abstain`을 표현할 수 없어 비교가 성립하지 않는다. D3(H1c)는 이 판정으로
 **해소됐고**(3 class 완전 교차, D-H3-2), D4·D5도 **해결됐다**(아래 참조).
 
-**재정의된 H3는 실행까지 완료됐다** — 세 arm 공통 action 표면
-(`accept_report|repair|defer`)을 구현·동결하고 smoke 3건 + pilot 45건을
-돌렸다(§H3 절). **다만 이 pilot은 비인증이다**: 세 fixture가 CONTRACT
-결과로 선별된 재료라 독립 test set이 아니다(D-H3-6). 남은 선행 작업은
-**확증 실험 설계**이고, 그 실질적 병목은 held-out fixture 확보다.
+**재정의된 H3는 실행까지 완료됐고, 2026-07-30 외부 판정으로 종료됐다** —
+세 arm 공통 action 표면(`accept_report|repair|defer`)을 구현·동결하고 smoke
+3건 + pilot 45건을 돌린 뒤, `DESIGN_DECISION_H3_CONFIRMATORY.md`가
+**존재 주장으로 종료**를 판정했다(§H3 절, 등록부 D7). 확증 실험은 표집틀
+자체가 없어서 — 세 fixture가 CONTRACT 결과로 선별됐고 남은 재료도 합성
+템플릿 2개뿐이라 — **별도 과제 3건으로 분리**됐다. **E2.4 안에 남은 차단
+요인은 없다.**
 
 **유효 커버리지는 4 class가 아니라 3 class다** — `conflicting`은 "현 저장소의
 live·동등강도 evidence로 구성 가능한 fixture 미확보"로 종결됐다(§4). Schema의
@@ -78,10 +80,9 @@ class 자체는 유지된다.
 > `UNKNOWN`인데 인증 발생) → 30 trial 전수 리뷰로 해결, **D5**(재실행 규모
 > 17 vs 30) → 단계적 조기중단 정책으로 해소.
 >
-> **신규 trial 차단은 해제됐고, 재정의된 H3 pilot까지 실행됐다.** D3는 외부
-> 설계 판정(D-H3-2)으로 해소됐고 공통 action 표면도 구현·동결·실행 완료다.
-> 남은 것은 **확증 실험 설계**(held-out fixture·SESOI·다중성 제어·power,
-> D-H3-5 deferred)다(§H3 절 참조).
+> **신규 trial 차단 해제 → pilot 실행 → 종료까지 끝났다.** D3는 D-H3-2로
+> 해소, 공통 action 표면은 구현·동결·실행 완료, 그리고 D-H3C가 **존재
+> 주장으로 종료**를 판정했다. 확증은 별도 과제로 분리(§H3 절, 등록부 D7).
 
 ## 2. 프로젝트 목적 (변경 없음)
 
@@ -99,7 +100,7 @@ class 자체는 유지된다.
 | E2.2.2 (invariant 수정) | rate=1.00, GO | 종료 |
 | E2.2.3 (OFAT ablation) | A_ONLY=20/20, B_ONLY=1/20, C_ONLY=0/20 | 종료 |
 | E2.3 (전역 invariant 일반화) | A_ONLY/PARAPHRASE/TOPOLOGY/DECOY 전부 screened PASS | 종료, 푸시됨 |
-| **E2.4 (repo-grounded contract)** | fixture 3 class 인증 + 제약 #11 리뷰 완료(4중 논리곱). **H3 재정의 후 pilot 완료 — Δ(defer\|insufficient)=+0.80, 단 비인증** | **진행 중** |
+| **E2.4 (repo-grounded contract)** | fixture 3 class 인증 + 제약 #11 리뷰 완료(4중 논리곱). **H3 존재 주장으로 종료**(D-H3C) — pilot 45 비인증, defer precision 0.00/0.00/1.00. 확증은 별도 과제로 분리 | **종료(존재 주장)** |
 
 ## 4. E2.4 — fixture 4종 검증 현황
 
@@ -258,7 +259,7 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
   "이동 기능을 제공한다"). **다만 이 둘은 서로 다른 type을 가리키므로**
   그대로 쓰면 conflicting에 가깝다 — 설계 주의 필요.
 
-### H3 — E2.4 본 실험 (Phase 4~6, 이 실험의 실제 목적) — **【재정의 후 pilot 완료, 비인증】**
+### H3 — E2.4 본 실험 (Phase 4~6, 이 실험의 실제 목적) — **【존재 주장으로 종료, 2026-07-30】**
 
 - **판정 요지**: `DESIGN_REQUEST_H3.md`(9407bb1)에 대한 외부 설계 판정
   (`DESIGN_DECISION_H3.md`)이 도착했다. **기존 native-schema 3-arm 실행은
@@ -296,15 +297,29 @@ single-concept으로 좁혀 해결했고(cross-concept 검증은 분리), 이 �
   가능 — trial 데이터는 이미 있으므로 그때는 재실행이 필요하다.
 
 **pilot 결과(2026-07-30, 비인증)** — P(defer | insufficient):
-CONTROL 0/5, A 0/5, **CONTRACT 4/5** → Δ = **+0.80** (두 arm 모두 대비).
-specificity 유지(CONTRACT의 두 sufficient class false-defer 0/5), CONTRACT
-내부 action/verdict 일치 12/12, schema-invalid 5/45. D-H3-5 중단 조건
-6종 미발동. 독립 손 재집계로 교차검증 완료(패턴 9).
+CONTROL 0/5, A 0/5, **CONTRACT 4/5** → Δ = +0.80. specificity 유지, CONTRACT
+내부 action/verdict 일치 12/12, schema-invalid 5/45. D-H3-5 중단 조건 6종
+미발동. 독립 손 재집계로 교차검증(패턴 9).
 
-⚠️ **우월성 주장 금지.** K=1(class당 fixture 1개)·R=5이고, 세 fixture는
-CONTRACT 결과로 선별된 재료다(D-H3-6). 결론은 "이 packet들에서 관측된 행동
-분포"로 한정된다. 부수 관측(비교 arm이 `sufficient_consistent`에서 대량
-false-defer — CONTROL 3/5, A 4/5)도 같은 한계를 공유한다.
+**그러나 Δ를 단독으로 인용하지 마라.** D-H3C-4가 요구한 recall/precision
+쌍으로 다시 보면 그림이 다르다:
+
+| arm | recall | **precision** | defer 총수 |
+|---|---|---|---|
+| CONTROL | 0.00 | **0.00** | 3 (0개 적중) |
+| A | 0.00 | **0.00** | 4 (0개 적중) |
+| CONTRACT | 0.80 | **1.00** | 4 (전부 적중) |
+
+**세 arm의 보류 총량은 3·4·4로 거의 같다.** 차이는 양이 아니라 **조준**이다.
+이 쌍은 결과를 본 뒤 채택한 사후 지표라 확증 근거가 아니며, 사전등록 1차
+지표 지위는 다음 cohort부터다.
+
+⚠️ **허용 결론은 `h3_pilot_score.json`의 `allowed_conclusion` 필드에 문장으로
+박혀 있다** — fixed-packet·fixed-model·fixed-parameter 조건의 **존재 수준
+서술**. class 일반·insufficient 일반·repo-derived 일반 우월성은 표집틀과
+독립 held-out 없이는 **형식적으로 식별되지 않는다**(D-H3C-1·2). 또한
+"repo-derived"는 class마다 뜻이 다르다 — `insufficient`만 실제 저장소
+코드이고 두 `sufficient`는 이전 실험의 합성 fixture 문장이다.
 
 ### H4 — whole-packet 판정 vs scoped 판정의 취약성 비대칭 (관찰됨, 미검증)
 
@@ -436,7 +451,7 @@ concept-gate-e2.2-wt              codex/e2.4-contract-repo-design       (E2.2~E2
 python3 scripts/run_gates.py
 
 # E2.4 전체 self-check (표면 폐쇄 + fixture 무결성 + 채점기 + #11 리뷰)
-python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/   # 114 passed
+python3 -m pytest -q experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/   # 118 passed
 
 # 코어만 (pytest.ini가 experiments/ 제외)
 python3 -m pytest -q
@@ -647,7 +662,7 @@ resets 11:40pm (Asia/Seoul)"`로 실패했다. 이것은 **컨텍스트 윈도�
 cd experiments/2026-07-25_e2.4_repo_grounded_contract_transfer
 
 # 0. 동결본이 현재 파일과 일치하는지
-python3 -m pytest -q .          # 114 passed
+python3 -m pytest -q .          # 118 passed
 
 # 1. (ⓐ를 택했다면) COHORT 상수 수정 후 재동결
 python3 _cohort.py agent        # 스키마가 두 곳에 있으므로 생성기를 먼저
