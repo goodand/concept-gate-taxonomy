@@ -24,15 +24,126 @@ estimand는 무엇인가"**다.
 
 ---
 
-## 1. 배경 — 이미 판정·실행된 것 (변경 요청 아님)
+## 1. 이 실험이 무엇인가 (사전 지식 없이 읽는 경우)
 
-D-H3-1~6에 따라 세 arm에 공통 action 표면(`accept_report`|`repair`|`defer`)을
-부여하고 단일 dispatcher로 렌더해 **비인증 pilot 45 trial**(3 class × 3 arm ×
-R=5)을 실행했다. 결과는 §2의 M7~M8이다. 이 부분은 판정 대상이 아니다.
+이 절만 읽으면 이후 전체를 판정할 수 있다. 이미 아는 내용이면 §3(실측)으로 건너뛰어라.
+
+### 1.1 프로젝트
+
+ConceptGate는 자연어에서 개념(concept)과 그 속성(feature)을 뽑아 온톨로지
+계층을 만드는 시스템이다. 원칙은 **"LLM이 제안하고, 결정론이 판정한다."**
+각 feature에는 6개 중 하나의 **type**이 붙는다:
+
+| type | 뜻 |
+|---|---|
+| `essential_feature` | is-a 계층을 형성하는 분류적 본질 속성 |
+| `contextual_usage` | 맥락에 따라 달라지는 용법 |
+| `locational` | 장소·영역 관계 |
+| `functional` | UFO 의미의 기능적 역할 |
+| `social_treatment` | 사회적·법적 처우 |
+| `structural_composition` | 부분-전체(has-a) 관계 |
+
+이 6개는 **전문 용어**이며 일상어와 다르다(`functional` ≠ "기능이 있다",
+`structural_composition` ≠ "구조를 가진 코드").
+
+### 1.2 E2.4가 묻는 것
+
+클라이언트 LLM 에이전트에게 **evidence packet**을 준다. packet은 세 부분이다:
+
+- `candidate_concepts` — 판정 대상. 각 concept의 feature와 **현재 붙어 있는
+  type**
+- `evidence_items` — 근거 텍스트. 각 항목은 `evidence_id`/`source_kind`/`text`
+  **3개 필드뿐**(경로·주석·메타데이터 없음. 오라클 유출을 구조적으로 차단)
+- `server_response` — 결정론적 파이프라인의 출력(status 등)
+
+에이전트는 이 packet **만** 보고 하나의 행동을 고른다. 외부 지식 사용 금지.
+
+**질문**: 구조화된 계약(evidence audit → 충분성 판정 → 불변식 확인 → 행동)을
+강제하면, 근거가 불충분할 때 **함부로 단정하지 않고 보류**하는가?
+
+### 1.3 세 arm
+
+세 arm은 **동일한 packet 바이트**를 받는다. 차이는 프롬프트 규칙과 응답
+스키마뿐이다.
+
+| arm | 프롬프트 규칙 | 응답 스키마 |
+|---|---|---|
+| `CONTROL_REPO_H3` | 6개 type 어휘 설명만 | 공통 4필드 |
+| `A_REPO_H3` | 위 + **전역 일관성 규칙**("같은 feature 이름이 여러 concept에 있으면 하나의 type으로 통일하라" — 선행 실험 E2.2.3에서 단독으로 효과가 확인된 규칙) | 공통 4필드 |
+| `CONTRACT_REPO_H3` | 위와 다른 계열 — **7개 절의 계약문**: packet 외 지식 금지 / 행동 전 evidence audit 필수 / 충분성 5단계 절차 / 전역 불변식 / repair 조건 / 보류 조건 / 수용 조건 | 공통 4필드 **+ `contract_assessment`**(감사 내역·충분성 판정·불변식 점검을 구조적으로 강제) |
+
+계약의 핵심 규칙 하나가 이 문서 전체를 지배한다:
+
+> **"코드가 무엇을 하는지"를 서술하는 텍스트는, 그 자체로는 6개 type 중
+> 어느 것에 대해서도 근거가 되지 않는다.** 근거가 되려면 텍스트가 그
+> feature의 **온톨로지적 성격**(분류적 본질인가 / 부분-전체인가 / 역할인가…)을
+> **명시적으로 서술**해야 한다.
+
+이 규칙 때문에 임의의 구현 코드는 자동으로 "근거 불충분"이 된다. 이것이
+§4의 공급 비대칭을 낳는다.
+
+### 1.4 공통 행동 어휘
+
+선행 판정(D-H3-1)이 세 arm에 동일한 행동 어휘를 부여했다. 이전에는 legacy
+arm이 `report_done`/`repair`/`request_evidence`를, 계약 arm이
+`accept_report`/`repair`/`abstain`을 써서 **보류를 표현할 수 있는 arm과 없는
+arm이 갈렸고**, 그러면 "보류가 관측되지 않음"이 *판단하지 않았다*인지
+*표현할 수 없었다*인지 분해되지 않는다. 그래서 셋 다:
+
+| action | 뜻 |
+|---|---|
+| `accept_report` | 현 상태가 안전하며 조치 불요 |
+| `repair` | 근거 있는 수정이 필요 |
+| `defer` | 이 packet만으로 확정 불가, 보류 |
+
+`contract_verdict`(계약 arm 내부 진단)는 **1차 지표가 아니다**(D-H3-3).
+
+### 1.5 semantic class (숨은 정답)
+
+각 fixture에는 사람이 붙인 정답 class가 있고 **모델에게는 절대 노출되지
+않는다**. class → 기대 행동:
+
+| class | 뜻 | 기대 action |
+|---|---|---|
+| `sufficient_consistent` | 근거가 현재 type을 충분히 지지 → 고칠 것 없음 | `accept_report` |
+| `sufficient_repairable` | 근거가 **다른** type을 명시 → 고칠 수 있음 | `repair` |
+| `insufficient` | 어떤 type도 명시적으로 지지되지 않음 | `defer` |
+| `conflicting` | 동등 강도로 상충하는 근거 | (미확보 종결, M11) |
+
+### 1.6 용어
+
+- **fixture** — 하나의 packet을 만들기 위한 제작용 파일. 숨은 정답과 출처
+  메타데이터를 포함하며, 모델에게는 화이트리스트 빌더가 걸러낸 3필드만 간다
+- **trial** — 한 arm × 한 fixture × 1회 모델 호출
+- **R** — 같은 fixture·arm의 반복 호출 수 (여기서는 5)
+- **K** — 독립 fixture 수 (class당, 여기서는 1)
+- **held-out** — 모델 결과와 **무관하게** 선정된, 확증용 별도 fixture
+- **비인증(non-certifying)** — 통과/실패 판정이나 우월성 주장을 산출하지
+  않는 실행
 
 ---
 
-## 2. 실측 (M1~M10)
+## 2. 배경 — 이미 판정·실행된 것 (변경 요청 아님)
+
+D-H3-1~6에 따라 세 arm에 공통 action 표면(`accept_report`|`repair`|`defer`)을
+부여하고 단일 dispatcher로 렌더해 **비인증 pilot 45 trial**(3 class × 3 arm ×
+R=5)을 실행했다. 결과는 §3의 M8~M9와 §3.2 전체 분포다. 이 부분은 판정
+대상이 아니다.
+
+**선행 판정 D-H3-1~6 요약** (이 문서는 그 뒤를 잇는다):
+
+| ID | 판정 |
+|---|---|
+| D-H3-1 | native 3-arm 비교 불성립 → 세 arm 공통 action 표면으로 재정의. legacy arm 제거하지 않음 |
+| D-H3-2 | `conflicting`의 빈자리를 채우지 않음. 남은 3 class × 3 arm 완전 교차 |
+| D-H3-3 | 1차 지표는 공통 `action`. 사후 행동 코더 불필요. `contract_verdict`는 진단용 |
+| D-H3-4 | 동결된 빌더를 재사용하는 단일 dispatcher |
+| D-H3-5 | pilot은 3×3×R=5=45로 확정. **확증 규모는 deferred** (SESOI·다중성·power·K·분석 모형) |
+| D-H3-6 | pilot은 비인증. 현 fixture는 계약 결과로 선별됐으므로 독립 test set 아님 |
+
+---
+
+## 3. 실측 (M1~M11)
 
 | # | 실측 | 확인 방법 |
 |---|---|---|
@@ -48,9 +159,69 @@ R=5)을 실행했다. 결과는 §2의 M7~M8이다. 이 부분은 판정 대상�
 | **M10** | **class 라벨은 결정론적으로 재현된다** — 두 템플릿만 아는 정규식 검출기가 3 fixture의 class를 3/3 정확히 도출했고, 실 소스/문서 26개 파일에서 false positive 0. **단, 이는 재료가 템플릿이기 때문이다** | 검출기 구현 후 실측 |
 | **M11** | `conflicting` class는 "현 저장소의 live·동등강도 evidence로 구성 불가"로 **종결**됐다. pilot은 3 class 완전 교차(D-H3-2) | `PROBLEM_2_conflicting.md` §5.2 |
 
+### 3.1 문제의 7문장 — 전문 (D-H3C-3 판정에 필요)
+
+저장소 전체를 통틀어 존재하는 온톨로지 관계 서술의 **전부**다. 독립성을
+판정하려면 서술이 아니라 원문을 봐야 하므로 그대로 옮긴다.
+
+**템플릿 ① `{X}의 {Y}는 {X} 몸체의 구성 부분이다`** → `structural_composition`
+
+1. `돌체의 바퀴는 돌체 몸체의 구성 부분이다`  ← **E2.4가 소비**(sufficient_repairable)
+2. `카페린의 손잡이는 카페린 몸체의 구성 부분이다`  ← **E2.4가 소비**(sufficient_consistent)
+3. `엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다`
+4. `엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다`
+5. `차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다`
+
+**템플릿 ② `{X}에서 {Y}는 {Z} 기능을 제공한다`** → `functional`
+
+6. `돌체린에서 바퀴는 이동 기능을 제공한다`
+7. `카페토에서 손잡이는 운반 기능을 제공한다`
+
+미사용 잔여는 3·4·5·6·7의 **5개**다. 3과 4는 **같은 X(엔진박스)** 의 서로
+다른 부품이고, 1·2·3·4·5는 명사 두 개를 뺀 나머지가 **문자 단위로 동일**하다.
+
+### 3.2 pilot 전체 분포 (45 trial) — D-H3C-4 판정에 필요
+
+분모는 **전체 n**이다. schema-invalid는 어떤 action으로도 세지 않고
+action-incorrect로 처리한다(선행 판정 §4 요구).
+
+| class (기대 action) | arm | n | invalid | accept_report | repair | defer |
+|---|---|---|---|---|---|---|
+| **insufficient** (→defer) | CONTROL | 5 | 0 | 0 | **5** | 0 |
+| | A | 5 | 1 | **4** | 0 | 0 |
+| | CONTRACT | 5 | 1 | 0 | 0 | **4** |
+| **sufficient_consistent** (→accept_report) | CONTROL | 5 | 0 | 2 | 0 | **3** |
+| | A | 5 | 1 | 0 | 0 | **4** |
+| | CONTRACT | 5 | 2 | **3** | 0 | 0 |
+| **sufficient_repairable** (→repair) | CONTROL | 5 | 0 | 0 | **5** | 0 |
+| | A | 5 | 0 | 0 | **5** | 0 |
+| | CONTRACT | 5 | 0 | 0 | **5** | 0 |
+
+파생 지표:
+
+| 지표 | CONTROL | A | CONTRACT |
+|---|---|---|---|
+| P(defer \| insufficient) — **1차** | 0.00 | 0.00 | **0.80** |
+| false-defer @ sufficient_consistent | 0.60 | 0.80 | **0.00** |
+| false-defer @ sufficient_repairable | 0.00 | 0.00 | 0.00 |
+| macro action accuracy (3 class 평균) | 0.47 | 0.33 | **0.80** |
+| invalid-output rate | 0.00 | 0.13 | **0.20** |
+| 내부 action/`contract_verdict` 일치 | — | — | 12/12 |
+
+**이 표에서 육안으로 보이는 것 3가지**(판정 대상이지 결론이 아니다):
+
+1. `sufficient_repairable` 행은 **세 arm이 완전히 동일**하다(5/5 repair).
+   이 class는 arm을 구별하지 못한다 — 즉 3 class 중 실제로 정보를 주는 것은
+   2개다.
+2. CONTROL은 `insufficient`에서 **5/5 repair**했다. 보류하지 않은 게 아니라
+   **근거 없이 고쳤다.** A는 같은 자리에서 4/5 `accept_report`했다 — 역시
+   보류하지 않았으나 CONTROL과 **다른 방향**으로 틀렸다.
+3. 두 비교 arm의 오류는 `sufficient_consistent`에서 **defer 쪽으로** 쏠린다
+   (0.60, 0.80). 즉 세 arm은 "보류의 양"이 아니라 **"보류의 위치"**가 다르다.
+
 ---
 
-## 3. 실측에서 따라 나오는 구조
+## 4. 실측에서 따라 나오는 구조
 
 **공급 비대칭.** `insufficient` class 재료는 사실상 무제한이다(임의의 구현
 코드는 온톨로지적 성격을 서술하지 않으므로 자동으로 insufficient다). 반면 두
@@ -71,7 +242,7 @@ R=5)을 실행했다. 결과는 §2의 M7~M8이다. 이 부분은 판정 대상�
 
 ---
 
-## 4. 판정 요청 항목
+## 5. 판정 요청 항목
 
 각 항목은 **질문 → 왜 판정 사항인가 → 선택지 → 실측 제약 → 권고(비구속) →
 미판정 시 귀결** 순이다.
@@ -250,7 +421,7 @@ treatment이기 때문이다.
 
 ---
 
-## 5. 비협상 제약 (판정이 지켜야 할 것)
+## 6. 비협상 제약 (판정이 지켜야 할 것)
 
 - **동결 아티팩트 불변**: `_surface.py`, `_cohort.py`, `contract_prompt.md`,
   `decision_schema.json`, 기존 4 fixture, `_score.py`, `_review_11.py`.
@@ -264,7 +435,7 @@ treatment이기 때문이다.
 
 ---
 
-## 6. 회신 형식
+## 7. 회신 형식
 
 ```text
 DESIGN DECISION — H3 confirmatory
