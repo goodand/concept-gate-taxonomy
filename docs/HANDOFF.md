@@ -33,9 +33,10 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 > ⚠️ `../concept-gate-e2.2-wt`에도 H1a 파일이 남아 있다 — 분리 이전 이력을
 > 공유하기 때문이다. **저쪽은 사본이고 여기가 정본이다.** 중복 제거는 미결.
 >
-> **현재 상태: 차단됨(독립 리뷰 재실행 대기). 실행된 trial 0건.**
-> 설계 판정 4회(D-H1a-1~7 / Q1·Q2 / Q3·Q4 / Q5~Q8), 독립 리뷰 2회.
-> **Q5~Q8 전부 적용 완료(2026-08-02)** — 아래는 이력.
+> **현재 상태: 차단됨(Q9 판정 대기). 실행된 trial 0건.**
+> 설계 판정 4회(D-H1a-1~7 / Q1·Q2 / Q3·Q4 / Q5~Q8), 독립 리뷰 3회.
+> **Q5~Q8 전부 적용 완료(2026-08-02), 3차 독립 리뷰 통과(blocker 0)** —
+> 아래는 이력.
 > - ✅ **Q5=B** 조작 span 2문장으로 축소 완료. 3번째 문장(`그 판정은 이미
 >   끝났고 너의 범위가 아니다.`) 제거, E2.4 선행사 복원 안 함(Q5.1 금지)
 > - ✅ **Q6=A** 모델 대면 type 앵커 제거 완료 — `concept_feature_pair`로
@@ -51,12 +52,17 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 > 평면)에서 로드한다 — Q5·Q6.1·Q7이 셋으로 나눠 수정해야 했기 때문이다.
 > `_h1a_contract.py`의 `DESIGN_DECISION_PATH`가 이 파일을 가리킨다.
 >
-> `python3 scripts/run_gates.py` 그린 확인함(H1a 102 passed/1 skipped,
+> `python3 scripts/run_gates.py` 그린 확인함(H1a 106 passed/1 skipped,
 > E2.4 118 불변).
 >
-> **다음 행동: 독립 리뷰 재실행.** 프롬프트·payload·fixture가 전부 바뀌었으므로
-> 2026-08-01 2차 리뷰는 **무효**다. 별도 에이전트, 제작자 결론 미고지, 직접
-> 재현 지시. 통과해야 동결 → 본 코호트 40 trial(별도 승인).
+> **3차 독립 리뷰(2026-08-02, 별도 에이전트·제작자 결론 미고지) 완료**:
+> blocker 0, major 2 + minor 1 즉시 수정·재테스트(전부 회귀 테스트로 고정).
+> 잔여 1건은 코드 결함이 아니라 fixture 내용 설계 질문이라
+> **Q9로 상신**(`correspondence/DESIGN_REQUEST_H1a_evidence_symmetry.md`).
+>
+> **다음 행동: Q9 판정 수신 대기(아직 미발송).** 판정 도착 후 fixture가
+> 바뀌면 재테스트, 바뀌지 않으면(A안: 한계로만 기록) 그대로 동결 →
+> 본 코호트 40 trial(별도 승인).
 >
 > 전체 목록·근거·검증 강도: [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md)
 > 리뷰 전문: [`feedback/h1a_fixture_review_20260730.md`](feedback/h1a_fixture_review_20260730.md)
@@ -84,30 +90,46 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 같은 사건의 다른 자름이다. 한쪽만 읽으면 "무엇이 반복되는가"(전자) 또는
 "언제 무엇이 있었나"(후자)를 놓친다.
 
-### 외부 설계 판정 4건 — **전부 구속력 유지**
+### 외부 설계 판정 4건 — **전부 구속력 유지, 전부 적용 완료**
 
 | 파일 | 범위 |
 |---|---|
 | `DESIGN_DECISION.md` | D-H1a-1~7 — 2-arm 서술적 실험 확정 |
 | `DESIGN_DECISION_H1a_manipulation_scope.md` | Q1=B 조작 재정의 / Q2=B 앵커 진단 |
 | `DESIGN_DECISION_H1a_prompt_surface.md` | Q3=B 전용 프롬프트 / Q4 승인 |
-| `DESIGN_DECISION_H1a_review_blockers.md` | **Q5~Q8 — 미적용, 다음 작업** |
+| `DESIGN_DECISION_H1a_review_blockers.md` | Q5=B/Q6=A/Q7=E/Q8=B — **2026-08-02 전부 적용 완료** |
 
-> ⚠️ **`DESIGN_DECISION_H1a_prompt_surface.md`는 문서가 아니라 실행 입력이다.**
-> 그 파일의 첫 ` ```text ` fenced block이 **모델 대면 프롬프트 template 원본**이고
-> `_h1a_contract.py:56`이 그것을 로드한다. 판정문은 원문 보존 대상이라 편집할 수
-> 없으므로, Q5·Q6.1·Q7을 적용하려면 **template을 자기 파일로 먼저 분리**해야 한다.
-> 나머지 판정문 3건은 순수 기록이고, **이름·위치로는 구분되지 않는다.**
+> **2026-08-02 갱신**: `DESIGN_DECISION_H1a_prompt_surface.md`는 더 이상
+> 코드가 로드하는 파일이 **아니다.** Q5·Q6.1·Q7이 template을 셋으로 나눠
+> 수정해야 해서, 모델 대면 프롬프트 template을 `h1a_prompt_template.md`
+> (신규, 평면 유지)로 분리했다. `_h1a_contract.py::DESIGN_DECISION_PATH`가
+> 이제 그 파일을 가리킨다. **네 판정문 전부 순수 기록**이 됐다 — 위 4개 중
+> 코드 입력은 이제 없다.
 
-### 독립 리뷰 2회 — 둘 다 제작자가 못 본 것을 잡았다
+**미결 — Q9**: 3차 독립 리뷰(2026-08-02)가 코드 결함이 아닌 fixture 설계
+질문을 하나 더 찾았다(ev1/ev3 증거 내용 비대칭, Q8의 개수 대칭과는 다른 축).
+`correspondence/DESIGN_REQUEST_H1a_evidence_symmetry.md`로 상신 문서
+작성·인용 검증 완료, **아직 외부 미발송**. 판정 도착 전까지 동결 불가.
+
+### 독립 리뷰 3회 — 매번 제작자가 못 본 것을 잡았다
 
 | 파일 | 결과 |
 |---|---|
 | [`feedback/h1a_fixture_review_20260730.md`](feedback/h1a_fixture_review_20260730.md) | blocker 1 + major 5 → C2~C10 반영 |
-| [`feedback/h1a_prompt_review_20260801.md`](feedback/h1a_prompt_review_20260801.md) | blocker 2 + major 7 → **Q5~Q8로 상신, 미적용** |
+| [`feedback/h1a_prompt_review_20260801.md`](feedback/h1a_prompt_review_20260801.md) | blocker 2 + major 7 → Q5~Q8로 상신, **적용 완료** |
+| 3차(2026-08-02, 별도 에이전트, 미고지) | blocker 0, major 2 + minor 1 → 즉시 수정·재테스트 완료. 잔여 1건(내용 비대칭) → Q9로 상신 |
 
-두 리뷰 모두 지시에 "**제작자의 테스트를 증거로 받지 말고 직접 재현하라**"가
-있었고, 두 번 다 제작자 테스트는 통과 중이었다.
+세 리뷰 모두 지시에 "**제작자의 테스트를 증거로 받지 말고 직접 재현하라**"가
+있었고, 매번 제작자 테스트는 통과 중이었다.
+
+### 상관관계 원장 — `correspondence/`
+
+`DESIGN_REQUEST*.md`(외부 판정 요청서, 6건)는 **더 이상 실험 폴더
+평면에 없다.** 2026-08-02, 검증된 `git mv`로
+`correspondence/`로 이동했다(어떤 활성 코드도 이 파일들을 로드하지
+않음을 확인 — `docs/DESIGN_workspace_file_placement.md` §0.1 검증
+4조건 충족). `DESIGN_DECISION*.md`(판정문 자체)는 위에서 보듯 전부
+순수 기록이 됐지만, 여전히 평면에 남아 있다 — 이동이 시급하지 않다.
 
 ### 필요할 때
 
@@ -118,6 +140,7 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 | [`HARNESS_KNOWHOW.md`](HARNESS_KNOWHOW.md) | Workflow/하네스 설계 실측 노하우 |
 | `../.vault-harness/vault-md-retrieval/AGENT_PROMPT.md` | **검색 절차 전문.** "이미 결정됐나"를 물을 땐 grep이 아니라 이것 |
 | `../concept-gate-e2.2-wt/docs/HANDOFF.md` | E2.2~E2.4 체인(종료)의 상태 |
+| `docs/DESIGN_workspace_file_placement.md` | 실험 폴더 구조 정리 판단 — §0.1이 "검증된 git mv는 허용"으로 정정함 |
 
 **E2.4의 위치(이력)**: 이 실험의 본 목적인 **3-arm 비교
 (CONTROL_REPO vs A_REPO vs CONTRACT_REPO)는 아직 한 번도 실행되지 않았다.**
