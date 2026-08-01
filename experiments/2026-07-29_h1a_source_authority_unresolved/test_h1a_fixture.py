@@ -20,6 +20,7 @@ import hashlib
 import importlib.util
 import inspect
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -50,12 +51,21 @@ def fixture() -> dict:
 
 # --- the surface copy must not drift from its original --------------------
 
-DOCUMENTED_DEVIATIONS = {"ELIGIBILITY_PROFILES", "_eligibility_profile"}
+DOCUMENTED_DEVIATIONS = {
+    "ELIGIBILITY_PROFILES", "_eligibility_profile",
+    "MODEL_PAYLOAD_KEYS", "build_model_payload",
+    "_SELF_REFERENTIAL_DOC_PREFIXES", "_SELF_REFERENTIAL_DOC_NAMES",
+}
 
 
 def test_h1a_surface_deviates_from_e2_4_only_where_documented():
-    """Every function body except the one documented deviation must be
-    byte-identical to E2.4's frozen original."""
+    """Every function body except the documented deviations must be
+    byte-identical to E2.4's frozen original.
+
+    This direction alone is not enough (C2 in the independent review): it
+    only walks E2.4's names, so it would miss something H1a *added* that
+    E2.4 never had. See test_h1a_surface_has_no_undocumented_additions for
+    the other direction."""
     drifted = []
     for name, e24_fn in vars(e24_surface).items():
         if not inspect.isfunction(e24_fn) or name in DOCUMENTED_DEVIATIONS:
@@ -65,6 +75,26 @@ def test_h1a_surface_deviates_from_e2_4_only_where_documented():
         if inspect.getsource(h1a_fn) != inspect.getsource(e24_fn):
             drifted.append(name)
     assert not drifted, f"undocumented drift from E2.4's surface: {drifted}"
+
+
+def test_h1a_surface_has_no_undocumented_additions():
+    """The bidirectional half. Walk H1a's own names: anything that is a
+    function or a public constant and is not in E2.4's module at all must be
+    named in DOCUMENTED_DEVIATIONS -- otherwise it is an addition nobody
+    reviewed against the frozen original."""
+    undocumented = []
+    for name, h1a_val in vars(h1a_surface).items():
+        if name.startswith("_") and name not in DOCUMENTED_DEVIATIONS:
+            continue
+        is_fn = inspect.isfunction(h1a_val)
+        is_const = isinstance(h1a_val, (str, tuple, frozenset, set, dict))
+        if not (is_fn or is_const):
+            continue
+        if name in DOCUMENTED_DEVIATIONS:
+            continue
+        if not hasattr(e24_surface, name):
+            undocumented.append(name)
+    assert not undocumented, f"undocumented addition in the H1a copy: {undocumented}"
 
 
 def test_h1a_surface_constants_match_except_the_documented_one():
@@ -103,19 +133,22 @@ def test_profile_name_does_not_assert_staleness():
 def test_fixture_qualifies_with_tests_actually_run():
     manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=True)
     assert manifest["status"] == "passed"
-    assert len(manifest["evidence_checks"]) == 4
+    assert len(manifest["evidence_checks"]) == 3
     for check in manifest["evidence_checks"]:
         assert check["locator_resolved"], check["evidence_id"]
         assert check["excerpt_exact_match"], check["evidence_id"]
         assert check["text_sha256_verified"], check["evidence_id"]
 
 
-def test_cited_test_is_actually_executed_and_passes():
-    manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=True)
-    ev4 = next(c for c in manifest["evidence_checks"] if c["evidence_id"] == "ev4")
-    assert ev4["eligibility_profile"] == "verified_by_passing_test"
-    assert ev4["verification_refs"], "the R6b test must have been run, not assumed"
-    assert "(not run)" not in ev4["verification_refs"][0]
+def test_source_commit_exists_in_repo_history():
+    """C6: source_commit was previously an unenforced assertion, inherited
+    from E2.4. Confirm it names a real commit object in this repository's
+    history rather than an arbitrary or foreign string."""
+    proc = subprocess.run(
+        ["git", "cat-file", "-e", f"{fixture()['source_commit']}^{{commit}}"],
+        cwd=str(REPO_ROOT), capture_output=True, text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
 
 
 def test_every_evidence_text_is_verbatim_from_its_source():
@@ -137,8 +170,13 @@ CONCEPT, FEATURE = "칼", "철"
 
 
 def test_both_sides_of_the_conflict_are_present():
-    kinds = {i["source_kind"] for i in fixture()["evidence_sources"]}
-    assert {"doc", "code", "test"} <= kinds
+    """The fixture is a 1-vs-1 conflict (independent review #10: an earlier
+    draft's ev4 double-counted the code side, since ev3/ev4 were one
+    authorial act in one commit)."""
+    kinds = [i["source_kind"] for i in fixture()["evidence_sources"]]
+    assert kinds.count("doc") == 2  # ev1 + ev2, one primary + one reinforcement
+    assert kinds.count("code") == 1  # ev3, the sole code-side source
+    assert set(kinds) == {"doc", "code"}
 
 
 def test_conflict_is_instance_bound_on_both_sides():
@@ -146,8 +184,8 @@ def test_conflict_is_instance_bound_on_both_sides():
     other would not be a conflict about *this* feature."""
     items = {i["evidence_id"]: i["text"] for i in fixture()["evidence_sources"]}
     assert CONCEPT in items["ev1"] and FEATURE in items["ev1"], "doc side not bound to 칼/철"
-    assert FEATURE in items["ev4"], "test side not bound to 철"
-    assert "structural_composition" in items["ev4"]
+    assert CONCEPT in items["ev3"] and FEATURE in items["ev3"], "code side not bound to 칼/철"
+    assert "structural_composition" in items["ev3"]
     assert "essential_feature" in items["ev1"]
 
 
@@ -155,8 +193,17 @@ def test_the_two_sides_actually_disagree():
     items = {i["evidence_id"]: i["text"] for i in fixture()["evidence_sources"]}
     doc_claim = "essential_feature" in items["ev1"]
     code_claim = "structural_composition" in items["ev3"]
-    test_claim = "structural_composition" in items["ev4"]
-    assert doc_claim and code_claim and test_claim
+    assert doc_claim and code_claim
+
+
+def test_the_two_sides_share_the_same_sentence_stem():
+    """The independent review's fix for #7/#8: ev1 and ev3 must be the same
+    underlying rule with only the type flipped, not an instance claim on one
+    side answered by an unrelated generic rule on the other."""
+    items = {i["evidence_id"]: i["text"] for i in fixture()["evidence_sources"]}
+    stem = "재료-대상: 철은 칼의 재료"
+    assert stem in items["ev1"]
+    assert stem in items["ev3"]
 
 
 def test_candidate_records_the_repositorys_actual_enforced_state():
@@ -212,12 +259,40 @@ def test_model_payload_carries_no_liveness_or_authority_hint():
         assert token not in blob, token
 
 
-def test_model_payload_exposes_only_the_three_evidence_keys():
+def test_model_payload_exposes_only_the_documented_keys():
     manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=False)
     payload = h1a_surface.build_model_payload(fixture(), manifest)
     assert set(payload) == set(h1a_surface.MODEL_PAYLOAD_KEYS)
     for item in payload["evidence_items"]:
         assert set(item) == set(h1a_surface.MODEL_EVIDENCE_KEYS)
+
+
+def test_model_payload_never_carries_server_response():
+    """C11 blocker: server_response.status=PASS structurally authenticated
+    the code side's answer (a counterfactual flip of the recorded type flips
+    status to NEEDS_CORRECTION). Guard the KEY structurally -- checking
+    MODEL_PAYLOAD_KEYS itself, not scanning the payload for a string -- so
+    an equivalent oracle field under a different name cannot slip back in
+    unnoticed the way a vocabulary scan would miss it."""
+    manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=False)
+    payload = h1a_surface.build_model_payload(fixture(), manifest)
+    assert "server_response" not in h1a_surface.MODEL_PAYLOAD_KEYS
+    assert "server_response" not in payload
+    assert set(payload) == {"candidate_concepts", "evidence_items"}
+
+
+def test_docs_self_referential_paths_are_rejected_as_evidence():
+    """The other half of H1a deviation #1: `docs/` prose is eligible unless
+    it is this experiment's own analysis of itself."""
+    for path in (
+        "docs/feedback/h1a_fixture_review_20260730.md",
+        "docs/HANDOFF.md",
+        "docs/E2.4_ISSUE_REGISTER.md",
+        "docs/H1A_ISSUE_REGISTER.md",
+    ):
+        ref = {"kind": "file_lines", "path": path, "start_line": 1, "end_line": 1}
+        with pytest.raises(h1a_surface.SurfaceError):
+            h1a_surface._eligibility_profile(ref, "doc")
 
 
 def test_builder_metadata_never_reaches_the_payload():

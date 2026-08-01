@@ -5,20 +5,40 @@ H1a carries its own copy rather than editing or importing the original. Load
 it under a unique sys.modules key -- this repo has already had one experiment
 silently execute another's module (E2.4_ISSUE_REGISTER [DONE] #6).
 
-THE ONLY INTENDED DEVIATION from E2.4's _surface.py is the eligibility
-profile for `docs/` prose, which E2.4 does not need and therefore rejects
-outright. H1a's whole subject matter is a documentation-vs-code conflict, so
-without it `qualify_fixture` raises before any fixture can exist.
-test_h1a_fixture.py::test_h1a_surface_deviates_from_e2_4_only_where_documented
-pins that claim by comparing every other constant and function body against
-the original, so an undocumented edit fails loudly instead of drifting.
+THERE ARE TWO INTENDED DEVIATIONS from E2.4's _surface.py, and both are
+enumerated in test_h1a_fixture.py::DOCUMENTED_DEVIATIONS.
+test_h1a_surface_deviates_from_e2_4_only_where_documented pins that claim by
+comparing every other constant and function body against the original, so an
+undocumented edit fails loudly instead of drifting. A second, bidirectional
+test (test_h1a_surface_has_no_undocumented_additions) walks the H1a module's
+own names to catch additions that exist only on this side and were never
+compared at all -- the first test alone only notices things E2.4 has that
+this copy lost or changed, not things this copy gained.
 
-The profile name is deliberately neutral (`repository_prose`, not
-`stale_documentation`). Profile names never reach the model payload -- that
-was measured, and it is why the draft's "leak dilemma" was refuted -- but a
-name asserting staleness would still be the harness recording a judgment it
-has no standing to make, and H1a exists precisely because that judgment is
-the open question.
+1. The eligibility profile for `docs/` prose, which E2.4 does not need and
+   therefore rejects outright. H1a's whole subject matter is a
+   documentation-vs-code conflict, so without it `qualify_fixture` raises
+   before any fixture can exist. The profile name is deliberately neutral
+   (`repository_prose`, not `stale_documentation`) -- profile names never
+   reach the model payload (measured; this is why the draft's "leak dilemma"
+   was refuted), but a name asserting staleness would still be the harness
+   recording a judgment it has no standing to make, and H1a exists precisely
+   because that judgment is the open question. The profile also excludes
+   this experiment's own self-referential paths (docs/feedback/ and named
+   meta-docs about H1a itself) -- those describe the fixture's own
+   conflict and would be a second, structural leak route if ever cited as
+   evidence.
+
+2. MODEL_PAYLOAD_KEYS / build_model_payload no longer forward
+   `server_response`. Independent review 20260730 finding #11: the code
+   side's server_response.status=PASS structurally authenticated the code
+   side's answer (flip the recorded type, status flips to
+   NEEDS_CORRECTION) -- a structural oracle leak, not a vocabulary one, so
+   the fix is removing the key rather than scanning its contents.
+   server_response is retained in the fixture itself (see
+   test_server_response_is_reproducible) so the fixture stays honest about
+   what the repo actually certifies; it simply never reaches
+   build_model_payload's return value.
 
 --- original E2.4 docstring follows ---
 
@@ -109,7 +129,8 @@ FEATURE_TYPES = {
 }
 
 # --- the model-facing surface, enumerated ---
-MODEL_PAYLOAD_KEYS = ("candidate_concepts", "evidence_items", "server_response")
+# H1a deviation #2: no server_response -- see module docstring.
+MODEL_PAYLOAD_KEYS = ("candidate_concepts", "evidence_items")
 MODEL_EVIDENCE_KEYS = ("evidence_id", "source_kind", "text")
 MODEL_CONCEPT_KEYS = ("name", "features")
 MODEL_FEATURE_KEYS = ("feature", "type", "evidence_refs")
@@ -264,6 +285,21 @@ def _excerpt_matches(ref: dict, text: str, repo_root: Path) -> bool:
                                       body, re.MULTILINE) is not None
 
 
+# H1a deviation #1 continued: docs/ paths that describe H1a's own conflict
+# are not eligible evidence -- citing them would let the fixture's own
+# analysis (which names a "correct" side) leak in as if it were ordinary
+# repository prose. This is a denylist, not a vocabulary scan: it blocks the
+# known self-referential locations outright rather than trying to detect
+# "talks about H1a" from content.
+_SELF_REFERENTIAL_DOC_PREFIXES = ("docs/feedback/",)
+_SELF_REFERENTIAL_DOC_NAMES = {
+    "docs/HANDOFF.md",
+    "docs/E2.4_ISSUE_REGISTER.md",
+    "docs/H1A_ISSUE_REGISTER.md",
+    "docs/HARNESS_KNOWHOW.md",
+}
+
+
 def _eligibility_profile(ref: dict, source_kind: str) -> str:
     """Deterministic, from location alone -- never a builder's assertion."""
     if ref["kind"] == "commit" or source_kind == "commit_message":
@@ -276,6 +312,11 @@ def _eligibility_profile(ref: dict, source_kind: str) -> str:
     if path.startswith("conceptgate/"):
         return "current_executable_source"
     if path.startswith("docs/"):
+        if path.startswith(_SELF_REFERENTIAL_DOC_PREFIXES) or path in _SELF_REFERENTIAL_DOC_NAMES:
+            raise SurfaceError(
+                f"{path}: self-referential to this experiment's own analysis, "
+                f"not eligible as evidence about the repository under study."
+            )
         return "repository_prose"
     raise SurfaceError(
         f"{path}: no eligibility profile applies. Sources must be live package "
@@ -373,9 +414,6 @@ def build_model_payload(fixture, qualification_manifest) -> dict:
             }
             for item in fixture["evidence_sources"]
         ],
-        "server_response": {
-            key: fixture["server_response"][key] for key in MODEL_SERVER_RESPONSE_KEYS
-        },
     }
 
 
