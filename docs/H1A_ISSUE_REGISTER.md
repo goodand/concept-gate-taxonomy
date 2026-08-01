@@ -1,6 +1,11 @@
 # H1a 이슈 등록부
 
-- 갱신: **2026-08-01** — 설계 판정 **4건**(+Q5~Q8), 독립 리뷰 **2회**,
+- 갱신: **2026-08-02** — **Q5~Q8 전부 적용 완료.** 조작 span 2문장, 모델
+  대면 type 앵커 제거(+구조적 no-anchor 가드), warrant 기반 select_type/defer
+  규칙, fixture 진짜 1-vs-1. 게이트 그린(H1a 102 passed/1 skipped, E2.4 118
+  불변). 다음 게이트: **독립 리뷰 재실행**(이전 리뷰는 무효) → 통과해야
+  본 코호트 40 trial 승인 요청
+- (이전) 2026-08-01 — 설계 판정 **4건**(+Q5~Q8), 독립 리뷰 **2회**,
   H 계열 worktree 분리. **패턴별 단면은 [`H1A_PROBLEM_ANALYSIS.md`](H1A_PROBLEM_ANALYSIS.md)**
   — 이 문서는 시간순 기록이고 그쪽은 패턴별 분류다. **한쪽만 읽으면 안 된다**
 - (이전) 2026-07-31 — 설계 판정 3건(D-H1a-1~7, Q1·Q2, Q3·Q4) + 사전등록
@@ -320,8 +325,12 @@ provenance 문장을 가리켰다. **Q3=B가 그 서문을 버리라고 했고 �
 
 **주목**: **Q3을 충실히 따랐기 때문에** 생긴 결함이다(패턴 P3).
 
-**해결 유무**: ❌ **미적용.** 판정 = **B**(3번째 문장 제거 → 조작 2문장).
-Q5.1이 E2.4 선행사 복원을 **명시적으로 금지**(앵커를 권위화하므로).
+**해결 유무**: ✅ **적용 완료(2026-08-02)**. 판정 = **B**(3번째 문장 제거 →
+조작 2문장). `_h1a_contract.py::LIVENESS_PRIORITY_CLAUSES["L24_25"]`에서
+제거, `RESIDUAL_TRIPWIRES_KO`에서 대응 두 tripwire도 함께 제거. Q5.1이 E2.4
+선행사 복원을 **명시적으로 금지**했고(앵커를 권위화하므로) — 복원하지 않음.
+`test_l24_25_clause_is_q5s_documented_prefix_of_the_unchanged_e24_original`이
+E2.4 원문(3문장)은 불변이고 우리 사본만 축소됐음을 고정.
 
 ### [DESIGN] Q6 — payload가 답을 건넨다 (blocker)
 
@@ -332,8 +341,15 @@ Q5.1이 E2.4 선행사 복원을 **명시적으로 금지**(앵커를 권위화�
 **검증 근거**: 렌더된 payload 직접 확인. 하네스 자신이 반대 셀을
 "counterfactual artifact"라 부른다.
 
-**해결 유무**: ❌ **미적용.** 판정 = **A**(앵커 제거). **파생: 20건 앵커
-진단이 잴 대상을 잃고 은퇴** → 구조적 no-anchor 가드로 대체.
+**해결 유무**: ✅ **적용 완료(2026-08-02)**. 판정 = **A**(앵커 제거).
+`_h1a_surface.py::build_model_payload`가 이제 `concept_feature_pair`
+(concept/feature/evidence_refs, type 없음)을 방출(deviation #3). **파생: 20건
+앵커 진단이 잴 대상을 잃고 은퇴** — `_h1a_diag*` 4파일 + `h1a-decider.md`를
+`superseded/`로 이동(`superseded/WHY.md`), `PREREGISTRATION.md` §11을
+이력 텍스트로 표시. 구조적 no-anchor 가드
+`assert_no_model_facing_type_anchor`로 대체 — 답 담는 키(`type` 등) 재도입과
+evidence text 밖 bare type 값을 모두 검사, 주입 뮤테이션 테스트로 실패함을
+확인(recall/precision 모두 `test_h1a_fixture.py`에 고정).
 
 ### [DESIGN] Q7 — `defer`의 의미가 이 fixture에 대해 미정의
 
@@ -341,8 +357,11 @@ Q5.1이 E2.4 선행사 복원을 **명시적으로 금지**(앵커를 권위화�
 않다(ev1·ev3 둘 다 지지 기준 충족). **충돌하지만 충분한** 경우를 다루는 조항이
 없다. Q3=B가 규칙 3의 동률 조항을 없애면서 **대체를 두지 않은 공백**(P3).
 
-**해결 유무**: ❌ **미적용.** 판정 = **E**(warrant 기반 정의 — 충돌이라고
-defer를 강요하지 않고, 직접증거가 있다고 select를 강요하지도 않음).
+**해결 유무**: ✅ **적용 완료(2026-08-02)**. 판정 = **E**(warrant 기반 정의 —
+충돌이라고 defer를 강요하지 않고, 직접증거가 있다고 select를 강요하지도
+않음). 판정문이 준 텍스트(3불릿 + tie-breaker 금지 목록)를
+`h1a_prompt_template.md`에 verbatim 삽입, `test_template_carries_q7_tie_breaker_prohibition_list`로
+고정. 코더(`_coder.py`)는 무변경 — `decision`/`selected_type` 2필드만 읽음.
 
 ### [DESIGN] Q8 — fixture가 2-vs-1인데 1-vs-1이라 주장
 
@@ -350,8 +369,11 @@ defer를 강요하지 않고, 직접증거가 있다고 select를 강요하지�
 doc 2 대 code 1. 코드측 `주의:` 문장이 `concept_gate_v7.py:1196-1197`에
 있는데 미포함 — **ev3에서 4줄 아래**다.
 
-**해결 유무**: ❌ **미적용.** 판정 = **B**(ev2 제거 → 진짜 1-vs-1).
-Q8.1: enum 밖 type 이름 노출 **불가**.
+**해결 유무**: ✅ **적용 완료(2026-08-02)**. 판정 = **B**(ev2 제거 → 진짜
+1-vs-1). `fixture_source_authority.json`에서 ev2 삭제, `evidence_refs`
+갱신, `builder_metadata`를 정직하게(doc:1/code:1) 재서술. Q8.1: enum 밖 type
+이름 노출 **불가** — 코드측 `주의:` 문장 미추가. `test_both_sides_of_the_conflict_are_present`,
+`test_fixture_qualifies_with_tests_actually_run`(3→2건) 갱신.
 
 ### [DONE] F7 — 잔여-금지 가드가 영어 금지문을 통과시킴
 
@@ -391,16 +413,15 @@ Q8.1: enum 밖 type 이름 노출 **불가**.
 **이 worktree(`concept-gate-h1-wt`)가 H 계열 정본이다.** `../concept-gate-e2.2-wt`
 에도 H1a 파일이 있으나 사본이다.
 
-1. **[차단선] Q5~Q8 적용** — 4건 전부 미적용이고, 이것만이 실질 차단선이다
-   - Q5=B 조작 span 2문장 축소(`그 판정은…` 제거)
-   - Q6=A 모델 대면 앵커 제거 → `_h1a_diag*` 4파일 은퇴, no-anchor 가드로 대체
-   - Q7=E warrant 규칙 삽입 / Q8=B `ev2` 제거
-   - **프롬프트 template을 자기 파일로 분리**하는 것을 먼저 고려하라 — 지금은
-     Q3 판정문의 fenced block을 `_h1a_contract.py`가 로드하는데, Q5·Q6.1·Q7이
-     그 template을 셋으로 나눠 수정한다. 판정문은 원문 보존 대상이라 편집 불가
-2. **독립 리뷰 재실행** — 프롬프트·payload·fixture가 전부 바뀌므로 2차 리뷰는
-   무효가 된다. 두 리뷰 모두 제작자가 못 본 것을 잡았다(패턴 P6)
-3. 통과해야 동결 → **본 코호트 40 trial**(별도 승인)
+**Q5~Q8 전부 적용 완료(2026-08-02).** `python3 scripts/run_gates.py`가 H1a
+102 passed/1 skipped, E2.4 118 unchanged로 그린. 다음 세션 첫 행동:
+
+1. **[차단선] 독립 리뷰 재실행** — 프롬프트·payload·fixture가 전부 바뀌었으므로
+   2026-08-01 2차 리뷰는 **무효**다. 별도 에이전트, 제작자 결론 미고지,
+   직접 재현 지시. 두 리뷰 모두 제작자가 못 본 것을 잡았다(패턴 P6) — 생략
+   금지
+2. 통과해야 동결 → **본 코호트 40 trial**(별도 승인). 앵커 진단이 없어졌으므로
+   남은 실행은 이것뿐
 
 **실행된 trial: 0건.** 이 조건은 첫 trial과 함께 사라지고, 그때부터 설계
 변경에 재동결 비용이 생긴다.
@@ -409,6 +430,7 @@ Q8.1: enum 밖 type 이름 노출 **불가**.
 
 | 항목 | 상태 |
 |---|---|
+| Q5~Q8 적용분 커밋 | ⬜ 작업 중(Phase 3) — 별도 승인 |
 | 두 브랜치 **푸시** | ⬜ 이번 세션 내내 안 함. 별도 승인 |
 | skills-catalog 승격 | ⬜ `methodology.md` 표 정정 + P3 2번째 에피소드 — 진행 중 |
 | E2.4 브랜치에서 H1a 제거 | ⬜ **선택**(W3) |

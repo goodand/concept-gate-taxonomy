@@ -33,25 +33,30 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 > ⚠️ `../concept-gate-e2.2-wt`에도 H1a 파일이 남아 있다 — 분리 이전 이력을
 > 공유하기 때문이다. **저쪽은 사본이고 여기가 정본이다.** 중복 제거는 미결.
 >
-> **현재 상태: 차단됨. 실행된 trial 0건.**
+> **현재 상태: 차단됨(독립 리뷰 재실행 대기). 실행된 trial 0건.**
 > 설계 판정 4회(D-H1a-1~7 / Q1·Q2 / Q3·Q4 / Q5~Q8), 독립 리뷰 2회.
-> 두 번째 리뷰(2026-08-01)가 **동결 부적합**을 냈다 — blocker 2 + major 7.
-> 그 4건에 대한 외부 판정 Q5~Q8이 도착했으나 **아직 미적용**이다.
+> **Q5~Q8 전부 적용 완료(2026-08-02)** — 아래는 이력.
+> - ✅ **Q5=B** 조작 span 2문장으로 축소 완료. 3번째 문장(`그 판정은 이미
+>   끝났고 너의 범위가 아니다.`) 제거, E2.4 선행사 복원 안 함(Q5.1 금지)
+> - ✅ **Q6=A** 모델 대면 type 앵커 제거 완료 — `concept_feature_pair`로
+>   교체. 20건 앵커 진단(`_h1a_diag*` 4파일)은 `superseded/`로 이동, 구조적
+>   no-anchor 가드(`assert_no_model_facing_type_anchor`)로 대체, 주입
+>   뮤테이션 테스트로 실패 확인
+> - ✅ **Q7=E** warrant 기반 select_type/defer 규칙을 `h1a_prompt_template.md`에
+>   verbatim 삽입 완료
+> - ✅ **Q8=B** `ev2` 제거, fixture 진짜 1-vs-1, `builder_metadata` 정직화
+>   완료
 >
-> **다음 행동**: `DESIGN_DECISION_H1a_review_blockers.md`를 적용한다.
-> - **Q5=B** 조작 span을 2문장으로 축소 — `그 판정은 이미 끝났고 너의 범위가
->   아니다.`를 뺀다. Q3=B가 E2.4 서문을 버리면서 이 문장의 **선행사가
->   사라졌고**, 프롬프트에 남은 유일한 지시 대상이 payload의 앵커라
->   `PROHIBITION_KEPT`만 "앵커는 확정된 판정"으로 읽히게 됐다
-> - **Q6=A 모델 대면 type 앵커 제거** → 20건 앵커 진단이 잴 대상을 잃고
->   은퇴하며, 구조적 no-anchor 가드로 대체된다
-> - **Q7=E** `defer`를 warrant로 정의(충돌이라고 defer를 강요하지 않고,
->   양쪽에 직접 증거가 있다고 select를 강요하지도 않는다)
-> - **Q8=B** `ev2` 제거해 진짜 1-vs-1로(지금은 doc 2 대 code 1인데
->   metadata는 1-vs-1이라고 적혀 있다)
+> 프롬프트 template은 이제 판정문이 아니라 **`h1a_prompt_template.md`**(신규,
+> 평면)에서 로드한다 — Q5·Q6.1·Q7이 셋으로 나눠 수정해야 했기 때문이다.
+> `_h1a_contract.py`의 `DESIGN_DECISION_PATH`가 이 파일을 가리킨다.
 >
-> 적용 후 **독립 리뷰 재실행** — 프롬프트·payload·fixture가 전부 바뀌므로
-> 이전 리뷰는 무효다. 통과해야 동결·실행.
+> `python3 scripts/run_gates.py` 그린 확인함(H1a 102 passed/1 skipped,
+> E2.4 118 불변).
+>
+> **다음 행동: 독립 리뷰 재실행.** 프롬프트·payload·fixture가 전부 바뀌었으므로
+> 2026-08-01 2차 리뷰는 **무효**다. 별도 에이전트, 제작자 결론 미고지, 직접
+> 재현 지시. 통과해야 동결 → 본 코호트 40 trial(별도 승인).
 >
 > 전체 목록·근거·검증 강도: [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md)
 > 리뷰 전문: [`feedback/h1a_fixture_review_20260730.md`](feedback/h1a_fixture_review_20260730.md)
