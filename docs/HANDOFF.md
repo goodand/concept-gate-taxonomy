@@ -1,13 +1,14 @@
-# HANDOFF — ConceptGate 세션 인수인계 (E2 실험 체인)
+# HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
 - 갱신: 2026-07-30
 - 대상: **컨텍스트 없이 이어받는 새 세션**. 이 문서만 읽고 작업을 재개할 수 있게 쓴다.
-- 이 문서는 worktree `concept-gate-e2.2-wt`(브랜치
-  `codex/e2.4-contract-repo-design`)의 최신 상태를 기록한다.
+- 이 문서는 worktree `concept-gate-h1-wt`(브랜치
+  `codex/h1-source-authority`)의 최신 상태를 기록한다.
+- **E2.2~E2.4 체인의 상태는 여기가 아니라** `../concept-gate-e2.2-wt/docs/HANDOFF.md`.
 - **파일을 어디서 찾을지 모르겠으면** 먼저 [`WORKSPACE_NAVIGATION.md`](WORKSPACE_NAVIGATION.md)를
   읽어라 — 저장소/worktree 구조, 문서 종류별 분류 체계, 탐색 명령 레시피가 있다.
 - **새 실험을 설계하기 전에** 메인 저장소 체크아웃의
-  `../concept-gate-taxonomy/docs/EXPERIMENT_METHODOLOGY.md`를 읽어라
+  `docs/EXPERIMENT_METHODOLOGY.md`를 읽어라(2026-08-01 병합으로 이 worktree에도 있다)
   (7개 규칙: 동결/운영로그 분리, 폴더 규약, provenance 계약, worktree 격리,
   비-git 감사본, 교훈 승격, 독립 재현 검증).
 
@@ -19,26 +20,38 @@ M1(relation.is_a certificate) 검증 실험 라인을 진행 중이다.
 E2.2.1(NO_GO) → E2.2.2(GO) → E2.2.3(OFAT, A_ONLY 단독 충분) →
 E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중, 차단됨)**.
 
-> ## ⏱️ 지금 활성 작업은 E2.4가 아니라 **H1a**다
+> ## 📍 이 worktree가 H 계열의 정본이다 (2026-08-01 분리)
 >
-> **E2.4/H3는 2026-07-30 종료됐다**(존재 주장, D-H3C). 아래 §4·§11의 E2.4
-> 서술은 **완료된 이력**이지 할 일이 아니다.
+> **worktree** `concept-gate-h1-wt` / **브랜치** `codex/h1-source-authority`.
+> H1a와 이후 H1b·H2… 가 여기서 산다.
 >
-> **현재 활성 실험**: `experiments/2026-07-29_h1a_source_authority_unresolved/`
-> — 계약문에서 liveness 재판정 금지 문장 하나를 뺐을 때 select/defer 행동이
-> 달라지는지 보는 2-arm 서술적 실험.
+> **왜 분리했나**: 2026-07-29 운영 지시가 H1a를 "**별도**
+> source_authority_unresolved 실험"이라고 명시했는데 E2.x worktree에 얹혀
+> 있었다. `EXPERIMENT_METHODOLOGY.md` §4 위반이라 분리했다 — "새 실험 계열을
+> 시작할 때는 새 worktree를 만들지, 기존 worktree에 무관한 실험을 얹지 않는다."
 >
-> **상태: 차단됨.** 설계 판정·사전등록·행동 코더는 끝났고 fixture도 만들었으나,
-> **독립 리뷰가 동결 부적합 판정**을 냈다(blocker 1 + major 5).
+> ⚠️ `../concept-gate-e2.2-wt`에도 H1a 파일이 남아 있다 — 분리 이전 이력을
+> 공유하기 때문이다. **저쪽은 사본이고 여기가 정본이다.** 중복 제거는 미결.
 >
-> **blocker**: 조작 대상인 금지 문장이 계약문에 **두 곳**에 있는데 설계는
-> 첫 번째만 지운다. 두 번째가 더 명시적이라 `PROHIBITION_REMOVED` arm이
-> 여전히 같은 행동을 금지한다 → **조작 무효.** 규정된 byte-level diff
-> 테스트는 이 상황을 **통과해버린다**.
+> **현재 상태: 차단됨. 실행된 trial 0건.**
+> 설계 판정 4회(D-H1a-1~7 / Q1·Q2 / Q3·Q4 / Q5~Q8), 독립 리뷰 2회.
+> 두 번째 리뷰(2026-08-01)가 **동결 부적합**을 냈다 — blocker 2 + major 7.
+> 그 4건에 대한 외부 판정 Q5~Q8이 도착했으나 **아직 미적용**이다.
 >
-> **다음 행동**: `DESIGN_REQUEST_H1a_manipulation_scope.md`를 외부 설계
-> 담당에게 전달(파일 하나로 자족형) → Q1 판정 대기. 판정 전에는 프롬프트
-> 생성·해시 동결·trial 실행 **불가**. 그 사이 [FIX] 9건은 적용 가능.
+> **다음 행동**: `DESIGN_DECISION_H1a_review_blockers.md`를 적용한다.
+> - **Q5=B** 조작 span을 2문장으로 축소 — `그 판정은 이미 끝났고 너의 범위가
+>   아니다.`를 뺀다. Q3=B가 E2.4 서문을 버리면서 이 문장의 **선행사가
+>   사라졌고**, 프롬프트에 남은 유일한 지시 대상이 payload의 앵커라
+>   `PROHIBITION_KEPT`만 "앵커는 확정된 판정"으로 읽히게 됐다
+> - **Q6=A 모델 대면 type 앵커 제거** → 20건 앵커 진단이 잴 대상을 잃고
+>   은퇴하며, 구조적 no-anchor 가드로 대체된다
+> - **Q7=E** `defer`를 warrant로 정의(충돌이라고 defer를 강요하지 않고,
+>   양쪽에 직접 증거가 있다고 select를 강요하지도 않는다)
+> - **Q8=B** `ev2` 제거해 진짜 1-vs-1로(지금은 doc 2 대 code 1인데
+>   metadata는 1-vs-1이라고 적혀 있다)
+>
+> 적용 후 **독립 리뷰 재실행** — 프롬프트·payload·fixture가 전부 바뀌므로
+> 이전 리뷰는 무효다. 통과해야 동결·실행.
 >
 > 전체 목록·근거·검증 강도: [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md)
 > 리뷰 전문: [`feedback/h1a_fixture_review_20260730.md`](feedback/h1a_fixture_review_20260730.md)
