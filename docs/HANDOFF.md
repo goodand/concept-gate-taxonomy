@@ -56,6 +56,64 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 > 전체 목록·근거·검증 강도: [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md)
 > 리뷰 전문: [`feedback/h1a_fixture_review_20260730.md`](feedback/h1a_fixture_review_20260730.md)
 
+
+## 📚 새 세션이 읽어야 할 것 — 전수 목록
+
+**이 표가 진입점이다.** 아래 밖의 문서는 읽지 않아도 작업을 재개할 수 있다.
+
+### 먼저 (순서대로)
+
+| # | 문서 | 왜 |
+|---|---|---|
+| 1 | 이 파일 | 지금 상태·다음 행동 |
+| 2 | [`WORKSPACE_NAVIGATION.md`](WORKSPACE_NAVIGATION.md) | **함정 4개**와 탐색 절차. §0 함정 4(검색의 침묵)는 이 세션에 두 번 걸린 것 |
+| 3 | [`EXPERIMENT_METHODOLOGY.md`](EXPERIMENT_METHODOLOGY.md) | 방법론 7규칙. §4 worktree 격리가 이 worktree가 존재하는 이유 |
+
+### 이슈 전체 — **두 문서를 다 읽어야 한다**
+
+| 문서 | 단면 |
+|---|---|
+| [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md) | **시간순** 기록(§A~§F) |
+| [`H1A_PROBLEM_ANALYSIS.md`](H1A_PROBLEM_ANALYSIS.md) | **패턴별** 단면 — 반복 형태 7종, 해결 18/미해결 8 |
+
+같은 사건의 다른 자름이다. 한쪽만 읽으면 "무엇이 반복되는가"(전자) 또는
+"언제 무엇이 있었나"(후자)를 놓친다.
+
+### 외부 설계 판정 4건 — **전부 구속력 유지**
+
+| 파일 | 범위 |
+|---|---|
+| `DESIGN_DECISION.md` | D-H1a-1~7 — 2-arm 서술적 실험 확정 |
+| `DESIGN_DECISION_H1a_manipulation_scope.md` | Q1=B 조작 재정의 / Q2=B 앵커 진단 |
+| `DESIGN_DECISION_H1a_prompt_surface.md` | Q3=B 전용 프롬프트 / Q4 승인 |
+| `DESIGN_DECISION_H1a_review_blockers.md` | **Q5~Q8 — 미적용, 다음 작업** |
+
+> ⚠️ **`DESIGN_DECISION_H1a_prompt_surface.md`는 문서가 아니라 실행 입력이다.**
+> 그 파일의 첫 ` ```text ` fenced block이 **모델 대면 프롬프트 template 원본**이고
+> `_h1a_contract.py:56`이 그것을 로드한다. 판정문은 원문 보존 대상이라 편집할 수
+> 없으므로, Q5·Q6.1·Q7을 적용하려면 **template을 자기 파일로 먼저 분리**해야 한다.
+> 나머지 판정문 3건은 순수 기록이고, **이름·위치로는 구분되지 않는다.**
+
+### 독립 리뷰 2회 — 둘 다 제작자가 못 본 것을 잡았다
+
+| 파일 | 결과 |
+|---|---|
+| [`feedback/h1a_fixture_review_20260730.md`](feedback/h1a_fixture_review_20260730.md) | blocker 1 + major 5 → C2~C10 반영 |
+| [`feedback/h1a_prompt_review_20260801.md`](feedback/h1a_prompt_review_20260801.md) | blocker 2 + major 7 → **Q5~Q8로 상신, 미적용** |
+
+두 리뷰 모두 지시에 "**제작자의 테스트를 증거로 받지 말고 직접 재현하라**"가
+있었고, 두 번 다 제작자 테스트는 통과 중이었다.
+
+### 필요할 때
+
+| 문서 | 언제 |
+|---|---|
+| `experiments/…/README.md` · `PREREGISTRATION.md` | 실험 설계·동결된 판정 장치 |
+| [`DIRECTIVE_2026-07-29_operations_change.md`](DIRECTIVE_2026-07-29_operations_change.md) | 운영 지시 원문. H1a가 "별도 실험"인 근거 |
+| [`HARNESS_KNOWHOW.md`](HARNESS_KNOWHOW.md) | Workflow/하네스 설계 실측 노하우 |
+| `../.vault-harness/vault-md-retrieval/AGENT_PROMPT.md` | **검색 절차 전문.** "이미 결정됐나"를 물을 땐 grep이 아니라 이것 |
+| `../concept-gate-e2.2-wt/docs/HANDOFF.md` | E2.2~E2.4 체인(종료)의 상태 |
+
 **E2.4의 위치(이력)**: 이 실험의 본 목적인 **3-arm 비교
 (CONTROL_REPO vs A_REPO vs CONTRACT_REPO)는 아직 한 번도 실행되지 않았다.**
 **fixture 준비 단계(Phase 0~3)는 2026-07-28에 완료·인증됐다** — 3개
@@ -803,3 +861,7 @@ trial은 실제로 성공했는데, 나머지가 `"session limit, resets HH:MMpm
 | `trials_raw.json` | 실행 후 | `{trial_id: 출력}` |
 | `trials.json` | `record` 후 | manifest + 출력 + 스키마 위반 |
 | `cohort_score.json` | `_score.py` 후 | class별 clean_rate, 밴드, escalate cell, `protocol_deviation` |
+
+---
+
+
