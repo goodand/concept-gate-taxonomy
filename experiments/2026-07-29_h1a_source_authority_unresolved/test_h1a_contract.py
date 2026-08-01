@@ -195,6 +195,26 @@ def test_guard_is_case_insensitive_on_the_english_surface():
         h1a_contract.assert_no_residual_prohibition(injected)
 
 
+# --- independent review 20260802: three paraphrases that previously slipped
+# past the guard undetected, kept as regressions -------------------------
+
+INDEPENDENT_REVIEW_20260802_PARAPHRASES = (
+    "Treat the packet record as final; do not second-guess which document "
+    "is fresher or carries more weight.",
+    "Do not treat the code as having superseded the documentation.",
+    "That determination has already been made for you and is not something "
+    "you need to figure out.",
+)
+
+
+@pytest.mark.parametrize("sentence", INDEPENDENT_REVIEW_20260802_PARAPHRASES)
+def test_guard_catches_the_reviewers_20260802_paraphrases(sentence):
+    injected = template().replace(
+        "or external sources.", f"or external sources. {sentence}", 1)
+    with pytest.raises(AssertionError):
+        h1a_contract.assert_no_residual_prohibition(injected)
+
+
 def test_guard_precision_the_clean_template_passes():
     """Precision. Recall without precision would be a guard that fires on
     everything, which is the same as no guard."""

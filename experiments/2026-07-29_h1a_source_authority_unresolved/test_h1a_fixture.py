@@ -330,6 +330,20 @@ def test_no_anchor_guard_catches_a_bare_type_value_outside_evidence_text(bad_typ
         h1a_surface.assert_no_model_facing_type_anchor(payload)
 
 
+def test_no_anchor_guard_catches_a_type_name_embedded_in_prose():
+    """Independent review 20260802: an exact-equality check on the string
+    passed a type name embedded in an ordinary sentence undetected, even
+    though that sentence gives exactly the no-cost answer path Q6 exists to
+    remove. Regression, kept as substring containment."""
+    manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=False)
+    payload = h1a_surface.build_model_payload(fixture(), manifest)
+    payload["concept_feature_pair"]["note"] = (
+        "the recorded classification is structural_composition per the repo"
+    )
+    with pytest.raises(h1a_surface.SurfaceError):
+        h1a_surface.assert_no_model_facing_type_anchor(payload)
+
+
 def test_no_anchor_guard_does_not_fire_on_type_names_inside_evidence_text():
     """Precision: the allowed type names legitimately appear inside
     evidence_items[].text (that is the whole conflict H1a observes). A guard

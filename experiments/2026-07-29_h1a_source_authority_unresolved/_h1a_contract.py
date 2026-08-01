@@ -145,7 +145,30 @@ RESIDUAL_TRIPWIRES_EN = (
     "outside the model's scope",
     "not your scope",
     "not within your scope",
+    # ADDED 2026-08-02 -- independent review demonstrated three further
+    # paraphrases of the same prohibition slip past the list above
+    # undetected (none of them repeat the seven propositions' wording):
+    #   "do not second-guess which document is fresher or carries more weight"
+    #   "do not treat the code as having superseded the documentation"
+    #   "that determination has already been made for you and is not
+    #    something you need to figure out"
+    "second-guess", "carries more weight", "fresher",
+    "superseded the documentation",
+    "already been made for you", "not something you need to figure out",
 )
+
+# KNOWN LIMITATION, not fixed by the addition above: this list is a closed
+# enumeration of phrasings, not a semantic check, so it structurally can only
+# catch paraphrases someone has already thought of. Every addition to this
+# tuple has been reactive -- one injection caught, phrases added, guard
+# closed for that wording only. Treat "the guard passes" as "no known
+# paraphrase was tried," never as "no prohibition is present." A hand-edit to
+# `h1a_prompt_template.md` reintroducing this prohibition in genuinely novel
+# wording would still land in both arms undetected by this guard AND by the
+# arm-diff test (which only proves KEPT == REMOVED + the one known clause).
+# Closing this properly needs a semantic check (e.g. an LLM-based reviewer of
+# the rendered template against the prohibited-meaning list), which is out of
+# scope for this module.
 
 RESIDUAL_TRIPWIRES = RESIDUAL_TRIPWIRES_KO + RESIDUAL_TRIPWIRES_EN
 

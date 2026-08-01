@@ -41,12 +41,22 @@ H1a는 같은 자리에 있다. 따라서 **결과를 보기 전에** 허용 결
 알았기 때문이다.
 
 **null 결론은 진단 게이트(§11)를 통과한 뒤에만, 그리고 그때도 좁게만
-보고할 수 있다.** 판정문 원문:
+보고할 수 있다.** 판정문 원문(이력 보존, 아래 갱신 주 참조):
 
 > Under this fixed packet, fixed source order, fixed anchor, model,
 > transport, and parameters, no arm difference was observed; the anchor
 > diagnostic did not detect gross ceiling behavior under the preregistered
 > perturbation.
+
+> **⚠️ 갱신 (2026-08-02, 독립 리뷰 finding #3 — minor):** 이 문장은 Q2의
+> 20건 anchor 진단을 전제한다. `§11.0`(Q6=A)이 그 진단을 "unnecessary and
+> inapplicable"로 은퇴시켰고, 지금 payload에는 앵커 자체가 없다. 따라서
+> "fixed anchor"·"the anchor diagnostic did not detect..."는 더 이상 참인
+> 서술이 아니다. **이 문장을 이제부터 verbatim 인용해 null을 보고하지
+> 말 것** — 대신 다음 형태로 보고한다: "이 고정 packet(앵커 없음), 고정
+> source order, 고정 model·transport·parameters 아래에서 arm 간 차이가
+> 관측되지 않았다; §11.0의 구조적 no-anchor 가드가 실행 전 통과했다." 위
+> 원문은 Q2 시절의 게이트 문구가 무엇이었는지 보여주는 이력으로만 남긴다.
 
 **"조작이 일반적으로 효과가 없다"는 식으로 보고할 수 없다.**
 

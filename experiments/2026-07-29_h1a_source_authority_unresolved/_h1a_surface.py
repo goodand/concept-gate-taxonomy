@@ -454,9 +454,15 @@ def assert_no_model_facing_type_anchor(model_payload: dict) -> None:
     1. no key anywhere in the payload (recursively) is an answer-bearing key
        name (ANSWER_BEARING_KEYS) -- catches a `type`/`selected_type`/etc key
        reappearing anywhere, not just at the top level.
-    2. no value anywhere in the payload equals an allowed type name, UNLESS
-       it occurs inside an evidence_items[].text string (where a type name is
-       legitimate content) or inside the allowed-value list itself.
+    2. no value anywhere in the payload CONTAINS an allowed type name as a
+       substring, UNLESS it occurs inside an evidence_items[].text string
+       (where a type name is legitimate content). Substring, not exact
+       equality -- independent review 20260802 finding: an exact-equality
+       check ("is this string == 'structural_composition'") passed a type
+       name embedded in an ordinary sentence
+       (e.g. "the recorded classification is structural_composition per the
+       repo") completely undetected, even though that sentence gives exactly
+       the no-cost path to select_type that Q6 exists to remove.
     """
     allowed_types = set(FEATURE_TYPES)
     evidence_texts = {
@@ -479,11 +485,12 @@ def assert_no_model_facing_type_anchor(model_payload: dict) -> None:
         elif isinstance(node, str):
             if in_evidence_text or node in evidence_texts:
                 return
-            if node in allowed_types:
-                raise SurfaceError(
-                    f"no-anchor guard: bare type value {node!r} present "
-                    f"outside evidence_items[].text"
-                )
+            for allowed in allowed_types:
+                if allowed in node:
+                    raise SurfaceError(
+                        f"no-anchor guard: type value {allowed!r} present "
+                        f"inside string {node!r}, outside evidence_items[].text"
+                    )
 
     walk(model_payload)
 
