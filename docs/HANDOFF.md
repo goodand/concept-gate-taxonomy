@@ -19,26 +19,30 @@ M1(relation.is_a certificate) 검증 실험 라인을 진행 중이다.
 E2.2.1(NO_GO) → E2.2.2(GO) → E2.2.3(OFAT, A_ONLY 단독 충분) →
 E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중, 차단됨)**.
 
-> ## ⏱️ 지금 활성 작업은 E2.4가 아니라 **H1a**다
+> ## 🚚 H1a는 이 worktree를 떠났다 (2026-08-01)
 >
-> **E2.4/H3는 2026-07-30 종료됐다**(존재 주장, D-H3C). 아래 §4·§11의 E2.4
-> 서술은 **완료된 이력**이지 할 일이 아니다.
+> **H1a 작업은 `../concept-gate-h1-wt`(브랜치 `codex/h1-source-authority`)에서
+> 계속된다.** 이 worktree에서 H1a를 이어받지 마라.
 >
-> **현재 활성 실험**: `experiments/2026-07-29_h1a_source_authority_unresolved/`
-> — 계약문에서 liveness 재판정 금지 문장 하나를 뺐을 때 select/defer 행동이
-> 달라지는지 보는 2-arm 서술적 실험.
+> **왜 옮겼나**: H1a는 2026-07-29 운영 지시가 "**별도** source_authority_unresolved
+> 실험"이라고 명시한 **새 계열**인데 E2.x worktree에 얹혀 있었다.
+> `EXPERIMENT_METHODOLOGY.md` §4가 이것을 금지한다 — "새 실험 계열을 시작할
+> 때는 새 worktree를 만들지, 기존 worktree에 무관한 실험을 얹지 않는다."
+> H1b·H2가 오면 반복될 문제라 지금 분리했다.
 >
-> **상태: 차단됨.** 설계 판정·사전등록·행동 코더는 끝났고 fixture도 만들었으나,
-> **독립 리뷰가 동결 부적합 판정**을 냈다(blocker 1 + major 5).
+> **이 브랜치(`codex/e2.4-contract-repo-design`)가 담는 것**: E2.2~E2.4 체인.
+> **E2.4/H3는 2026-07-30 종료**(존재 주장, D-H3C). 아래 §4·§11의 E2.4 서술은
+> **완료된 이력**이지 할 일이 아니다.
 >
-> **blocker**: 조작 대상인 금지 문장이 계약문에 **두 곳**에 있는데 설계는
-> 첫 번째만 지운다. 두 번째가 더 명시적이라 `PROHIBITION_REMOVED` arm이
-> 여전히 같은 행동을 금지한다 → **조작 무효.** 규정된 byte-level diff
-> 테스트는 이 상황을 **통과해버린다**.
+> ⚠️ **아직 파일이 양쪽에 다 있다.** 분리 커밋(`e0b8fd9`)까지의 이력을 두
+> 브랜치가 공유하므로 `experiments/2026-07-29_h1a_source_authority_unresolved/`가
+> 여기에도 남아 있다. **여기 것은 사본이다** — H1a의 정본은 `../concept-gate-h1-wt`
+> 쪽이다. 중복 제거는 미결(§아래 "미결 구조 작업").
 >
-> **다음 행동**: `DESIGN_REQUEST_H1a_manipulation_scope.md`를 외부 설계
-> 담당에게 전달(파일 하나로 자족형) → Q1 판정 대기. 판정 전에는 프롬프트
-> 생성·해시 동결·trial 실행 **불가**. 그 사이 [FIX] 9건은 적용 가능.
+> **H1a 상태 요약**(상세는 그쪽 worktree의 `docs/H1A_ISSUE_REGISTER.md`):
+> 설계 판정 4회(Q1~Q8), 독립 리뷰 2회. 두 번째 리뷰가 **동결 부적합**
+> (blocker 2 + major 7)을 냈고 그 4건에 대한 판정(Q5~Q8)이 도착했으나
+> **아직 미적용**. trial 실행 **0건**.
 >
 > 전체 목록·근거·검증 강도: [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md)
 > 리뷰 전문: [`feedback/h1a_fixture_review_20260730.md`](feedback/h1a_fixture_review_20260730.md)
@@ -790,3 +794,25 @@ trial은 실제로 성공했는데, 나머지가 `"session limit, resets HH:MMpm
 | `trials_raw.json` | 실행 후 | `{trial_id: 출력}` |
 | `trials.json` | `record` 후 | manifest + 출력 + 스키마 위반 |
 | `cohort_score.json` | `_score.py` 후 | class별 clean_rate, 밴드, escalate cell, `protocol_deviation` |
+
+---
+
+## 미결 구조 작업 (2026-08-01)
+
+H 계열을 `concept-gate-h1-wt`로 분리했으나 **중복 제거는 하지 않았다.**
+
+| 항목 | 상태 |
+|---|---|
+| 새 worktree + 브랜치 생성 | ✅ `concept-gate-h1-wt` / `codex/h1-source-authority` |
+| main 5커밋 병합(방법론 문서 유입) | ✅ `e0b8fd9` |
+| 이 브랜치에서 H1a 파일 제거 | ⬜ **미결** — 25파일 684KB가 양쪽에 중복 |
+| H1a 전용 docs 이관 | ⬜ 미결 — `H1A_ISSUE_REGISTER.md`, `feedback/h1a_*.md` 3건, `DESIGN_workspace_file_placement.md` |
+| MOC 재생성 | ⬜ 미결 — vault가 새 worktree를 아직 인덱싱 안 함 |
+
+**중복이 왜 문제인가**: 검색이 같은 문서를 두 경로에서 만난다. 검증된 retrieval
+규율이 "동일 SHA-256 문서는 replica로 묶기"를 요구하는 이유이고, 지금은 그
+묶음을 사람이 매번 해야 한다.
+
+**왜 아직 안 했나**: 파일 제거가 docs 6건의 참조 정리까지 연쇄하고, 그중
+일부는 H 브랜치로 **이동**해야 하는지 **양쪽 유지**해야 하는지가 갈린다
+(`E2.4_ISSUE_REGISTER.md`는 H1a를 참조하지만 E2.4 소유다). 사용자 판단 대기.
