@@ -97,6 +97,34 @@ venv/bin/python scripts/run_gates.py     # 전부 그린이어야 머지
 FAIL이다 — 그러지 않으면 환경 의존 테스트 하나가 같은 suite의 실제 회귀를
 가린다.
 
+## 무언가를 찾을 때 — grep으로 끝내지 마라
+
+**`rg`/`grep`은 "무엇이 어디 있나"엔 충분하지만 "이건 이미 결정됐나"엔 답하지
+못한다.** 결정 문서의 제목이 네 질문의 어휘를 하나도 포함하지 않을 수 있기
+때문이다. 2026-08-01 실측: 활성 폴더 정리를 설계하며 "디렉토리 정리 /
+DESIGN_DECISION / canonical"로 훑었으나 이미 채택된 결정
+(`notes/audits/vault/symlink-vs-moc-2026-07-30.md`)이 안 걸렸다 — 그 문서
+제목이 "Format storage, symlink views, and MOC validation"이라 교집합이 0.
+그 사이 쓴 설계는 채택된 결정과 정면 충돌했다. **backlink 1홉으로 나왔다.**
+
+검색이 빗나가면 **키워드를 바꾸지 말고 그래프를 따라가라**(실측 recall:
+0.688 → pool refill 0.812 → graph walk 0.958 → 1.000):
+
+```bash
+obsidian read      path="notes/…/문서.md"     # 반드시 path=, file=<basename> 금지
+obsidian backlinks path="…" counts format=json
+obsidian links     path="…"
+```
+
+`file=<basename>`는 worktree 간 동명 파일(`HANDOFF.md` 등)을 조용히 잘못
+해석한다. CLI를 못 쓰면 backlink를 **추정하지 말고** "rg-only"라고 명시하라.
+
+절차 전문은 이미 있고 검증됐다. 다시 만들지 마라 —
+`../.vault-harness/vault-md-retrieval/AGENT_PROMPT.md`(Required Procedure),
+`multiturn_retrieval.py "QUERY" --policy recall-first-v2 --max-turns 4`.
+탐색 레시피와 함정 4개는 `docs/WORKSPACE_NAVIGATION.md`.
+
+
 ## Git
 
 - Do NOT commit without explicit permission
