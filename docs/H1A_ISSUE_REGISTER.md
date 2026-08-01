@@ -430,10 +430,26 @@ Q8.1이 code측에 대해 이미 금지한 것과 대칭인 문제. code측 반�
 충돌한다. 즉 **개수를 안 늘리고는 어느 쪽도 깨끗하게 못 고친다** — 코드
 결함이 아니라 실제 저장소 텍스트의 구조적 한계다.
 
-**해결 유무**: 🔶 **상신됨.** `DESIGN_REQUEST_H1a_evidence_symmetry.md`
-작성 완료(2026-08-02), 인용 3건 실측 대조 완료. 옵션 A(한계로 선언·진행)
-/ B(양쪽 enum 밖 노출 허용, Q8.1 재판정) / C(code측 반박절 트림) / D(다른
-개념/속성 쌍으로 fixture 재구성) / E. 아직 **미발송**(사용자 확인 대기).
+**해결 유무**: 🔶 **판정 도착, 미적용.** 요청서
+(`correspondence/DESIGN_REQUEST_H1a_evidence_symmetry.md`) 작성 완료
+2026-08-02, 인용 3건 실측 대조 완료. **판정 도착 확인함(2026-08-02)**:
+`notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`(아직 저장소로 미반입,
+아래 참조). **Q9=A** — fixture/코드 **무변경**, byte-faithful 1-vs-1
+그대로 유지. 대신 `PREREGISTRATION.md`에 판정문 Q9.1이 준 정확한 문구를
+그대로 **L3**로 등록. Q9.2: Q8.1(enum 밖 노출 금지) 구속력 유지 재확인.
+실험 진행 여부: **계속**.
+
+**다음 세션이 할 일(운영 세션 의견, 미실행 — 상세는 `HANDOFF.md` 배너)**:
+1. `notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`를 저장소로 반입 —
+   기존 판정문 명명 규칙(`DESIGN_DECISION_H1a_evidence_symmetry.md`,
+   H1a는 소문자 a)에 맞춰 `experiments/2026-07-29_h1a_source_authority_unresolved/`에
+   복사, **byte-identical 대조 후** notes 원본은 그대로 둔다(원문 보존)
+2. `PREREGISTRATION.md`에 L3를 L1·L2와 같은 자리에 **판정문 원문
+   그대로**(의역 금지) 추가
+3. fixture·코드는 손대지 않는다 — Q9=A가 명시적으로 무변경을 요구
+4. 4차 독립 리뷰 필요 여부 재판단 — 표면(prompt/payload/fixture)이 안
+   바뀌므로 운영 세션 의견은 생략 가능이나 최종 판단은 사람 몫
+5. 완료 후 동결 → 본 코호트 40 trial(별도 승인)로 진행 가능
 
 ---
 
@@ -445,6 +461,8 @@ Q8.1이 code측에 대해 이미 금지한 것과 대칭인 문제. code측 반�
 | W2 | 이름 3층 불일치(dir e2.2 / branch e2.4 / work H1a). §4 "새 계열은 새 worktree" 위반 | `git worktree list` + §4 원문 | ✅ `concept-gate-h1-wt` / `codex/h1-source-authority` 분리 |
 | W3 | H1a가 두 worktree에 중복 | MOC 12건씩 이중 등재 | ⚠️ **선택.** vault `duplicate-register.md`가 "정본 1 + replica" 로 **이미 처리**(214 groups) |
 | W4 | 검증된 검색 절차가 존재하나 **저장소·워크스페이스 어디서도 안 가리킴** | `grep -rn 'AGENT_PROMPT\|multiturn_retrieval'` → **0건** | ✅ 워크스페이스 `CLAUDE.md` Retrieval Order + `WORKSPACE_NAVIGATION.md` §4.0·§0 함정 4 |
+| W5 | Phase 5 구조 정리 착수 전, 계획이 이미 채택된 결정("활성 경로 불변")과 충돌하는 것으로 보였음(§0.1 배경) | `DESIGN_workspace_file_placement.md` §4 원표 확인 → "활성 실험 폴더 내 이동: ❌" | ✅ 원본 감사 문서 전문 재독으로 **그 표 자체가 과잉 일반화**였음을 발견, §0.1로 정정(검증된 `git mv`는 허용). `DESIGN_REQUEST*.md` 6건 → `correspondence/`(rename-only, 0/0 diff 확인) |
+| W6 | 원래 계획(Phase 6)이 `docs/EXTERNAL_RULINGS.md` 신설을 제안했음 | `DESIGN_workspace_file_placement.md` §1 재확인 — 이미 "❌ 불필요, `canonical:` frontmatter가 같은 정보를 파일 단위로 기계가독 형태로 담는다"로 결론남 | ✅ **의도적으로 만들지 않음.** `WORKSPACE_NAVIGATION.md` §2에 대신 "외부 설계 판정"/"외부 설계 요청" 두 문서 종류를 표에 등재, §3에 "판정문이 코드 입력일 수 있다" grep 경고 추가 |
 
 ---
 

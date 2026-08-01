@@ -60,9 +60,30 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 > 잔여 1건은 코드 결함이 아니라 fixture 내용 설계 질문이라
 > **Q9로 상신**(`correspondence/DESIGN_REQUEST_H1a_evidence_symmetry.md`).
 >
-> **다음 행동: Q9 판정 수신 대기(아직 미발송).** 판정 도착 후 fixture가
-> 바뀌면 재테스트, 바뀌지 않으면(A안: 한계로만 기록) 그대로 동결 →
-> 본 코호트 40 trial(별도 승인).
+> **Q9 판정 도착 확인함(2026-08-02, `notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`).
+> 아직 미적용 — 토큰 소진으로 이번 세션은 의견만 남긴다.**
+>
+> 판정: **Q9=A** — fixture 무변경(byte-faithful 1-vs-1 유지), 비대칭은
+> `PREREGISTRATION.md`에 **L3**로 선언. Q9.1이 L3 정확한 문구를 줬고,
+> Q9.2는 Q8.1(enum 밖 노출 금지) 구속력 유지를 재확인. "실험 진행 여부:
+> 계속" — fixture/코드 변경 없음, 문구 추가만 필요한 **저위험 판정**.
+>
+> **다음 세션 의견(운영 세션, 미실행)**:
+> 1. `PREREGISTRATION.md`에 L1·L2와 같은 자리에 **Q9.1의 L3 텍스트를
+>    byte-for-byte 그대로** 추가한다(판정문이 "정확한 문구"라고 명시했으므로
+>    의역하지 말 것).
+> 2. `H1A_ISSUE_REGISTER.md`의 Q9 항목을 "🔶 상신됨"에서 "✅ 적용
+>    완료(Q9=A, L3 등록)"로 갱신.
+> 3. **fixture·코드는 건드리지 않는다** — 판정이 명시적으로 "keep the
+>    byte-faithful 1-vs-1 evidence packet"이라 했다. Q5~Q8 때처럼 재테스트가
+>    필요한 변경이 아니다.
+> 4. L3 등록 후 **4차 독립 리뷰가 필요한지 재판단**: 지금까지 관행상
+>    "표면이 바뀌면 재리뷰"였는데, 이번엔 표면(prompt/payload/fixture)이
+>    바뀌지 않고 사전등록 문서에 한계 선언만 추가되므로, **개인적으로는
+>    생략 가능하다고 본다** — 단, 3차 리뷰가 지적한 사안 자체에 대한
+>    판정이므로 최종 판단은 사람이 하길 권한다.
+> 5. 위 완료 후 **동결 → 본 코호트 40 trial**로 넘어갈 수 있다(그래도
+>    trial 실행 자체는 별도 승인 대상).
 >
 > 전체 목록·근거·검증 강도: [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md)
 > 리뷰 전문: [`feedback/h1a_fixture_review_20260730.md`](feedback/h1a_fixture_review_20260730.md)
@@ -90,7 +111,7 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 같은 사건의 다른 자름이다. 한쪽만 읽으면 "무엇이 반복되는가"(전자) 또는
 "언제 무엇이 있었나"(후자)를 놓친다.
 
-### 외부 설계 판정 4건 — **전부 구속력 유지, 전부 적용 완료**
+### 외부 설계 판정 5건 — **전부 구속력 유지. 5번째는 도착했으나 미반입·미적용**
 
 | 파일 | 범위 |
 |---|---|
@@ -98,6 +119,7 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 | `DESIGN_DECISION_H1a_manipulation_scope.md` | Q1=B 조작 재정의 / Q2=B 앵커 진단 |
 | `DESIGN_DECISION_H1a_prompt_surface.md` | Q3=B 전용 프롬프트 / Q4 승인 |
 | `DESIGN_DECISION_H1a_review_blockers.md` | Q5=B/Q6=A/Q7=E/Q8=B — **2026-08-02 전부 적용 완료** |
+| `notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md` ⚠️ | Q9=A(fixture 무변경, L3 한계 선언) / Q9.2(Q8.1 유지) — **판정 도착함(2026-08-02), 저장소 미반입, 미적용.** 아직 `notes/` 루트에만 있다 — 위 넷과 달리 `experiments/2026-07-29_h1a_source_authority_unresolved/`에 사본이 없다. 반입 시 파일명은 기존 관행대로 `DESIGN_DECISION_H1a_evidence_symmetry.md`(H1a 소문자 a) |
 
 > **2026-08-02 갱신**: `DESIGN_DECISION_H1a_prompt_surface.md`는 더 이상
 > 코드가 로드하는 파일이 **아니다.** Q5·Q6.1·Q7이 template을 셋으로 나눠
@@ -106,10 +128,13 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 > 이제 그 파일을 가리킨다. **네 판정문 전부 순수 기록**이 됐다 — 위 4개 중
 > 코드 입력은 이제 없다.
 
-**미결 — Q9**: 3차 독립 리뷰(2026-08-02)가 코드 결함이 아닌 fixture 설계
-질문을 하나 더 찾았다(ev1/ev3 증거 내용 비대칭, Q8의 개수 대칭과는 다른 축).
-`correspondence/DESIGN_REQUEST_H1a_evidence_symmetry.md`로 상신 문서
-작성·인용 검증 완료, **아직 외부 미발송**. 판정 도착 전까지 동결 불가.
+**Q9 처리 경과**: 3차 독립 리뷰(2026-08-02)가 코드 결함이 아닌 fixture
+설계 질문을 하나 더 찾았다(ev1/ev3 증거 내용 비대칭, Q8의 개수 대칭과는
+다른 축). `correspondence/DESIGN_REQUEST_H1a_evidence_symmetry.md`로
+상신 문서 작성·인용 검증 완료 → **판정 도착 확인함**(위 표 5번째 행) →
+아직 저장소 반입·`PREREGISTRATION.md` L3 등록 **미실행**(토큰 소진으로
+이번 세션은 의견만 남기고 종료). 다음 세션 실행 순서는
+`H1A_ISSUE_REGISTER.md` Q9 항목 하단 "다음 세션이 할 일" 5단계 참조.
 
 ### 독립 리뷰 3회 — 매번 제작자가 못 본 것을 잡았다
 

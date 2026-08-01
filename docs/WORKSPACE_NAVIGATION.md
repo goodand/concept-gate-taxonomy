@@ -77,6 +77,8 @@ Project_in_progress/
 | **채점기** | `experiments/<...>/evaluate.py` | 결정론적 채점 + provenance 계약 검사 | 실험별 |
 | **프로토콜 자기검증** | `experiments/<...>/test_protocol.py` | fixture 무결성(구조/해시/재현성) | 실험별 |
 | **운영 로그** | `OPERATIONS_PLAN.md`, `PROBLEM_*.md`, `HANDOFF.md` | 진행 상황·판단·미결 사항. **별도 커밋** | 계속 갱신 |
+| **외부 설계 판정** | `experiments/<...>/DESIGN_DECISION*.md` (평면) | 외부 판정자의 회신. **구속력 있음**, 사전등록만큼 무겁다 | **원문 보존 — 수정 금지.** 판정이 바뀌면 새 요청→새 판정 파일 |
+| **외부 설계 요청** | `experiments/<...>/correspondence/DESIGN_REQUEST*.md` | 운영 세션이 외부 판정자에게 보내는 자기완결형 질의서(저장소 접근 없이 판정 가능하게 원문·실측 embed) | 발송 전 인용 대조(citation-check) 필수. 발송 후엔 원문 보존 |
 | **설계 문서** | `docs/*.md`(실험 폴더 밖) | 아키텍처/로드맵/스펙 | 해당 작업 시 |
 | **승격된 교훈** | 외부 `skills-catalog/.../references/*-at<ts>.md` | 재사용 가능한 노하우 | 덮어쓰지 않고 새 타임스탬프 추가 |
 
@@ -95,6 +97,24 @@ Project_in_progress/
 | `PROBLEM_<n>_<slug>.md` | 정식 문제 정의서. 시도-실패 이력이 누적됨 |
 | `*-at2026-07-28-14-02.md` | skills-catalog 컨벤션. **타임스탬프가 클수록 최신**, 이전 버전을 supersede하지만 파일은 남김. supersede는 "더 많아짐"이 아니라 **"앞의 것이 틀렸을 수 있음"** 을 포함한다 — 07-28 판 3건이 각각 이전 판의 지침을 정정했다 |
 | `__pycache__/` | 무시 |
+
+**⚠️ 외부 설계 판정문 중 하나가 코드 입력일 수 있다 — 확인 없이 "전부
+순수 기록"이라 가정하지 마라.** H1a의 실제 이력: `_h1a_contract.py`가
+2026-07-31~08-01엔 `DESIGN_DECISION_H1a_prompt_surface.md`의 fenced block을
+프롬프트 template으로 **직접 로드**했다(판정문 원문 보존 규칙과 충돌하는
+상태). 2026-08-02, template을 `h1a_prompt_template.md`(별도 파일)로 분리해
+지금은 **네 판정문 전부 순수 기록**이다. 이 상태가 다음에도 유지된다는
+보장은 없다 — 새 세션은 이렇게 확인한다:
+
+```bash
+# 서술적 인용("DESIGN_DECISION_X.md §4는...")이 아니라 실제 로드 지점만
+grep -rn 'HERE / "DESIGN_DECISION\|Path([^)]*"DESIGN_DECISION' experiments/*/[_a-z]*.py
+```
+
+결과가 있으면, 그 판정문은 **문서가 아니라 실행 입력**이다 — 원문 보존
+규칙과 충돌하므로 template 분리(H1a의 Q5~Q7 사례)가 필요할 수 있다.
+(서술적 인용은 흔하고 정상이다 — 이 grep은 `HERE / "DESIGN_DECISION..."`
+형태의 실제 경로 조립만 잡도록 좁혔다.)
 
 ## 4. 탐색 레시피 — "X를 알고 싶다" → 실행할 명령
 
