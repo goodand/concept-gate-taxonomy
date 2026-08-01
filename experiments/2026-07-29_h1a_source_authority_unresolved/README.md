@@ -1,11 +1,17 @@
-# H1a — `source_authority_unresolved` (설계 판정 반영, freeze 전)
+# H1a — `source_authority_unresolved` (설계 판정 2건 반영, anchor 진단 전)
 
-- 작성: 2026-07-29 (초안) / **재정의: 2026-07-29 설계 판정 반영**
-- 지위: **설계 판정 완료, 사전등록 미완.** 판정 7건은 전부 내려졌으나
-  판정문이 "**재정의 필요**"와 함께 **사전등록 7항목(§7)** 을 실행 조건으로
-  달았다. 그것이 확정되기 전에는 fixture를 만들지 않고 trial도 돌리지 않는다.
-- 설계 판정 원문: [`DESIGN_DECISION.md`](DESIGN_DECISION.md) (판정자: OpenAI Codex, 외부)
-- 적대 검증 보고: [`../../docs/feedback/h1a_source_authority_unresolved_review_20260729.md`](../../docs/feedback/h1a_source_authority_unresolved_review_20260729.md)
+- 작성: 2026-07-29 (초안) / 재정의: 2026-07-29 설계 판정 반영 /
+  **갱신: 2026-07-30 조작 범위 재정의(Q1) + anchor 진단 게이트(Q2) 반영**
+- 지위: **설계 판정 완료(2건), fixture 재구성 완료, anchor 진단 미실행.**
+  독립 리뷰가 초안 fixture와 초안 조작 정의 둘 다 동결 부적합으로 판정했다.
+  fixture는 C2~C10 반영으로 재구성됐고(커밋 대기), 조작 정의는 외부 판정
+  Q1로 재확정됐다(`_h1a_contract.py`). **남은 게이트는 Q2의
+  anchor-sensitivity 진단(§11) — 이것이 완료·통과되기 전에는 본 코호트를
+  동결·실행하지 않는다.**
+- 설계 판정 원문: [`DESIGN_DECISION.md`](DESIGN_DECISION.md)(D-H1a-1~7),
+  [`DESIGN_DECISION_H1a_manipulation_scope.md`](DESIGN_DECISION_H1a_manipulation_scope.md)(Q1·Q2) — 판정자: OpenAI Codex, 외부
+- 적대 검증 보고: [`../../docs/feedback/h1a_source_authority_unresolved_review_20260729.md`](../../docs/feedback/h1a_source_authority_unresolved_review_20260729.md)(설계 초안 리뷰),
+  [`../../docs/feedback/h1a_fixture_review_20260730.md`](../../docs/feedback/h1a_fixture_review_20260730.md)(fixture 리뷰, blocker #16 발견)
 - 분기 출처: 2026-07-29 운영 지시 §3(네 번째 항목) — 원문
   [`docs/DIRECTIVE_2026-07-29_operations_change.md`](../../docs/DIRECTIVE_2026-07-29_operations_change.md)
 
@@ -64,14 +70,17 @@ H1a가 다루는 것은 다른 상황이다: 충돌이 "동등강도"가 아니�
 ## 3. 재료 — 실측 확인 완료
 
 인스턴스가 `칼`/`철`로 **정확히 일치**하는 실제 충돌이다. 합성이 아니다.
-독립 리뷰어가 전수 확인했고 R6b 테스트는 실제로 실행해 통과를 확인했다.
+독립 리뷰어가 전수 확인했다. **2026-07-30 독립 리뷰 C2·C3(#7·#8·#10) 반영:**
+아래 표는 재구성 후 상태다 — code측 증거를 칼/철 미명명 일반 규칙에서
+칼/철을 명명하고 문장 줄기가 같은 코드로 교체했고, ev3와 한 저작 행위였던
+테스트 인용(ev4)은 제거해 정직한 1-vs-1로 만들었다. 옛 표는
+`docs/H1A_ISSUE_REGISTER.md` C2·C3에 근거와 함께 보존.
 
 | 측 | 위치 | 텍스트 | 주장 |
 |---|---|---|---|
 | **문서**(`source_kind: doc`) | `docs/phase_a_implementation_packet.md:102` | `(4) 재료-대상: 철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)` | 철 = `essential_feature` |
 | 〃 보강 | 〃 `:106` | `주의: 재료-대상(4)만 essential_feature가 될 수 있습니다.` | 예외를 명시 |
-| **코드**(`source_kind: code`) | `conceptgate/cg_partwhole.py:36` | `"material_of": "structural_composition",  # Winston stuff-object (has-a)` | 철 = `structural_composition` |
-| **테스트**(`source_kind: test`) | `test_semantic_regressions.py::test_r6b_material_feature_not_in_isa_dag` | concept `칼`, feature `철`, type `structural_composition`, `relation_hint="material_of"` | 코드 쪽을 회귀로 고정 |
+| **코드**(`source_kind: code`) | `conceptgate/concept_gate_v7.py:1192-1193` | `(4) 재료-대상: 철은 칼의 재료 → structural_composition (재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)` | 철 = `structural_composition` — 문서와 **같은 문장 줄기, type만 반대** |
 
 문서 쪽 이력: 마지막 변경은 `cf58c8c`(패키지 단일화 리팩터)로 상단에 경고
 배너만 추가했고 **본문 주장은 미수정**. 내용은 `4e0214c` 시점 그대로다.
@@ -86,10 +95,12 @@ C1~C4: C2(인스턴스 결박) 충족, C3(비순환) 충족, C4(선행성) `git 
 
 ## 4. arm — 2개 (판정 D-H1a-6 = B)
 
-| arm | 계약 서문 | 스키마 |
+| arm | 프롬프트 표면(Q3=B, 2026-07-31 재정의) | 스키마 |
 |---|---|---|
-| `PROHIBITION_KEPT` | E2.4 서문 그대로 (금지 문장 **포함**) | H1a 전용 스키마 (동일) |
-| `PROHIBITION_REMOVED` | 지정된 한 문장만 **삭제** | H1a 전용 스키마 (동일) |
+| `PROHIBITION_KEPT` | H1a 전용 template + Q1 liveness 절 포함 | H1a 전용 스키마 (동일) |
+| `PROHIBITION_REMOVED` | H1a 전용 template, liveness 절 없음 | H1a 전용 스키마 (동일) |
+
+**"E2.4 서문 그대로"는 폐기됐다** — §4.1 참조.
 
 **legacy CONTROL arm은 제외됐다.** 판정 근거: legacy 스키마의 `decision` enum은
 `report_done`/`repair`/`request_evidence`뿐이라 **"보류"를 표현할 수 없고**,
@@ -98,22 +109,82 @@ C1~C4: C2(인스턴스 결박) 충족, C3(비순환) 충족, C4(선행성) `git 
 두 arm은 **같은 fixture, 같은 모델, 같은 parameters, 같은 응답 스키마**를 쓴다.
 **arm 간 유일한 차이는 지정된 금지 문장 하나여야 한다.**
 
-### 4.1 최소편집 절차 (판정 D-H1a-5 = A)
+### 4.1 프롬프트 표면 (판정 D-H1a-5, **2026-07-30 재정의, 2026-07-31 재재정의**)
 
-대상 문단은 두 문장이 붙어 있다:
+> ⚠️⚠️ **2026-07-31 갱신 — 아래 "재정의"도 그대로 실행하면 blocker다.**
+> 2026-07-30 재정의는 "E2.4 계약문 113행 전체를 재사용하고 두 절만 지운다"는
+> 방식이었다. 실제로 첫 trial 프롬프트를 조립해 보니 E2.4 규칙 2~7이
+> `h1a_observation_v1`과 맞물리지 않았고, 특히 **규칙 3의 동률 조항이 H1a
+> fixture의 정확한 모양을 무조건 `defer`로 매핑**해 조작과 무관한 천장을
+> 만들 위험이 드러났다(등록부 G2·G3). 외부 설계 판정
+> [`DESIGN_DECISION_H1a_prompt_surface.md`](DESIGN_DECISION_H1a_prompt_surface.md)
+> (Q3=B)가 프롬프트 표면 자체를 다시 정의했다: **E2.4 규칙 2~7과 서문을
+> 버리고, H1a 전용 task 지시문으로 교체한다.** 아래 §4.1.1이 최신이다.
+
+#### 4.1.0 2026-07-30 재정의 (폐기 — 이력 보존용)
+
+원래 초안은 계약 서문 문장 하나만 지우면 조작이 성립한다고 봤다. 독립
+리뷰(2026-07-30) blocker #16이 발견한 것: 절대 규칙 1에 **논리적으로
+동등하고 더 명시적인** 두 번째 금지가 그대로 남아 있어, 그 초안대로
+지운 `PROHIBITION_REMOVED` arm은 **여전히 liveness 재판정을 금지한다.**
+조작이 무효화된다는 뜻이다. 외부 설계 판정
+[`DESIGN_DECISION_H1a_manipulation_scope.md`](DESIGN_DECISION_H1a_manipulation_scope.md)
+(Q1=B)가 D-H1a-5를 재정의했다 — **이 절 삭제 판정 자체는 여전히 유효하다**,
+다만 "무엇 위에 적용하는가"가 §4.1.1로 바뀌었다.
+
+> ⚠️ **아래는 폐기된 초안이다 — 그대로 실행하면 blocker다.**
+> 원래 초안은 계약 서문 문장 하나만 지우면 조작이 성립한다고 봤다. 독립
+> 리뷰(2026-07-30) blocker #16이 발견한 것: 절대 규칙 1에 **논리적으로
+> 동등하고 더 명시적인** 두 번째 금지가 그대로 남아 있어, 그 초안대로
+> 지운 `PROHIBITION_REMOVED` arm은 **여전히 liveness 재판정을 금지한다.**
+> 조작이 무효화된다는 뜻이다. 외부 설계 판정
+> [`DESIGN_DECISION_H1a_manipulation_scope.md`](DESIGN_DECISION_H1a_manipulation_scope.md)
+> (Q1=B)가 D-H1a-5를 재정의했다.
+
+대상 계약문에는 liveness/우선순위/최신성/권위를 금지하는 절이 **두 곳**에
+있다(2026-07-30 전수 스캔으로 확인 — 다른 곳에는 없음):
 
 ```
 이 packet의 evidence item은 실행 전 provenance/eligibility 검증을
-통과했다. 모델은 출처의 liveness나 우선순위를 재판정하지 않는다.
+통과했다. 모델은 출처의 liveness나 우선순위를 재판정하지 않는다.   ← block L8
 ```
 
-- **삭제**: `모델은 출처의 liveness나 우선순위를 재판정하지 않는다.` — 이 문장만
-- **유지(양쪽 arm 공통)**: `이 packet의 evidence item은 실행 전
-  provenance/eligibility 검증을 통과했다.`
+```
+   - 어떤 출처가 더 최신인지, 더 권위 있는지, 아직 살아있는 코드인지를
+     추론하지 마라. 그 판정은 이미 끝났고 너의 범위가 아니다.       ← block L24-25
+```
 
-앞 문장까지 지우면 "검증이 끝났다"는 사실 자체가 사라져 **다른 변수가 함께
-바뀐다.** 두 프롬프트가 **정확히 그 한 문장의 유무로만** 다름을 **byte-level
-테스트로 고정**하고, 각 `rendered_prompt_sha256`을 동결한다.
+**재정의된 규칙(2026-07-30, 여전히 유효)**: "한 문장을 지운다"가 아니라
+**"liveness·source-priority·recency·authority·supersession 재판정을 금지하는
+모델 대면 절을 전부 지운다."** 지울 대상은 여전히 L8 + L24-25 두 절이다.
+
+#### 4.1.1 2026-07-31 재정의 — 프롬프트 표면 자체를 H1a 전용으로 (최신, Q3=B)
+
+**Q3.1 부수 판정("그럴듯하다"가 recency/authority를 포괄하는가) = "예,
+기능적으로."** 규칙 3은 알고리즘적이라 동률이면 근거 종류와 무관하게 무조건
+null(=defer)을 요구한다 — "치명" 해석이 맞았다는 뜻이고, 이것이 규칙 2~7
+전체를 버리는 결정적 근거였다.
+
+**무엇이 남고 무엇이 사라지는가**:
+
+| E2.4 원본 | H1a 처리 |
+|---|---|
+| 서문(packet 설명, "모델의 책임은…", "목표는…") | **삭제.** H1a 전용 task 지시문으로 교체 |
+| 절대 규칙 1(packet 밖 지식 금지 + liveness 절 2개) | **실질만 유지**, 판정문 자신의 영어 문구로 재작성. liveness 절 2개는 여전히 §4.1의 규칙대로 KEPT에만 삽입 |
+| 규칙 2~7(evidence audit·sufficiency·repair·abstain·accept_report) | **전부 삭제.** `h1a_observation_v1`과 맞물리지 않고, 규칙 3(동률→null)이 조작과 무관한 천장을 만들 위험이 있었다 |
+| 마지막 줄(스키마 지시) | **삭제.** 새 template이 `h1a_observation_v1`을 프롬프트 안에 직접 보여준다 |
+
+구현은 `_h1a_contract.py` 전면 재작성 — H1a 전용 template을
+`DESIGN_DECISION_H1a_prompt_surface.md` 자신의 fenced block에서 **로드**하고
+(재입력 없음), Q1의 두 절을 정규화해 template의 유일한 packet-boundary
+문장("...or external sources.") 뒤에 `PROHIBITION_KEPT`에만 삽입한다.
+`test_h1a_contract.py` 18 passed, 뮤테이션 4종 CAUGHT. 상세는
+`PREREGISTRATION.md` §P0.1.
+
+**독립 리뷰 우선 점검 대상으로 문서에 명시해 둔 것**: template은 영어, Q1의
+절은 한국어라 `PROHIBITION_KEPT`는 두 언어가 섞인 문단이 된다. 번역하지 않고
+원문 그대로 삽입한 것은 의도적 선택이다(번역 자체가 새로운, 검토되지 않은
+저작 행위이므로).
 
 ## 5. 응답 스키마와 행동 코딩 (판정 D-H1a-2 = C, D-H1a-3 = C)
 
@@ -185,14 +256,18 @@ rationale:          ...
 
 | # | 내용 | 상태 |
 |---|---|---|
-| 1 | **P1~P7 사전등록 확정** | ✅ `PREREGISTRATION.md` (`8def710`) |
+| 1 | **P1~P7 사전등록 확정** | ✅ `PREREGISTRATION.md` |
 | 2 | 전용 스키마 `h1a_schema.json` | ✅ 두 arm 동일 variant, 닫힌 enum |
-| 5 | 행동 코더 + 양방향 테스트 + 동결 | ✅ `_coder.py`, `test_h1a_coder.py` 38 passed. **교정 18/18 통과** |
-| 3a | H1a 전용 `_h1a_surface.py` 사본 + fixture 제작 (칼/철) | ✅ `20f7102`, 19 passed. qualification 통과, R6b 실제 실행 |
-| 3b | **독립 리뷰 (제작자와 분리)** | ⛔ **미완 — 재실행 필요.** 2026-07-30 1회 시도했으나 API 세션 한도로 에이전트가 파일을 읽기 전에 중단. **리뷰 소견 0건** |
-| 4 | 두 arm 프롬프트 생성 + byte-level diff 테스트 + 해시 동결 | 3 후 |
-| 6 | trial subject agent 정의·설치 | 4 후 |
-| 7 | **trial 실행** Stage A(10) → 하네스 점검 → Stage B(30) | 6 후 |
+| 3 | 행동 코더 + 양방향 테스트 + 동결 | ✅ `_coder.py`, `test_h1a_coder.py` 38 passed. **교정 18/18 통과** |
+| 4a | H1a 전용 `_h1a_surface.py` 사본 + fixture 제작 (칼/철) | ✅ `20f7102` |
+| 4b | **독립 리뷰 (제작자와 분리)** | ✅ **완료 — blocker 1 + major 5 발견, 동결 부적합 판정.** `docs/feedback/h1a_fixture_review_20260730.md` |
+| 4c | 리뷰 C2~C10 기계적 수정 반영 (fixture 재구성) | ✅ 완료, 커밋 대기. `test_h1a_fixture.py` 23 passed |
+| 4d | Q1·Q2 외부 설계 요청 및 판정 | ✅ `DESIGN_DECISION_H1a_manipulation_scope.md` 도착·반영. Q1=B(조작 재정의), Q2=B(진단 게이트) |
+| 5 | Q1 반영 — 절 기반 arm 렌더러 + 구조 가드 | ✅ `_h1a_contract.py`, `test_h1a_contract.py` 11 passed |
+| 6 | **Q2 반영 — anchor-sensitivity 진단(2×2×5=20) 설계·구현·실행** | ⛔ **다음 단계, 미완.** `PREREGISTRATION.md` §11에 프로토콜 사전등록 완료, 실행은 아직 |
+| 7 | 두 arm 최종 프롬프트 렌더링 + `rendered_prompt_sha256` 동결 | 6 통과 후 |
+| 8 | trial subject agent 정의·설치 | 7 후 |
+| 9 | **trial 실행** Stage A(10) → 하네스 점검 5항 → Stage B(30) | 8 후 |
 
 > [DONE] #17의 "agent registry가 세션 시작에 고정" 서술은 **이번 세션에서
 > 반증됐다** — E2.4 H3의 trial subject 3종을 세션 중간에 설치해 즉시
