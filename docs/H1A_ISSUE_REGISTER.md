@@ -1,6 +1,9 @@
 # H1a 이슈 등록부
 
-- 갱신: **2026-07-31** — 설계 판정 3건(D-H1a-1~7, Q1·Q2, Q3·Q4) + 사전등록
+- 갱신: **2026-08-01** — 설계 판정 **4건**(+Q5~Q8), 독립 리뷰 **2회**,
+  H 계열 worktree 분리. **패턴별 단면은 [`H1A_PROBLEM_ANALYSIS.md`](H1A_PROBLEM_ANALYSIS.md)**
+  — 이 문서는 시간순 기록이고 그쪽은 패턴별 분류다. **한쪽만 읽으면 안 된다**
+- (이전) 2026-07-31 — 설계 판정 3건(D-H1a-1~7, Q1·Q2, Q3·Q4) + 사전등록
   완료, 독립 리뷰에서 blocker 1 + major 5 발견 → 동결 부적합 →
   **fixture 재구성(C2~C10) + 조작 범위 재정의(Q1) + 프롬프트 표면 재정의
   (Q3=B) 전부 완료. 남은 게이트: 독립 리뷰(프롬프트) → anchor-sensitivity
@@ -299,39 +302,113 @@ effects`**로 넓어졌다(G3 발견 이후라 타당한 확장). "새 차단 �
 
 ---
 
+## E. 2차 독립 리뷰 + Q5~Q8 (2026-08-01)
+
+Q3=B를 구현하고 **첫 trial 직전에** 돌린 2차 독립 리뷰가 **동결 부적합**을
+냈다 — blocker 2 + major 7 + minor 4 + clean 3. 전문:
+[`feedback/h1a_prompt_review_20260801.md`](feedback/h1a_prompt_review_20260801.md).
+운영 세션이 4건을 직접 재현했고 **전부 사실**이었다.
+
+### [DESIGN] Q5 — 조작 문장의 선행사가 사라졌다 (blocker)
+
+**이슈**: `그 판정은 이미 끝났고 너의 범위가 아니다.`는 E2.4에서 두 문장 앞의
+provenance 문장을 가리켰다. **Q3=B가 그 서문을 버리라고 했고 버렸다.** 남은
+지시 대상이 payload 앵커뿐이라, `PROHIBITION_KEPT`만 모델에게 "앵커는 확정된
+판정"이라고 읽히게 된다 = 조작이 만든 treatment×anchor 상호작용.
+
+**검증 근거**: 렌더 후 `E2.4 antecedent sentence present in H1a template? False`
+
+**주목**: **Q3을 충실히 따랐기 때문에** 생긴 결함이다(패턴 P3).
+
+**해결 유무**: ❌ **미적용.** 판정 = **B**(3번째 문장 제거 → 조작 2문장).
+Q5.1이 E2.4 선행사 복원을 **명시적으로 금지**(앵커를 권위화하므로).
+
+### [DESIGN] Q6 — payload가 답을 건넨다 (blocker)
+
+**이슈**: `"type": "structural_composition"`이 두 허용값 중 하나이자 저장소의
+실제 강제 상태. `select_type`으로 가는 **무비용 경로**. `no_oracle`의
+"Neither type is marked right."가 사실상 거짓.
+
+**검증 근거**: 렌더된 payload 직접 확인. 하네스 자신이 반대 셀을
+"counterfactual artifact"라 부른다.
+
+**해결 유무**: ❌ **미적용.** 판정 = **A**(앵커 제거). **파생: 20건 앵커
+진단이 잴 대상을 잃고 은퇴** → 구조적 no-anchor 가드로 대체.
+
+### [DESIGN] Q7 — `defer`의 의미가 이 fixture에 대해 미정의
+
+**이슈**: 프롬프트의 유일한 defer 경로가 "증거 부족"인데 이 fixture는 부족하지
+않다(ev1·ev3 둘 다 지지 기준 충족). **충돌하지만 충분한** 경우를 다루는 조항이
+없다. Q3=B가 규칙 3의 동률 조항을 없애면서 **대체를 두지 않은 공백**(P3).
+
+**해결 유무**: ❌ **미적용.** 판정 = **E**(warrant 기반 정의 — 충돌이라고
+defer를 강요하지 않고, 직접증거가 있다고 select를 강요하지도 않음).
+
+### [DESIGN] Q8 — fixture가 2-vs-1인데 1-vs-1이라 주장
+
+**이슈**: `builder_metadata`는 "1-vs-1 conflict"라 적었으나 모델이 보는 것은
+doc 2 대 code 1. 코드측 `주의:` 문장이 `concept_gate_v7.py:1196-1197`에
+있는데 미포함 — **ev3에서 4줄 아래**다.
+
+**해결 유무**: ❌ **미적용.** 판정 = **B**(ev2 제거 → 진짜 1-vs-1).
+Q8.1: enum 밖 type 이름 노출 **불가**.
+
+### [DONE] F7 — 잔여-금지 가드가 영어 금지문을 통과시킴
+
+**검증 근거**: 리뷰어 injection이 **통과**했고 운영 세션이 재현. 판정 요구사항
+7이 영어 명제 7종을 2026-07-30부터 명시했는데 미구현이었다.
+
+**해결방법**: 영어 tripwire 14종 + 대소문자 무관. 7개 명제를 parametrized로
+**recall 7/7**, 깨끗한 template 통과로 **precision** 확인. 재주입 →
+`CAUGHT: EN tripwire 'authoritative'`.
+
+### [DONE] F11 — 스키마가 폐기된 D-H1a-5=A를 서술
+
+**해결방법**: Q1=B·Q3=B가 무엇을 대체했는지 명시하도록 정정.
+
+### [DECLARE] 고치지 않고 한계로 기록 (2건)
+
+| # | 내용 |
+|---|---|
+| L1 | evidence-reading rule 4불릿이 **전부 select 쪽에만** 작용. defer엔 어떤 조건·의무도 없음 |
+| L2 | 조작이 **언어 전환과 분리 불가**(영어 본문 + 한국어 3문장). placebo arm 없음 |
+
+---
+
+## F. 워크스페이스 구조 (2026-08-01)
+
+| # | 이슈 | 검증 근거 | 해결 |
+|---|---|---|---|
+| W1 | `EXPERIMENT_METHODOLOGY.md`가 "e2.* worktree 전부 포함"이라면서 그 worktree에서 **열리지 않음.** 브랜치 5/77 갈라짐 | `git log --all -- docs/EXPERIMENT_METHODOLOGY.md` → `c1b6af2`, main 브랜치에만. `git rev-list --left-right --count` → 5/77 | ✅ main 5커밋 병합. `HANDOFF.md`는 ours(함정 #1), 로드맵은 **파일 안에 남아 있던 2026-07-25 지침**대로 theirs 기반 + ours의 E2.4 절 보존 |
+| W2 | 이름 3층 불일치(dir e2.2 / branch e2.4 / work H1a). §4 "새 계열은 새 worktree" 위반 | `git worktree list` + §4 원문 | ✅ `concept-gate-h1-wt` / `codex/h1-source-authority` 분리 |
+| W3 | H1a가 두 worktree에 중복 | MOC 12건씩 이중 등재 | ⚠️ **선택.** vault `duplicate-register.md`가 "정본 1 + replica" 로 **이미 처리**(214 groups) |
+| W4 | 검증된 검색 절차가 존재하나 **저장소·워크스페이스 어디서도 안 가리킴** | `grep -rn 'AGENT_PROMPT\|multiturn_retrieval'` → **0건** | ✅ 워크스페이스 `CLAUDE.md` Retrieval Order + `WORKSPACE_NAVIGATION.md` §4.0·§0 함정 4 |
+
+---
+
 ## 다음 세션 첫 행동
 
-1. ~~**[FIX] C2~C10 적용**~~ — 완료(2026-07-30), 61 passed
-2. ~~**Q1·Q2 설계 요청서 발송·회신·반영**~~ — 완료. `_h1a_contract.py`
-   11 passed
-3. ~~**Q4 보조 조건 + 배치 규약 사전등록**~~ — 완료(2026-07-31),
-   `PREREGISTRATION.md` §11.2a·§11.2b. **진단 0건 시점에 등재됨**
-4. ~~**진단 하네스 프롬프트 독립 부분**~~ — 완료. `_h1a_diag.py`,
-   `test_h1a_diag.py` 20 passed, 뮤테이션 4종 확인(G5)
-5. ~~**`DESIGN_REQUEST_H1a_prompt_surface.md` 발송 → Q3·Q4 판정**~~ —
-   완료(2026-07-31). `DESIGN_DECISION_H1a_prompt_surface.md` 도착.
-   Q3=B(H1a 전용 프롬프트) · Q3.1=예 · Q4=승인(문구 개선) 반영 완료
-6. ~~**Q3 반영 — 프롬프트 재구현**~~ — 완료. `_h1a_contract.py` 전면
-   재작성, `test_h1a_contract.py` 18 passed, 뮤테이션 4종 CAUGHT
-7. **[다음 단계] 독립 리뷰(별도 에이전트, 제작자 결론 미고지).** 최우선
-   공격 대상: 새 프롬프트가 select/defer 한쪽으로 기울었는가. 특히
-   `_h1a_contract.py`가 스스로 표시해 둔 판단(영어 템플릿에 한국어 liveness
-   절을 그대로 삽입, 번역하지 않음)을 검토
-8. **[리뷰 통과 후] agent 정의 설치 → 동결 → 진단 실행**
-   - agent 정의는 스키마를 별도 임베드할 필요 없음 — Q3 템플릿 자체가
-     `h1a_observation_v1`을 프롬프트 안에 인라인으로 보여준다(H3와 다른
-     선택, 판정문이 그렇게 줌)
-   - 진단 20건은 **arm 단위 10+10**(§11.2b). Agent/Workflow 호출이므로
-     **사용자 명시 허가 별도 필요**
-9. **본 코호트 동결·실행은 진단 게이트 통과 후.**
+**이 worktree(`concept-gate-h1-wt`)가 H 계열 정본이다.** `../concept-gate-e2.2-wt`
+에도 H1a 파일이 있으나 사본이다.
 
-**커밋 미완 목록**(전부 사용자 명시 승인 필요, CLAUDE.md). `20f7102`를
-되돌리지 않고 후속 커밋으로 쌓는다:
+1. **[차단선] Q5~Q8 적용** — 4건 전부 미적용이고, 이것만이 실질 차단선이다
+   - Q5=B 조작 span 2문장 축소(`그 판정은…` 제거)
+   - Q6=A 모델 대면 앵커 제거 → `_h1a_diag*` 4파일 은퇴, no-anchor 가드로 대체
+   - Q7=E warrant 규칙 삽입 / Q8=B `ev2` 제거
+   - **프롬프트 template을 자기 파일로 분리**하는 것을 먼저 고려하라 — 지금은
+     Q3 판정문의 fenced block을 `_h1a_contract.py`가 로드하는데, Q5·Q6.1·Q7이
+     그 template을 셋으로 나눠 수정한다. 판정문은 원문 보존 대상이라 편집 불가
+2. **독립 리뷰 재실행** — 프롬프트·payload·fixture가 전부 바뀌므로 2차 리뷰는
+   무효가 된다. 두 리뷰 모두 제작자가 못 본 것을 잡았다(패턴 P6)
+3. 통과해야 동결 → **본 코호트 40 trial**(별도 승인)
 
-| 구분 | 파일 |
+**실행된 trial: 0건.** 이 조건은 첫 trial과 함께 사라지고, 그때부터 설계
+변경에 재동결 비용이 생긴다.
+
+### 미커밋 / 미승인
+
+| 항목 | 상태 |
 |---|---|
-| fixture 재구성 | `fixture_source_authority.json`, `_h1a_surface.py`, `test_h1a_fixture.py` |
-| 프롬프트 표면(Q1+Q3) | `_h1a_contract.py`, `test_h1a_contract.py` |
-| 진단 하네스 | `_h1a_diag.py`, `test_h1a_diag.py` |
-| 사전등록·설계 | `PREREGISTRATION.md`, `DESIGN_DECISION_H1a_manipulation_scope.md`, `DESIGN_REQUEST_H1a_prompt_surface.md`, `DESIGN_DECISION_H1a_prompt_surface.md` |
-| 문서 | `README.md`, `docs/H1A_ISSUE_REGISTER.md` |
+| 두 브랜치 **푸시** | ⬜ 이번 세션 내내 안 함. 별도 승인 |
+| skills-catalog 승격 | ⬜ `methodology.md` 표 정정 + P3 2번째 에피소드 — 진행 중 |
+| E2.4 브랜치에서 H1a 제거 | ⬜ **선택**(W3) |

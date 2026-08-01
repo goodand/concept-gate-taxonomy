@@ -4,11 +4,11 @@
 - 대상: 컨텍스트 없이 시작한 세션이 **파일을 찾고, 그 파일을 얼마나 믿을지
   판단**하기 위한 문서. "지금 무슨 작업 중인가"는 [`HANDOFF.md`](HANDOFF.md),
   "실험을 어떻게 설계·기록하는가"는
-  `../concept-gate-taxonomy/docs/EXPERIMENT_METHODOLOGY.md`.
+  `docs/EXPERIMENT_METHODOLOGY.md`.
 
 ---
 
-## 0. 먼저 알아야 할 함정 3개
+## 0. 먼저 알아야 할 함정 4개
 
 이 workspace에서 새 세션이 실제로 반복해서 빠진 함정들이다. 탐색을 시작하기
 전에 읽어라.
@@ -29,15 +29,29 @@
    (N=1 인증 후 기준이 강화됐는데 재검사가 안 됨). 인증 문구를 보면 **언제,
    어떤 기준으로** 인증됐는지 함께 확인하라.
 
+4. **검색이 조용한 것은 "없다"가 아니라 "이 어휘로는 못 찾았다"이다.**
+   결정 문서의 제목이 네 질문의 어휘를 **하나도** 포함하지 않을 수 있다.
+   2026-08-01 실측: 활성 실험 폴더 정리를 설계하면서 `rg`로 "디렉토리 정리 /
+   DESIGN_DECISION / canonical"을 훑었으나, 이미 채택된 결정
+   (`notes/audits/vault/symlink-vs-moc-2026-07-30.md`, `status: finished`,
+   **"Keep repository and active experiment paths unchanged"**)이 걸리지
+   않았다 — 그 문서 제목이 "Format storage, symlink views, and MOC
+   validation"이라 교집합이 0이었다. **backlink 1홉**으로 나왔고, 그 사이
+   작성된 설계 문서는 채택된 결정과 **정면으로 충돌**했다.
+   같은 세션에서 **두 번** 걸렸다(두 번째는 skills-catalog를 "0건"이라
+   단정했다가 전수 조사에서 PARTIAL로 정정). → §4.0의 graph 절차를 쓸 것.
+
 ## 1. Layer 0 — 물리적 위치 (어느 저장소/worktree인가)
 
 ```
 Project_in_progress/
 ├── concept-gate-taxonomy/            메인 체크아웃 (claude/ontoclean-gufo-handoff-7cmq0v)
-│   └── docs/EXPERIMENT_METHODOLOGY.md   ← 실험 방법론 7규칙 (worktree 브랜치엔 없음!)
-├── concept-gate-e2.2-wt/             ★ E2.2~E2.4 실험 체인 (codex/e2.4-contract-repo-design)
-├── concept-gate-e2.1-wt/             E2.1 (codex/e2.1-haiku-results-20260723)
-├── concept-gate-agent-publish-vault/ 별개 작업 — 지시 없이 건드리지 말 것
+│   └── docs/EXPERIMENT_METHODOLOGY.md   ← 실험 방법론 7규칙 (2026-08-01 병합으로 worktree에도 있음)
+├── concept-gate-h1-wt/               ★ H 계열: source authority (codex/h1-source-authority)
+├── concept-gate-e2.2-wt/             E2.2~E2.4 체인 — 종료 (codex/e2.4-contract-repo-design)
+├── .vault-harness/vault-md-retrieval/   검색 하네스 — AGENT_PROMPT.md에 절차 전문
+├── notes/                            Obsidian vault (00-moc = 생성된 MOC facet)
+├── archive/worktrees/                E2.1·publish-vault — read-only 역사 증거
 ├── e2.1-execution-audit/             비-git 감사 기록 (의도적으로 커밋 안 함)
 └── benchmark-references.md           비-git 참조 색인
 ```
@@ -84,11 +98,53 @@ Project_in_progress/
 
 ## 4. 탐색 레시피 — "X를 알고 싶다" → 실행할 명령
 
+> **아래 레시피는 전부 `grep` 기반이다.** 저장소 안에서 "무엇이 어디 있나"엔
+> 충분하지만, **"이건 이미 결정됐나"엔 답하지 못한다**(§0 함정 4). 그 질문엔
+> §4.0의 graph 절차를 쓴다.
+
+### 4.0 vault graph 탐색 — 결정·선례를 찾을 때
+
+**절차는 이미 작성·검증돼 있다. 다시 만들지 마라**:
+
+```bash
+# 전체 절차(Required Procedure / Prohibited Actions / Command Template)
+cat ../.vault-harness/vault-md-retrieval/AGENT_PROMPT.md
+
+# 패키지된 4턴 버전
+python3 ../.vault-harness/vault-md-retrieval/multiturn_retrieval.py "QUERY" \
+  --policy recall-first-v2 --max-turns 4
+```
+
+손으로 돌릴 때(Obsidian 앱이 떠 있어야 한다):
+
+```bash
+obsidian read      path="notes/audits/vault/symlink-vs-moc-2026-07-30.md"
+obsidian backlinks path="notes/00-moc/by-topic/vault-architecture.md" counts format=json
+obsidian links     path="<위에서 읽은 문서>"
+obsidian tags      path="<...>" format=json
+obsidian properties path="<...>" format=json
+```
+
+**`file=<basename>`를 쓰지 마라 — 반드시 `path=`.** 이 워크스페이스는 worktree
+간 동명 파일이 많아(`HANDOFF.md`, `WORKSPACE_NAVIGATION.md`, `README.md` …)
+basename은 조용히 다른 파일로 해석된다. CLI를 못 쓰면 backlink를 **추정하지
+말고** "rg-only"라고 명시하라.
+
+핵심 규율 4개:
+
+- 검색이 빗나가도 **즉시 키워드를 바꾸지 말 것.** 후보 pool(최대 50)을 유지하고
+  미방문 8개를 먼저 소진한다
+- 새 키워드보다 **읽은 문서의 실제 backlink/link를 한 홉 더 따라가는 것**이
+  recall을 더 올린다(실측: 0.688 → pool refill 0.812 → graph walk 0.958 → 1.000)
+- **MOC는 길찾기 전용.** 답의 근거는 canonical 원문에서 확인한다
+- 이미 읽은 path와 **동일 hash replica는 다시 읽지 않는다**
+  (`notes/00-moc/by-source/duplicate-register.md`가 정본/replica를 지정한다)
+
 ### 4.1 지금 상태 / 다음 할 일
 
 ```bash
 cat docs/HANDOFF.md                                  # 이 worktree의 활성 상태
-cat ../concept-gate-taxonomy/docs/EXPERIMENT_METHODOLOGY.md   # 방법론 7규칙
+cat docs/EXPERIMENT_METHODOLOGY.md                    # 방법론 7규칙(§4 worktree 격리 포함)
 git log --oneline -15                                # 최근 작업 흐름
 git log --oneline -- experiments/<폴더>/             # 특정 실험의 이력
 python3 scripts/run_gates.py                         # 전체 머지 게이트 (단일 진입점)
@@ -242,7 +298,7 @@ git 이력)에서 재확인한다. 로그나 요약 텍스트는 근거가 아�
 3. **`docs/E2.4_ISSUE_REGISTER.md`** — 미결 전체 목록. HANDOFF가 진입점이고
    이 등록부가 상세다. **`[GATE]` 항목이 있으면 그것부터** — 그게 진행을 막는
    유일한 것이라는 뜻이다
-4. 이 문서(`WORKSPACE_NAVIGATION.md`) §0 함정 3개
+4. 이 문서(`WORKSPACE_NAVIGATION.md`) §0 함정 4개
 5. 새 실험이면 `../concept-gate-taxonomy/docs/EXPERIMENT_METHODOLOGY.md`
 6. Workflow/trial 대량 실행이면 skills-catalog의 최신 knowhow 파일(§4.5)
 7. evidence fixture를 다룬다면 `cited-source-text-evidence-rules-at*.md`의
