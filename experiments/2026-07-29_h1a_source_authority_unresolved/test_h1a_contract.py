@@ -55,17 +55,40 @@ def test_missing_fence_raises_loudly(tmp_path):
         h1a_contract.load_h1a_native_template(bogus)
 
 
-# --- Q1's clauses are unchanged and still occur exactly once in E2.4 -------
+# --- Q1's clauses trace back to E2.4's unchanged original text -------------
+#
+# Q5=B (2026-08-01) shortened LIVENESS_PRIORITY_CLAUSES["L24_25"] to two
+# sentences, dropping the dangling third sentence. E2.4's own frozen
+# contract_prompt.md is NOT touched by Q5 -- it still carries the original
+# three-sentence form. So the check is no longer "our clause occurs verbatim
+# in E2.4" (it doesn't, by design); it is "E2.4's original text is unchanged,
+# and our shortened clause is a documented, deliberate prefix of it."
 
 def _e24_contract_block() -> str:
     e24_surface = _load("e24_surface_for_h1a_contract", E24 / "_surface.py")
     return e24_surface.load_contract_prompt(E24 / "contract_prompt.md")
 
 
-def test_liveness_clauses_still_occur_exactly_once_in_e24_contract():
+def test_l8_clause_still_occurs_exactly_once_in_e24_contract():
     block = _e24_contract_block()
-    for clause_id, clause_text in h1a_contract.LIVENESS_PRIORITY_CLAUSES.items():
-        assert block.count(clause_text) == 1, clause_id
+    assert block.count(h1a_contract.LIVENESS_PRIORITY_CLAUSES["L8"]) == 1
+
+
+def test_l24_25_clause_is_q5s_documented_prefix_of_the_unchanged_e24_original():
+    block = _e24_contract_block()
+    original_three_sentence_form = (
+        "   - 어떤 출처가 더 최신인지, 더 권위 있는지, 아직 살아있는 코드인지를\n"
+        "     추론하지 마라. 그 판정은 이미 끝났고 너의 범위가 아니다.\n"
+    )
+    assert block.count(original_three_sentence_form) == 1, (
+        "E2.4's original three-sentence clause must remain unchanged -- Q5 "
+        "only shortens H1a's own copy, it does not edit E2.4's frozen file"
+    )
+    shortened = h1a_contract.LIVENESS_PRIORITY_CLAUSES["L24_25"]
+    assert shortened != original_three_sentence_form
+    assert h1a_contract._normalize_clause(shortened) in \
+        h1a_contract._normalize_clause(original_three_sentence_form)
+    assert "그 판정은 이미 끝났고 너의 범위가 아니다" not in shortened
 
 
 # --- normalization preserves content, only collapses whitespace -----------
@@ -275,8 +298,19 @@ def test_template_carries_no_evaluative_language_favoring_either_behavior():
 
 
 def test_template_gives_defer_and_select_type_symmetric_treatment():
-    """Both instructions are phrased as plain conditionals ('if... choose/cite'),
-    neither hedged nor encouraged relative to the other."""
+    """Both instructions are phrased as plain conditionals ('Choose X only
+    if/if...'), neither hedged nor encouraged relative to the other. Q7's
+    warrant rule (2026-08-01) is the current source of this pairing."""
     t = template()
-    assert "choose defer" in t
-    assert "cite the evidence item ids" in t
+    assert "Choose select_type only if" in t
+    assert "Choose defer if" in t
+    assert "Cite the evidence item ids" in t
+
+
+def test_template_carries_q7_tie_breaker_prohibition_list():
+    """Q7's explicit list of forbidden tie-breakers must be present verbatim
+    -- this is the rule that replaces the undefined-defer gap C7/Q7 found."""
+    t = template()
+    for forbidden in ("evidence item count", "source order", "source_kind",
+                      "recency", "authority", "liveness", "outside knowledge"):
+        assert forbidden in t, forbidden

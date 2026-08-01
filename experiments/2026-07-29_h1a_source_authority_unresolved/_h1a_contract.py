@@ -1,6 +1,6 @@
-"""H1a arm-prompt construction -- H1a-native template per Q3=B.
+"""H1a arm-prompt construction -- H1a-native template per Q3=B, Q5=B.
 
-Two external rulings shaped this module, in sequence:
+Three external rulings shaped this module, in sequence:
 
 1. `DESIGN_DECISION_H1a_manipulation_scope.md` (Q1=B, 2026-07-30): the
    manipulation is "delete every model-facing clause that prohibits
@@ -21,18 +21,34 @@ Two external rulings shaped this module, in sequence:
    substance -- expressed in the ruling's own English wording, not E2.4's
    Korean rule 1 text.
 
+3. `DESIGN_DECISION_H1a_review_blockers.md` (Q5=B, 2026-08-01): a second
+   independent review found that the manipulated clause's third sentence,
+   "그 판정은 이미 끝났고 너의 범위가 아니다" ("that adjudication is already
+   finished and is not in your scope"), had lost its antecedent when Q3
+   dropped the E2.4 preamble it used to point at -- leaving the payload's
+   recorded type as the only thing in the prompt readable as "an already
+   finished adjudication," which uniquely authorized the anchor for
+   PROHIBITION_KEPT. Q5's repair is to drop that third sentence rather than
+   restore the antecedent (Q5.1 forbids restoring it: it would reintroduce a
+   provenance/eligibility assertion H1a does not need, and Q6 removes the
+   anchor it would otherwise protect anyway). The manipulated clause is now
+   exactly two sentences.
+
 What this module does
 ----------------------
-The H1a-native template lives in `DESIGN_DECISION_H1a_prompt_surface.md`
-itself (the first ```text fenced block under "Recommended H1a-native prompt
-shape"), loaded here rather than retyped -- retyping is exactly the
-transcription-error mode this project's provenance rules exist to prevent.
-Q1's frozen liveness clauses (still the correct, ruling-approved bytes -- Q3
-did not reopen Q1) are inserted into that template for PROHIBITION_KEPT only,
-immediately after the template's own "external sources." sentence, which is
-the one remaining packet-boundary locus once E2.4's rule 1 and preamble were
-dropped. This positions them at the ruling's "frozen locations" as literally
-as a template with only one packet-boundary paragraph allows.
+The H1a-native template now lives in `h1a_prompt_template.md` (a sibling file
+in this experiment folder), not in the Q3 ruling file -- Q5's own sentence
+edit, plus Q6.1's concept/feature block and Q7's warrant rule, all modify the
+template body, and a ruling file must stay a preserved-verbatim record. See
+`h1a_prompt_template.md`'s own header table for which ruling contributed which
+section.
+Q1's frozen liveness clauses (reduced to two sentences by Q5=B; Q3 did not
+reopen Q1's wording otherwise) are inserted into that template for
+PROHIBITION_KEPT only, immediately after the template's own "external
+sources." sentence, which is the one remaining packet-boundary locus once
+E2.4's rule 1 and preamble were dropped. This positions them at the ruling's
+"frozen locations" as literally as a template with only one packet-boundary
+paragraph allows.
 
 Construction judgment call, flagged for independent review
 ------------------------------------------------------------
@@ -53,18 +69,21 @@ import re
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-DESIGN_DECISION_PATH = HERE / "DESIGN_DECISION_H1a_prompt_surface.md"
+DESIGN_DECISION_PATH = HERE / "h1a_prompt_template.md"
 
 ARMS = ("PROHIBITION_KEPT", "PROHIBITION_REMOVED")
 
-# Q1's frozen clauses (unchanged from the manipulation-scope ruling). Kept as
-# the raw, as-approved bytes -- see LIVENESS_CLAUSE_TEXT below for the
-# whitespace-normalized form actually inserted into the new template.
+# Q1's frozen clauses, reduced to two sentences by Q5=B (the third sentence,
+# "그 판정은 이미 끝났고 너의 범위가 아니다", is dropped -- it lost its
+# antecedent when Q3 removed the E2.4 preamble it used to refer to, and Q5.1
+# forbids restoring that antecedent). Kept as the raw, as-approved bytes --
+# see LIVENESS_CLAUSE_TEXT below for the whitespace-normalized form actually
+# inserted into the template.
 LIVENESS_PRIORITY_CLAUSES = {
     "L8": " 모델은 출처의 liveness나 우선순위를 재판정하지 않는다.",
     "L24_25": (
         "   - 어떤 출처가 더 최신인지, 더 권위 있는지, 아직 살아있는 코드인지를\n"
-        "     추론하지 마라. 그 판정은 이미 끝났고 너의 범위가 아니다.\n"
+        "     추론하지 마라.\n"
     ),
 }
 
@@ -72,10 +91,19 @@ LIVENESS_PRIORITY_CLAUSES = {
 # be a secondary tripwire, not the sole proof of absence"). The primary proof
 # is LIVENESS_PRIORITY_CLAUSES absence, checked structurally above.
 #
-# Korean surface -- the language Q1's frozen clauses are written in.
+# Korean surface -- the language Q1's frozen clauses are written in. The two
+# phrases naming the dropped third sentence ("판정은 이미 끝났", "너의 범위가
+# 아니다") are removed here too -- Q5=B took them out of the manipulation
+# itself, so they are no longer part of what this guard exists to detect.
+#
+# "출처의 liveness" (phrase), not bare "liveness" -- Q7's warrant rule
+# legitimately uses the bare English word "liveness" in the tie-breaker
+# prohibition list ("...recency, authority, liveness, or outside knowledge
+# ..."), in BOTH arms. A bare-word tripwire would fire on the clean template,
+# i.e. zero precision, the same trap "outside" was already documented as.
 RESIDUAL_TRIPWIRES_KO = (
-    "liveness", "우선순위를 재판정", "더 최신인지", "더 권위 있는지",
-    "아직 살아있는", "추론하지 마라", "판정은 이미 끝났", "너의 범위가 아니다",
+    "출처의 liveness", "우선순위를 재판정", "더 최신인지", "더 권위 있는지",
+    "아직 살아있는", "추론하지 마라",
 )
 
 # English surface. ADDED 2026-08-01 after an independent review demonstrated
@@ -95,11 +123,15 @@ RESIDUAL_TRIPWIRES_KO = (
 # Phrases, not bare words, wherever a bare word could occur innocently:
 # "outside" appears legitimately in the template ("fields outside
 # h1a_observation_v1"), so only scoping phrases are matched. Matching is
-# case-insensitive. test_h1a_contract.py pins BOTH directions -- each of the
-# ruling's seven propositions is caught (recall), and the clean template
-# passes (precision).
+# case-insensitive. "liveness" is likewise no longer a bare word after Q7 --
+# the warrant rule's own tie-breaker prohibition list legitimately says
+# "...recency, authority, liveness, or outside knowledge..." in BOTH arms, so
+# "liveness of" is used instead (matches the ruling's actual proposition,
+# "the liveness of any source", without matching Q7's legitimate mention).
+# test_h1a_contract.py pins BOTH directions -- each of the ruling's seven
+# propositions is caught (recall), and the clean template passes (precision).
 RESIDUAL_TRIPWIRES_EN = (
-    "liveness",
+    "liveness of",
     "source priority",
     "authoritative",
     "which source is newer",
@@ -148,8 +180,8 @@ LIVENESS_CLAUSE_TEXT = (
 
 
 def load_h1a_native_template(path: Path = DESIGN_DECISION_PATH) -> str:
-    """The H1a-native prompt template, loaded verbatim from the ruling file's
-    first ```text fenced block (under "Recommended H1a-native prompt shape").
+    """The H1a-native prompt template, loaded verbatim from
+    `h1a_prompt_template.md`'s first ```text fenced block.
 
     Loaded rather than retyped into this module -- retyping is exactly the
     transcription-error mode this project's provenance rules exist to

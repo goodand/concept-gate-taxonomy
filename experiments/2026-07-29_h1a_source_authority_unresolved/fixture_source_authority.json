@@ -30,7 +30,6 @@
           "type": "structural_composition",
           "evidence_refs": [
             "ev1",
-            "ev2",
             "ev3"
           ]
         }
@@ -49,18 +48,6 @@
       },
       "text": "(4) 재료-대상: 철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)",
       "text_sha256": "1f85f031eb8989c1f18cd9051749b19fd89d6b33b3f916b95307c6d8f33014bc"
-    },
-    {
-      "evidence_id": "ev2",
-      "source_kind": "doc",
-      "source_ref": {
-        "kind": "file_lines",
-        "path": "docs/phase_a_implementation_packet.md",
-        "start_line": 106,
-        "end_line": 106
-      },
-      "text": "주의: 재료-대상(4)만 essential_feature가 될 수 있습니다.",
-      "text_sha256": "093c9a1b59f3902c1ca8e420ee1308b985ebfdd97e3174789a88d9e8da30b12c"
     },
     {
       "evidence_id": "ev3",
@@ -82,10 +69,9 @@
     "anti_patterns": []
   },
   "builder_metadata": {
-    "purpose": "H1a. The 칼/철 feature is claimed as essential_feature by documentation prose (ev1, reinforced by ev2 -- which restates the same rule rather than adding an independent source) and as structural_composition by live code (ev3). This is a 1-vs-1 conflict, both sides instance-bound to this exact concept/feature pair.",
-    "ev3_provenance": "ev3 previously pointed at conceptgate/cg_partwhole.py:36, a generic mapping-table entry naming neither 칼 nor 철 (independent review 20260730 findings #7/#8: the conflict was asymmetric -- doc side named the instance, code side did not). It was swapped to conceptgate/concept_gate_v7.py:1192-1193, which shares the doc side's exact sentence stem ('재료-대상: 철은 칼의 재료') with only the type flipped, is live package code, and names both concept and feature -- symmetric with ev1 on every axis except the disputed type.",
-    "ev4_removed": "A prior draft additionally cited a passing regression test (test_r6b_material_feature_not_in_isa_dag) as ev4, a second code-side confirmation. ev3 and that test were written in the same commit as one authorial act (independent review finding #10), so citing both overstated the code side as 2 independent sources when it is 1. Removed so the fixture presents the true 1-vs-1 shape rather than an apparent 2-vs-2.",
-    "recorded_type_rationale": "candidate_concepts records 철 as structural_composition because that is the repository's actual enforced state -- ev3 is live, executing code. Recording essential_feature instead would misrepresent the repo. Both arms receive this identical fixture, so the anchor is held constant and cannot confound the arm contrast; it may affect absolute rates, which P3 already forbids reporting.",
+    "purpose": "H1a. The 칼/철 feature is claimed as essential_feature by documentation prose (ev1) and as structural_composition by live code (ev3). This is a genuine 1-vs-1 conflict, both sides instance-bound to this exact concept/feature pair, one evidence item per side.",
+    "ev2_removed": "A prior draft additionally cited docs/phase_a_implementation_packet.md:106 ('주의: 재료-대상(4)만 essential_feature가 될 수 있습니다') as ev2, presented as a second doc-side source. Independent review 20260801 (Q8=B): ev2 only restates ev1's same rule rather than adding an independent source, so the model-facing packet was actually doc:2 vs code:1 -- a count asymmetry that can act as a prompt-level pressure toward the doc-side type, independent of the liveness manipulation. Removed so the packet is truthfully 1-vs-1. Q8.1 explicitly forbids restoring count symmetry by adding the code side's own 주의 sentence, since that sentence names out-of-enum feature types and would broaden the model-facing ontology space beyond H1a's two-value scope.",
+    "recorded_type_rationale": "candidate_concepts records 철 as structural_composition because that is the repository's actual enforced state -- ev3 is live, executing code. Recording essential_feature instead would misrepresent the repo. Q6=A: this field is fixture/certifier-side only -- build_model_payload's concept_feature_pair carries concept/feature/evidence_refs and never this type value, so it cannot reach the model as an anchor.",
     "no_oracle": "H1a scores no correctness (D-H1a-4). There is deliberately no expected_decision, expected_type, or semantic_class field anywhere in this fixture. Neither type is marked right.",
     "liveness_is_harness_only": "That the documentation is older than the code is knowledge held by the harness and by readers of README §3. It is NOT in this fixture and does not reach the model -- the model receives evidence_id, source_kind, and text only. Encoding it here would destroy the manipulated variable.",
     "server_response_not_in_payload": "server_response is retained in this fixture -- test_server_response_is_reproducible still checks it against a live pipeline run, so the fixture cannot silently drift from what the repo actually certifies -- but build_model_payload (the H1a copy) no longer forwards it to the model. Independent review finding #11: server_response.status=PASS structurally authenticated the code side's answer (flipping the recorded type to essential_feature flips status to NEEDS_CORRECTION), which is a structural oracle leak distinct from the vocabulary-scanned liveness tokens. This is the second documented deviation from E2.4's frozen _surface.py.",

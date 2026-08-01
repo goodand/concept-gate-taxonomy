@@ -55,6 +55,12 @@ DOCUMENTED_DEVIATIONS = {
     "ELIGIBILITY_PROFILES", "_eligibility_profile",
     "MODEL_PAYLOAD_KEYS", "build_model_payload",
     "_SELF_REFERENTIAL_DOC_PREFIXES", "_SELF_REFERENTIAL_DOC_NAMES",
+    # H1a deviation #3 (Q6=A): no model-facing type anchor. render_prompt
+    # also changes here -- it substitutes {concept}/{feature} from
+    # concept_feature_pair, which E2.4's contract prompt has no equivalent
+    # placeholder for.
+    "MODEL_CONCEPT_FEATURE_PAIR_KEYS", "ANSWER_BEARING_KEYS",
+    "assert_no_model_facing_type_anchor", "render_prompt",
 }
 
 
@@ -133,7 +139,7 @@ def test_profile_name_does_not_assert_staleness():
 def test_fixture_qualifies_with_tests_actually_run():
     manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=True)
     assert manifest["status"] == "passed"
-    assert len(manifest["evidence_checks"]) == 3
+    assert len(manifest["evidence_checks"]) == 2  # ev1, ev3 -- ev2 removed by Q8=B
     for check in manifest["evidence_checks"]:
         assert check["locator_resolved"], check["evidence_id"]
         assert check["excerpt_exact_match"], check["evidence_id"]
@@ -170,11 +176,13 @@ CONCEPT, FEATURE = "칼", "철"
 
 
 def test_both_sides_of_the_conflict_are_present():
-    """The fixture is a 1-vs-1 conflict (independent review #10: an earlier
-    draft's ev4 double-counted the code side, since ev3/ev4 were one
-    authorial act in one commit)."""
+    """The fixture is a genuine 1-vs-1 conflict. Independent review #10 had
+    already found an earlier ev4 double-counted the code side (one authorial
+    act in one commit); Q8=B (2026-08-01) later found ev2 double-counted the
+    doc side the same way (restating ev1's rule, not an independent source),
+    so the model-facing packet was actually doc:2 vs code:1. ev2 is removed."""
     kinds = [i["source_kind"] for i in fixture()["evidence_sources"]]
-    assert kinds.count("doc") == 2  # ev1 + ev2, one primary + one reinforcement
+    assert kinds.count("doc") == 1  # ev1, the sole doc-side source
     assert kinds.count("code") == 1  # ev3, the sole code-side source
     assert set(kinds) == {"doc", "code"}
 
@@ -265,6 +273,8 @@ def test_model_payload_exposes_only_the_documented_keys():
     assert set(payload) == set(h1a_surface.MODEL_PAYLOAD_KEYS)
     for item in payload["evidence_items"]:
         assert set(item) == set(h1a_surface.MODEL_EVIDENCE_KEYS)
+    assert set(payload["concept_feature_pair"]) == \
+        set(h1a_surface.MODEL_CONCEPT_FEATURE_PAIR_KEYS)
 
 
 def test_model_payload_never_carries_server_response():
@@ -278,7 +288,57 @@ def test_model_payload_never_carries_server_response():
     payload = h1a_surface.build_model_payload(fixture(), manifest)
     assert "server_response" not in h1a_surface.MODEL_PAYLOAD_KEYS
     assert "server_response" not in payload
-    assert set(payload) == {"candidate_concepts", "evidence_items"}
+    assert set(payload) == {"concept_feature_pair", "evidence_items"}
+
+
+# --- Q6=A: no model-facing type anchor -------------------------------------
+
+def test_model_payload_carries_concept_feature_pair_with_no_type():
+    manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=False)
+    payload = h1a_surface.build_model_payload(fixture(), manifest)
+    pair = payload["concept_feature_pair"]
+    assert pair["concept"] == CONCEPT
+    assert pair["feature"] == FEATURE
+    assert set(pair["evidence_refs"]) == {"ev1", "ev3"}
+    assert "type" not in pair
+
+
+def test_no_anchor_guard_passes_the_real_payload():
+    manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=False)
+    payload = h1a_surface.build_model_payload(fixture(), manifest)
+    h1a_surface.assert_no_model_facing_type_anchor(payload)  # must not raise
+
+
+@pytest.mark.parametrize("bad_key", sorted(h1a_surface.ANSWER_BEARING_KEYS))
+def test_no_anchor_guard_catches_an_injected_answer_bearing_key(bad_key):
+    """Recall via mutation: a guard that has never been shown to fail proves
+    nothing by passing (skills-catalog pattern 8)."""
+    manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=False)
+    payload = h1a_surface.build_model_payload(fixture(), manifest)
+    payload["concept_feature_pair"][bad_key] = "structural_composition"
+    with pytest.raises(h1a_surface.SurfaceError):
+        h1a_surface.assert_no_model_facing_type_anchor(payload)
+
+
+@pytest.mark.parametrize("bad_type", sorted(h1a_surface.FEATURE_TYPES &
+                                             {"essential_feature", "structural_composition"}))
+def test_no_anchor_guard_catches_a_bare_type_value_outside_evidence_text(bad_type):
+    manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=False)
+    payload = h1a_surface.build_model_payload(fixture(), manifest)
+    payload["concept_feature_pair"]["recorded_state"] = bad_type
+    with pytest.raises(h1a_surface.SurfaceError):
+        h1a_surface.assert_no_model_facing_type_anchor(payload)
+
+
+def test_no_anchor_guard_does_not_fire_on_type_names_inside_evidence_text():
+    """Precision: the allowed type names legitimately appear inside
+    evidence_items[].text (that is the whole conflict H1a observes). A guard
+    that fired there would have zero precision."""
+    manifest = h1a_surface.qualify_fixture(fixture(), REPO_ROOT, run_tests=False)
+    payload = h1a_surface.build_model_payload(fixture(), manifest)
+    texts = " ".join(item["text"] for item in payload["evidence_items"])
+    assert "essential_feature" in texts or "structural_composition" in texts
+    h1a_surface.assert_no_model_facing_type_anchor(payload)  # must not raise
 
 
 def test_docs_self_referential_paths_are_rejected_as_evidence():

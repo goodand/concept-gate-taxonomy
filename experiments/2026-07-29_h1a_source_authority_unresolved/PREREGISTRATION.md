@@ -321,7 +321,34 @@ selected_type:  essential_feature | structural_composition | null
 
 ---
 
-## 11. Anchor-sensitivity 진단 (Q2, 본 코호트 전 필수 게이트)
+## 11. Anchor-sensitivity 진단 (Q2, **superseded by Q6=A — 이력 보존용**)
+
+> **⚠️ SUPERSEDED (2026-08-01, `DESIGN_DECISION_H1a_review_blockers.md`
+> Q6=A/Q6.2).** 이 섹션 전체(§11, §11.1~§11.3)는 더 이상 유효한 게이트가
+> **아니다.** 아래 §11.0이 대체 규율이다. 본문은 "왜 20건 진단이 필요했고,
+> 왜 더 이상 필요 없는가"를 보이는 이력으로만 보존한다. §11.2a의 Q4
+> 문구도 동일하게 이력 텍스트다 — 더 이상 걸리는 조건이 없다(진단 자체가
+> 실행되지 않으므로 "네 셀이 동일 범주"라는 전제가 성립하지 않는다).
+
+### 11.0 대체 — 구조적 no-anchor 가드 (Q6.2)
+
+Q6=A: 독립 리뷰가 앵커의 **간섭(interference)을 측정**해야 할 대상이 아니라
+앵커 자체가 **모델 대면 답 후보**임을 밝혔다. 측정 후 조건부 진행이 아니라
+**앵커를 제거**하는 것이 옳은 수선이다. 20건 진단은 "unnecessary and
+inapplicable"(Q6.2)이 되어 대체됐다.
+
+대체 게이트는 `_h1a_surface.py::assert_no_model_facing_type_anchor` —
+실행 전 1회 구조 검사, trial 소비 없음:
+
+- 모델 대면 payload의 어떤 키도 답 담는 이름(`type`, `selected_type`,
+  `expected_type`, `current_type`, `recorded_type`)이 아닐 것
+- 모델 대면 payload의 어떤 문자열 값도, `evidence_items[].text`를 제외하고,
+  허용 type 값(`essential_feature`, `structural_composition`)과 같지 않을 것
+
+주입 테스트(`test_h1a_fixture.py`)로 이 가드가 **실패할 수 있는지** 확인한다
+— 잡지 못하는 가드는 장식(skills-catalog 패턴 8).
+
+### 11.1~11.3 이하 — 이력 텍스트, 더 이상 유효하지 않음
 
 **독립 리뷰 #14 / 외부 판정 Q2=B.** 현재 설계는 실행 후 이 둘을 구별하지
 못한다:

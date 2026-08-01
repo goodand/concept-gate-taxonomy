@@ -5,7 +5,7 @@ H1a carries its own copy rather than editing or importing the original. Load
 it under a unique sys.modules key -- this repo has already had one experiment
 silently execute another's module (E2.4_ISSUE_REGISTER [DONE] #6).
 
-THERE ARE TWO INTENDED DEVIATIONS from E2.4's _surface.py, and both are
+THERE ARE THREE INTENDED DEVIATIONS from E2.4's _surface.py, and all three are
 enumerated in test_h1a_fixture.py::DOCUMENTED_DEVIATIONS.
 test_h1a_surface_deviates_from_e2_4_only_where_documented pins that claim by
 comparing every other constant and function body against the original, so an
@@ -39,6 +39,17 @@ this copy lost or changed, not things this copy gained.
    test_server_response_is_reproducible) so the fixture stays honest about
    what the repo actually certifies; it simply never reaches
    build_model_payload's return value.
+
+3. build_model_payload no longer emits `candidate_concepts` with a `type`
+   field. `DESIGN_DECISION_H1a_review_blockers.md` Q6=A: a second independent
+   review found that a pre-filled `"type": "structural_composition"` inside
+   the fixture-side candidate is a no-cost path to `select_type` (repeat the
+   recorded repository state) -- a model-facing answer candidate, not merely
+   an inert record. The payload now emits `concept_feature_pair` (concept,
+   feature, evidence_refs -- no type) per Q6.1's exact shape. The fixture's
+   own `candidate_concepts[...]["type"]` is unchanged and still used by the
+   certifier (`recorded_type_rationale` in builder_metadata); it simply never
+   reaches build_model_payload's return value, same discipline as deviation 2.
 
 --- original E2.4 docstring follows ---
 
@@ -130,11 +141,23 @@ FEATURE_TYPES = {
 
 # --- the model-facing surface, enumerated ---
 # H1a deviation #2: no server_response -- see module docstring.
-MODEL_PAYLOAD_KEYS = ("candidate_concepts", "evidence_items")
+# H1a deviation #3 (Q6=A): concept_feature_pair, not candidate_concepts with
+# type -- see module docstring. MODEL_FEATURE_KEYS is retained only as the
+# fixture-side (never model-facing) feature key set checked by
+# validate_fixture; it is NOT part of what build_model_payload emits.
+MODEL_PAYLOAD_KEYS = ("concept_feature_pair", "evidence_items")
 MODEL_EVIDENCE_KEYS = ("evidence_id", "source_kind", "text")
+MODEL_CONCEPT_FEATURE_PAIR_KEYS = ("concept", "feature", "evidence_refs")
 MODEL_CONCEPT_KEYS = ("name", "features")
 MODEL_FEATURE_KEYS = ("feature", "type", "evidence_refs")
 MODEL_SERVER_RESPONSE_KEYS = ("status", "dag", "composition_issues", "anti_patterns")
+
+# Q6.2's structural no-anchor guard: no model-facing key may carry an
+# answer-bearing name, and no model-facing field outside evidence_items[].text
+# may contain either allowed type value as its content.
+ANSWER_BEARING_KEYS = {
+    "type", "selected_type", "expected_type", "current_type", "recorded_type",
+}
 
 _SHA1_FULL = re.compile(r"^[0-9a-f]{40}$")
 
@@ -380,6 +403,11 @@ def qualify_fixture(fixture, repo_root, run_tests: bool = True) -> dict:
 # --------------------------------------------------------------------------
 
 def build_model_payload(fixture, qualification_manifest) -> dict:
+    """H1a deviation #3 (Q6=A): emits `concept_feature_pair` -- concept,
+    feature, evidence_refs -- never a `type`. Requires the fixture to name
+    exactly one concept and one feature, which is H1a's whole subject
+    (single_feature_scope in builder_metadata); a payload with more than one
+    pair would have nowhere unambiguous to put "the" concept/feature."""
     manifest = qualification_manifest
     if manifest.get("qualification_version") != QUALIFICATION_VERSION:
         raise SurfaceError("qualification manifest version mismatch")
@@ -391,21 +419,23 @@ def build_model_payload(fixture, qualification_manifest) -> dict:
         )
     validate_fixture(fixture)
 
+    concepts = fixture["candidate_concepts"]
+    if len(concepts) != 1 or len(concepts[0]["features"]) != 1:
+        raise SurfaceError(
+            "H1a's model-facing payload requires exactly one concept and one "
+            "feature; got "
+            f"{len(concepts)} concept(s), "
+            f"{[len(c['features']) for c in concepts]} feature(s) each"
+        )
+    concept = concepts[0]
+    feature = concept["features"][0]
+
     return {
-        "candidate_concepts": [
-            {
-                "name": concept["name"],
-                "features": [
-                    {
-                        "feature": feature["feature"],
-                        "type": feature["type"],
-                        "evidence_refs": list(feature["evidence_refs"]),
-                    }
-                    for feature in concept["features"]
-                ],
-            }
-            for concept in fixture["candidate_concepts"]
-        ],
+        "concept_feature_pair": {
+            "concept": concept["name"],
+            "feature": feature["feature"],
+            "evidence_refs": list(feature["evidence_refs"]),
+        },
         "evidence_items": [
             {
                 "evidence_id": item["evidence_id"],
@@ -415,6 +445,47 @@ def build_model_payload(fixture, qualification_manifest) -> dict:
             for item in fixture["evidence_sources"]
         ],
     }
+
+
+def assert_no_model_facing_type_anchor(model_payload: dict) -> None:
+    """Q6.2's structural no-anchor guard.
+
+    Two checks, both structural rather than a keyword scan of rendered text:
+    1. no key anywhere in the payload (recursively) is an answer-bearing key
+       name (ANSWER_BEARING_KEYS) -- catches a `type`/`selected_type`/etc key
+       reappearing anywhere, not just at the top level.
+    2. no value anywhere in the payload equals an allowed type name, UNLESS
+       it occurs inside an evidence_items[].text string (where a type name is
+       legitimate content) or inside the allowed-value list itself.
+    """
+    allowed_types = set(FEATURE_TYPES)
+    evidence_texts = {
+        item.get("text") for item in model_payload.get("evidence_items", [])
+        if isinstance(item, dict)
+    }
+
+    def walk(node, in_evidence_text: bool = False):
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key in ANSWER_BEARING_KEYS:
+                    raise SurfaceError(
+                        f"no-anchor guard: answer-bearing key {key!r} present "
+                        f"in model-facing payload"
+                    )
+                walk(value, in_evidence_text=(key == "text"))
+        elif isinstance(node, list):
+            for item in node:
+                walk(item, in_evidence_text=in_evidence_text)
+        elif isinstance(node, str):
+            if in_evidence_text or node in evidence_texts:
+                return
+            if node in allowed_types:
+                raise SurfaceError(
+                    f"no-anchor guard: bare type value {node!r} present "
+                    f"outside evidence_items[].text"
+                )
+
+    walk(model_payload)
 
 
 def load_contract_prompt(path) -> str:
@@ -429,7 +500,14 @@ def load_contract_prompt(path) -> str:
 def render_prompt(contract_prompt: str, model_payload: dict) -> str:
     if "{payload_json}" not in contract_prompt:
         raise SurfaceError("contract prompt has no {payload_json} placeholder")
-    return contract_prompt.replace(
+    rendered = contract_prompt
+    pair = model_payload.get("concept_feature_pair")
+    if pair is not None:
+        if "{concept}" in rendered:
+            rendered = rendered.replace("{concept}", pair["concept"])
+        if "{feature}" in rendered:
+            rendered = rendered.replace("{feature}", pair["feature"])
+    return rendered.replace(
         "{payload_json}", json.dumps(model_payload, ensure_ascii=False)
     )
 
