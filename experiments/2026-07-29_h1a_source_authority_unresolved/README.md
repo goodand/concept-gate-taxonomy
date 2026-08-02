@@ -1,15 +1,34 @@
-# H1a — `source_authority_unresolved` (설계 판정 2건 반영, anchor 진단 전)
+# H1a — `source_authority_unresolved` (설계 판정 5건, Q9 등록 대기)
+
+> ⚠️ **이 README의 아래 본문 상당 부분은 2026-07-30 시점 서술이다.**
+> Q3~Q9가 그 뒤에 왔고, 특히 **Q6=A가 anchor-sensitivity 진단을
+> 은퇴시켰다** — 아래에서 "진단을 통과해야 본 코호트 진행"이라고 읽히는
+> 서술은 **더 이상 유효하지 않다**. 현재 상태의 정본은
+> [`../../docs/HANDOFF.md`](../../docs/HANDOFF.md)이고, 실행 함정은
+> [`../../docs/NEXT_SESSION_TRAPS.md`](../../docs/NEXT_SESSION_TRAPS.md)다.
 
 - 작성: 2026-07-29 (초안) / 재정의: 2026-07-29 설계 판정 반영 /
-  **갱신: 2026-07-30 조작 범위 재정의(Q1) + anchor 진단 게이트(Q2) 반영**
-- 지위: **설계 판정 완료(2건), fixture 재구성 완료, anchor 진단 미실행.**
-  독립 리뷰가 초안 fixture와 초안 조작 정의 둘 다 동결 부적합으로 판정했다.
-  fixture는 C2~C10 반영으로 재구성됐고(커밋 대기), 조작 정의는 외부 판정
-  Q1로 재확정됐다(`_h1a_contract.py`). **남은 게이트는 Q2의
-  anchor-sensitivity 진단(§11) — 이것이 완료·통과되기 전에는 본 코호트를
-  동결·실행하지 않는다.**
+  갱신: 2026-07-30 조작 범위 재정의(Q1) + anchor 진단 게이트(Q2) /
+  **갱신: 2026-08-02 Q3~Q8 적용 완료 + Q9 판정 도착**
+- 지위: **설계 판정 5건, 독립 리뷰 3회, 실행된 trial 0건.**
+  Q5~Q8 적용 완료(조작 2문장 축소, 모델 대면 type 앵커 제거, warrant 기반
+  defer 정의, fixture 진짜 1-vs-1), 3차 독립 리뷰 blocker 0.
+  **남은 게이트는 Q9=A의 L3 한계 문구를 `PREREGISTRATION.md`에 등록하는
+  것뿐이다** — fixture·코드 변경은 없다. 그 뒤 동결 → 본 코호트 40 trial
+  (별도 승인).
+- **anchor-sensitivity 진단(Q2)은 은퇴했다** — Q6=A가 모델 대면 앵커를
+  제거해 잴 대상이 사라졌다. 구현체 4파일은
+  [`superseded/`](superseded/)에 있고 사유는
+  [`superseded/WHY.md`](superseded/WHY.md). 대체물은
+  `_h1a_surface.py::assert_no_model_facing_type_anchor`(구조적 가드).
 - 설계 판정 원문: [`DESIGN_DECISION.md`](DESIGN_DECISION.md)(D-H1a-1~7),
-  [`DESIGN_DECISION_H1a_manipulation_scope.md`](DESIGN_DECISION_H1a_manipulation_scope.md)(Q1·Q2) — 판정자: OpenAI Codex, 외부
+  [`DESIGN_DECISION_H1a_manipulation_scope.md`](DESIGN_DECISION_H1a_manipulation_scope.md)(Q1·Q2),
+  [`DESIGN_DECISION_H1a_prompt_surface.md`](DESIGN_DECISION_H1a_prompt_surface.md)(Q3·Q4),
+  [`DESIGN_DECISION_H1a_review_blockers.md`](DESIGN_DECISION_H1a_review_blockers.md)(Q5~Q8),
+  Q9(`notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md` — **저장소 미반입**)
+  — 판정자: OpenAI Codex, 외부
+- 모델 대면 프롬프트 template: [`h1a_prompt_template.md`](h1a_prompt_template.md)
+  **(판정문이 아니다 — 2026-08-02 분리)**
 - 적대 검증 보고: [`../../docs/feedback/h1a_source_authority_unresolved_review_20260729.md`](../../docs/feedback/h1a_source_authority_unresolved_review_20260729.md)(설계 초안 리뷰),
   [`../../docs/feedback/h1a_fixture_review_20260730.md`](../../docs/feedback/h1a_fixture_review_20260730.md)(fixture 리뷰, blocker #16 발견)
 - 분기 출처: 2026-07-29 운영 지시 §3(네 번째 항목) — 원문
@@ -264,10 +283,14 @@ rationale:          ...
 | 4c | 리뷰 C2~C10 기계적 수정 반영 (fixture 재구성) | ✅ 완료, 커밋 대기. `test_h1a_fixture.py` 23 passed |
 | 4d | Q1·Q2 외부 설계 요청 및 판정 | ✅ `DESIGN_DECISION_H1a_manipulation_scope.md` 도착·반영. Q1=B(조작 재정의), Q2=B(진단 게이트) |
 | 5 | Q1 반영 — 절 기반 arm 렌더러 + 구조 가드 | ✅ `_h1a_contract.py`, `test_h1a_contract.py` 11 passed |
-| 6 | **Q2 반영 — anchor-sensitivity 진단(2×2×5=20) 설계·구현·실행** | ⛔ **다음 단계, 미완.** `PREREGISTRATION.md` §11에 프로토콜 사전등록 완료, 실행은 아직 |
-| 7 | 두 arm 최종 프롬프트 렌더링 + `rendered_prompt_sha256` 동결 | 6 통과 후 |
+| 6 | ~~Q2 반영 — anchor-sensitivity 진단(2×2×5=20) 설계·구현·실행~~ | ⛔ **은퇴(2026-08-02, Q6=A).** 구현·테스트까지 완료했으나 앵커 제거로 잴 대상이 사라졌다. 구현체는 `superseded/`, 사유는 `superseded/WHY.md`. 대체: 구조적 no-anchor 가드 |
+| 6a | Q3·Q4 반영 — H1a 전용 프롬프트 표면 | ✅ 완료. `h1a_prompt_template.md`로 분리(판정문에서 떼어냄) |
+| 6b | Q5~Q8 반영 — 조작 2문장 / 앵커 제거 / warrant defer / ev2 제거 | ✅ 완료 2026-08-02. 게이트 그린(H1a 106 passed) |
+| 6c | **3차 독립 리뷰** (Q5~Q8 적용분 재검증) | ✅ **blocker 0.** major 2 + minor 1 즉시 수정·회귀 테스트 고정 |
+| 6d | **Q9=A 반영 — L3 한계 문구를 `PREREGISTRATION.md`에 등록** | ⛔ **다음 단계, 미완.** 판정 도착했으나 저장소 반입·등록 미완. fixture·코드 변경 **없음** |
+| 7 | 두 arm 최종 프롬프트 렌더링 + `rendered_prompt_sha256` 동결 | 6d 후 |
 | 8 | trial subject agent 정의·설치 | 7 후 |
-| 9 | **trial 실행** Stage A(10) → 하네스 점검 5항 → Stage B(30) | 8 후 |
+| 9 | **trial 실행** Stage A(10) → 하네스 점검 5항 → Stage B(30) | 8 후, **별도 승인** |
 
 > [DONE] #17의 "agent registry가 세션 시작에 고정" 서술은 **이번 세션에서
 > 반증됐다** — E2.4 H3의 trial subject 3종을 세션 중간에 설치해 즉시
