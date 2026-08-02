@@ -135,12 +135,17 @@ FAIL이다 — 그러지 않으면 환경 의존 테스트 하나가 같은 suit
 ## 무언가를 찾을 때 — grep으로 끝내지 마라
 
 **`rg`/`grep`은 "무엇이 어디 있나"엔 충분하지만 "이건 이미 결정됐나"엔 답하지
-못한다.** 결정 문서의 제목이 네 질문의 어휘를 하나도 포함하지 않을 수 있기
-때문이다. 2026-08-01 실측: 활성 폴더 정리를 설계하며 "디렉토리 정리 /
-DESIGN_DECISION / canonical"로 훑었으나 이미 채택된 결정
-(`notes/audits/vault/symlink-vs-moc-2026-07-30.md`)이 안 걸렸다 — 그 문서
-제목이 "Format storage, symlink views, and MOC validation"이라 교집합이 0.
-그 사이 쓴 설계는 채택된 결정과 정면 충돌했다. **backlink 1홉으로 나왔다.**
+못한다.** 결정 문서의 **경로(파일명)**가 네 질문의 어휘를 하나도 포함하지
+않을 수 있기 때문이다. 2026-08-01 실측: 활성 폴더 정리를 설계하며 "디렉토리
+정리 / DESIGN_DECISION / canonical"로 **파일명**을 훑었으나 이미 채택된 결정
+(`notes/audits/vault/symlink-vs-moc-2026-07-30.md`)이 안 걸렸다 — 그 파일의
+**경로**가 저 키워드를 하나도 포함하지 않기 때문이다(2026-08-02 재확인:
+`find notes -iname "*canonical*" -o -iname "*design_decision*"`가 이 파일을
+반환하지 않음). **본문**에는 `canonical`이 8회 등장한다 — 본문 grep이었다면
+후보로는 걸렸을 것이나, 같은 조건에 걸리는 파일이 7개라 여전히 순위를 매길
+근거가 없었을 것이다. 그 사이 쓴 설계는 채택된 결정과 정면 충돌했다.
+**backlink 1홉(정확히 2건: MOC 자신 + 이 감사 문서)으로 나왔다.** 상세 재현:
+`docs/H1A_PROBLEM_ANALYSIS.md` §4 W-B.
 
 검색이 빗나가면 **키워드를 바꾸지 말고 그래프를 따라가라**(실측 recall:
 0.688 → pool refill 0.812 → graph walk 0.958 → 1.000):

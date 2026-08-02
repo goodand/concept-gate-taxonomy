@@ -263,13 +263,27 @@ M8(전문 재독)의 상위 절차다. §3이 "찾은 뒤 검증하는 법"이�
 
 | 단계 | 쿼리/리퀘스트 | 결과 | 다음 단계로 넘어간 이유 |
 |---|---|---|---|
-| 1 | `rg`로 "디렉토리 정리 / 파일 배치 / DESIGN_DECISION / canonical" 키워드 훑기 | 관련 결정 문서를 못 찾음 | 없다고 잠정 결론하고 설계 초안 작성(뒤에 틀린 것으로 드러남) |
-| 2 | (사용자 지적 후) `obsidian backlinks path="notes/00-moc/by-topic/vault-architecture.md" counts format=json` | `notes/audits/vault/symlink-vs-moc-2026-07-30.md`(status: finished) 적중 | backlink 1홉으로 즉시 적중 — 그 문서 제목("Format storage, symlink views, and MOC validation")이 1단계 키워드와 교집합 0이었음을 확인 |
+| 1 | `rg`로 "디렉토리 정리 / 파일 배치 / DESIGN_DECISION / canonical" 키워드로 **파일명**(경로) 훑기 | 관련 결정 문서를 못 찾음 — 대상 파일 경로가 `notes/audits/vault/symlink-vs-moc-2026-07-30.md`라 네 키워드 중 무엇도 경로 안에 없다(2026-08-02 재확인: `find notes -iname "*canonical*" -o -iname "*design_decision*"`가 이 파일을 반환하지 않음) | 없다고 잠정 결론하고 설계 초안 작성(뒤에 틀린 것으로 드러남) |
+| 2 | (사용자 지적 후) `obsidian backlinks path="notes/00-moc/by-topic/vault-architecture.md" counts format=json` | **backlink 2건**: `notes/00-moc/00-vault-home.md`(1), `notes/audits/vault/symlink-vs-moc-2026-07-30.md`(1, status: finished) — 후자가 정답 (2026-08-02 재확인: 위 명령 그대로 재실행, 결과 동일) | backlink 1홉으로 즉시 적중 |
 
-**이 워크플로가 드러낸 문제(P5)**: 결정 문서의 제목이 질문의 어휘를
-포함하지 않으면 lexical 검색은 원리상 못 찾는다. 여기서 쓴 우회로는
-**주제 MOC의 backlink를 역방향으로 탐색**하는 것 — 키워드를 바꾸는 게
-아니라 그래프를 따라간 것이다.
+**⚠️ 이 절 자체를 2026-08-02에 재검증하다 부정확한 서술을 하나 잡았다.**
+초판은 "그 문서 제목이 1단계 키워드와 교집합 0"이라고 썼는데, **본문
+content grep이었다면 사실이 아니다** — 그 문서 본문에 `canonical`이
+**8회** 등장한다(`grep -n canonical notes/audits/vault/symlink-vs-moc-2026-07-30.md`
+로 재확인). 실제로 안 걸린 이유는 1단계가 **본문이 아니라 파일명/경로만
+훑는 검색**이었기 때문이다(원 서술 "파일명만 훑었다"가 정확했는데, 뒤이은
+"교집합 0"이 범위를 흐렸다). `rg -l canonical notes/`로 지금 다시 돌리면
+이 파일을 포함해 **7개 파일**이 걸린다 — 즉 **본문 content grep이었어도
+단서가 됐을 것**이나, 7개 중 어느 게 답인지 순위를 매길 근거가 없어
+여전히 graph walk가 필요했을 것이다.
+
+**이 워크플로가 드러낸 문제(P5, 그리고 재검증에서 드러난 하위 함정)**:
+결정 문서의 **경로**가 질문의 어휘를 포함하지 않으면 파일명 기반 검색은
+원리상 못 찾는다 — 이건 본문 검색과는 다른 실패 지점이다. 여기서 쓴
+우회로는 **주제 MOC의 backlink를 역방향으로 탐색**하는 것. 그리고 이
+워크플로를 **기록한 문서 자신도**, "본문 검색이 놓쳤다"고 뭉뚱그려 써서
+나중에(W-D 스타일 재발) 정정이 필요했다 — 검색 방법을 "파일명 vs 본문"
+으로 명시하지 않으면 그 기록 자체가 다음 사람을 오도한다.
 
 ### W-C. (W-B의 재발) 그 채택된 결정이 실제로 뭘 금지하는가 (P8 발견)
 
@@ -326,6 +340,36 @@ W-C의 해법은 **찾은 문서를 발췌 대신 전문으로 다시 읽는 것
 **이 문서가 스스로 이 절차를 어긴 사례**: W-C는 애초에 W-B의 결과를
 **2단계(범위 확장) 없이 1단계 인용만으로 결론 내려던 것**이었다. 위
 절차의 4번("답이 있다로 나와도 멈추지 않는다")을 건너뛴 결과였다.
+
+### W-F. 이번(압축 이후) 세션이 실제로 `rg`/grep과 obsidian CLI를 각각 썼는가 — 자기감사
+
+**문제 정의**: 사용자가 "최근에 문서 검색을 했을 때 rg 키워드 검색과
+obsidian CLI wikilink 타기를 했었는지" 직접 물었다. 짐작으로 답하지 않고
+**이번 대화의 압축 이후 구간에서 실제로 실행한 도구 호출을 전수 감사**한다.
+
+| # | 확인 대상("이미 다뤄졌나" 질문) | 실제로 쓴 방법 |
+|---|---|---|
+| 1 | CLAUDE.md에 "문헌 우선 확인" 규율을 추가하기 전(W-D) | `grep`만 3회(HARNESS_KNOWHOW 목차, owlready2, repo_root) |
+| 2 | `DESIGN_REQUEST*.md`를 `correspondence/`로 옮겨도 되는가(Phase 5) | `grep`만(어떤 `.py`도 로드 안 함 확인) |
+| 3 | Q9 요청서 인용 3건이 실제 원문과 맞는가 | `grep -n`만(정확한 줄 대조) |
+| 4 | `NEXT_SESSION_TRAPS.md`를 쓰기 전 기존 문서 중복 확인 | `grep`·`wc -l`·`awk`만 |
+| 5 | `README.md`가 낡은 서술을 담고 있는가(§7.1) | `grep -c`만 |
+| 6 | `e2.2-wt` 사본과의 드리프트 | `diff -rq`(grep도 obsidian도 아님) |
+| 7 | `notes/`에 `DESIGN_REQUEST` 미러가 있는가 | `find`만 |
+| 8 | (지금) W-B 절의 정확한 키워드·backlink 수 재검증 | **obsidian CLI 처음 사용**(`vaults verbose`, `backlinks ... counts format=json`) — 단 이건 **새 "이미 다뤄졌나" 확인이 아니라 과거 주장의 재검증**이었다 |
+
+**결론 — 정직한 격차**: 1~7번 **일곱 건 전부 `grep`/`find`/`diff`만
+썼고, 단 한 번도 obsidian CLI backlink를 능동적으로 쓰지 않았다.**
+이 문서 §4가 스스로 처방한 절차(3단계: "범위를 넓히는 두 축 — 검색 폭
+확장 **또는** graph walk")에서, 이번 세션은 매번 "검색 폭 확장"(더 넓은
+grep) 쪽만 택했고 graph walk 쪽은 한 번도 안 갔다. 이유를 사후 추정하면:
+1~7번 전부 **grep이 첫 시도에서 바로 답을 줬다**(빈 결과든 히트든
+명확했다) — graph walk는 "grep이 애매하거나 0건인데 문서가 있을 법할 때"
+쓰는 두 번째 수단인데, 이번엔 그 조건이 한 번도 걸리지 않았다. **그러나
+이것 자체가 검증되지 않은 가정이다** — grep이 준 "빈 결과"·"낡음 확인"
+답이 실제로 완전했는지 graph walk로 교차검증한 적이 없다. W-B/W-C의
+교훈("찾았다고 멈추지 마라")을 이번 세션 자신에게 적용하면, 1~7번 중
+최소 하나는 obsidian backlink로 교차검증해 볼 가치가 있었다는 뜻이다.
 
 ---
 
