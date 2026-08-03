@@ -1,8 +1,26 @@
 # H1a 이슈 등록부
 
+> ## 🔴 최신 상태는 §H다 (2026-08-03(2))
+>
+> **Q10 판정 도착(D-H1a-10, Q10=E).** 최초 40-trial 코호트는
+> `completed_nonidentifying`으로 동결 보존되고, **Q7 부분 개정(R1) + 양 arm
+> 재실행(R2)** 이 명령됐다. **§H.5가 현재의 게이트 목록이다.**
+>
+> ⚠️ **이 문서 하단의 "다음 세션 첫 행동"은 2026-08-02 텍스트다.** 거기의
+> "실행된 trial 0건", "독립 리뷰 재실행이 차단선"은 **그 시점의 평가이며
+> 지금은 참이 아니다.** 실제로 이 함정에 2026-08-03(2) 세션이 걸렸다 —
+> 하단을 읽고 "지금 독립 리뷰를 돌려야 한다"고 판단했으나, 그때는 표면이
+> 바뀌지 않아 리뷰 대상이 없는 상태였다. `WORKSPACE_NAVIGATION.md` §0 함정
+> 3("해결됨/완료 표시는 과거 시점의 평가")이 **같은 문서 안에서** 재발한
+> 사례다. 아래 §0 표와 §H를 먼저 읽어라.
+
+- 갱신: **2026-08-03(2)** — **Q10 판정 도착·반입(D-H1a-10).** Q10=E /
+  Q10.1=비병합 보존 / Q10.2=가드 상향 / Q10.3=L4 등록. 상세 §H.4~H.7
+- 갱신: **2026-08-03** — Q9=A 반입, `PREREGISTRATION.md` §0.1 신설(L1~L3),
+  4차 독립 리뷰 사용자 승인으로 생략, **동결 → 본 코호트 40 trial 실행**
+  (양 arm 20/20 defer). 상세 §H
 - 갱신: **2026-08-02(3)** — ev1/ev3 내용 비대칭을 **Q9 설계 판정 요청으로
-  상신**(`DESIGN_REQUEST_H1a_evidence_symmetry.md`, 아직 미발송). 판정
-  도착 전까지 동결 불가
+  상신**(`DESIGN_REQUEST_H1a_evidence_symmetry.md`). → **판정 도착·적용 완료**
 - 갱신: **2026-08-02(2)** — **3차 독립 리뷰 완료, blocker 0.** major 2 +
   minor 1 즉시 수정(§G). 게이트 그린(H1a 106 passed/1 skipped, E2.4 118
   불변).
@@ -34,22 +52,33 @@
 | 항목 | 값 |
 |---|---|
 | 실험 | `experiments/2026-07-29_h1a_source_authority_unresolved/` |
-| 설계 판정 | **완료 (3건)** — D-H1a-1~7 (`DESIGN_DECISION.md`) +
-  조작 범위 Q1·Q2 (`DESIGN_DECISION_H1a_manipulation_scope.md`) +
-  프롬프트 표면 Q3·Q4 (`DESIGN_DECISION_H1a_prompt_surface.md`) |
-| 사전등록 P0.1 + P1~P7 + §11(11.2a·11.2b) | **완료** — `PREREGISTRATION.md`, trial 0건 시점에 갱신 |
-| 행동 코더 | **교정 통과 18/18**, 테스트 38 passed, 뮤테이션 3종 검증 |
-| fixture | `20f7102` → **C2~C10 재구성 적용(2026-07-30), 커밋 대기** |
-| 프롬프트 표면(arm) 렌더러 | **G1·G2·G3 해결.** `_h1a_contract.py` — Q3=B 반영, H1a 전용 template + Q1 절 삽입, `test_h1a_contract.py` 18 passed, 뮤테이션 4종 CAUGHT |
-| 진단 하네스 | 프롬프트 독립 부분 완성 — `_h1a_diag.py`, `test_h1a_diag.py` 20 passed |
-| 실행된 trial | **0건** (재동결 비용 없음) |
-| **진행을 막는 것** | **[GATE] G2 — 모델 대면 프롬프트 표면 미정의.** 진단조차 렌더링할 수 없다. `DESIGN_REQUEST_H1a_prompt_surface.md` Q3 판정 필요 |
+| 설계 판정 | **6건 전부 도착·반입** — D-H1a-1~7(`DESIGN_DECISION.md`) / Q1·Q2(`_manipulation_scope`) / Q3·Q4(`_prompt_surface`) / Q5~Q8(`_review_blockers`) / Q9(`_evidence_symmetry`) / **Q10(`_residual_prohibition`, D-H1a-10)** |
+| 사전등록 | `PREREGISTRATION.md` — P0.1·P1~P7 + §0.1 한계 **L1~L4**. §11은 Q6=A로 은퇴(이력) |
+| 행동 코더 | **교정 통과 18/18**(실행 직전 재측정), 테스트 38 passed, 뮤테이션 3종 검증. **Q10에서 변경 대상 아님** |
+| fixture | 1-vs-1(Q8=B로 ev2 제거), Q9=A로 **무변경 확정**. 비대칭은 L3로 선언 |
+| 프롬프트 표면(arm) 렌더러 | `_h1a_contract.py` — Q3=B·Q5~Q7 반영. **Q10.2가 아키텍처 전환을 명령** → 어휘 tripwire에서 정책 계약으로 |
+| **실행된 trial** | **40건** (2026-08-03, 40/40 성공, 전송 실패 0). ⚠️ **"trial 0건" 전제는 끝났다 — 이후 설계 변경엔 재동결 비용이 있다** |
+| 최초 코호트 지위 | **`completed_nonidentifying`**(Q10.1) — 유효 관측이나 확증 부적격, 새 코호트와 **병합 금지**. `COHORT_STATUS_20260803_nonidentifying.md` |
+| **진행을 막는 것** | **[GATE] §H.5의 5개** — R1(Q7 부분 개정) → Q10.2(가드 상향) → 신규 사전등록 → **독립 리뷰**(표면이 바뀌므로 3차 리뷰 무효화) → R2(양 arm 재실행) |
+| [DESIGN] 미판정 | **§H.6 Q11 후보** — `removed: allowed`를 명시적 허용 문장으로 렌더링할지 침묵할지 |
 
 **허용 결론의 상한**(결과 보기 전에 고정, `PREREGISTRATION.md` §0):
 H1a는 K=1이라 `P(행동 | 고정 packet, 고정 arm, 고정 모델·파라미터)`만
-추정 가능하다. **N을 늘려도 이 상한은 올라가지 않는다.** null 결론은
-anchor 진단(§11) 통과 후에만, 그것도 "이 고정 packet 하에서"로 좁게만
-보고 가능 — "조작이 일반적으로 효과 없다"는 금지.
+추정 가능하다. **N을 늘려도 이 상한은 올라가지 않는다.**
+
+> ⚠️ **위 문장의 "null 결론은 anchor 진단(§11) 통과 후에만"이라는 옛 단서는
+> 두 번 superseded됐다.** ① Q6=A가 anchor 진단을 은퇴시켰고(대체: 구조적
+> no-anchor 가드), ② **Q10이 최초 코호트의 null 자체를 비식별로 판정했다.**
+> 지금 유효한 표기는 다음이다(D-H1a-10 §12):
+>
+> ```text
+> target_effect:            insufficient_evidence
+> current_bundle_contrast:  observed_zero
+> ```
+>
+> `null_effect`가 **아니다.** "금지를 제거해도 행동은 변하지 않았다"는 보고는
+> **금지**되며, 허용 문구는 `COHORT_STATUS_20260803_nonidentifying.md` §4에
+> 있다. "조작이 일반적으로 효과 없다"는 금지는 물론 그대로 유효하다.
 
 ---
 
@@ -430,26 +459,200 @@ Q8.1이 code측에 대해 이미 금지한 것과 대칭인 문제. code측 반�
 충돌한다. 즉 **개수를 안 늘리고는 어느 쪽도 깨끗하게 못 고친다** — 코드
 결함이 아니라 실제 저장소 텍스트의 구조적 한계다.
 
-**해결 유무**: 🔶 **판정 도착, 미적용.** 요청서
+**해결 유무**: ✅ **적용 완료(2026-08-03)**. 요청서
 (`correspondence/DESIGN_REQUEST_H1a_evidence_symmetry.md`) 작성 완료
-2026-08-02, 인용 3건 실측 대조 완료. **판정 도착 확인함(2026-08-02)**:
-`notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`(아직 저장소로 미반입,
-아래 참조). **Q9=A** — fixture/코드 **무변경**, byte-faithful 1-vs-1
-그대로 유지. 대신 `PREREGISTRATION.md`에 판정문 Q9.1이 준 정확한 문구를
-그대로 **L3**로 등록. Q9.2: Q8.1(enum 밖 노출 금지) 구속력 유지 재확인.
-실험 진행 여부: **계속**.
+2026-08-02, 인용 3건 실측 대조 완료. 판정 도착 확인(2026-08-02):
+`notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`. **Q9=A** — fixture/코드
+**무변경**, byte-faithful 1-vs-1 그대로 유지. `PREREGISTRATION.md` §0.1에
+판정문 Q9.1이 준 정확한 문구를 그대로 **L3**로 등록 완료(L1·L2와 같은
+자리). Q9.2: Q8.1(enum 밖 노출 금지) 구속력 유지 재확인. 실험 진행 여부:
+**계속**.
 
-**다음 세션이 할 일(운영 세션 의견, 미실행 — 상세는 `HANDOFF.md` 배너)**:
-1. `notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`를 저장소로 반입 —
+**반입·등록 완료 내역(2026-08-03)**:
+1. ✅ `notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`를 저장소로 반입 —
    기존 판정문 명명 규칙(`DESIGN_DECISION_H1a_evidence_symmetry.md`,
-   H1a는 소문자 a)에 맞춰 `experiments/2026-07-29_h1a_source_authority_unresolved/`에
-   복사, **byte-identical 대조 후** notes 원본은 그대로 둔다(원문 보존)
-2. `PREREGISTRATION.md`에 L3를 L1·L2와 같은 자리에 **판정문 원문
-   그대로**(의역 금지) 추가
-3. fixture·코드는 손대지 않는다 — Q9=A가 명시적으로 무변경을 요구
-4. 4차 독립 리뷰 필요 여부 재판단 — 표면(prompt/payload/fixture)이 안
-   바뀌므로 운영 세션 의견은 생략 가능이나 최종 판단은 사람 몫
-5. 완료 후 동결 → 본 코호트 40 trial(별도 승인)로 진행 가능
+   H1a는 소문자 a)에 맞춰
+   `experiments/2026-07-29_h1a_source_authority_unresolved/`에 복사,
+   **byte-identical 대조 완료**(`diff` 무출력), notes 원본은 그대로 둠(원문 보존)
+2. ✅ `PREREGISTRATION.md` §0.1(신설)에 L1·L2(이 문서 [DECLARE] 표에서
+   그대로 인용)와 L3(판정문 Q9.1 원문 그대로, 의역 없음)를 같은 자리에 등록
+3. ✅ fixture·코드는 손대지 않음 — Q9=A가 명시적으로 요구한 대로 무변경
+4. ✅ **4차 독립 리뷰 생략** — 사용자가 2026-08-03 명시적으로 승인(표면
+   불변이므로 생략 가능하다는 운영 세션 의견 수용)
+5. ✅ **동결 → 본 코호트 40 trial 실행 완료(2026-08-03)** — 사용자 승인.
+   결과와 그 과정에서 나온 신규 설계 사안은 아래 §H
+
+---
+
+## H. 본 코호트 40 trial 실행 + Q10 상신 (2026-08-03)
+
+**실행된 trial: 0건 → 40건.** 이 문서의 "trial 0건" 전제는 여기서 끝난다.
+
+### H.1 실행 무결성 (전부 통과)
+
+| 항목 | 결과 |
+|---|---|
+| 신규 harness | `_h1a_cohort.py`(동결), `_h1a_score.py`(채점) — **채점기는 출력을 읽기 전에 작성** |
+| 동결 결정론 | 2회 재실행 byte-identical |
+| fixture qualification | `passed` |
+| §11.0 구조적 no-anchor 가드 | 실행 전 통과 |
+| arm diff 재구성 | Q1 2문장으로만 제한됨 확인 |
+| trial subject 표면 | `h1a-decider` `tools: []`를 **정의 파일에서 확인**하고 `definition_sha256`·`system_prompt_sha256` 기록 — E2.4 §11.1이 찾은 "system prompt를 아무도 해싱하지 않음" 구멍을 H1a에서도 닫음. 가드 음성 대조(`tools: [Read, Bash]` 주입 → CAUGHT)로 recall 확인 |
+| 실행 | 40 dispatched / **40 done** / 0 error / 0 empty / 114,330 tok / 49.7s |
+| 전송 실패(P4) | **0건** — 재실행 대상 없음, 완주 bundle 20/20 |
+| 코더 교정 | 실행 직전 재측정 **18/18 passed** |
+
+### H.1a 로그 (방법론 §1·§2·§5 — 처음에 빠뜨렸다가 보완)
+
+첫 정리에서 **사전등록 P4가 요구하는 `h1a_attempt_log.json`과 방법론 표준
+파일 세트의 `OPERATIONS_LOG.md`를 만들지 않았다.** 사용자 지적으로 보완했다.
+
+| 로그 | 근거 | 내용 |
+|---|---|---|
+| `h1a_attempt_log.json` | **P4 명시 요구** | batch 1건, 40/40 first-attempt, 전송 실패 0, 재실행 0. 값은 손으로 타이핑하지 않고 스크립트로 도출(전사 오류 방지) |
+| `OPERATIONS_LOG.md` | 방법론 §1·§2 | 실행 경위·발견·미결. 설계와 같은 커밋에 섞지 않는다 |
+| `../../h1a-execution-audit/` | 방법론 §5 비-git 감사본 (선례 `e2.1-execution-audit/`) | 하네스 `journal.jsonl` + workflow 반환값 원본 + environment/commands. **원 위치가 휘발성**(`/private/tmp`, `~/.claude`)이라 사라지기 전에 복사했다 |
+
+### H.2 행동 분포 (P5.2 기계 코딩)
+
+| arm | selection | deferral | invalid |
+|---|---|---|---|
+| PROHIBITION_KEPT | **0** | **20** | 0 |
+| PROHIBITION_REMOVED | **0** | **20** | 0 |
+
+`_coder.code()`를 거치지 않는 **독립 재집계**로 교차검증(패턴 9): 동일.
+40개 rationale이 전부 상이 → 캐시·재생이 아닌 실제 독립 표본.
+
+### H.3 [DESIGN] Q10 — 잔여 금지가 양 arm에 남아 null이 식별되지 않는다
+
+**이 null을 "조작이 효과 없었다"로 읽으면 안 된다.** 0/40이라는 바닥값을
+검증하다 발견한 것:
+
+Q7=E가 도입한 warrant rule의 tie-breaker 금지 목록이 **양 arm 모두에**
+남아 있다(실측, 동결 바이트에서 추출):
+
+> Do not break ties using evidence item count, source order, source_kind
+> priority, recency, authority, liveness, or outside knowledge unless that
+> priority is directly stated inside an evidence item's text.
+
+이 fixture는 **정확히 그 tie**다 — 1-vs-1 정면 충돌, 양쪽 다 직접 type
+진술, 어느 텍스트에도 우선순위 진술 없음(→ `unless` 예외 안 열림). 따라서
+`PROHIBITION_REMOVED` arm도 이 fixture의 작동 경로에 대해서는 조작 대상
+행동을 여전히 금지한다. **조작이 열려던 문을 Q7이 양쪽에서 잠근다.**
+
+**blocker #16의 재발이다** — 같은 금지가 두 곳에 있고 한 곳만 지웠던 그
+결함(§패턴 10 사례 A). 다만 이번엔 구현 오류가 아니라 **판정문 자신이 그
+목록을 양 arm 구속으로 명시**했다(`DESIGN_DECISION_H1a_review_blockers.md`
+Q7 본문 + New Constraints). 그래서 운영 세션이 고치지 않고 상신했다.
+
+**가드가 왜 못 잡았나 — 잡지 않도록 의도적으로 조정돼 있었다.**
+`_h1a_contract.py`의 주석이 명시한다: bare `"liveness"`를 tripwire에서 뺀
+이유가 "Q7's warrant rule legitimately uses the bare English word
+`liveness` ... in BOTH arms"이기 때문이다. 그리고
+`test_guard_precision_the_clean_template_passes`가 현재 template을 clean으로
+**적극 인증**한다.
+
+| | 명제 |
+|---|---|
+| 가드가 검사한 것 | "Q1 절 바이트가 REMOVED에 없는가" |
+| 필요했던 것 | "REMOVED에 **동등한 금지가 남아 있지 않은가**" |
+
+**닫히지 않은 경로(공정하게 기록)**: Q7이 막은 것은 동점을 *출처 속성*으로
+깨는 것이지 *실질 논거*로 고르는 것이 아니다. `ev3`의 반박절(= Q9의 L3
+비대칭)을 merit로 읽어 select하는 것은 허용된다. 즉 select_type이 논리적으로
+불가능하진 않았고, 실측이 40/40 그 경로를 택하지 않았을 뿐이다.
+
+**해석 자료(코딩 입력 아님, P5.1)**: 40/40 rationale이 tie-break 금지를
+보류 사유로 명시. REMOVED arm의 모델도 자기가 금지당했다고 서술한다.
+
+**상태**: ✅ **판정 도착·반입 완료(2026-08-03)** —
+`experiments/2026-07-29_h1a_source_authority_unresolved/DESIGN_DECISION_H1a_residual_prohibition.md`
+(**D-H1a-10**). 요청서는
+`correspondence/DESIGN_REQUEST_H1a_residual_prohibition.md`(선택지 A~E +
+Q10.1~10.3), 인용 전수 실측 대조 완료.
+
+### H.4 [DONE] D-H1a-10 판정 내용 — Q10=E
+
+| 질문 | 판정 |
+|---|---|
+| **Q10** | **E** — 코호트를 무효화하지 않되 **비식별(non-identifying)** 로 표시하고, **B 방식으로 새 실험** 수행 |
+| **Q10.1** | **보존.** `exploratory_diagnostic`, 새 코호트와 **병합 금지**, 기존 arm 재사용 금지 |
+| **Q10.2** | **가드 상향.** 어휘 목록만으로는 불충분 — 구조화 정책 계약 필수, LLM 검사기는 **보조만** |
+| **Q10.3** | **L4 별도 등록.** `L3_subsumes_L4: false` |
+
+**결론 표기가 바뀐다** — 이번 코호트를 `null_effect`로 쓸 수 없다:
+
+```text
+target_effect:            insufficient_evidence
+current_bundle_contrast:  observed_zero
+```
+
+**형식 근거(판정문 §3)**: 표적 경로가 열리는 조건은
+`M_allowed = ¬Q1 ∧ ¬Q7_target`이다.
+
+| arm | Q1 | Q7_target | M_allowed |
+|---|---:|---:|---:|
+| KEPT (현재) | 1 | 1 | **0** |
+| REMOVED (현재) | 0 | 1 | **0** |
+| KEPT (수선 후) | 1 | 0 | 0 |
+| REMOVED (수선 후) | 0 | 0 | **1** |
+
+`ProofCurrentNoContrast: True` / `ProofRepairCreatesContrast: True`.
+**단 `select_type`이 논리적으로 불가능했던 것은 아니다** — Q7이 막은 것은
+동점을 *출처 속성*으로 깨는 것이고, `ev3`의 반박절(L3 비대칭)을 *실질
+논거*로 읽어 고르는 경로는 열려 있었다. 40/40이 그것을 택하지 않았을 뿐이다.
+
+**기각된 선택지와 사유**: A는 "표적을 허용했으나 무변화"와 "양 arm에서
+금지돼 있었음"을 혼동시킴 / C는 Q7 전체를 옮겨 비표적 축(count·order·outside
+knowledge)까지 함께 바꿔 복합 조작이 됨, 그리고 Q1=B·Q5=B·Q3=B를 실질
+개정함 / D(2×2)는 정당하나 최소 복구에 불필요하고 K=1 상한을 못 올림 →
+**후속 탐색으로 유보**.
+
+### H.5 [GATE] D-H1a-10이 만든 새 게이트 — 여기부터가 다음 작업
+
+| # | 게이트 | 대상 | 승인 |
+|---|---|---|---|
+| **R1** | Q7 tie-breaker 목록에서 **표적 축 4개만 제거**(`source_kind priority`·`recency`·`authority`·`liveness`), 비표적 3개 유지 | `h1a_prompt_template.md:50-52` — **동결 프롬프트 변경** | 필요 |
+| **Q10.2** | `assert_no_residual_prohibition`을 어휘 tripwire → **타입 정책 스키마 + 결정론적 렌더러 + 구조 단언 6항 + 연역 검사** | `_h1a_contract.py` 아키텍처 전환 | 필요 |
+| **신규 사전등록** | 판정문 §11의 post-result 공개 7항 | **새 문서**(기존 `PREREGISTRATION.md`는 최초 코호트 기록으로 보존) | 필요 |
+| **독립 리뷰** | 표면이 바뀌므로 **3차 리뷰(2026-08-02)가 무효가 된다.** Q9 때 생략 근거("표면 불변")가 성립하지 않음 | 별도 에이전트, 제작자 결론 미고지 | — |
+| **R2** | **양 arm 40 trial 재실행.** 기존 KEPT 재사용 금지 — Q7 변경이 양 arm 표면을 다 바꾸므로 기존 KEPT와 수선된 KEPT는 다른 프롬프트다 | 새 cohort id | 별도 승인 |
+
+### H.6 [DESIGN] Q11 후보 — `removed: allowed`의 렌더링 방식 미판정
+
+판정문의 정책 스키마는 표적 축을 REMOVED에서 `allowed`로 표기하지만,
+그것이 프롬프트에 **명시적 허용 문장으로 렌더링되는지 침묵인지**를 판정하지
+않았다.
+
+| 선택 | 귀결 |
+|---|---|
+| 침묵(문장 없음) | REMOVED에 금지도 허용도 없음. 모델이 관행적으로 출처 속성을 안 쓸 여지가 남는다 |
+| 명시적 허용 문장 | 이전에 없던 **새 문장** 생성. KEPT(금지 산문) vs REMOVED(허용 산문) 비대칭이 새로 도입되어 조작 표면이 커진다 |
+
+Q10.2 렌더러 요구사항 5("렌더된 모든 정책 문장이 원래 policy ID로 추적
+가능한가")는 `allowed` 상태도 문장을 낼 수 있음을 함의하는 것으로 읽히나
+단정할 수 없다. **P7의 "고칠 대상을 임의로 정하지 않는다"에 해당** —
+운영 세션이 정하지 않고 Q11 상신 또는 사용자 판단 대상으로 둔다.
+
+### H.7 반입 완료 내역 (2026-08-03(2), 문서·메타데이터만)
+
+| # | 작업 | 파일 |
+|---|---|---|
+| 1 | ✅ 판정문 저장(평면, 기존 4건과 같은 자리) | `DESIGN_DECISION_H1a_residual_prohibition.md` |
+| 2 | ✅ **L4 등재** — 영문 원문 + 한국어 기록문, 의역 없음. L1~L3(외적 일반화 한계)와 L4(내적 식별 한계)의 성격 차이를 표로 명시 | `PREREGISTRATION.md` §0.1 |
+| 3 | ✅ 헤더 **"trial 0건이라 재동결 비용 없음" 정정** — 이제 거짓 | `PREREGISTRATION.md` 헤더 |
+| 4 | ✅ **코호트 상태 동결** — Q10.1 YAML + 산출물 11종 sha256 + 보고 규약 | `COHORT_STATUS_20260803_nonidentifying.md`(신규) |
+| 5 | ✅ 운영 로그 갱신 + §9의 "Q10 대기" 정정 | `OPERATIONS_LOG.md` |
+| 6 | ✅ 이 등록부 §H.3~H.7 | 이 파일 |
+
+**상태값을 `h1a_cohort_score.json`에 넣지 않았다** — `_h1a_score.py:161-171`이
+`SCORE_PATH`·`TRIALS_PATH` 둘 다 매 실행 덮어쓴다(실측). 손으로 넣으면 채점기
+재실행 시 조용히 사라진다.
+
+**요청서 인용을 그대로 받지 않고 원본에서 재검증한 것 3건**: 가드 주석의 bare
+`liveness` 제외 사유(`_h1a_contract.py:99-103`·`:126-130`),
+`test_guard_precision_the_clean_template_passes` 존재(`test_h1a_contract.py:218`),
+채점기의 덮어쓰기(`_h1a_score.py:161-171`). 전부 일치.
 
 ---
 
@@ -471,24 +674,44 @@ Q8.1이 code측에 대해 이미 금지한 것과 대칭인 문제. code측 반�
 **이 worktree(`concept-gate-h1-wt`)가 H 계열 정본이다.** `../concept-gate-e2.2-wt`
 에도 H1a 파일이 있으나 사본이다.
 
-**Q5~Q8 전부 적용 완료(2026-08-02).** `python3 scripts/run_gates.py`가 H1a
-102 passed/1 skipped, E2.4 118 unchanged로 그린. 다음 세션 첫 행동:
+**현재 게이트는 §H.5다.** Q10 판정(D-H1a-10)이 도착·반입됐고, 남은 것은
+동결 아티팩트를 실제로 바꾸는 작업이다:
 
-1. **[차단선] 독립 리뷰 재실행** — 프롬프트·payload·fixture가 전부 바뀌었으므로
-   2026-08-01 2차 리뷰는 **무효**다. 별도 에이전트, 제작자 결론 미고지,
-   직접 재현 지시. 두 리뷰 모두 제작자가 못 본 것을 잡았다(패턴 P6) — 생략
-   금지
-2. 통과해야 동결 → **본 코호트 40 trial**(별도 승인). 앵커 진단이 없어졌으므로
-   남은 실행은 이것뿐
+1. **R1** — `h1a_prompt_template.md:50-52`의 Q7 tie-breaker 목록에서 표적 축
+   4개(`source_kind priority`·`recency`·`authority`·`liveness`) 제거, 비표적
+   3개(`evidence item count`·`source order`·`outside knowledge`) 유지
+2. **Q10.2** — `assert_no_residual_prohibition`을 어휘 tripwire에서 **타입
+   정책 스키마 + 결정론적 렌더러 + 구조 단언 6항 + 연역 검사**로 상향.
+   LLM 검사기는 보조만(단독 인증 게이트 금지)
+3. **§H.6 Q11 후보 확정** — `removed: allowed`의 렌더링 방식(명시 문장 vs
+   침묵). 운영 세션이 임의로 정하지 않는다
+4. **신규 사전등록** — 판정문 §11의 post-result 공개 7항. 새 문서에
+5. **[차단선] 독립 리뷰** — 위 1·2가 표면을 바꾸므로 **3차 리뷰(2026-08-02)가
+   무효가 된다.** Q9 때 생략이 정당했던 근거("표면 불변")가 성립하지 않는다.
+   별도 에이전트, 제작자 결론 미고지, 직접 재현 지시
+6. **R2** — 양 arm 40 trial 재실행(별도 승인). 기존 KEPT 재사용 금지
 
-**실행된 trial: 0건.** 이 조건은 첫 trial과 함께 사라지고, 그때부터 설계
-변경에 재동결 비용이 생긴다.
+> ### ⚠️ 이 섹션의 옛 판(2026-08-02)이 다음 세션을 오도했다 — 기록으로 남긴다
+>
+> 삭제된 옛 내용은 "**실행된 trial: 0건**"과 "**[차단선] 독립 리뷰 재실행**"을
+> 다음 첫 행동으로 지목했다. 2026-08-03(2) 세션이 이 문서 **하단만** 읽고
+> 그대로 따라 "지금 4차 독립 리뷰를 돌리자"고 제안했는데, 그 시점의 실제
+> 상태는 ① Q9=A로 표면이 안 바뀌어 리뷰 대상이 없고 ② 4차 리뷰는 사용자가
+> 이미 생략 승인했고 ③ 40 trial이 실행돼 있고 ④ 유일한 게이트는 Q10 판정
+> 대기였다. 사용자가 "세션 대화 내용을 직접 READ해보고 판단해라"라고 되돌린
+> 뒤에야 정정됐다.
+>
+> **교훈**: 이 등록부는 §A~§H가 시간순 누적이라 **하단이 최신이 아니다.**
+> "다음 행동"류 서술은 그것이 쓰인 시점의 평가이며, 문서 상단 배너·§0 표·
+> 최신 §가 그것을 supersede한다. `WORKSPACE_NAVIGATION.md` §0 함정 3이
+> 경고한 패턴이 **한 문서 내부에서** 재발한 사례이고, 그 함정 항목은 지금까지
+> 파일 **간** 문제로만 서술돼 있었다.
 
 ### 미커밋 / 미승인
 
 | 항목 | 상태 |
 |---|---|
-| Q5~Q8 적용분 커밋 | ⬜ 작업 중(Phase 3) — 별도 승인 |
-| 두 브랜치 **푸시** | ⬜ 이번 세션 내내 안 함. 별도 승인 |
-| skills-catalog 승격 | ⬜ `methodology.md` 표 정정 + P3 2번째 에피소드 — 진행 중 |
+| Q5~Q8 적용분 + Q9 반입분 + **40 trial 산출물 + Q10 반입분** 커밋 | ⬜ **전부 미커밋.** 방법론 §1 순서 준수 필요 — manifest freeze / results / ops-docs를 **각각 독립 커밋**으로 |
+| 두 브랜치 **푸시** | ⬜ 안 함. 별도 승인 |
+| skills-catalog 승격 | ⬜ `methodology.md` 표 정정 + P3 2번째 에피소드. **신규 후보 2건**: (a) "리뷰 3회 통과 설계가 실행 후 식별 결함을 드러냄" (b) "가드가 precision을 위해 의도적으로 완화된 지점이 정확히 결함 지점이 됨" |
 | E2.4 브랜치에서 H1a 제거 | ⬜ **선택**(W3) |

@@ -1,6 +1,7 @@
 # HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
-- 갱신: 2026-07-30
+- 갱신: **2026-08-03(2)** — Q10 판정(D-H1a-10) 도착·반입. 최초 40-trial
+  코호트는 `completed_nonidentifying`으로 동결, 수선(R1·R2) 대기
 - 대상: **컨텍스트 없이 이어받는 새 세션**. 이 문서만 읽고 작업을 재개할 수 있게 쓴다.
 - 이 문서는 worktree `concept-gate-h1-wt`(브랜치
   `codex/h1-source-authority`)의 최신 상태를 기록한다.
@@ -18,7 +19,8 @@
 
 M1(relation.is_a certificate) 검증 실험 라인을 진행 중이다.
 E2.2.1(NO_GO) → E2.2.2(GO) → E2.2.3(OFAT, A_ONLY 단독 충분) →
-E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중, 차단됨)**.
+E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중 —
+최초 코호트 실행·비식별 판정, 수선 대기)**.
 
 > ## 📍 이 worktree가 H 계열의 정본이다 (2026-08-01 분리)
 >
@@ -33,6 +35,57 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 > ⚠️ `../concept-gate-e2.2-wt`에도 H1a 파일이 남아 있다 — 분리 이전 이력을
 > 공유하기 때문이다. **저쪽은 사본이고 여기가 정본이다.** 중복 제거는 미결.
 >
+> ## 🔴 2026-08-03(2) — Q10 판정 도착(D-H1a-10). 최초 코호트는 **비식별**로 확정
+>
+> **Q10=E.** 40 trial은 **무효가 아니지만 확증에도 쓸 수 없다.** 판정문:
+> `experiments/2026-07-29_h1a_source_authority_unresolved/DESIGN_DECISION_H1a_residual_prohibition.md`
+>
+> | 항목 | 판정 |
+> |---|---|
+> | 최초 40 trial | `completed_nonidentifying` / `exploratory_diagnostic`. **새 코호트와 병합 금지, 기존 arm 재사용 금지** |
+> | 결론 표기 | `target_effect: insufficient_evidence` + `current_bundle_contrast: observed_zero`. **`null_effect` 아님** |
+> | 수선 | **R1** Q7 목록에서 표적 축 4개만 제거 → **R2 양 arm 재실행** |
+> | 가드 | **Q10.2** 어휘 tripwire → 구조화 정책 계약(LLM 검사기는 보조만) |
+> | 한계 | **Q10.3 L4 신규 등록.** `L3_subsumes_L4: false` |
+>
+> **형식 근거**: 표적 경로는 `M_allowed = ¬Q1 ∧ ¬Q7_target`. 현재는 KEPT·REMOVED
+> 둘 다 `0`(`ProofCurrentNoContrast: True`), 수선 후 REMOVED만 `1`
+> (`ProofRepairCreatesContrast: True`). **단 `select_type`이 논리적으로
+> 불가능했던 건 아니다** — `ev3`의 반박절을 *실질 논거*로 읽는 경로는 열려
+> 있었고, 40/40이 그것을 택하지 않았을 뿐이다.
+>
+> **🚫 금지 문구**: "금지를 제거해도 행동은 변하지 않았다."
+> **✅ 허용 문구**와 산출물 해시는 `COHORT_STATUS_20260803_nonidentifying.md`.
+>
+> **다음 세션 첫 행동 = [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md) §H.5의
+> 게이트 5개.** R1(동결 프롬프트 변경) → Q10.2(가드 아키텍처 전환) → 신규
+> 사전등록(post-result 공개 7항) → **독립 리뷰**(표면이 바뀌므로 3차 리뷰가
+> 무효화된다 — Q9 때 생략 근거가 성립하지 않는다) → R2(양 arm 재실행, 별도 승인).
+>
+> ⚠️ **[DESIGN] 미판정 1건(§H.6, Q11 후보)**: `removed: allowed`를 프롬프트에
+> **명시적 허용 문장으로 렌더링할지 침묵할지**를 판정문이 정하지 않았다.
+> 침묵이면 REMOVED에 금지도 허용도 없고, 명시하면 없던 문장이 생겨 조작 표면이
+> 커진다. **운영 세션이 임의로 정하지 않는다**(P7).
+>
+> - 요청서: `correspondence/DESIGN_REQUEST_H1a_residual_prohibition.md`
+> - 상세: [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md) §H.4~H.7
+> - 산출물: `cohort_prompts.json`(동결) / `trials_raw.json` /
+>   `trials.json` / `h1a_cohort_score.json` — **11종 sha256이
+>   `COHORT_STATUS_20260803_nonidentifying.md` §3에 동결됨**
+> - **로그**: `OPERATIONS_LOG.md`(운영 로그, 방법론 §1·§2) /
+>   `h1a_attempt_log.json`(**P4 요구** 시도 이력 + 독립 교차검증 해시) /
+>   비-git 감사본 `../../h1a-execution-audit/`(방법론 §5, 선례
+>   `e2.1-execution-audit/`) — 하네스 `journal.jsonl`과 workflow 반환값 원본을
+>   보존했다. 원 위치(`/private/tmp`, `~/.claude`)는 휘발성이다
+> - 신규 harness: `_h1a_cohort.py`(동결), `_h1a_score.py`(**출력을 읽기 전에
+>   작성** — 결과를 본 뒤 채점 규칙을 만들지 않기 위해)
+> - **커밋·푸시 안 함.** 40 trial 산출물 + Q10 반입분 전부 미커밋 상태로
+>   사용자 승인 대기. 커밋 시 방법론 §1 순서 준수 — manifest freeze / results /
+>   ops-docs를 **각각 독립 커밋**으로.
+>
+> ---
+>
+> **(이하 2026-08-02 시점 기록 — 위 실행 이전 상태)**
 > **현재 상태: 차단됨(Q9 판정 대기). 실행된 trial 0건.**
 > 설계 판정 4회(D-H1a-1~7 / Q1·Q2 / Q3·Q4 / Q5~Q8), 독립 리뷰 3회.
 > **Q5~Q8 전부 적용 완료(2026-08-02), 3차 독립 리뷰 통과(blocker 0)** —
@@ -60,30 +113,29 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 > 잔여 1건은 코드 결함이 아니라 fixture 내용 설계 질문이라
 > **Q9로 상신**(`correspondence/DESIGN_REQUEST_H1a_evidence_symmetry.md`).
 >
-> **Q9 판정 도착 확인함(2026-08-02, `notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`).
-> 아직 미적용 — 토큰 소진으로 이번 세션은 의견만 남긴다.**
+> **Q9 반입·등록 완료(2026-08-03).**
+> `notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md` → 저장소로 byte-identical
+> 반입(`experiments/2026-07-29_h1a_source_authority_unresolved/DESIGN_DECISION_H1a_evidence_symmetry.md`,
+> `diff` 무출력으로 확인), `PREREGISTRATION.md` §0.1(신설)에 L1·L2·L3를
+> 같은 자리에 등록(L3는 Q9.1 원문 그대로, 의역 없음), `H1A_ISSUE_REGISTER.md`
+> Q9 항목을 "✅ 적용 완료"로 갱신. `python3 -m pytest -q
+> experiments/2026-07-29_h1a_source_authority_unresolved/` 재확인함(106
+> passed/1 skipped — 문서만 바뀌었으므로 회귀 없음).
 >
 > 판정: **Q9=A** — fixture 무변경(byte-faithful 1-vs-1 유지), 비대칭은
-> `PREREGISTRATION.md`에 **L3**로 선언. Q9.1이 L3 정확한 문구를 줬고,
-> Q9.2는 Q8.1(enum 밖 노출 금지) 구속력 유지를 재확인. "실험 진행 여부:
-> 계속" — fixture/코드 변경 없음, 문구 추가만 필요한 **저위험 판정**.
+> `PREREGISTRATION.md`에 **L3**로 선언 완료. Q9.2는 Q8.1(enum 밖 노출 금지)
+> 구속력 유지를 재확인.
 >
-> **다음 세션 의견(운영 세션, 미실행)**:
-> 1. `PREREGISTRATION.md`에 L1·L2와 같은 자리에 **Q9.1의 L3 텍스트를
->    byte-for-byte 그대로** 추가한다(판정문이 "정확한 문구"라고 명시했으므로
->    의역하지 말 것).
-> 2. `H1A_ISSUE_REGISTER.md`의 Q9 항목을 "🔶 상신됨"에서 "✅ 적용
->    완료(Q9=A, L3 등록)"로 갱신.
-> 3. **fixture·코드는 건드리지 않는다** — 판정이 명시적으로 "keep the
->    byte-faithful 1-vs-1 evidence packet"이라 했다. Q5~Q8 때처럼 재테스트가
->    필요한 변경이 아니다.
-> 4. L3 등록 후 **4차 독립 리뷰가 필요한지 재판단**: 지금까지 관행상
->    "표면이 바뀌면 재리뷰"였는데, 이번엔 표면(prompt/payload/fixture)이
->    바뀌지 않고 사전등록 문서에 한계 선언만 추가되므로, **개인적으로는
->    생략 가능하다고 본다** — 단, 3차 리뷰가 지적한 사안 자체에 대한
->    판정이므로 최종 판단은 사람이 하길 권한다.
-> 5. 위 완료 후 **동결 → 본 코호트 40 trial**로 넘어갈 수 있다(그래도
->    trial 실행 자체는 별도 승인 대상).
+> **다음 세션이 할 일**:
+> 1. ⬜ **4차 독립 리뷰가 필요한지 사람이 최종 판단.** 표면(prompt/payload/
+>    fixture)은 바뀌지 않고 사전등록 문서에 한계 선언만 추가됐으므로 생략
+>    가능하다는 것이 운영 세션 의견이나, 3차 리뷰가 지적한 사안 자체에 대한
+>    판정이므로 최종 판단은 사람 몫으로 남긴다.
+> 2. 위 결정 후 **동결 → 본 코호트 40 trial**로 넘어갈 수 있다(trial 실행
+>    자체는 별도 승인 대상).
+> 3. 이번 세션은 커밋·푸시를 하지 않았다 — 변경된 파일 3개(`PREREGISTRATION.md`,
+>    `H1A_ISSUE_REGISTER.md`, 신규 `DESIGN_DECISION_H1a_evidence_symmetry.md`)를
+>    `git diff`/`git status`로 검토 후 커밋 여부를 사용자가 정한다.
 >
 > 전체 목록·근거·검증 강도: [`H1A_ISSUE_REGISTER.md`](H1A_ISSUE_REGISTER.md)
 > 리뷰 전문: [`feedback/h1a_fixture_review_20260730.md`](feedback/h1a_fixture_review_20260730.md)
@@ -119,7 +171,7 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중,
 | `DESIGN_DECISION_H1a_manipulation_scope.md` | Q1=B 조작 재정의 / Q2=B 앵커 진단 |
 | `DESIGN_DECISION_H1a_prompt_surface.md` | Q3=B 전용 프롬프트 / Q4 승인 |
 | `DESIGN_DECISION_H1a_review_blockers.md` | Q5=B/Q6=A/Q7=E/Q8=B — **2026-08-02 전부 적용 완료** |
-| `notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md` ⚠️ | Q9=A(fixture 무변경, L3 한계 선언) / Q9.2(Q8.1 유지) — **판정 도착함(2026-08-02), 저장소 미반입, 미적용.** 아직 `notes/` 루트에만 있다 — 위 넷과 달리 `experiments/2026-07-29_h1a_source_authority_unresolved/`에 사본이 없다. 반입 시 파일명은 기존 관행대로 `DESIGN_DECISION_H1a_evidence_symmetry.md`(H1a 소문자 a) |
+| `experiments/2026-07-29_h1a_source_authority_unresolved/DESIGN_DECISION_H1a_evidence_symmetry.md` | Q9=A(fixture 무변경, L3 한계 선언) / Q9.2(Q8.1 유지) — **2026-08-03 반입·적용 완료**(`notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`에서 byte-identical 복사, 원본은 `notes/`에 보존). `PREREGISTRATION.md` §0.1에 L3 등록 완료 |
 
 > **2026-08-02 갱신**: `DESIGN_DECISION_H1a_prompt_surface.md`는 더 이상
 > 코드가 로드하는 파일이 **아니다.** Q5·Q6.1·Q7이 template을 셋으로 나눠
@@ -249,7 +301,7 @@ class 자체는 유지된다.
 | E2.2.3 (OFAT ablation) | A_ONLY=20/20, B_ONLY=1/20, C_ONLY=0/20 | 종료 |
 | E2.3 (전역 invariant 일반화) | A_ONLY/PARAPHRASE/TOPOLOGY/DECOY 전부 screened PASS | 종료, 푸시됨 |
 | E2.4 (repo-grounded contract) | fixture 3 class 인증 + 제약 #11 리뷰 완료(4중 논리곱). **H3 존재 주장으로 종료**(D-H3C) — pilot 45 비인증, defer precision 0.00/0.00/1.00. 확증은 별도 과제 3건으로 분리 | 종료(존재 주장) |
-| **H1a (source_authority_unresolved)** | 설계 판정 7건 + 사전등록 P1~P7 + 코더 교정 18/18 완료. fixture 제작됨. **독립 리뷰에서 동결 부적합 — blocker 1 + major 5** | **진행 중, 차단됨** |
+| **H1a (source_authority_unresolved)** | 설계 판정 **10건(Q1~Q10)** 도착. 최초 코호트 40 trial 실행(2026-08-03) → 양 arm 20/20 defer, select_type 0/40 → Q7 tie-breaker 금지가 양 arm에 남아 **비식별**로 판정(D-H1a-10, Q10=E). 코호트는 `completed_nonidentifying`으로 보존·비병합 | **진행 중 — 수선(R1 Q7 부분 개정 → R2 양 arm 재실행) 대기** |
 
 ## 4. E2.4 — fixture 4종 검증 현황
 
