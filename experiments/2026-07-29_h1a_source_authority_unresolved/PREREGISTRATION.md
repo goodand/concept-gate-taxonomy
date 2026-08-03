@@ -5,7 +5,17 @@
   **갱신 2: 2026-07-31** — §11.2a 보조 해석가능성 조건 + §11.2b 배치 규약
   등재. **갱신 3: 2026-07-31** — `DESIGN_DECISION_H1a_prompt_surface.md`
   (Q3=B·Q4=승인) 반영: §P0.1 조작 재구현(H1a 전용 프롬프트), §11.2a 문구를
-  판정문의 개선안으로 교체. **전부 trial 0건 시점이라 재동결 비용 없음**
+  판정문의 개선안으로 교체. **갱신 1~3은 전부 trial 0건 시점이라 재동결 비용
+  없었음.** **갱신 4: 2026-08-03** — Q9=A 반영, §0.1 신설(L1·L2·L3). 표면
+  무변경, 여전히 trial 0건 시점. **갱신 5: 2026-08-03(2)** — Q10 판정
+  (`DESIGN_DECISION_H1a_residual_prohibition.md`, D-H1a-10) 반영: §0.1에 L4
+  등재.
+- ⚠️ **"trial 0건" 전제는 끝났다.** 2026-08-03에 40 trial이 실행됐다(갱신 5
+  이전). 그 코호트는 Q10.1로 `completed_nonidentifying`으로 동결 보존되며 새
+  코호트와 병합하지 않는다. **이 문서를 앞으로 고치는 것은 무비용이 아니다** —
+  D-H1a-10-R1의 수선은 새 사전등록·새 동결·양 arm 재실행을 요구한다
+  (`DESIGN_DECISION_H1a_residual_prohibition.md` §7·§11 — 특히 §11의
+  post-result 공개 7항은 **이 문서가 아니라 새 사전등록**에 들어간다).
 - 지위: **사전등록.** 이 문서는 H1a trial을 **한 건도 실행하기 전에** 커밋된다.
   판정 장치를 결과를 본 뒤에 정하면 그것은 장치가 아니라 사후 합리화다.
 - 근거: `DESIGN_DECISION.md`(외부 판정 D-H1a-1~7), `DESIGN_DECISION_H1a_manipulation_scope.md`
@@ -59,6 +69,97 @@ H1a는 같은 자리에 있다. 따라서 **결과를 보기 전에** 허용 결
 > 원문은 Q2 시절의 게이트 문구가 무엇이었는지 보여주는 이력으로만 남긴다.
 
 **"조작이 일반적으로 효과가 없다"는 식으로 보고할 수 없다.**
+
+### 0.1 한계 선언 (L1~L4)
+
+`docs/H1A_ISSUE_REGISTER.md`의 [DECLARE] 항목(L1·L2), Q9 판정문
+(`DESIGN_DECISION_H1a_evidence_symmetry.md`, Q9.1)이 준 L3, 그리고 Q10
+판정문(`DESIGN_DECISION_H1a_residual_prohibition.md`, Q10.3)이 준 L4를 같은
+보고 층위에 등록한다. 결과 보고 시 이 네 항목을 함께 인용한다.
+
+**L1~L3와 L4의 성격이 다르다 — 혼동하지 말 것.**
+
+| | 성격 | 범위 |
+|---|---|---|
+| L1·L2·L3 | **외적 일반화 한계.** 고치지 않고 한계로 기록한 것 | 이 fixture에서 얻은 결과를 밖으로 확장하지 말라 |
+| **L4** | **내적 식별 한계.** 고치지 않고 기록한 것이 **아니다** — Q10이 수선(D-H1a-10-R1)을 명령했다 | **최초 40-trial 코호트**에 한정. 그 코호트 안에서 조작이 arm 간 다르게 구현되지 않았다 |
+
+Q10.3이 명시적으로 판정했다: **L3는 L4를 포섭하지 않는다**(`L3_subsumes_L4:
+false`). L3는 "이 packet의 결과를 다른 packet으로 확장하지 말라"이고, L4는
+"이 packet **안에서도** 표적 메커니즘의 arm 대비가 구현되지 않았다"다.
+
+**L1** — evidence-reading rule 4불릿이 전부 select 쪽에만 작용. defer엔
+어떤 조건·의무도 없음.
+
+**L2** — 조작이 언어 전환과 분리 불가(영어 본문 + 한국어 3문장). placebo
+arm 없음.
+
+**L3 - Intrinsic evidence-content asymmetry**
+
+```text
+The model-facing packet is symmetric in evidence-item count (one doc item and
+one code item) but not in argumentative structure. The code item (`ev3`)
+acknowledges and rebuts the competing essential-feature rationale and adds the
+general distinction that material essentiality and the relation type are
+separate axes. The doc item (`ev1`) states only its own essential-feature
+rationale. This asymmetry is present in the unique byte-faithful source excerpts
+for the fixed concept/feature pair and is held identical, in the same order, in
+both arms.
+
+Accordingly, H1a estimates only a descriptive arm contrast conditional on this
+specific rhetorically asymmetric packet. Absolute selected-type frequencies,
+and the presence, absence, size, or direction of a select/defer arm difference,
+must not be generalized to content-balanced conflicts, other doc/code pairs, or
+a repository-level population. The code-side rhetorical advantage must not be
+interpreted as evidence that structural_composition is correct, that code is
+generally more authoritative, or that the same behavior would occur with
+argumentatively symmetric evidence. A null result is only a null for this fixed
+packet; it does not establish that the prohibition is behaviorally inert in
+general.
+```
+
+출처: `DESIGN_DECISION_H1a_evidence_symmetry.md` Q9.1 원문 그대로(의역
+없음). Q9.2 재확인: Q8.1(enum 밖 type 노출 금지)은 그대로 구속력 유지.
+
+**L4 - Residual-prohibition identification limit**
+
+```text
+L4 — Residual-prohibition identification limit
+
+The original 40-trial cohort retained, in both arms, a common warrant rule
+prohibiting source_kind priority, recency, authority, and liveness from being
+used as tie-breakers. Consequently, the cohort did not instantiate an arm
+contrast in whether the targeted source-priority mechanism was permitted.
+
+The observed 20/20 versus 20/20 deferral distribution is descriptive only of
+the frozen packet-and-prompt bundles. It must not be interpreted as evidence
+that permitting source-priority or liveness reasoning has no effect on
+select_type versus defer behavior.
+```
+
+한국어 기록문(판정문이 함께 제공한 것, 의역 아님):
+
+```text
+L4 — 잔여 금지에 따른 식별 한계
+
+최초 40-trial 코호트는 source_kind priority, recency, authority, liveness를
+tie-breaker로 사용하는 행위를 금지하는 공통 warrant rule을 양 arm에 모두
+유지했다. 따라서 이 코호트에는 표적 source-priority 메커니즘의 허용 여부에
+대한 arm 간 대비가 구현되지 않았다.
+
+관측된 20/20 대 20/20 보류 분포는 동결된 packet+prompt bundle의 기술적
+결과로만 기록한다. 이를 source-priority 또는 liveness 추론을 허용해도
+select_type/defer 행동에 효과가 없다는 증거로 해석하지 않는다.
+```
+
+출처: `DESIGN_DECISION_H1a_residual_prohibition.md` Q10.3 원문 그대로(영문·
+한국어 둘 다 판정문이 제공, 의역 없음).
+
+**L4가 적용되는 대상**: 2026-08-03 실행된 최초 40-trial 코호트
+(`cohort_status: completed_nonidentifying`,
+`COHORT_STATUS_20260803_nonidentifying.md` 참조). D-H1a-10-R1의 수선을 거친
+새 코호트는 **이 한계 아래 있지 않다** — 수선의 목적이 바로 이 식별 결함을
+제거하는 것이다. 다만 새 코호트도 L1·L2·L3는 그대로 승계한다.
 
 ---
 
