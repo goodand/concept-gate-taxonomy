@@ -1,0 +1,672 @@
+{
+  "records": [
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-05",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 5,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, but they state opposite types: ev1 assigns essential_feature (재료는 본질이 될 수 있음), ev3 assigns structural_composition (본질성은 별도 축, 관계는 has-a). The conflict is head-on and neither item contains any text stating a priority rule over the other. Breaking the tie would require appealing to source_kind (doc vs code), recency, liveness, or outside ontology reasoning, all of which are excluded. The packet therefore does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-05",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 5,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [],
+        "rationale": "The packet contains exactly two evidence items, and both directly address the supplied pair (철 as 재료 of 칼) but assign opposite allowed types. ev1 states the material-object relation yields essential_feature (\"재료는 본질이 될 수 있음\"); ev3 states the same relation yields structural_composition (\"본질성은 별도 축\", relation is has-a). Each item independently would satisfy the evidence-reading rule, so neither is disqualified as mere context. Nothing inside either item's text states a priority rule that would resolve the conflict, and I am barred from breaking the tie on source_kind (doc vs code), item count, order, recency, or outside ontology knowledge. Support is therefore directly conflicting and does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-02",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 2,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "두 증거 항목 모두 동일한 개념/자질 쌍(칼-철, \"재료-대상\" 사례 (4))에 대해 온톨로지 타입을 직접 명시하지만 서로 다른 값을 지정한다. ev1은 \"철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\"라고 하고, ev3은 \"철은 칼의 재료 → structural_composition (재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)\"이라고 한다. 두 항목 모두 지시된 증거-판독 규칙을 충족하는 직접 진술이므로, 어느 한쪽만 지지 근거로 배제할 수 없다. 어떤 증거 항목의 텍스트에도 두 출처 간 우선순위 규칙이 명시되어 있지 않으며, source_kind(doc vs code), 항목 수, 순서, 최신성, 권위, liveness로 동점을 깨는 것은 금지되어 있다. 따라서 패킷만으로는 정확히 하나의 허용 타입을 선택할 근거가 없어 보류한다."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-02",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 2,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as the material of 칼) and each directly asserts an ontology type, but they assert opposing ones: ev1 states essential_feature (재료는 본질이 될 수 있음), while ev3 states structural_composition (본질적이어도 관계는 has-a, 본질성은 별도 축). Neither item contains any text establishing precedence over the other, and the instructions forbid breaking the tie by source_kind, order, count, recency, or outside ontology reasoning. The packet therefore presents direct, unresolved conflict rather than warranting selection of exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-13",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 13,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "패킷의 두 증거 항목 모두 공급된 개념/특징 쌍(칼/철, \"재료-대상\")의 온톨로지 타입을 직접 진술하지만 서로 다른 값을 지목한다. ev1은 \"철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\"이라고 하고, ev3은 동일한 (4) 항목에 대해 \"→ structural_composition (재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)\"이라고 한다. 두 항목 중 어느 쪽이 우선한다는 진술이 증거 텍스트 내부에 없으며, source_kind(doc vs code), 항목 수, 순서, 최신성, 권위, liveness로 동점을 깨는 것은 금지되어 있다. 따라서 패킷만으로는 허용된 두 타입 중 정확히 하나를 선택할 근거가 없어 defer한다."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-13",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 13,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly assigns a type, but they assign different allowed types: ev1 states essential_feature (\"재료는 본질이 될 수 있음\"), ev3 states structural_composition (\"관계는 has-a — 본질성은 별도 축\"). Neither item contains text establishing precedence over the other, and the instructions bar breaking the tie by source_kind (doc vs code), item count, order, recency, authority, or outside ontology knowledge. ev3's parenthetical reasoning is an argument for its own assignment, not a stated priority rule that governs ev1. Support is therefore directly conflicting, so the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-03",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 3,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and each directly asserts an ontology type, but they assert opposing types: ev1 states essential_feature (재료는 본질이 될 수 있음), while ev3 states structural_composition (본질적이어도 관계는 has-a). Neither item contains any internally stated priority rule that would resolve the conflict, and the task forbids breaking the tie by source_kind, order, recency, authority, liveness, or outside ontology knowledge. Support is therefore directly conflicting and the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-03",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 3,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as the material of 칼) and each directly asserts an ontology type, but they assert different allowed types: ev1 states essential_feature (재료는 본질이 될 수 있음), while ev3 states structural_composition (관계는 has-a; 본질성은 별도 축). Neither item contains any stated priority rule that would resolve the conflict, and the instructions forbid breaking the tie by source_kind, order, count, recency, or outside ontology knowledge. Support is therefore directly conflicting, so the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-20",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 20,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly asserts an ontology type, but they assert different allowed types: ev1 states essential_feature (재료는 본질이 될 수 있음), while ev3 states structural_composition (관계는 has-a, 본질성은 별도 축). Neither item contains any internal statement of precedence over the other, and the tie cannot be broken by source_kind, order, count, recency, authority, liveness, or outside ontology knowledge. The support is therefore directly conflicting, so the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-20",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 20,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [],
+        "rationale": "The packet contains exactly two evidence items, both of which directly address the supplied pair (철 as 재료 of 칼) and each assigns a different allowed type. ev1 states the material-object relation maps to essential_feature (재료는 본질이 될 수 있음); ev3 states the same relation maps to structural_composition (본질적이어도 관계는 has-a, 본질성은 별도 축). Both are on-point and type-determining, so the support is directly conflicting rather than one-sided. No text inside either item states a precedence rule over the other, and the instructions forbid breaking the tie by source_kind (doc vs code), order, count, recency, authority, or outside ontology knowledge. With no packet-internal tiebreaker, the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-18",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 18,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, but they state different allowed types: ev1 assigns essential_feature (재료는 본질이 될 수 있음), while ev3 assigns structural_composition (관계는 has-a이며 본질성은 별도 축). The support is therefore directly conflicting rather than ambiguous or absent. Neither item's text states any priority rule over the other, and the task bars breaking the tie by source_kind (doc vs code), item count, order, recency, authority, liveness, or outside ontology knowledge. With no in-text tiebreaker, the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-18",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 18,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states a type, but they state opposing ones: ev1 assigns essential_feature (재료는 본질이 될 수 있음), while ev3 assigns structural_composition (본질성이어도 관계는 has-a). Neither item contains any stated precedence rule that would resolve the conflict, and the instructions forbid breaking the tie on source_kind, count, order, or outside knowledge. Support is therefore directly conflicting, so the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-19",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 19,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and each directly asserts an allowed type, but they assert different ones: ev1 states essential_feature (재료는 본질이 될 수 있음), ev3 states structural_composition (관계는 has-a이며 본질성은 별도 축). Each is on its own sufficient support under the evidence-reading rule, so the packet's support is directly conflicting rather than insufficient. The only available discriminators would be source_kind (doc vs code), ordering, recency, authority, or liveness, and no evidence item's text states any such priority; the instructions bar using those and bar outside ontology knowledge to adjudicate whether material relations are essential or compositional. With no in-packet basis to prefer one assertion over the other, the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-19",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 19,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as the material of 칼) and each directly assigns a type, but they assign different allowed types: ev1 states essential_feature (재료는 본질이 될 수 있음), while ev3 states structural_composition (관계는 has-a, 본질성은 별도 축). The support is therefore direct on both sides and squarely conflicting. No evidence item's text states any priority rule that would resolve the conflict, and the instructions forbid breaking the tie by source_kind (doc vs code), item count, ordering, recency, authority, or outside ontology knowledge. With no packet-internal basis for preferring one assignment, the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-08",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 8,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "두 증거 항목 모두 동일한 concept/feature 쌍(칼-철, \"재료-대상\" 케이스 (4))을 직접적으로 온톨로지 타입에 연결하지만 서로 다른 타입을 지정한다. ev1은 \"철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\"라고 명시하고, ev3은 \"철은 칼의 재료 → structural_composition (재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)\"이라고 명시한다. 두 항목 중 어느 쪽도 자신이 다른 쪽보다 우선한다고 텍스트 내부에서 진술하지 않으며, 패킷 안에 우선순위 규칙이 담긴 항목도 없다. source_kind(doc vs code), 항목 순서, 개수, 최신성, 권위, liveness는 타이브레이커로 사용할 수 없으므로 패킷만으로는 정확히 하나의 허용 타입을 선택할 근거가 없다. 따라서 충돌(conflicting support)로 판단하여 defer한다."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-08",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 8,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as the material of 칼) and each directly asserts a type, but they assert opposing ones: ev1 states essential_feature (재료는 본질이 될 수 있음), while ev3 states structural_composition (관계는 has-a; 본질성은 별도 축). Neither item contains any stated priority rule over the other, and the packet supplies no third item that resolves the conflict. Breaking the tie would require appealing to source_kind, order, or outside ontology reasoning, which the reading rule forbids. Support is therefore directly conflicting, so the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-17",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 17,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and both directly state an ontology type, but they state different ones: ev1 assigns essential_feature (\"재료는 본질이 될 수 있음\"), while ev3 assigns structural_composition (\"관계는 has-a — 본질성은 별도 축\"). Neither item contains text establishing a priority, override, or supersession relative to the other, and the instructions bar breaking the tie by source_kind (doc vs code), recency, authority, liveness, or outside ontology knowledge. The support is therefore directly conflicting and the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-17",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 17,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, but they state opposing ones: ev1 assigns essential_feature (재료는 본질이 될 수 있음), while ev3 assigns structural_composition (본질적이어도 관계는 has-a, 본질성은 별도 축). Neither item contains any internal statement of precedence over the other, and the packet supplies no tie-break criterion I am permitted to apply (source_kind, order, count, recency, and outside ontology knowledge are all excluded). The support is therefore directly conflicting and does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-01",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 1,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "The packet contains exactly two items, and both directly address the supplied pair (철 as 재료 of 칼), so both clear the evidence-reading bar. But they assign opposite allowed types: ev1 states \"철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\", while ev3 states the same material relation but concludes \"→ structural_composition (재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)\". This is a direct, head-on conflict on the same premise, not a difference in what each item is about. Neither item's text contains any stated priority rule that would subordinate the other, and I am barred from breaking the tie by source_kind (doc vs code), source order, item count, recency, authority, liveness, or outside ontology background. ev3's reasoning (\"본질성은 별도 축\") is an argument for why the two labels could coexist on different axes, but it does not establish which single allowed type the packet warrants here — if anything it underscores that the packet is treating one question along two incompatible framings. With support conflicting and no in-packet resolution mechanism, the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-01",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 1,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 칼's 재료) and each directly asserts a type, but they assert different allowed types: ev1 states essential_feature (\"재료는 본질이 될 수 있음\"), while ev3 states structural_composition (\"관계는 has-a — 본질성은 별도 축\"). The support is therefore directly conflicting rather than ambiguous or absent. Neither item's text contains a stated precedence rule that would resolve the conflict, and I am barred from breaking the tie on source_kind (doc vs code), ordering, count, recency, authority, or outside ontology knowledge. ev3's reasoning (\"본질성은 별도 축\") is an argument internal to that item, not a packet-level priority directive that overrides ev1. With no packet-internal basis for selecting exactly one allowed type, the correct observation is defer."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-14",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 14,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, but they state opposing types: ev1 assigns essential_feature (reasoning that material can be essential), while ev3 assigns structural_composition (reasoning that the relation is has-a and essentiality is a separate axis). Neither item contains any internal statement of priority over the other, and the packet supplies no tie-breaking rule inside the evidence text. Resolving the conflict would require appealing to source_kind, recency, authority, liveness, or outside ontology knowledge, all of which are excluded. Support is therefore directly conflicting and does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-14",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 14,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly asserts an ontology type, but they assert opposite types: ev1 states essential_feature (재료는 본질이 될 수 있음), while ev3 states structural_composition (본질적이어도 관계는 has-a, 본질성은 별도 축). Neither item contains any internal statement establishing precedence over the other, and the task rules forbid breaking the tie by source_kind (doc vs code), ordering, count, recency, authority, or outside ontology knowledge. The support is therefore directly conflicting, so the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-04",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 4,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly assigns an ontology type, but they assign different allowed types: ev1 states essential_feature (재료는 본질이 될 수 있음), while ev3 states structural_composition (본질적이어도 관계는 has-a, 본질성은 별도 축). Neither item contains any stated priority rule that would resolve the conflict, and I am barred from breaking the tie by source_kind (doc vs code), order, count, recency, authority, liveness, or outside ontology knowledge. Support is therefore directly conflicting and the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-04",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 4,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [],
+        "rationale": "Both packet items address exactly the same pair (철 as material of 칼) and each directly asserts a different allowed type: ev1 states essential_feature (재료는 본질이 될 수 있음), while ev3 states structural_composition (본질적이어도 관계는 has-a). The two are directly contradictory and equally on-point; neither item's text contains any stated priority rule that would resolve the conflict, and I am barred from breaking the tie by source_kind (doc vs code), ordering, count, or outside ontology knowledge. The packet therefore does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-07",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 7,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, but they state opposing types: ev1 assigns essential_feature (재료는 본질이 될 수 있음), while ev3 assigns structural_composition (본질성은 별도 축, 관계는 has-a). Neither item contains any internal statement of priority over the other, and the packet gives no tie-breaking rule inside the evidence text. Breaking the tie would require appealing to source_kind, recency, authority, liveness, or outside ontology knowledge, all of which are excluded. Support is therefore directly conflicting, so the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-07",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 7,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as the 재료 of 칼) and both directly assign an ontology type, but they assign opposite allowed types: ev1 states \"→ essential_feature (재료는 본질이 될 수 있음)\" while ev3 states \"→ structural_composition (재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)\". Neither item contains any stated priority rule that would resolve the conflict, and the instructions forbid breaking the tie on source_kind (doc vs code), order, count, recency, authority, or outside ontology knowledge. The packet therefore does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-09",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 9,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 칼's 재료) and each directly asserts an ontology type, but they assert opposing types: ev1 states essential_feature (재료는 본질이 될 수 있음), ev3 states structural_composition (본질성은 별도 축, 관계는 has-a). Neither item contains any internal statement establishing priority over the other, and I am barred from breaking the tie by source_kind, recency, authority, liveness, count, or outside ontology knowledge. The support is therefore directly conflicting and the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-09",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 9,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as the material of 칼, item \"(4) 재료-대상\") and both directly state an ontology type, but they state opposing ones: ev1 assigns essential_feature (reasoning that material can be essential), while ev3 assigns structural_composition (reasoning that even if the material is essential, the relation is has-a and essentiality is a separate axis). Neither item contains any stated priority rule that would resolve the conflict, and the packet forbids breaking the tie on source_kind (doc vs code), count, order, recency, or outside ontology knowledge. Support is therefore directly conflicting, and the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-16",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 16,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, but they state opposing types: ev1 assigns essential_feature (reasoning that material can be essential), while ev3 assigns structural_composition (reasoning that even an essential material yields a has-a relation, with essentiality as a separate axis). Each item is on its face sufficient support for its respective type, so the packet contains direct conflict rather than convergence. No item states any priority rule between the two, and the instructions bar breaking the tie by source_kind (doc vs code), recency, authority, liveness, count, or outside ontology knowledge. With no packet-internal basis for preferring one allowed type over the other, the packet does not warrant selecting exactly one type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-16",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 16,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, but they state opposing ones: ev1 assigns essential_feature (reasoning that material can be essential), while ev3 assigns structural_composition (reasoning that even an essential material yields a has-a relation, with essentiality treated as a separate axis). The conflict is head-on and neither item contains any stated priority rule, scope qualifier, or supersession claim that would resolve it from within the packet. Breaking the tie would require appealing to source_kind (doc vs code), ordering, or outside ontology reasoning, all of which are excluded. No third item disambiguates. Therefore the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-11",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 11,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (칼 / 철) and each directly states an ontology type, but they state different ones: ev1 assigns essential_feature (\"재료는 본질이 될 수 있음\"), while ev3 assigns structural_composition (\"본질성은 별도 축\", 관계는 has-a). The two are in direct, on-point conflict at the same level of specificity. Neither item's text contains any stated precedence rule that would resolve the conflict, and the instructions forbid breaking the tie on source_kind (doc vs code), ordering, count, recency, authority, liveness, or outside ontology knowledge. With no in-packet basis for selecting one allowed type over the other, the packet does not warrant selecting exactly one type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-11",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 11,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 칼's 재료) and both directly state an ontology type, but they state opposing types: ev1 assigns essential_feature (재료는 본질이 될 수 있음), while ev3 assigns structural_composition (본질적이어도 관계는 has-a, 본질성은 별도 축). Neither item contains any internal statement establishing precedence over the other, and the instructions forbid breaking the tie on source_kind (doc vs code), ordering, recency, authority, or outside ontology knowledge. Support is therefore directly conflicting with no packet-internal resolution, so the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-12",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 12,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and both directly state an ontology type, but they state different ones: ev1 assigns essential_feature (재료는 본질이 될 수 있음), ev3 assigns structural_composition (관계는 has-a; 본질성은 별도 축). Each is on its face sufficient support for its own type, so the packet contains direct, head-on conflict rather than ambiguity or absence. No item's text states any priority rule between them, and I am barred from breaking the tie on source_kind (doc vs code), ordering, count, recency, authority, liveness, or outside ontology knowledge. With no in-packet tiebreaker, the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-12",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 12,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, but they state opposing types: ev1 assigns essential_feature (재료는 본질이 될 수 있음), while ev3 assigns structural_composition (관계는 has-a; 본질성은 별도 축). Neither item contains any stated priority rule that would resolve the conflict, and the instructions forbid breaking the tie on source_kind (doc vs code), ordering, count, recency, authority, or outside ontology knowledge. With direct, symmetric, and mutually exclusive support on both sides, the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-10",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 10,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address the supplied pair (철 as 재료 of 칼) directly and each assigns a different allowed type: ev1 states essential_feature (재료는 본질이 될 수 있음), ev3 states structural_composition (관계는 has-a; 본질성은 별도 축). Neither item contains text granting priority over the other, and the packet supplies no in-text tiebreaker. Breaking the tie would require source_kind priority, recency, liveness, or outside ontology reasoning, all of which are excluded. Support is therefore directly conflicting, so the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-10",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 10,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as the material of 칼) under the same numbered case \"(4) 재료-대상\", and each directly assigns a different allowed type. ev1 states the pair is essential_feature (재료는 본질이 될 수 있음); ev3 states the same pair is structural_composition, reasoning that even if the material is essential, the relation is has-a and essentiality is a separate axis. The two are directly contradictory on the typing question, and neither item's text contains any stated priority rule that would resolve the conflict. The instructions forbid breaking the tie by source_kind (doc vs code), evidence count, order, recency, authority, or outside ontology knowledge. With support evenly conflicting and no in-packet tiebreaker, the packet does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-06",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 6,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "두 증거 항목 모두 공급된 개념/특징 쌍(칼-철)의 온톨로지 타입을 직접 진술하지만 서로 다른 값을 지목한다. ev1은 \"철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\"라고 하고, ev3은 동일한 (4) 재료-대상 사례에 대해 \"→ structural_composition (재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)\"라고 한다. 따라서 각각이 서로 다른 허용 타입에 대한 직접적 근거를 구성하며, 지지가 정면으로 충돌한다. 어느 항목의 텍스트 안에도 다른 출처보다 우선한다는 우선순위 진술이 없고, 증거 개수·source_kind(doc 대 code)·순서·최신성·권위·liveness로 동점을 깨는 것은 금지되어 있다. ev3이 본질성과 관계 축을 분리한다는 논증을 담고 있으나, 이는 패킷 내부에 명시된 우선순위 규칙이 아니라 하나의 주장일 뿐이므로 ev1을 무효화하지 못한다. 패킷만으로는 정확히 하나의 허용 타입을 선택할 근거가 성립하지 않아 defer한다."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-06",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 6,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and both directly assign an ontology type, but they assign different allowed types. ev1 states \"철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\"; ev3 states the same premise but concludes \"→ structural_composition (재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)\". ev3 does offer a rationale that engages ev1's premise (essentiality treated as a separate axis from the has-a relation), but neither item contains a stated precedence rule making one assertion authoritative over the other for this pair, and the packet gives no other item to adjudicate. Selecting between them would require breaking the tie on source_kind (doc vs code), argument persuasiveness, or outside ontology background — all excluded by the reading rule. The packet therefore does not warrant selecting exactly one allowed type; support is directly conflicting."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_KEPT-15",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 15,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, but they state opposing ones: ev1 assigns essential_feature (재료는 본질이 될 수 있음), while ev3 assigns structural_composition (관계는 has-a, 본질성은 별도 축). Neither item contains any internally stated priority rule that would resolve the conflict, and I am barred from breaking the tie by source_kind (doc vs code), evidence count, order, recency, authority, liveness, or outside ontology knowledge. Support is therefore directly conflicting rather than converging on exactly one allowed type, so the packet does not warrant selecting one type over the other."
+      },
+      "in_comparison": true
+    },
+    {
+      "trial_id": "H1A-PROHIBITION_REMOVED-15",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 15,
+      "category": "deferral",
+      "status": "recorded",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev3"
+        ],
+        "rationale": "Both packet items address exactly the supplied pair (철 as the material of 칼) and each directly asserts a type, but they assert opposing ones: ev1 states essential_feature (reasoning that material can be essential), while ev3 states structural_composition (reasoning that the relation is has-a even if the material is essential, with essentiality treated as a separate axis). The conflict is head-on and each item carries its own justification, so neither is rendered inapplicable or subsumed by the other. Nothing inside either item's text states a precedence rule, and the instructions bar breaking the tie by source_kind, ordering, count, or outside ontology knowledge. The packet therefore does not warrant selecting exactly one allowed type."
+      },
+      "in_comparison": true
+    }
+  ]
+}
