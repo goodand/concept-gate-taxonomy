@@ -11,6 +11,130 @@
 
 ---
 
+## 2026-08-03(3) — Q10.2 정책 계약 구현, Q11 상신
+
+### 1. 신규 — `_h1a_policy.py` + `test_h1a_policy.py` (28 passed)
+
+Q10.2가 명령한 계층 중 앞 네 개를 구현했다. LLM 의미 검사기는 판정문이
+"advisory only"로 못박았으므로 구현하지 않았다.
+
+```text
+typed policy schema → deterministic renderer → structural assertions
+→ deductive policy check → (LLM semantic lint: 미구현, 보조) → human sign-off
+```
+
+**핵심은 `carriers` 필드다.** 옛 가드에 없던 것이고, 그것이 없었기 때문에
+blocker #16과 Q10이 같은 결함으로 두 번 났다. 축의 **상태**만 알면
+부족하고, 그 상태를 **어느 섹션이 담지하는가**를 알아야 "한 축이 두 번
+금지되고 있는가"를 검사할 수 있다.
+
+| 단언 | Q10.2 요구사항 | 무엇을 잡는가 |
+|---|---|---|
+| `assert_target_axis_states` | 1 | 표적 축이 KEPT=forbidden/REMOVED=allowed가 아님 |
+| `assert_nontarget_axes_are_arm_invariant` | 2 | 비표적 축이 arm 간 달라짐 |
+| `assert_arm_difference_is_exactly_the_target_set` | 3 | arm 차이 집합 ≠ 사전등록 표적 집합 |
+| `assert_manipulated_axes_have_exactly_one_carrier` | 4 | **조작 대상 축의 중복 금지 = Q10의 결함** |
+| `assert_declared_carriers_match_rendered_text` | 5·6 | 선언과 산문의 불일치, **양방향** |
+| `assert_deductive_check` | 연역 | `M_allowed = ¬Q1 ∧ ¬Q7_target`를 정책 객체에서 **재도출** |
+
+연역 검사는 판정문 §3·§6의 표를 **복사하지 않고 재생산한다** — 진리표 4셀을
+열거해 표적 경로가 열리는 셀이 정확히 하나(`¬Q1 ∧ ¬Q7`)임을 보이고,
+KEPT=False / REMOVED=True / contrast=True를 정책에서 유도한다. Wolfram 없이
+결정론적 Python으로 충분했다(판정문이 연역 도구를 permissive하게 허용했고,
+새 의존성은 "영향 최소" 원칙에 어긋난다).
+
+### 2. 가장 중요한 테스트 — 실제로 실행된 코호트가 거부되는가
+
+`test_the_actual_nonidentifying_cohort_prompt_is_rejected`가
+`cohort_prompts.json`의 **동결 바이트**(2026-08-03에 실제로 40 trial에 쓰인 것)를
+새 가드에 넣고 **거부를 요구**한다. 그 옆에
+`test_old_guard_still_passes_those_same_bytes`가 옛 가드는 같은 바이트를
+**통과**시킴을 고정한다.
+
+**즉 "새 가드가 실제로 일어난 일을 잡는다"가 합성 뮤테이션이 아니라 실물로
+증명된다.** 뮤테이션 8종은 가드가 발화할 수 있음을 보이고, 이 두 테스트는
+발화 대상이 맞다는 것을 보인다.
+
+### 3. 구현 중 테스트가 잡은 실제 결함 1건
+
+서식을 원본(76열 wrap)에 맞추자 **두 테스트가 즉시 깨졌다.** 원인은 테스트가
+아니라 가드였다 — surface token이 다어절 구(`outside knowledge`)인데 wrap이
+그것을 개행+들여쓰기로 쪼개면 substring 검사가 **실패한다**. 프롬프트에 축이
+있는데 가드가 없다고 보고하는 **거짓 음성**이고, 정확히 옛 가드가 이 실험을
+한 번 무너뜨린 종류의 결함이다.
+
+`_normalize_ws`로 공백을 정규화해 수정하고,
+`test_wrapping_cannot_hide_an_axis_from_the_checker`로 회귀를 고정했다.
+**wrap을 도입하지 않았다면 이 결함은 발견되지 않은 채 남았을 것이다.**
+
+### 4. R1 — 내용은 구현, 템플릿 교체는 **의도적으로 보류**
+
+| 부분 | 상태 |
+|---|---|
+| R1의 내용 결정(어느 축이 공통 목록을 떠나는가) | ✅ `render_policy_text`가 구현, 테스트로 고정 |
+| 템플릿의 하드코딩 불릿 → 정책 생성 placeholder 교체 | ⬜ **보류** |
+
+보류 이유:
+
+1. **Q11이 REMOVED 블록의 불릿 개수를 결정한다**(침묵=1개, 명시 허용=2개).
+   배선을 지금 확정할 수 없다.
+2. `test_h1a_contract.py:330::test_template_carries_q7_tie_breaker_prohibition_list`
+   가 수선 전 바이트를 고정하고 있다. 지금 바꾸면 그 테스트를 고치고,
+   Q11 후에 **또** 고쳐야 한다.
+3. **재동결은 더 이상 무료가 아니다** — 40 trial이 실행됐다. 두 번 동결하는
+   것보다 판정 후 한 번이 낫다.
+
+R1 적용 후 공통 불릿의 예정 형태(렌더러 실측 출력):
+
+```text
+- Do not break ties using evidence item count, source order, or outside
+  knowledge unless that priority is directly stated inside an evidence
+  item's text.
+```
+
+### 5. Q11 상신
+
+`correspondence/DESIGN_REQUEST_H1a_allowed_rendering.md`.
+**Q11**(`removed: allowed`의 렌더링 — 침묵/명시 허용/양 arm 형식 대칭) +
+**Q11.1**(R1이 KEPT 금지도 약화시키는데 그대로 두는가) +
+**Q11.2**(`carrier` 매핑을 사전등록에 동결하는가).
+
+인용 대조 **9/9 통과** — 템플릿 46-52행 verbatim, `LIVENESS_CLAUSE_TEXT`,
+렌더 길이 2318/2235(delta 83), packet-boundary 문장의 양 arm 존재, tie-breaker
+불릿의 양 arm 존재(수선 전), Q1 절의 KEPT 단독 존재를 전부 실측으로 확인했다.
+
+**Q11.1은 판정문에 없던 질문이다.** R1의 표는 KEPT를 "Q1에 의해 금지"로
+적었지만, 수선 전 KEPT는 Q1(산문)과 Q7(의사결정 규칙) **두 곳**에서
+금지받고 있었다. R1은 REMOVED를 열면서 **KEPT의 담지자도 하나 줄인다.**
+판정문 §12가 그 둘을 "이 fixture에서 기능적으로 중복"이라고 했으므로 무해할
+수 있으나, 그 전제가 참이라는 것이 바로 Q10의 근거였으므로 같은 전제를
+반대 방향으로 쓰는 것이 타당한지는 판정 대상이다.
+
+### 6. Fail-closed
+
+`REMOVED_ALLOWED_RENDERING = None`이고, `assert_freezable()`이 그 값이
+None인 동안 **동결을 거부한다.** 판정 없이 프롬프트가 trial에 도달하는 경로를
+코드가 막는다. `render_policy_block("PROHIBITION_REMOVED")`도 모드 없이
+호출하면 `Q11Undecided`를 던진다 — 다만 모드를 명시적으로 넘기면 렌더되므로
+테스트는 양 분기를 다 검사할 수 있다(실험이 선택하지 않은 상태로).
+
+### 7. 게이트
+
+```text
+H1a       106 → 134 passed / 1 skipped   (+28)
+E2.4      118 passed                      (불변)
+core      1 failed (owlready2 미설치 — §10의 기존 결함, 이번 변경과 무관)
+```
+
+### 8. 다음
+
+**Q11 판정 대기.** 판정 전에 템플릿 교체·재동결·trial 실행·독립 리뷰를 하지
+않는다. 독립 리뷰는 표면이 **확정된 뒤** 필수다 — Q9 때 생략 근거가 "표면
+불변"이었고 지금은 "표면 미확정"이라 아직 이르지만, R1이 적용되는 순간
+3차 리뷰(2026-08-02)는 무효가 된다.
+
+---
+
 ## 2026-08-03(2) — Q10 판정 도착·반입 (D-H1a-10)
 
 판정문: `DESIGN_DECISION_H1a_residual_prohibition.md`.
