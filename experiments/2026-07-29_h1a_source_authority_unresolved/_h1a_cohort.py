@@ -22,6 +22,7 @@ from pathlib import Path
 
 import _h1a_surface as surface
 import _h1a_contract as contract
+import _h1a_policy as policy
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]  # concept-gate-h1-wt/
@@ -125,6 +126,22 @@ def build_cohort() -> dict:
     )
     if not ok:
         raise contract.ContractDriftError(f"arm diff not restricted to liveness clause: {detail}")
+
+    # D-H1a-11's policy layer, run against the ACTUAL rendered arms.
+    #
+    # Two independent reviews (docs/feedback/h1a_repair_review_20260804.md)
+    # found this call absent: build_cohort() ran only the two guards above --
+    # exactly the guard class that passed on the 2026-08-03 cohort and let it
+    # become non-identifying -- while every _h1a_policy assertion was
+    # exercised only against a synthetic string or the frozen JSON, never
+    # against what render_arm() actually produces. That is the same shape of
+    # error the policy layer was built to fix: asserting a true proposition
+    # about the wrong object. Calling assert_freezable() here closes that gap
+    # and, because condition 5 is unmet by design
+    # (INDEPENDENT_SEMANTIC_REVIEW_PASSED = False), this also means
+    # build_cohort() cannot produce a manifest until that flag is set --
+    # freeze() cannot outrun the freeze gate.
+    policy.assert_freezable(arm_templates, contract.LIVENESS_CLAUSE_TEXT)
 
     rendered_prompts = {
         arm: surface.render_prompt(arm_templates[arm], model_payload)
