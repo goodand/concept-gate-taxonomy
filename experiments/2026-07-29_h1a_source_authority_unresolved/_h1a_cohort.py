@@ -201,7 +201,45 @@ def build_cohort() -> dict:
     }
 
 
+class CohortOverwriteRefused(Exception):
+    """freeze() would destroy a preserved cohort. Never proceed."""
+
+
 def freeze() -> dict:
+    """Build and write the cohort manifest.
+
+    ⚠️ FAIL-CLOSED SINCE 2026-08-04. Three independent reviewers of the
+    D-H1a-11 repair found that this function, unchanged since the first cohort,
+    would silently destroy that cohort's frozen manifest:
+
+      - COHORT_PATH is the ORIGINAL cohort's manifest. The write below was
+        unconditional, so re-running freeze() overwrites the artifact
+        `COHORT_STATUS_20260803_nonidentifying.md` and its eleven recorded
+        sha256 values rest on.
+      - ORDER_SEED is still `H1A-fixed-order-v1` and trial ids are still
+        `H1A-{arm}-{replicate:02d}`, but PREREGISTRATION_REPAIRED_COHORT.md §5
+        requires `H1A-repaired-fixed-order-v1` and `H1AR-{arm}-{replicate:02d}`
+        precisely so the two cohorts cannot be confused. As written, the
+        repaired run would emit ids indistinguishable from the preserved ones.
+
+    D-H1a-10 Q10.1 forbids merging or reusing the original cohort, and
+    D-H1a-11 §13 repeats it (`merge_original_and_repaired_cohorts: false`).
+    Overwriting in place is the most irreversible form of that violation, so
+    this refuses rather than warns. The repaired-cohort wiring (new path, new
+    seed, new id prefix) is a pending change, not something to work around by
+    deleting the guard.
+    """
+    if COHORT_PATH.exists():
+        raise CohortOverwriteRefused(
+            f"{COHORT_PATH.name} already exists and holds the 2026-08-03 "
+            f"cohort that D-H1a-10 ruled non-identifying and ordered PRESERVED "
+            f"(Q10.1: merge_with_repaired_cohort: false). Writing here would "
+            f"destroy it irreversibly.\n\n"
+            f"The repaired cohort needs its own manifest path, ORDER_SEED "
+            f"{'H1A-repaired-fixed-order-v1'!r} and trial-id prefix 'H1AR-' "
+            f"per PREREGISTRATION_REPAIRED_COHORT.md §5. That wiring is not "
+            f"done. Do not delete this check to proceed."
+        )
     cohort = build_cohort()
     COHORT_PATH.write_text(
         json.dumps(cohort, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
