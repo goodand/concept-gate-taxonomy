@@ -124,6 +124,25 @@ _CARRIER_SEMANTICS = {
 # here for the audit trail and deliberately excluded from carrier cardinality.
 SCOPE_CONSTRAINTS = ("PACKET_ONLY", "NO_EXTERNAL_SOURCES")
 
+# The scope constraint's own bytes (template lines 39-41, present verbatim and
+# identically in both arms -- it predates D-H1a-11 and is Q3=B's packet-
+# boundary preamble). Its wording legitimately says "Do not use ... external
+# sources", which co-occurs with `outside_knowledge`'s surface tokens under the
+# same verb-proximity test assert_5 and assert_6b use. That overlap is
+# EXPECTED, not a duplicate carrier -- the ruling excludes scope constraints
+# from carrier cardinality precisely because they are arm-invariant and cannot
+# create or destroy an arm contrast. It must be excluded from the "text outside
+# known carriers" scan the same way the Q1 clause and Q7 block are, or the scan
+# false-positives on this sentence every time. Loaded as a constant here
+# (rather than from the template) so a template edit that changes this
+# sentence is caught by drift, not silently tolerated.
+SCOPE_CONSTRAINT_TEXT = (
+    "Input is a repo-derived evidence packet. Use only the packet fields "
+    "presented in this prompt. Do not use general ontology knowledge, "
+    "OWL/GUFO background knowledge, codebase memory, prior conversation "
+    "context, or external sources."
+)
+
 # --------------------------------------------------------------------------
 # Default permission (D-H1a-11 sec 1 / sec 5) -- byte-exact from the ruling
 # --------------------------------------------------------------------------
@@ -356,13 +375,36 @@ def assert_4_default_permission_states_use_the_default_carrier() -> None:
                 )
 
 
-def assert_5_no_duplicate_forbidding_carrier(rendered: dict[str, str] | None = None) -> None:
+def assert_5_no_duplicate_forbidding_carrier(
+    rendered: dict[str, str] | None = None, q1_clause_text: str | None = None
+) -> None:
     """No axis x arm is forbidden by more than one carrier.
 
-    The declared table cannot express a duplicate (assertion 2 forbids a
-    collection), so the real risk is a SECOND carrier appearing in prose. When
-    `rendered` is supplied this checks that too: an axis whose sole carrier is
-    Q1 must not also be named by the generated Q7 list.
+    KNOWN LIMITATION, corrected 2026-08-04. The original version of this
+    function never read `rendered` and both its branches were tautologically
+    unreachable: `_q7_forbidden_axes` is DERIVED from `carrier_of(a, arm) ==
+    CARRIER_Q7`, so `declared != CARRIER_Q7 and axis in _q7_forbidden_axes(arm)`
+    reduces to `declared == Q7 and declared != Q7`, which is never true. An
+    independent review (`docs/feedback/h1a_repair_review_20260804.md`) found
+    this by constructing a poisoned `rendered` dict with a second forbidding
+    bullet in KEPT and observing the function pass. Re-verified by the
+    operating session before this fix, independently of the review's report.
+
+    The real check: locate each axis's declared carrier's OWN text span in the
+    rendered arm (the Q7 block's bytes, or Q1's clause bytes), remove exactly
+    those known spans, and scan what remains for another mention that forbids
+    the same axis. Structural, not lexical-complete -- it still uses
+    `_PROHIBITION_VERBS`/`AXIS_SURFACE_TOKENS` to recognize a mention in the
+    remainder, so it inherits their coverage limits (documented on
+    `assert_6b`). What it newly guarantees is that a duplicate landing
+    ANYWHERE outside the two known carrier regions is visible, rather than
+    never being looked for at all.
+
+    `rendered` and `q1_clause_text` are optional so the no-args structural
+    suite (`assert_structural_no_args`) can still run before any prompt is
+    rendered; the prose check is skipped in that case, matching the original
+    function's most permissive behavior, but now for a real reason (nothing to
+    scan) rather than a dead branch.
     """
     for axis in AXES:
         for arm in ARMS:
@@ -370,16 +412,57 @@ def assert_5_no_duplicate_forbidding_carrier(rendered: dict[str, str] | None = N
                 continue
             declared = carrier_of(axis, arm)
             emitted = {cid for cid, _ in render_policy_block(arm)}
-            if declared != CARRIER_Q7 and axis in _q7_forbidden_axes(arm):
-                raise PolicyContractError(
-                    f"[5] {axis} x {arm}: declared carrier {declared!r} but the "
-                    f"Q7 list also forbids it -- duplicate carrier, the Q10 defect"
-                )
             if declared == CARRIER_Q7 and CARRIER_Q7 not in emitted:
                 raise PolicyContractError(
                     f"[5] {axis} x {arm}: declared carrier is Q7 but no Q7 block "
                     f"was emitted"
                 )
+
+    if rendered is None:
+        return
+
+    for arm in ARMS:
+        if arm not in rendered:
+            raise PolicyContractError(f"[5] rendered text missing for arm {arm!r}")
+        text = rendered[arm]
+
+        # Strip the known carrier spans AND the scope constraint, normalized
+        # first because the template hard-wraps at 76 columns and none of
+        # these spans can be matched as an exact multi-line substring
+        # otherwise (the same reason `_normalize_ws` exists at all). What
+        # remains is text no declared carrier -- and no scope constraint --
+        # accounts for; any forbidding mention found there is, by
+        # construction, a SECOND carrier.
+        remainder = _normalize_ws(text)
+        q7_text = dict(render_policy_block(arm)).get(CARRIER_Q7)
+        if q7_text:
+            remainder = remainder.replace(_normalize_ws(q7_text), " ", 1)
+        if arm == "PROHIBITION_KEPT" and q1_clause_text:
+            remainder = remainder.replace(_normalize_ws(q1_clause_text), " ", 1)
+        remainder = remainder.replace(_normalize_ws(SCOPE_CONSTRAINT_TEXT), " ", 1)
+
+        for axis in AXES:
+            if state_of(axis, arm) not in _FORBIDDING_STATES:
+                continue
+            declared = carrier_of(axis, arm)
+            for token in AXIS_SURFACE_TOKENS[axis]:
+                tok = _normalize_ws(token)
+                if tok not in remainder:
+                    continue
+                for verb in _PROHIBITION_VERBS:
+                    v = _normalize_ws(verb)
+                    if v not in remainder:
+                        continue
+                    for vi in _all_indices(remainder, v):
+                        for ti in _all_indices(remainder, tok):
+                            if abs(ti - vi) <= 240:
+                                raise PolicyContractError(
+                                    f"[5] {axis} x {arm}: declared carrier is "
+                                    f"{declared!r}, but text outside that "
+                                    f"carrier's own span also forbids it "
+                                    f"({verb!r} near {token!r}) -- duplicate "
+                                    f"carrier, the Q10 defect"
+                                )
 
 
 def assert_6_removed_target_axes_have_no_forbidding_carrier() -> None:
@@ -648,7 +731,7 @@ INDEPENDENT_SEMANTIC_REVIEW_PASSED = False
 def assert_freezable(rendered: dict[str, str], q1_clause_text: str) -> dict:
     """All five D-H1a-11 freeze conditions, as a conjunction."""
     assert_structural_no_args()
-    assert_5_no_duplicate_forbidding_carrier(rendered)
+    assert_5_no_duplicate_forbidding_carrier(rendered, q1_clause_text)
     assert_6b_removed_prose_has_no_target_prohibition(rendered)
     assert_10_q1_clause_is_kept_only_and_unchanged(rendered, q1_clause_text)
     assert_11_removed_has_no_axis_specific_permission_text(rendered)

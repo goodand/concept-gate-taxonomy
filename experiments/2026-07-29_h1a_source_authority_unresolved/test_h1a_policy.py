@@ -76,7 +76,7 @@ def clean_policy():
 def test_all_twelve_structural_assertions_pass():
     policy.assert_structural_no_args()
     rendered = _repaired_rendered()
-    policy.assert_5_no_duplicate_forbidding_carrier(rendered)
+    policy.assert_5_no_duplicate_forbidding_carrier(rendered, Q1)
     policy.assert_6b_removed_prose_has_no_target_prohibition(rendered)
     policy.assert_10_q1_clause_is_kept_only_and_unchanged(rendered, Q1)
     policy.assert_11_removed_has_no_axis_specific_permission_text(rendered)
@@ -332,6 +332,50 @@ def test_mutation_axis_specific_permission_in_removed_is_caught():
     )
     with pytest.raises(policy.PolicyContractError, match=r"\[11\]"):
         policy.assert_11_removed_has_no_axis_specific_permission_text(rendered)
+
+
+def test_assert_5_actually_reads_rendered_and_catches_a_duplicate_carrier():
+    """Regression for the vacuous-guard defect an independent review found.
+
+    The original assert_5 never referenced its `rendered` parameter and both
+    branches were tautologically unreachable (see the function's own
+    docstring for the derivation). A poisoned KEPT arm carrying a second,
+    independent prohibition of a Q1-carried axis passed it. This pins that the
+    fixed version (a) passes on the real rendered template and (b) actually
+    fires on that exact poisoned input -- on the REAL rendered arms, not a
+    synthetic fixture, so a regression here means the fix regressed against
+    the artifact that matters.
+    """
+    template = contract.load_h1a_native_template()
+    kept = contract.render_arm(template, "PROHIBITION_KEPT")
+    removed = contract.render_arm(template, "PROHIBITION_REMOVED")
+
+    # (a) the real, unmodified prompts must pass.
+    policy.assert_5_no_duplicate_forbidding_carrier(
+        {"PROHIBITION_KEPT": kept, "PROHIBITION_REMOVED": removed}, Q1
+    )
+
+    # (b) the reviewer's exact poisoning must be caught.
+    poisoned_kept = kept + "\n- Do not use recency or authority to decide."
+    with pytest.raises(policy.PolicyContractError, match=r"\[5\]"):
+        policy.assert_5_no_duplicate_forbidding_carrier(
+            {"PROHIBITION_KEPT": poisoned_kept, "PROHIBITION_REMOVED": removed}, Q1
+        )
+
+
+def test_assert_5_does_not_false_positive_on_the_scope_constraint_sentence():
+    """The packet-boundary sentence legitimately says 'or external sources',
+    which co-occurs with outside_knowledge's tokens under the same
+    verb-proximity window assert_5 uses. That overlap is ruled EXPECTED
+    (D-H1a-11 sec 8: scope constraints are not carriers), so it must not be
+    flagged -- this was the first thing the corrected assert_5 got wrong
+    before SCOPE_CONSTRAINT_TEXT was excluded from the scan.
+    """
+    template = contract.load_h1a_native_template()
+    rendered = {
+        arm: contract.render_arm(template, arm) for arm in contract.ARMS
+    }
+    policy.assert_5_no_duplicate_forbidding_carrier(rendered, Q1)  # must not raise
 
 
 def test_mutation_paraphrased_residual_prohibition_is_caught():
