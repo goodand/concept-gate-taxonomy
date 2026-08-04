@@ -217,26 +217,90 @@ def load_h1a_native_template(path: Path = DESIGN_DECISION_PATH) -> str:
     return blocks[0]
 
 
+_POLICY_SLOTS = ("{global_default_permission}", "{decision_basis_tiebreaker}")
+
+
+def _fill_policy_slots(template: str, arm: str) -> str:
+    """Substitute the two policy-generated regions (D-H1a-11).
+
+    Both are filled from `_h1a_policy`'s frozen table, not from prose in the
+    template. Q10.2 requires this direction: when prose was canonical, the same
+    prohibition could live in two places and deleting one left the other, which
+    is what made the 2026-08-03 cohort non-identifying.
+
+    Imported lazily and under a unique sys.modules key, matching the loading
+    discipline the rest of this folder uses -- experiment folders here hold
+    same-named modules and one experiment has been observed running on
+    another's code.
+    """
+    import importlib.util
+    import sys
+
+    key = "_h1a_contract__policy"
+    module = sys.modules.get(key)
+    if module is None:
+        spec = importlib.util.spec_from_file_location(key, HERE / "_h1a_policy.py")
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[key] = module
+        spec.loader.exec_module(module)
+
+    for slot in _POLICY_SLOTS:
+        count = template.count(slot)
+        if count != 1:
+            raise ContractDriftError(
+                f"policy slot {slot} occurs {count} times in the template, "
+                f"expected exactly 1 -- the template drifted from the structure "
+                f"this module was built against"
+            )
+
+    blocks = dict(module.render_policy_block(arm))
+    out = template.replace(
+        "{global_default_permission}", blocks[module.CARRIER_DEFAULT], 1
+    )
+    # The tie-breaker slot sits on its own line inside the warrant bullet list.
+    out = out.replace(
+        "{decision_basis_tiebreaker}", blocks[module.CARRIER_Q7], 1
+    )
+    return out
+
+
 def render_arm(template: str, arm: str) -> str:
     """Return the arm-specific H1a-native prompt (payload slot unfilled).
 
-    PROHIBITION_KEPT inserts Q1's frozen liveness clauses immediately after
-    the template's packet-boundary sentence. PROHIBITION_REMOVED is the
-    template unchanged.
+    Two policy-generated regions are filled in BOTH arms, byte-identically:
+    the D-H1a-11 default-permission rule and the R1-repaired tie-breaker
+    bullet. PROHIBITION_KEPT then additionally inserts Q1's frozen liveness
+    clauses immediately after the template's packet-boundary sentence.
+
+    So the arm contrast remains exactly one region -- Q1's clause -- even
+    though the common template changed (D-H1a-11 sec 11 `arm_diff`).
     """
     if arm not in ARMS:
         raise ValueError(f"arm must be one of {ARMS}, got {arm!r}")
-    if arm == "PROHIBITION_REMOVED":
-        return template
 
-    count = template.count(_INSERTION_ANCHOR)
+    filled = _fill_policy_slots(template, arm)
+    if arm == "PROHIBITION_REMOVED":
+        return filled
+    return insert_liveness_clause(filled)
+
+
+def insert_liveness_clause(text: str) -> str:
+    """Insert Q1's frozen clause after the packet-boundary sentence.
+
+    Split out of `render_arm` so the arm-diff proof can reconstruct KEPT from
+    an ALREADY-RENDERED REMOVED arm. Before D-H1a-11 the template and the
+    rendered REMOVED arm were the same string, so the proof could just call
+    `render_arm` again; now that both arms have policy slots filled, calling
+    `render_arm` on rendered text would look for slots that are no longer there.
+    """
+    count = text.count(_INSERTION_ANCHOR)
     if count != 1:
         raise ContractDriftError(
-            f"insertion anchor {_INSERTION_ANCHOR!r} occurs {count} times in "
-            f"the template, expected exactly 1 -- the ruling's template "
-            f"drifted from the text this module was built against"
+            f"insertion anchor {_INSERTION_ANCHOR!r} occurs {count} times, "
+            f"expected exactly 1 -- the text drifted from what this module was "
+            f"built against"
         )
-    return template.replace(
+    return text.replace(
         _INSERTION_ANCHOR, f"{_INSERTION_ANCHOR} {LIVENESS_CLAUSE_TEXT}", 1
     )
 
@@ -279,7 +343,7 @@ def diff_is_restricted_to_the_liveness_clause(kept_text: str, removed_text: str)
     Q1 check and rejected -- its greedy LCS misaligns deletion boundaries
     around short repeated substrings.)
     """
-    expected_kept = render_arm(removed_text, "PROHIBITION_KEPT")
+    expected_kept = insert_liveness_clause(removed_text)
     if expected_kept == kept_text:
         return True, []
     for i, (a, b) in enumerate(zip(expected_kept, kept_text)):

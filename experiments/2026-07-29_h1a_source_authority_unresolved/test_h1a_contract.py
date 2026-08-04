@@ -103,9 +103,24 @@ def test_normalization_preserves_every_non_whitespace_character():
 
 # --- PROHIBITION_REMOVED is the template, unchanged -------------------------
 
-def test_removed_arm_is_byte_identical_to_the_template():
+def test_removed_arm_is_the_template_with_only_policy_slots_filled():
+    """Superseded form of test_removed_arm_is_byte_identical_to_the_template.
+
+    Before D-H1a-11 the REMOVED arm WAS the template verbatim. Now both arms
+    fill two policy-generated regions -- the shared default-permission rule and
+    the R1-repaired tie-breaker bullet -- so equality with the raw template no
+    longer holds. What must still hold is that REMOVED differs from the
+    template ONLY by those substitutions, and carries no Q1 clause.
+    """
     t = template()
-    assert h1a_contract.render_arm(t, "PROHIBITION_REMOVED") == t
+    removed = h1a_contract.render_arm(t, "PROHIBITION_REMOVED")
+    assert removed != t, "policy slots should have been substituted"
+    for slot in h1a_contract._POLICY_SLOTS:
+        assert slot in t, f"{slot} missing from the template"
+        assert slot not in removed, f"{slot} left unsubstituted"
+    assert h1a_contract.LIVENESS_CLAUSE_TEXT not in removed
+    # Reconstruction: filling the slots is the whole difference.
+    assert h1a_contract._fill_policy_slots(t, "PROHIBITION_REMOVED") == removed
 
 
 # --- PROHIBITION_KEPT inserts the clause at the one packet-boundary locus --
@@ -327,10 +342,57 @@ def test_template_gives_defer_and_select_type_symmetric_treatment():
     assert "Cite the evidence item ids" in t
 
 
-def test_template_carries_q7_tie_breaker_prohibition_list():
-    """Q7's explicit list of forbidden tie-breakers must be present verbatim
-    -- this is the rule that replaces the undefined-defer gap C7/Q7 found."""
+def test_rendered_tie_breaker_list_is_the_r1_repaired_set():
+    """Superseded form of test_template_carries_q7_tie_breaker_prohibition_list.
+
+    That test asserted Q7's list was present in the TEMPLATE verbatim, with all
+    seven axes. D-H1a-10-R1 amended the list: the four target axes leave the
+    common list and the three non-target ones stay. D-H1a-11 Q11.2 made the
+    policy table the authority, so the list is now generated and the template
+    carries a placeholder instead.
+
+    Asserted on the RENDERED arms, whitespace-normalized because the bullet
+    hard-wraps at 76 columns and a two-word phrase straddles the break.
+    """
     t = template()
-    for forbidden in ("evidence item count", "source order", "source_kind",
-                      "recency", "authority", "liveness", "outside knowledge"):
-        assert forbidden in t, forbidden
+    for arm in h1a_contract.ARMS:
+        text = " ".join(h1a_contract.render_arm(t, arm).split()).lower()
+        for retained in ("evidence item count", "source order", "outside knowledge"):
+            assert retained in text, f"{arm}: {retained!r} should be retained"
+        for removed in ("source_kind priority", "recency", "authority"):
+            assert removed not in text, (
+                f"{arm}: {removed!r} must not appear in the common tie-breaker "
+                f"list after R1"
+            )
+
+
+def test_liveness_is_absent_from_removed_but_present_in_kept_via_q1_only():
+    """`liveness` needs its own check: R1 removed it from the common list, but
+    Q1's Korean clause legitimately still names it in KEPT."""
+    t = template()
+    kept = h1a_contract.render_arm(t, "PROHIBITION_KEPT")
+    removed = h1a_contract.render_arm(t, "PROHIBITION_REMOVED")
+    assert "liveness" not in removed.lower(), (
+        "REMOVED must not name liveness at all once R1 drops it from the common "
+        "list -- this is the axis whose duplicate carrier caused Q10"
+    )
+    assert "liveness" in kept.lower()
+    assert kept.lower().count("liveness") == 1, (
+        "exactly one carrier: Q1's clause. More than one occurrence would mean "
+        "the common list still names it too, which is the Q10 defect"
+    )
+
+
+def test_default_permission_is_present_and_identical_in_both_arms():
+    """D-H1a-11 Q11=D: the shared default-permission rule, byte-identical."""
+    t = template()
+    import importlib.util as _il, sys as _sys
+    key = "_h1a_contract_test__policy"
+    if key not in _sys.modules:
+        spec = _il.spec_from_file_location(key, HERE / "_h1a_policy.py")
+        m = _il.module_from_spec(spec)
+        _sys.modules[key] = m
+        spec.loader.exec_module(m)
+    policy = _sys.modules[key]
+    for arm in h1a_contract.ARMS:
+        assert policy.GLOBAL_DEFAULT_PERMISSION_TEXT in h1a_contract.render_arm(t, arm)

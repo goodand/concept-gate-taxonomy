@@ -9,8 +9,24 @@ below is traceable to exactly one ruling:
 |---|---|
 | Preamble, packet-boundary sentence, allowed values, output schema, consistency requirements | `DESIGN_DECISION_H1a_prompt_surface.md` (Q3=B), unchanged |
 | `Supplied concept/feature pair:` block | `DESIGN_DECISION_H1a_review_blockers.md` Q6.1, verbatim |
-| Warrant rule (3 bullets + tie-breaker prohibition list) | `DESIGN_DECISION_H1a_review_blockers.md` Q7, verbatim |
+| Warrant rule, first two bullets | `DESIGN_DECISION_H1a_review_blockers.md` Q7, verbatim |
+| `{decision_basis_tiebreaker}` (third bullet) | **generated** from `_h1a_policy.DECISION_BASIS_POLICY` -- `DESIGN_DECISION_H1a_residual_prohibition.md` R1 removed the four target axes from the common list, and Q10.2 requires the prompt be generated from the policy object rather than the policy be read out of the prose |
+| `{global_default_permission}` | `DESIGN_DECISION_H1a_allowed_rendering.md` (**D-H1a-11**, Q11=D) -- byte-identical in BOTH arms |
 | Liveness clause (2 sentences, inserted for `PROHIBITION_KEPT` only, by `_h1a_contract.py`) | `DESIGN_DECISION_H1a_manipulation_scope.md` Q1, reduced per Q5=B |
+
+> **⚠️ The third warrant bullet is no longer verbatim ruling text.**
+> D-H1a-10-R1 amended it: the four target axes (`source_kind priority`,
+> `recency`, `authority`, `liveness`) leave the common list, and the three
+> non-target axes (`evidence item count`, `source order`, `outside knowledge`)
+> stay. It is rendered from the frozen policy table, so the table -- not this
+> file -- is the authority. See `PREREGISTRATION_REPAIRED_COHORT.md` sec 2.
+>
+> **Why the placeholders are here rather than the text.** Q10.2 found that when
+> prose is canonical, a prohibition can sit in two places and deleting one
+> leaves the other -- which is what made the 2026-08-03 cohort
+> non-identifying. Generating these two regions from the policy object makes
+> that structurally impossible: an axis can appear in the tie-breaker list only
+> if the table says it is Q7-carried.
 
 The Q3 template's own two `select_type`/`defer` bullets under "Evidence-reading
 rule" are removed here -- Q7 found that pairing undefined for
@@ -39,6 +55,8 @@ Evidence-reading rule:
   adjacent context without tying the concept/feature pair to one of the allowed
   types is not enough by itself.
 
+{global_default_permission}
+
 Evidence may support different allowed types for the same concept/feature pair.
 Your output should record whether, using only the packet, you judge the packet
 to warrant selecting exactly one allowed type.
@@ -47,9 +65,7 @@ to warrant selecting exactly one allowed type.
   over the other. Cite the evidence item ids that support the selected type.
 - Choose defer if the packet does not warrant selecting exactly one allowed
   type, including cases where support is conflicting, ambiguous, or insufficient.
-- Do not break ties using evidence item count, source order, source_kind
-  priority, recency, authority, liveness, or outside knowledge unless that
-  priority is directly stated inside an evidence item's text.
+{decision_basis_tiebreaker}
 
 Allowed selected_type values:
 - essential_feature
