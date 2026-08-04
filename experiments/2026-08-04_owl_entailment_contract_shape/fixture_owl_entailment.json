@@ -1,0 +1,63 @@
+{
+  "provenance": {
+    "grounded_in": "test_cg_owl.py::test_p2_defined_classes_generate_hierarchy",
+    "note": "Rectangle/Rhombus/Square all declare genus=Parallelogram as direct OWL input (asserted_and_entailed). Square subclass-of Rectangle and Square subclass-of Rhombus are never stated anywhere in the input -- HermiT derives them purely from the meet of differentiae (derived)."
+  },
+  "classify_owl_result": {
+    "hierarchy": {
+      "Rectangle": [
+        "Parallelogram"
+      ],
+      "Rhombus": [
+        "Parallelogram"
+      ],
+      "Square": [
+        "Parallelogram",
+        "Rectangle",
+        "Rhombus"
+      ]
+    }
+  },
+  "edges": [
+    {
+      "subject": "Rectangle",
+      "predicate": "is_a",
+      "object": "Parallelogram",
+      "origin": "asserted_and_entailed",
+      "assurance": "REASONER_PROVED",
+      "reasoner": "HermiT"
+    },
+    {
+      "subject": "Rhombus",
+      "predicate": "is_a",
+      "object": "Parallelogram",
+      "origin": "asserted_and_entailed",
+      "assurance": "REASONER_PROVED",
+      "reasoner": "HermiT"
+    },
+    {
+      "subject": "Square",
+      "predicate": "is_a",
+      "object": "Parallelogram",
+      "origin": "asserted_and_entailed",
+      "assurance": "REASONER_PROVED",
+      "reasoner": "HermiT"
+    },
+    {
+      "subject": "Square",
+      "predicate": "is_a",
+      "object": "Rectangle",
+      "origin": "derived",
+      "assurance": "REASONER_PROVED",
+      "reasoner": "HermiT"
+    },
+    {
+      "subject": "Square",
+      "predicate": "is_a",
+      "object": "Rhombus",
+      "origin": "derived",
+      "assurance": "REASONER_PROVED",
+      "reasoner": "HermiT"
+    }
+  ]
+}
