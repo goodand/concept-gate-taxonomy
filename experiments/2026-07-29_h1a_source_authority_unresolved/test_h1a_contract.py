@@ -357,7 +357,13 @@ def test_rendered_tie_breaker_list_is_the_r1_repaired_set():
     t = template()
     for arm in h1a_contract.ARMS:
         text = " ".join(h1a_contract.render_arm(t, arm).split()).lower()
-        for retained in ("evidence item count", "source order", "outside knowledge"):
+        # RETARGETED by D-H1a-12 sec 4 (2026-08-05): the single Q7 bullet became
+        # three sentences. `outside knowledge` is no longer in the tie-breaker
+        # sentence -- it is now `outside domain or ontology knowledge` carried by
+        # DOMAIN_KNOWLEDGE_BOUNDARY. All three still must reach the prompt; only
+        # which sentence carries which changed.
+        for retained in ("evidence item count", "source order",
+                         "outside domain or ontology knowledge"):
             assert retained in text, f"{arm}: {retained!r} should be retained"
         for removed in ("source_kind priority", "recency", "authority"):
             assert removed not in text, (

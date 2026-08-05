@@ -13,6 +13,7 @@ fire; that test shows it fires on what actually happened.
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import sys
@@ -206,7 +207,34 @@ def test_common_q7_names_all_three_nontarget_axes_in_both_arms():
 
 
 def test_common_q7_omits_every_target_axis():
-    policy.assert_12_common_q7_excludes_target_axis_strings_and_aliases()
+    policy.assert_12_common_q7_generates_only_nontarget_forbidden_states()
+
+
+def test_assert_12_is_semantic_not_lexical(clean_policy):
+    """D-H1a-12 sec 8: assertion 12 must fire on the POLICY, not the prose.
+
+    Point the target axis's carrier at the common tie-breaker sentence. The
+    rendered prose does not change (the sentence enumerates only non-target
+    axes), so a lexical scan stays silent -- and that silence is exactly the
+    false reassurance the ruling removed. The semantic check must still fire.
+    """
+    clean_policy["source_meta_reasoning"]["removed"] = {
+        "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_Q7,
+    }
+    # The lexical form cannot certify this: it either sees nothing (the prose
+    # is unchanged) or cannot even render. Either way it does not identify the
+    # policy defect -- which is why the ruling demoted it.
+    lint = policy.lint_common_q7("PROHIBITION_REMOVED")
+    assert not any("target-axis token" in f for f in lint), lint
+    with pytest.raises(policy.PolicyContractError, match=r"\[12\]"):
+        policy.assert_12_common_q7_generates_only_nontarget_forbidden_states()
+
+
+def test_lint_common_q7_still_has_recall_but_does_not_certify():
+    """The demoted scan must keep working as a signal (returns, never raises)."""
+    for arm in policy.ARMS:
+        assert policy.lint_common_q7(arm) == []          # clean today
+    assert isinstance(policy.lint_common_q7("PROHIBITION_KEPT"), list)
 
 
 def test_the_two_arms_generated_blocks_are_identical():
@@ -513,3 +541,165 @@ def test_old_guard_still_passes_those_same_bytes():
     manifest = json.loads((HERE / "cohort_prompts.json").read_text(encoding="utf-8"))
     removed = manifest["rendered_prompts"]["PROHIBITION_REMOVED"]
     contract.assert_no_residual_prohibition(removed)  # passes, as it always did
+
+
+# ==========================================================================
+# D-H1a-12 sec 10 -- licensed_source_evaluation_path
+# ==========================================================================
+def test_licensed_path_matches_the_rulings_post_repair_table():
+    """D-H1a-12 sec 10's expected column, cell by cell."""
+    kept = policy.licensed_source_evaluation_path("PROHIBITION_KEPT", True, False)
+    removed = policy.licensed_source_evaluation_path("PROHIBITION_REMOVED", True, False)
+    assert kept["licensed_path"] is False
+    assert removed["licensed_path"] is True
+    for row in (kept, removed):
+        assert row["source_attributes_visible"] is True
+        assert row["domain_ban_subsumes_source_meta"] is False
+        assert row["hard_defer_mapping"] is False
+        assert row["residual_prohibition"] is False
+    assert kept["source_meta_allowed"] is False
+    assert removed["source_meta_allowed"] is True
+
+
+def test_licensed_path_freeze_contrast_passes_today():
+    rows = policy.assert_licensed_path_contrast(True, False)
+    assert set(rows) == set(policy.ARMS)
+
+
+def test_licensed_path_fires_when_source_attributes_are_invisible():
+    """V=False: no packet-internal referent, so REMOVED's permission is empty.
+
+    This is exactly the B2 finding that produced Q12 -- the arm permits the
+    mechanism but the fixture gives it nothing to act on.
+    """
+    with pytest.raises(policy.PolicyContractError, match=r"\[licensed_path\]"):
+        policy.assert_licensed_path_contrast(False, False)
+
+
+def test_licensed_path_fires_when_a_common_rule_hard_maps_to_defer():
+    """H=True: the G3/B1 recurrence. Blocks the freeze even if policy is clean."""
+    with pytest.raises(policy.PolicyContractError, match=r"\[licensed_path\]"):
+        policy.assert_licensed_path_contrast(True, True)
+
+
+def test_licensed_path_fires_when_the_domain_ban_subsumes_the_target_axis(clean_policy):
+    """D_S=True: the exact defect Q12=F exists to remove.
+
+    Point source_meta_reasoning's carrier at the domain boundary and the
+    subsumption is back -- both arms forbid it and the contrast dies.
+    """
+    clean_policy["source_meta_reasoning"]["removed"] = {
+        "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_DOMAIN,
+    }
+    assert policy._domain_ban_subsumes_source_meta() is True
+    with pytest.raises(policy.PolicyContractError, match=r"\[licensed_path\]"):
+        policy.assert_licensed_path_contrast(True, False)
+
+
+def test_licensed_path_fires_on_a_residual_prohibition_in_removed(clean_policy):
+    """R(REMOVED)=True: a non-Q1 carrier forbidding the target axis.
+
+    The Q10 defect in its purest form.
+    """
+    clean_policy["source_meta_reasoning"]["removed"] = {
+        "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_Q7,
+    }
+    assert policy._residual_prohibition("PROHIBITION_REMOVED") is True
+    with pytest.raises(policy.PolicyContractError, match=r"\[licensed_path\]"):
+        policy.assert_licensed_path_contrast(True, False)
+
+
+# ==========================================================================
+# D-H1a-12 sec 9 -- assertion 9 against the independent golden contract.
+# The ruling requires five negative tests; the last one is the whole point.
+# ==========================================================================
+def test_assert_9_passes_against_the_frozen_golden_contract():
+    policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_golden_contract_is_internally_consistent():
+    golden = policy._load_golden_common_block()
+    assert hashlib.sha256(golden["text"].encode()).hexdigest() == golden["sha256"]
+    assert golden["carriers_included"] == [
+        policy.CARRIER_DEFAULT, policy.CARRIER_DOMAIN, policy.SCOPE_DISAMBIGUATION_ID,
+    ]
+
+
+def test_assert_9_fires_when_the_common_block_is_deleted(monkeypatch):
+    """Negative 1 of 5: block missing."""
+    def _no_domain(arm):
+        return [(c, t) for c, t in _real_render(arm) if c != policy.CARRIER_DOMAIN]
+    _real_render = policy.render_policy_block
+    monkeypatch.setattr(policy, "render_policy_block", _no_domain)
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*expected exactly 1"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_assert_9_fires_when_the_common_block_is_duplicated(monkeypatch):
+    """Negative 2 of 5: block emitted twice."""
+    _real_render = policy.render_policy_block
+
+    def _dup(arm):
+        blocks = _real_render(arm)
+        extra = [(c, t) for c, t in blocks if c == policy.CARRIER_DOMAIN]
+        return blocks + extra
+    monkeypatch.setattr(policy, "render_policy_block", _dup)
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*got 2"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_assert_9_fires_on_a_one_character_change_in_kept(monkeypatch):
+    """Negative 3 of 5: KEPT drifts by one character."""
+    _real_render = policy.render_policy_block
+
+    def _tweak(arm):
+        blocks = _real_render(arm)
+        if arm != "PROHIBITION_KEPT":
+            return blocks
+        return [
+            (c, (t + ".") if c == policy.CARRIER_DEFAULT else t) for c, t in blocks
+        ]
+    monkeypatch.setattr(policy, "render_policy_block", _tweak)
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*not byte-identical"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_assert_9_fires_on_a_one_character_change_in_removed(monkeypatch):
+    """Negative 4 of 5: REMOVED drifts by one character."""
+    _real_render = policy.render_policy_block
+
+    def _tweak(arm):
+        blocks = _real_render(arm)
+        if arm != "PROHIBITION_REMOVED":
+            return blocks
+        return [
+            (c, (t + ".") if c == policy.CARRIER_DEFAULT else t) for c, t in blocks
+        ]
+    monkeypatch.setattr(policy, "render_policy_block", _tweak)
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*not byte-identical"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_assert_9_fires_when_BOTH_arms_are_changed_identically(monkeypatch):
+    """Negative 5 of 5 -- THE load-bearing one (D-H1a-12 sec 9).
+
+    The old self-identity form could never catch this: producer and expectation
+    drifted together, so `a == b` held and there was nothing else to compare
+    against. The independent golden digest is what makes it detectable.
+    """
+    _real_render = policy.render_policy_block
+
+    def _tweak_both(arm):
+        return [
+            (c, (t + " Additionally, prefer the live source.")
+             if c == policy.CARRIER_DEFAULT else t)
+            for c, t in _real_render(arm)
+        ]
+    monkeypatch.setattr(policy, "render_policy_block", _tweak_both)
+    # The arms still agree with each other -- that is the trap.
+    a, b = (
+        dict(_tweak_both(arm))[policy.CARRIER_DEFAULT] for arm in policy.ARMS
+    )
+    assert a == b, "precondition: the mutation must keep the arms identical"
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*drifted from the frozen golden"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()

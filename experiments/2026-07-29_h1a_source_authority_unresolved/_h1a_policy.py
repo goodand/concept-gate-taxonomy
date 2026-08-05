@@ -52,6 +52,9 @@ demand characteristic the way an axis-enumerating permission sentence would.
 
 from __future__ import annotations
 
+import hashlib
+import json
+import pathlib
 import textwrap
 
 # Wrapping matches the surrounding template's existing style (76-column body,
@@ -607,22 +610,78 @@ def assert_8_nontarget_axes_identical_in_state_and_carrier() -> None:
 
 
 def assert_9_default_permission_is_byte_identical_across_arms() -> None:
-    texts = {}
+    """D-H1a-12 sec 9: verified against an INDEPENDENT golden contract.
+
+    The previous form compared `render_policy_block`'s output to
+    GLOBAL_DEFAULT_PERMISSION_TEXT -- the very constant the renderer emits.
+    Producer and expectation shared one source, so all three raise paths were
+    unreachable by construction and no negative test could exist without
+    mocking the renderer (which would prove the mock). It sat in
+    `test_guard_negative_coverage.py`'s KNOWN_UNPROVEN for that reason.
+
+    Now the expectation lives in `h1a_common_policy_block_v2.json` (frozen
+    text + sha256), which the renderer does not read. A drift in the renderer,
+    in the constant, or in BOTH TOGETHER now fails -- the last case being the
+    one the ruling singled out (sec 9: "양 arm 이 서로 같더라도 golden digest
+    와 다르면 실패해야 한다").
+    """
+    golden = _load_golden_common_block()
+
+    per_arm = {}
     for arm in ARMS:
-        found = [t for cid, t in render_policy_block(arm) if cid == CARRIER_DEFAULT]
-        if len(found) != 1:
-            raise PolicyContractError(
-                f"[9] {arm}: expected exactly 1 default-permission block, got {len(found)}"
-            )
-        texts[arm] = found[0]
-    if texts[ARMS[0]] != texts[ARMS[1]]:
-        raise PolicyContractError(
-            "[9] the default-permission text is not byte-identical across arms"
+        blocks = render_policy_block(arm)
+        ids = [cid for cid, _ in blocks]
+        for carrier in golden["carriers_included"]:
+            count = ids.count(carrier)
+            if count != 1:
+                raise PolicyContractError(
+                    f"[9] {arm}: expected exactly 1 {carrier} block, got {count}"
+                )
+        by_id = dict(blocks)
+        per_arm[arm] = "\n\n".join(
+            by_id[c] for c in golden["carriers_included"]
         )
-    if texts[ARMS[0]] != GLOBAL_DEFAULT_PERMISSION_TEXT:
+
+    a, b = (per_arm[arm] for arm in ARMS)
+    if a != b:
         raise PolicyContractError(
-            "[9] the emitted default-permission text drifted from the ruling's bytes"
+            "[9] the common policy block is not byte-identical across arms"
         )
+
+    actual = hashlib.sha256(a.encode("utf-8")).hexdigest()
+    if actual != golden["sha256"]:
+        raise PolicyContractError(
+            f"[9] the rendered common block drifted from the frozen golden "
+            f"contract. expected sha256 {golden['sha256']}, got {actual}. "
+            f"If this change is intended it is an experiment amendment: "
+            f"re-freeze {GOLDEN_COMMON_BLOCK_PATH.name} in its own commit and "
+            f"say why."
+        )
+
+
+GOLDEN_COMMON_BLOCK_PATH = pathlib.Path(__file__).resolve().parent / \
+    "h1a_common_policy_block_v2.json"
+
+
+def _load_golden_common_block() -> dict:
+    try:
+        data = json.loads(GOLDEN_COMMON_BLOCK_PATH.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise PolicyContractError(
+            f"[9] the golden common-block contract is missing "
+            f"({GOLDEN_COMMON_BLOCK_PATH.name}). Assertion 9 cannot certify "
+            f"anything without it -- do not proceed."
+        ) from exc
+    for key in ("sha256", "text", "carriers_included"):
+        if key not in data:
+            raise PolicyContractError(f"[9] golden contract lacks {key!r}")
+    restated = hashlib.sha256(data["text"].encode("utf-8")).hexdigest()
+    if restated != data["sha256"]:
+        raise PolicyContractError(
+            "[9] the golden contract is internally inconsistent: its own "
+            "`text` does not hash to its own `sha256`"
+        )
+    return data
 
 
 def assert_10_q1_clause_is_kept_only_and_unchanged(
@@ -662,25 +721,75 @@ def assert_11_removed_has_no_axis_specific_permission_text(
                     )
 
 
-def assert_12_common_q7_excludes_target_axis_strings_and_aliases() -> None:
-    """No target axis, nor a declared alias of one, appears in the common Q7 list.
+def assert_12_common_q7_generates_only_nontarget_forbidden_states() -> None:
+    """D-H1a-12 sec 8: SEMANTIC check, not a lexical alias scan.
 
-    KNOWN LIMITATION, stated because the ruling's wording ("의미상 별칭") asks
-    for semantic completeness that a declared alias list cannot certify. This
-    check is a cross-check, not the guarantee. The guarantee is that the Q7
-    block is GENERATED from the policy table, so a target axis can only appear
-    there if the table says it is Q7-carried -- which assertion 7 forbids.
+    The old form scanned the rendered tie-breaker sentence for target-axis
+    tokens. The ruling demoted that: a token list cannot certify semantic
+    absence, and this experiment already lost a cohort to a guard whose
+    passing meant less than it looked (the Q10 defect). Worse, the token list
+    was *incidentally* incomplete -- it declared the Korean alias `우선순위`
+    but not the English `priority`, and the ruling's own sec 5 prescription
+    contained the bare word `priority`. Passing was an accident of that gap.
+
+    What is certified now: the set of axes the COMMON tie-breaker carrier
+    forbids is exactly the declared non-target set. This is checked against
+    the policy object, which the prose is generated FROM, so it cannot be
+    satisfied by rewording. Lexical scanning survives as `lint_common_q7`
+    below -- reportable, never certifying (ruling sec 8: `role: lint_only`).
     """
     for arm in ARMS:
-        q7 = [t for cid, t in render_policy_block(arm) if cid == CARRIER_Q7]
-        haystack = _normalize_ws(" ".join(q7))
-        for axis in sorted(TARGET_AXES):
-            for token in AXIS_SURFACE_TOKENS[axis]:
-                if _normalize_ws(token) in haystack:
-                    raise PolicyContractError(
-                        f"[12] {arm}: common Q7 list names target axis {axis!r} "
-                        f"via {token!r}"
-                    )
+        carried = {
+            a for a in AXES
+            if carrier_of(a, arm) == CARRIER_Q7
+            and state_of(a, arm) in _FORBIDDING_STATES
+        }
+        offending = carried & TARGET_AXES
+        if offending:
+            raise PolicyContractError(
+                f"[12] {arm}: the common tie-breaker carrier ({CARRIER_Q7}) "
+                f"forbids target axis/axes {sorted(offending)}. A target axis "
+                f"must be governed by {CARRIER_Q1} in KEPT only -- otherwise "
+                f"both arms forbid it and the contrast is destroyed."
+            )
+        # Subaxes are governed through their parent; none may be carried
+        # directly by the common sentence either.
+        for parent, subs in SUBAXES.items():
+            if parent in TARGET_AXES:
+                for sub in subs:
+                    if sub in DECISION_BASIS_POLICY and \
+                       carrier_of(sub, arm) == CARRIER_Q7:
+                        raise PolicyContractError(
+                            f"[12] {arm}: subaxis {sub!r} of target axis "
+                            f"{parent!r} is carried directly by {CARRIER_Q7}"
+                        )
+
+
+def lint_common_q7(arm: str) -> list[str]:
+    """Lexical alias scan, DEMOTED to lint by D-H1a-12 sec 8.
+
+    Returns findings instead of raising. A finding is a signal to read the
+    sentence, not a certification failure -- the certifying check is
+    `assert_12_common_q7_generates_only_nontarget_forbidden_states`. Keeping it
+    as lint (rather than deleting it) preserves the recall it does have while
+    removing its false authority.
+    """
+    try:
+        q7 = [txt for cid, txt in render_policy_block(arm) if cid == CARRIER_Q7]
+    except PolicyContractError as exc:
+        # Lint never raises -- that is what makes it lint. A render failure is
+        # itself a finding worth reporting, not a reason to abort the caller.
+        return [f"{arm}: could not render for lint ({exc})"]
+    haystack = _normalize_ws(" ".join(q7))
+    findings = []
+    for axis in sorted(TARGET_AXES):
+        for token in AXIS_SURFACE_TOKENS.get(axis, ()):
+            if _normalize_ws(token) in haystack:
+                findings.append(
+                    f"{arm}: tie-breaker sentence contains target-axis token "
+                    f"{token!r} (axis {axis!r})"
+                )
+    return findings
 
 
 STRUCTURAL_ASSERTIONS_NO_ARGS = (
@@ -693,7 +802,7 @@ STRUCTURAL_ASSERTIONS_NO_ARGS = (
     assert_7_kept_target_axes_are_carried_only_by_q1,
     assert_8_nontarget_axes_identical_in_state_and_carrier,
     assert_9_default_permission_is_byte_identical_across_arms,
-    assert_12_common_q7_excludes_target_axis_strings_and_aliases,
+    assert_12_common_q7_generates_only_nontarget_forbidden_states,
 )
 
 
@@ -722,6 +831,107 @@ def target_mechanism_allowed(arm: str) -> bool:
     return not any(
         effective_state(a, arm) in _FORBIDDING_STATES for a in TARGET_AXES
     )
+
+
+# --------------------------------------------------------------------------
+# D-H1a-12 sec 10 -- licensed_source_evaluation_path(arm)
+# --------------------------------------------------------------------------
+# Replaces `target_mechanism_contrast`, which checked only the target axis's
+# state and therefore did not guarantee the needed proposition. The ruling's
+# five conjuncts:
+#   L(a) = V and S(a) and not D_S and not H and not R(a)
+# V   : model-visible evidence source attributes exist
+# S(a): source_meta_reasoning is allowed in this arm
+# D_S : the domain-knowledge ban subsumes source-meta reasoning
+# H   : a common rule maps the fixture's conflict shape directly to defer
+# R(a): any other carrier prohibits source_meta_reasoning in this arm
+
+# V and H are properties of the fixture and the shared prompt, not of this
+# policy table, so they cannot be derived here. They are injected by the
+# caller and default to the values the ruling's post-repair table asserts --
+# but `assert_licensed_path_contrast` requires the caller to pass them
+# explicitly, so a stale default can never silently certify a freeze.
+SOURCE_ATTRIBUTES_VISIBLE_DEFAULT = True
+HARD_DEFER_MAPPING_DEFAULT = False
+
+
+def _domain_ban_subsumes_source_meta() -> bool:
+    """D_S: is source_meta_reasoning captured by the domain-knowledge ban?
+
+    Under Q12=F they are sibling categories and neither subsumes the other, so
+    this must be False. It is computed, not assumed: if some future edit points
+    source_meta_reasoning's carrier at the domain boundary, the subsumption is
+    back and this returns True.
+    """
+    if "source_meta_reasoning" not in DECISION_BASIS_POLICY:
+        return True  # the axis is gone; treat as captured -- fail closed
+    return any(
+        carrier_of("source_meta_reasoning", arm) == CARRIER_DOMAIN
+        for arm in ARMS
+    )
+
+
+def _residual_prohibition(arm: str) -> bool:
+    """R(a): a carrier OTHER than Q1 forbids source_meta_reasoning in `arm`."""
+    if state_of("source_meta_reasoning", arm) not in _FORBIDDING_STATES:
+        return False
+    return carrier_of("source_meta_reasoning", arm) != CARRIER_Q1
+
+
+def licensed_source_evaluation_path(
+    arm: str,
+    source_attributes_visible: bool = SOURCE_ATTRIBUTES_VISIBLE_DEFAULT,
+    hard_defer_mapping: bool = HARD_DEFER_MAPPING_DEFAULT,
+) -> dict:
+    """Return each conjunct plus the conjunction (D-H1a-12 sec 10).
+
+    Returns the parts, not just the boolean: a bare False would not say WHICH
+    condition failed, and this experiment has already been set back twice by
+    checks whose passing/failing carried less information than it appeared to.
+    """
+    v = bool(source_attributes_visible)
+    s = state_of("source_meta_reasoning", arm) in _PERMITTING_STATES
+    d_s = _domain_ban_subsumes_source_meta()
+    h = bool(hard_defer_mapping)
+    r = _residual_prohibition(arm)
+    return {
+        "arm": arm,
+        "source_attributes_visible": v,
+        "source_meta_allowed": s,
+        "domain_ban_subsumes_source_meta": d_s,
+        "hard_defer_mapping": h,
+        "residual_prohibition": r,
+        "licensed_path": v and s and (not d_s) and (not h) and (not r),
+    }
+
+
+def assert_licensed_path_contrast(
+    source_attributes_visible: bool,
+    hard_defer_mapping: bool,
+) -> dict:
+    """D-H1a-12 sec 10 freeze condition, as a conjunction over both arms.
+
+        licensed_source_evaluation_path(KEPT)    == False
+        licensed_source_evaluation_path(REMOVED) == True
+
+    Both fixture-level facts must be passed in explicitly -- see the note on
+    the module defaults. Returns the two rows so a caller can log them.
+    """
+    rows = {
+        arm: licensed_source_evaluation_path(
+            arm, source_attributes_visible, hard_defer_mapping
+        )
+        for arm in ARMS
+    }
+    expected = {"PROHIBITION_KEPT": False, "PROHIBITION_REMOVED": True}
+    for arm, want in expected.items():
+        got = rows[arm]["licensed_path"]
+        if got != want:
+            raise PolicyContractError(
+                f"[licensed_path] {arm}: expected {want}, got {got}. "
+                f"Conjuncts: {rows[arm]}"
+            )
+    return rows
 
 
 def truth_table() -> list[dict]:
