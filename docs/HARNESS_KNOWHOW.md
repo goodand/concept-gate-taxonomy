@@ -175,6 +175,87 @@ B3의 결함을 잡기로 설계된 가드가 있었다: "두 프롬프트가 �
 "hidden oracle fields must not be included"라 적어두고 **아무도 검사하지
 않아** 네 fixture가 몇 주간 유출했다.
 
+### B4a. 추가 (2026-08-05) — B4를 규율에서 **기제**로 옮겼다
+
+B4의 일반화("두 명제를 적어 대조하라")는 **7회 처방되고 7회 실패했다**
+(`docs/H1A_PROBLEM_ANALYSIS.md` P1 6건 + `_h1a_policy.py`의 `assert_5`).
+규율은 매번 기억해야 성립하므로 실패율이 내려가지 않는다. 기제로 바꿨다.
+
+**근본 이유 — 긍정 테스트로는 원리적으로 구별할 수 없다.**
+
+| 가드의 실제 상태 | 정상입력 → pass? | 위반입력 → raise? |
+|---|---|---|
+| 정상 가드 | 통과 | 발동 |
+| 공허한 가드 (no-op) | 통과 | **발동 안 함** |
+
+긍정 테스트는 왼쪽 열만 본다. 두 행의 관측값이 같으므로 정보가 부족한 게
+아니라 **측정 채널이 없다.** `assert_5`가 이 경로로 살아남았다.
+
+**구현**: `test_guard_negative_coverage.py` (repo root). AST로
+모듈 수준 `assert_*`/`_assert_*`를 수집하고, 본문에 `raise`/`assert`가 있는
+것만 대상으로 삼아, `with pytest.raises(...)` 안에서 호출되지 않는 가드가
+있으면 실패한다.
+
+**왜 introspection이 아니라 AST인가**: import를 하지 않는다. 실험 폴더들이
+동명 모듈을 중복 보유해 먼저 로드된 쪽이 `sys.modules`를 선점한다는
+`pytest.ini`의 경고가 그대로 적용되기 때문이다. 파싱은 그 함정을 구조적으로
+회피하고, 덕분에 `norecursedirs = experiments`에도 **root 테스트 1개가 실험
+전체를 덮는다**. 배선 불필요 — core `pytest -q`가 이미 수집한다.
+
+**검사기 자신도 양방향 테스트를 갖는다**(pattern 8). 스캐너의 recall
+(긍정만 있는 가드를 잡는가) · precision(커버된 가드를 안 잡는가 / raise 없는
+`assert_*` 리포터를 건드리지 않는가 / `policy.assert_x()` 속성 호출을 커버로
+인정하는가)을 각각 고정했다. 그러지 않으면 recall 미지의 검사기를 만드는 셈이고
+그건 이 파일이 막으려는 결함 그 자체다.
+
+**실측 (2026-08-05)**:
+
+| worktree | raising 가드 | 커버됨 | 미커버 |
+|---|---|---|---|
+| `concept-gate-owl-wt` | 10 | 9 | 1 → 닫음 |
+| `concept-gate-h1-wt` | 18 | 16 | **2 (미해결)** |
+
+owl의 1건(`_h1a_score.py::_assert_instrument_speaks`)은
+`test_h1a_score_instrument.py`로 닫았다. **h1-wt의 2건은 열려 있다** —
+`_assert_instrument_speaks`와
+`_h1a_policy.py::assert_9_default_permission_is_byte_identical_across_arms`.
+후자는 D-H1a-11의 12개 구조 단언 중 하나다. **본문을 읽고 나서 판정이
+바뀌었다** — 공허하지는 않으나 **raise 경로 3개가 모두 도달 불가**다:
+`render_policy_block`이 `GLOBAL_DEFAULT_PERMISSION_TEXT`를 모듈 상수에서
+직접 읽어 양 arm에 무조건 방출하므로, "블록 개수 != 1"·"arm 간 불일치"·"상수
+로부터 drift" 세 명제를 **코드가 구조적으로 참으로 만든다.** 발동시키려면
+`render_policy_block` 자체를 모킹해야 하고, 그러면 모킹을 검증하는 셈이다.
+
+즉 B4의 변종이다 — 가드가 참인 명제를 검사하는데 그 명제를 코드가 이미
+보장한다. 다만 **처방이 다르다**: 음성 테스트를 쓰는 게 아니라 *"이 가드가
+잉여인가, 아니면 renderer가 상수를 직접 읽지 않아야 하는가"*를 판정해야 한다.
+설계 판정(Q12) 영역이므로 테스트가 대신 결정할 수 없다. **음성 테스트를
+날조하지 마라** — 모킹 기반 음성 테스트는 게이트를 초록으로 만들면서 아무것도
+증명하지 않는다.
+
+그래서 게이트에 `KNOWN_UNPROVEN`을 뒀다: 이름 → 이유 + 담당. 예외가 이유보다
+오래 살면 그것이 silent cap이므로 `test_known_unproven_entries_are_not_stale`이
+(a) 그 이름의 가드가 사라지거나 (b) raise 능력을 잃거나 (c) 음성 테스트를
+갖게 되면 실패한다. 예외 목록도 검사기이므로 **자기 음성 테스트를 갖는다**
+(`test_the_staleness_check_itself_fires_on_a_bogus_entry`). owl 트리의 목록은
+비어 있다(raising 10 / 커버 10).
+
+적용 준비물은 검증돼 있다 — h1-wt에 이 파일 + `test_h1a_score_instrument.py`를
+넣으면 raising 18 / 커버 17 / 문서화 예외 1 / skip 1 / **잔여 미커버 0**이다
+(읽기 전용 시뮬레이션으로 실측).
+
+**precision이 붕괴하지 않았다는 점이 이 게이트를 blocking으로 둘 근거다.**
+`NEXT_SESSION_TRAPS.md` §3.2의 트립와이어 비용 교훈대로 먼저 실측했고,
+18개 중 16개가 이미 통과했다 — 담요처럼 전부를 실패시키는 검사가 아니다.
+비교: 같은 날 `SEARCH_DID_NOT_CONVERGE` 후보 2개는 144/144·92/92로 발동해
+게이트 대신 disclosure로 내렸다.
+
+**이 기제가 잡지 못하는 것 — 범위를 좁게 읽어라.** *존재하지만 증명되지 않은*
+가드만 잡는다. **아예 없는 검사**는 찾을 `assert_*`가 없으므로 보이지 않는다.
+`experiments/2026-08-04_owl_entailment_contract_shape/OPERATIONS_LOG.md`
+2026-08-05 판정의 미포착 4건은 전부 그 두 번째 종류다. 이 게이트는 P1을 닫고,
+그 4건은 닫지 않는다.
+
 ### B5. 제작자는 자기 산출물의 결함을 보지 못한다 — 리뷰를 분리하라
 
 B3의 원문은 **제작 세션의 컨텍스트에 이미 있었다**(다른 작업 중
