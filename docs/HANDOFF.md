@@ -1,7 +1,16 @@
 # HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
-- 갱신: **2026-08-03(2)** — Q10 판정(D-H1a-10) 도착·반입. 최초 40-trial
-  코호트는 `completed_nonidentifying`으로 동결, 수선(R1·R2) 대기
+- 갱신: **2026-08-05** — Q11·Q12 판정(D-H1a-11, D-H1a-12) 모두 도착·반입.
+  Q12=F(typed-scope split)로 H1a는 계속되나 **§16의 freeze 해제 조건 12개는
+  아직 미구현**. 가드 음성-테스트 커버리지 게이트(`test_guard_negative_coverage.py`,
+  repo root)를 신설하고 이 브랜치에서 실행해 `assert_9_default_permission_is_byte_identical_across_arms`
+  를 독립 재발견(`KNOWN_UNPROVEN`에 등재, Q12.4의 golden contract 구현 대기).
+  worktree `concept-gate-owl-wt`(브랜치 `codex/entailed-is-a-contract`)에서
+  먼저 작업된 뒤 `git cherry-pick`으로 이 브랜치에 전파됐다(손복사 아님).
+  전체 이슈 목록은 그 worktree의
+  `docs/feedback/session_retrospective_20260805_search_trigger_and_h1a.md`
+  (H1a 외 OWL 실험·vault 검색 하네스도 다루므로 이 브랜치에는 미전파).
+  이전 배너: 2026-08-03(2) Q10 판정 도착·반입.
 - 대상: **컨텍스트 없이 이어받는 새 세션**. 이 문서만 읽고 작업을 재개할 수 있게 쓴다.
 - 이 문서는 worktree `concept-gate-h1-wt`(브랜치
   `codex/h1-source-authority`)의 최신 상태를 기록한다.
@@ -182,7 +191,7 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중 
 같은 사건의 다른 자름이다. 한쪽만 읽으면 "무엇이 반복되는가"(전자) 또는
 "언제 무엇이 있었나"(후자)를 놓친다.
 
-### 외부 설계 판정 5건 — **전부 구속력 유지. 5번째는 도착했으나 미반입·미적용**
+### 외부 설계 판정 8건 — **전부 구속력 유지.**
 
 | 파일 | 범위 |
 |---|---|
@@ -191,6 +200,9 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중 
 | `DESIGN_DECISION_H1a_prompt_surface.md` | Q3=B 전용 프롬프트 / Q4 승인 |
 | `DESIGN_DECISION_H1a_review_blockers.md` | Q5=B/Q6=A/Q7=E/Q8=B — **2026-08-02 전부 적용 완료** |
 | `experiments/2026-07-29_h1a_source_authority_unresolved/DESIGN_DECISION_H1a_evidence_symmetry.md` | Q9=A(fixture 무변경, L3 한계 선언) / Q9.2(Q8.1 유지) — **2026-08-03 반입·적용 완료**(`notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`에서 byte-identical 복사, 원본은 `notes/`에 보존). `PREREGISTRATION.md` §0.1에 L3 등록 완료 |
+| `DESIGN_DECISION_H1a_residual_prohibition.md` | D-H1a-10, Q10=E(코호트 비식별 보존) / Q10.1~Q10.3 — **2026-08-03 반입·적용 완료** |
+| `DESIGN_DECISION_H1a_allowed_rendering.md` | D-H1a-11, Q11=D(공통 기본허용 규칙, 축별 permission 없음) / Q11.1=A / Q11.2=A — **적용 완료.** 독립 리뷰 3명 전원 `FREEZE_BLOCKED`(공허한 `assert_5`, 코호트 파괴 경로, 정책 계층 미배선 — 전부 수정 완료) |
+| `DESIGN_DECISION_H1a_identification_validity.md` | D-H1a-12(2026-08-05), Q12=F(`outside_domain_knowledge`/`source_meta_reasoning` typed-scope split) / Q12.1~Q12.4 + M4·M7·M8 — **판정만 반입, §16의 freeze 해제 조건 12개는 미구현.** 요청서: `correspondence/DESIGN_REQUEST_H1a_identification_validity.md` |
 
 > **2026-08-02 갱신**: `DESIGN_DECISION_H1a_prompt_surface.md`는 더 이상
 > 코드가 로드하는 파일이 **아니다.** Q5·Q6.1·Q7이 template을 셋으로 나눠
@@ -391,6 +403,43 @@ ev5의 `structural_composition` 문자열은 "노출 안 된 enum 값 언급"이
 부분-전체가 아니라고 구분. 규칙 2의 전문용어 규율은 의도대로 작동한다.
 
 ## 5. 세션 로그 (최신순)
+
+### 2026-08-05 — D-H1a-11·12 반입, 가드 음성-테스트 게이트 이 브랜치로 전파
+
+관련 작업(OWL 실험, vault 검색 하네스, skills-catalog patch)의 전문은
+worktree `concept-gate-owl-wt`의
+[`docs/feedback/session_retrospective_20260805_search_trigger_and_h1a.md`](../concept-gate-owl-wt/docs/feedback/session_retrospective_20260805_search_trigger_and_h1a.md)
+— 이 브랜치와 무관한 부분(OWL 실험 자체 등)은 옮기지 않았다. 여기는 H1a에
+직접 적용된 것만 남긴다.
+
+1. **`assert_5_no_duplicate_forbidding_carrier`가 완전히 공허한 가드였다.**
+   본문에 `rendered` 참조 0회, 양쪽 분기가 입력과 무관하게 같은 결과로
+   귀결 — 독립 리뷰가 발견, 제작 세션은 못 봄. 실제 템플릿 바이트로
+   발동/비발동을 재현하는 테스트로 수정(커밋 `9416aaa`).
+2. **`_h1a_cohort.py::freeze()`가 무조건 덮어써 보존 코호트를 파괴할 수
+   있었다.** `CohortOverwriteRefused` 추가(커밋 `3e2ed5b`).
+3. **정책 계층(`_h1a_policy`)이 `build_cohort()` 실행 경로에 배선 안 돼
+   있었다.** 리뷰어 2명 독립 발견 → 배선(커밋 `4e5c236`).
+4. **가드 음성-테스트 커버리지를 규율에서 기제로.**
+   `test_guard_negative_coverage.py`(repo root, AST 기반, import 없음)가
+   `concept-gate-owl-wt`에서 먼저 만들어져 `git cherry-pick`으로 이
+   브랜치에 전파됐다(커밋 `bac49fa`). 이 브랜치에서 실행하자 사전 정보
+   없이 `assert_9_default_permission_is_byte_identical_across_arms`를
+   독립 재발견했다 — raise 경로 3개가 모두 코드 구조상 도달 불가(렌더러가
+   비교 상수를 자기 자신에게서 직접 방출)라 모킹 없이는 실패시킬 수 없다.
+   날조하지 않고 `KNOWN_UNPROVEN`에 이유·해결 조건(Q12.4)을 등재했다
+   (커밋 `bac49fa` 이후, `KNOWN_UNPROVEN` 채움 커밋).
+5. **D-H1a-11·D-H1a-12 반입.** 위 §"외부 설계 판정" 표 참조. D-H1a-12는
+   리뷰어 주장을 그대로 받지 않고 fixture를 직접 재측정해서 확인했다 —
+   evidence 텍스트에 우선순위 어휘 0건, 공통 Q7 예외 조항 불발동, 양 arm
+   모두 `target_mechanism_allowed=false`였다. 상신 요청서와 판정문 모두
+   이 브랜치에 있다(cherry-pick 완료, 손복사 아님).
+6. **`CLAUDE.md`·`HARNESS_KNOWHOW.md`에 신설 절 반영** — worktree 간 파일
+   손복사 금지(경험적 근거: 이 게이트 파일을 두 worktree에 손복사하려다
+   격리 도구가 거부, 대신 커밋 전파로 정정한 것이 바로 이 항목 자체다),
+   가드에 음성 테스트가 함께 와야 한다는 머지 게이트 진입점.
+
+**다음 세션이 반드시 확인할 것 — §10.4 참조.**
 
 ### 2026-07-30 — H3 종료, H1a 착수·차단
 
@@ -816,6 +865,40 @@ except ModuleNotFoundError as exc:
 > `clean` 정의의 네 번째 항으로 편입됐다. `_score.py`는 이제 리뷰 결과가 없는
 > trial을 `UNKNOWN`으로 보고 `clean`에서 제외한다(지시문 §3). 사전등록은
 > `DESIGN_D4_constraint_11_review.md`, 실행 기록은 등록부 [DONE] #25.
+
+### 10.4 다음 세션이 반드시 할 일 (2026-08-05 추가)
+
+D-H1a-12 수령으로 H1a는 계속되지만 **§16의 freeze 해제 조건 12개가 전부
+미구현**이다 — 하나라도 빠지면 `FREEZE_BLOCKED` 유지. 전문은
+`DESIGN_DECISION_H1a_identification_validity.md` §16.
+
+1. **typed-scope split 구현** — `outside_domain_knowledge`(양 arm 금지 유지)와
+   `source_meta_reasoning`(KEPT만 Q1로 금지, REMOVED는 기본허용)을 별개
+   정책 범주로 분리. §5의 정책 계약 YAML이 그 형태를 명시한다.
+2. **공통 Q7 재작성** — 비표적 tie-breaker / 도메인 지식 제한 / 범위 구분,
+   세 문장으로 분리(§4).
+3. **defer 규칙 비방향화** — `including cases where support is conflicting`
+   제거, warrant 기반 규칙으로 교체(§6, G3 재발 방지).
+4. **demand neutralizer 재문안**(§7).
+5. **`assert_12`를 문자열 별칭 검사에서 의미 검사로 교체** — `COMMON_Q7`가
+   target-axis policy ID에 forbidden 상태를 생성하는지 검사(§8).
+6. **`assert_9`용 독립 golden contract 도입(Q12.4)** — 동결 artifact
+   `h1a_common_policy_block_v2` + sha256, 음성 테스트 5종(§9). 이걸 넣기
+   전까지 `test_guard_negative_coverage.py`의 `KNOWN_UNPROVEN`에 남겨 둔다 —
+   **영구 승인 금지**, 이 항목이 그 이유다.
+7. **표적 기제 가드를 `licensed_source_evaluation_path(arm)`로 교체**(§10).
+8. **M4 ceiling 복구** — 기존 Q4 ceiling 명제 재등록, 새 prompt surface에
+   적용 명시, 구조 검사 배선.
+9. **repaired preregistration 갱신** — post-result amendment disclosure
+   포함(§15).
+10. **독립 의미 리뷰 재실행 + 리뷰어 전원 freeze 승인.**
+
+완료 후에도 **최초 40 trial과 병합하지 않는다**(§15) — 새 코호트, 새 cohort id.
+
+세션 2(별도)가 진행한 N=16 사후 코호트의 미포착 결함 3건(사전등록 코드
+게이트 부재·`predecessor_cohort` 미해소·arm 간 키 순서 비대칭)은
+`concept-gate-owl-wt/experiments/2026-08-04_owl_entailment_contract_shape/OPERATIONS_LOG.md`
+참조 — 이 실험(H1a)과 무관하니 여기서 처분하지 않는다.
 
 ---
 
