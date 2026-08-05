@@ -888,7 +888,17 @@ D-H1a-12 수령으로 H1a는 계속되지만 **§16의 freeze 해제 조건 12�
    **영구 승인 금지**, 이 항목이 그 이유다.
 7. **표적 기제 가드를 `licensed_source_evaluation_path(arm)`로 교체**(§10).
 8. **M4 ceiling 복구** — 기존 Q4 ceiling 명제 재등록, 새 prompt surface에
-   적용 명시, 구조 검사 배선.
+   적용 명시, 구조 검사 배선. **조사 완료(2026-08-05), 복구 자체는 미완료**:
+   `PREREGISTRATION.md` §11 전체(§11.2a의 Q4=승인 ceiling 해석 조건 포함)가
+   **2026-08-01 Q6=A로 이미 superseded**됐고, 그 대체(§11.0
+   `assert_no_model_facing_type_anchor`)는 **앵커가 payload에 주입되는 것을
+   구조적으로 막을 뿐, "결과가 null로 보여도 ceiling 때문일 수 있다"는
+   해석 조건은 어디에도 재등록되지 않았다.** 즉 M4가 지적한 공백이 정확히
+   맞다 — §11.2a의 마지막 문안(Q4 승인판, "anchor or prompt-surface ceiling
+   effects"까지 넓힌 버전)을 새 사전등록에 **다시** 등재해야 하며, 이번엔
+   범위를 typed-scope split 이후의 새 prompt surface 전체로 갱신해야 한다.
+   원문은 `PREREGISTRATION.md` §11.2a에 그대로 남아 있으니(이력 텍스트로
+   보존됨) 새로 쓸 필요 없이 그 문안을 새 문서로 옮기면 된다.
 9. **repaired preregistration 갱신** — post-result amendment disclosure
    포함(§15).
 10. **독립 의미 리뷰 재실행 + 리뷰어 전원 freeze 승인.**
