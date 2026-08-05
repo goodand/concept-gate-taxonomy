@@ -9,6 +9,20 @@
 - 근거 판정: `DESIGN_DECISION_H1a_residual_prohibition.md`(D-H1a-10) +
   `DESIGN_DECISION_H1a_allowed_rendering.md`(**D-H1a-11**)
 
+> ## 🔴 이 문서만으로 trial을 실행하지 마라 (2026-08-05, D-H1a-12로 부분 대체)
+>
+> 독립 리뷰 3명 전원이 이 문서가 반영한 설계를 `FREEZE_BLOCKED`로 판정했다
+> (`docs/feedback/h1a_repair_review_20260804.md`) — §2의 정책 계약(Q11.2=A
+> 담지자 표)과 §4의 freeze gate(5조건)가 **표적 대비를 봉쇄한다는 게 이유다**
+> (표적 축이 `outside_knowledge`에 포섭되어 양 arm 모두 봉쇄, B2 발견).
+> 그 뒤 받은 `DESIGN_DECISION_H1a_identification_validity.md`(D-H1a-12,
+> Q12=F typed-scope split)가 §2의 정책 계약을 **다시 설계**했고, §4의
+> 5조건 freeze gate 대신 **§16의 12조건**이 적용된다. §0·§1·§3·§5·§6·§7은
+> 그대로 유효하다 — 바뀐 건 §2(정책 계약)와 §4(gate 조건 개수·내용)뿐이다.
+> **실행 전 체크리스트는 `docs/HANDOFF.md` §10.4 또는
+> `DESIGN_DECISION_H1a_identification_validity.md` §16을 따르고, 이 문서의
+> §2·§4를 그대로 구현으로 옮기지 마라.**
+
 ---
 
 ## 0. 이 코호트가 최초 결과를 아는 상태에서 설계됐다는 공개 (D-H1a-10 §11)
