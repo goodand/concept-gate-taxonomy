@@ -51,7 +51,24 @@ GUARD_PREFIXES = ("assert_", "_assert_")
 # These are NOT exempt from scrutiny -- `test_known_unproven_entries_are_not_stale`
 # fails if an entry disappears or stops being able to raise, so the list cannot
 # rot into a silent cap.
-KNOWN_UNPROVEN: dict[str, str] = {}
+KNOWN_UNPROVEN: dict[str, str] = {
+    # D-H1a-11 structural assertion 9. Two of its three raise paths cannot be
+    # reached: `render_policy_block` emits `GLOBAL_DEFAULT_PERMISSION_TEXT`
+    # itself, from the module constant, into BOTH arms -- so "arms differ" and
+    # "drifted from the ruling's bytes" are made true by construction, not by
+    # this guard. The third (count != 1) is likewise unreachable while the
+    # emission is unconditional. Firing any of them requires mocking
+    # `render_policy_block`, which would prove the mock, not the guard.
+    # D-H1a-12 Q12.4 (2026-08-05) already ruled on this: replace with an
+    # independent golden contract (frozen artifact + sha256, 5 negative
+    # tests -- see DESIGN_DECISION_H1a_identification_validity.md section 9).
+    # Remove this entry once that lands; do not fabricate a mock-based test
+    # to close it early.
+    "assert_9_default_permission_is_byte_identical_across_arms": (
+        "raise paths unreachable without mocking render_policy_block; "
+        "D-H1a-12 Q12.4 requires an independent golden contract"
+    ),
+}
 
 
 def _python_files(root: Path):
