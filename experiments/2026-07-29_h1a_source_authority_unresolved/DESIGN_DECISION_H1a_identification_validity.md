@@ -21,6 +21,15 @@
 > (`codex/h1-source-authority`)에만 있다. 이 커밋을 그 브랜치로
 > **cherry-pick**해야 문서가 자기 이웃을 가리킨다. 손으로 복사하지 말 것
 > (`CLAUDE.md` Project Structure).
+>
+> **해소 (2026-08-05, h1-wt).** 위 커밋이 `git cherry-pick`으로 이
+> 브랜치에 도달했다(owl-wt 커밋 `d58cf46` → h1-wt `ff72d31`, 손복사
+> 아님). 이제 인용 대상 `DESIGN_DECISION_H1a_allowed_rendering.md`와
+> `PREREGISTRATION_REPAIRED_COHORT.md`가 이 브랜치에 실제로 존재하므로
+> 문서가 자기 이웃을 가리킨다. 같은 방식으로 `test_guard_negative_coverage.py`
+> (owl-wt `d8db0eb`)도 전파되어 이 worktree에서 실행하면 §9의 `assert_9`를
+> 독립적으로 재발견한다(`KNOWN_UNPROVEN`에 등재, 이 문서 §9의 golden
+> contract 구현 전까지).
 
 **이하 본문은 수령한 판정문 전문이다. 운영 세션이 편집하지 않았다.**
 
