@@ -61,10 +61,13 @@ Evidence may support different allowed types for the same concept/feature pair.
 Your output should record whether, using only the packet, you judge the packet
 to warrant selecting exactly one allowed type.
 
-- Choose select_type only if the packet warrants selecting one allowed type
-  over the other. Cite the evidence item ids that support the selected type.
-- Choose defer if the packet does not warrant selecting exactly one allowed
-  type, including cases where support is conflicting, ambiguous, or insufficient.
+- After applying only the decision bases permitted by this prompt, choose
+  select_type if exactly one allowed type is warranted. Cite the evidence item
+  ids that support the selected type.
+- Choose defer if, after applying those permitted decision bases, neither
+  allowed type is uniquely warranted.
+- The presence of conflicting evidence does not by itself require either
+  selection or deferral.
 {decision_basis_tiebreaker}
 
 Allowed selected_type values:

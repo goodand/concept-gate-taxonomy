@@ -168,19 +168,35 @@ def test_default_permission_is_emitted_in_both_arms_byte_identically():
 
 
 def test_default_permission_text_matches_the_ruling_bytes():
+    """RETARGETED to D-H1a-12 sec 7 (2026-08-05).
+
+    D-H1a-11's second sentence read "Permission to consider a basis does not by
+    itself warrant selecting a type", which Q12.2 found could be read as
+    denying that the basis is a warrant at all -- cancelling the treatment.
+    The replacement splits the two propositions. Pinned byte-exact for the
+    same reason as before: this is a preregistration device.
+    """
     expected = (
         "Within the supplied packet, a decision basis may be considered unless this\n"
-        "prompt explicitly prohibits it. Permission to consider a basis does not by\n"
-        "itself warrant selecting a type or favor either allowed type."
+        "prompt explicitly prohibits it. The fact that this prompt does not prohibit\n"
+        "a decision basis is not itself a reason to select a type. A permitted basis\n"
+        "may affect the decision only through its application to the supplied\n"
+        "evidence."
     )
     assert policy.GLOBAL_DEFAULT_PERMISSION_TEXT == expected
 
 
 def test_default_permission_carries_the_demand_neutralizer():
-    """The second sentence must deny that permission encourages selecting."""
+    """RETARGETED to D-H1a-12 sec 7: the neutralizer must now assert BOTH
+    propositions, not just the first. The old form only pinned "permission is
+    not a reason", which is exactly the half that could be over-read.
+    """
     text = policy._normalize_ws(policy.GLOBAL_DEFAULT_PERMISSION_TEXT)
-    assert "does not by itself warrant selecting a type" in text
-    assert "favor either allowed type" in text
+    # (1) permission status alone is not evidence
+    assert "not itself a reason to select a type" in text
+    # (2) but a permitted basis CAN matter through the evidence -- this half is
+    #     what keeps the neutralizer from cancelling the treatment
+    assert "may affect the decision only through its application" in text
     assert policy.POLICY_DEFAULTS["packet_internal_decision_basis"]["non_directive"] is True
 
 

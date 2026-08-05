@@ -337,9 +337,20 @@ def test_template_gives_defer_and_select_type_symmetric_treatment():
     if/if...'), neither hedged nor encouraged relative to the other. Q7's
     warrant rule (2026-08-01) is the current source of this pairing."""
     t = template()
-    assert "Choose select_type only if" in t
-    assert "Choose defer if" in t
-    assert "Cite the evidence item ids" in t
+    # RETARGETED by D-H1a-12 sec 6 (2026-08-05): the pairing was rewritten to
+    # remove the conflict->defer mapping. Symmetry is still the property under
+    # test -- both outcomes are now conditioned on the SAME antecedent
+    # ("after applying those permitted decision bases"), which is stronger
+    # symmetry than the old "only if / if" pairing.
+    # Whitespace-normalized: the template hard-wraps at 76 columns, so a
+    # phrase straddles the break. Matching raw text would be a false negative.
+    flat = " ".join(t.split())
+    assert "choose select_type if exactly one allowed type is warranted" in flat
+    assert "Choose defer if, after applying those permitted decision bases" in flat
+    assert "Cite the evidence item ids" in flat
+    # And the directional mapping must be gone.
+    assert "including cases where support is conflicting" not in flat
+    assert "does not by itself require either selection or deferral" in flat
 
 
 def test_rendered_tie_breaker_list_is_the_r1_repaired_set():

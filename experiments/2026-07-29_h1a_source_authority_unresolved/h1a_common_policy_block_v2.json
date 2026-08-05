@@ -3,11 +3,19 @@
   "source": "D-H1a-12 sec 9 (independent golden contract)",
   "frozen_at_trials": 0,
   "why": "assert_9 compared render_policy_block's output against the same module constant the renderer emits -- a self-identity check. This artifact is an INDEPENDENT source: the renderer cannot satisfy it by drifting in lockstep with its own constant.",
+  "amendment_history": [
+    {
+      "from_sha256": "9888d2abe741a412a7c0dd57b798c6f624e95b980ff08e22c4f5bc2a07e3a259",
+      "to_sha256": "01b034022e8724490818b824a0f5afc6d437efeb6b8802fbb5e3cf4bc0b7e449",
+      "reason": "D-H1a-12 sec 7 rewrote the demand neutralizer. The old second sentence could be read as denying that a permitted basis is a warrant at all, which under Q12's finding would cancel the treatment. Re-frozen BEFORE any trial ran (frozen_at_trials: 0), so no result informed it.",
+      "at_trials": 0
+    }
+  ],
   "carriers_included": [
     "GLOBAL_DEFAULT_PERMISSION",
     "DOMAIN_KNOWLEDGE_BOUNDARY",
     "SCOPE_DISAMBIGUATION"
   ],
-  "sha256": "9888d2abe741a412a7c0dd57b798c6f624e95b980ff08e22c4f5bc2a07e3a259",
-  "text": "Within the supplied packet, a decision basis may be considered unless this\nprompt explicitly prohibits it. Permission to consider a basis does not by\nitself warrant selecting a type or favor either allowed type.\n\n- Do not use outside domain or ontology knowledge to supply facts about the\n  concept-feature relation, and do not consult external sources.\n\n- The restriction on outside domain or ontology knowledge does not itself\n  govern evaluation of the supplied evidence items as sources. Source\n  evaluation is governed by the arm-specific source-evaluation clause."
+  "sha256": "01b034022e8724490818b824a0f5afc6d437efeb6b8802fbb5e3cf4bc0b7e449",
+  "text": "Within the supplied packet, a decision basis may be considered unless this\nprompt explicitly prohibits it. The fact that this prompt does not prohibit\na decision basis is not itself a reason to select a type. A permitted basis\nmay affect the decision only through its application to the supplied\nevidence.\n\n- Do not use outside domain or ontology knowledge to supply facts about the\n  concept-feature relation, and do not consult external sources.\n\n- The restriction on outside domain or ontology knowledge does not itself\n  govern evaluation of the supplied evidence items as sources. Source\n  evaluation is governed by the arm-specific source-evaluation clause."
 }

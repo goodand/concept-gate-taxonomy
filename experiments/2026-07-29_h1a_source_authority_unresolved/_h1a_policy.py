@@ -175,10 +175,20 @@ SCOPE_CONSTRAINT_TEXT = (
 # --------------------------------------------------------------------------
 # Default permission (D-H1a-11 sec 1 / sec 5) -- byte-exact from the ruling
 # --------------------------------------------------------------------------
+# D-H1a-12 sec 7 rewrote the second sentence. The old wording ("Permission to
+# consider a basis does not by itself warrant selecting a type") could be read
+# as "that basis is not a warrant" -- which, under Q12's finding that
+# source-meta reasoning is the only arm difference, would cancel the treatment
+# itself. The replacement separates two propositions that the old sentence
+# conflated:
+#     permission status alone  != evidence
+#     permitted basis applied to evidence = potentially relevant
 GLOBAL_DEFAULT_PERMISSION_TEXT = (
     "Within the supplied packet, a decision basis may be considered unless this\n"
-    "prompt explicitly prohibits it. Permission to consider a basis does not by\n"
-    "itself warrant selecting a type or favor either allowed type."
+    "prompt explicitly prohibits it. The fact that this prompt does not prohibit\n"
+    "a decision basis is not itself a reason to select a type. A permitted basis\n"
+    "may affect the decision only through its application to the supplied\n"
+    "evidence."
 )
 
 POLICY_DEFAULTS = {
