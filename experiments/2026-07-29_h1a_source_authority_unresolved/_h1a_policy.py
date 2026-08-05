@@ -67,16 +67,21 @@ _BULLET_INDENT = "  "
 AXES = (
     "evidence_count",
     "source_order",
-    "outside_knowledge",
-    "source_kind_priority",
-    "recency",
-    "authority",
-    "liveness",
+    "outside_domain_knowledge",
+    "external_source_retrieval",
+    "source_meta_reasoning",
 )
 
-TARGET_AXES = frozenset(
-    {"source_kind_priority", "recency", "authority", "liveness"}
-)
+# D-H1a-12 Q12=F: the four former target axes are now SUBAXES of
+# source_meta_reasoning, which is a sibling of outside_domain_knowledge
+# (no subsumption in either direction).
+SUBAXES = {
+    "source_meta_reasoning": (
+        "source_kind_priority", "recency", "authority", "liveness",
+    ),
+}
+
+TARGET_AXES = frozenset({"source_meta_reasoning"})
 NONTARGET_AXES = frozenset(AXES) - TARGET_AXES
 
 ARMS = ("PROHIBITION_KEPT", "PROHIBITION_REMOVED")
@@ -105,10 +110,11 @@ _PERMITTING_STATES = frozenset({ALLOWED_BY_DEFAULT, EXPLICITLY_ALLOWED})
 # axis's final policy state" -- not merely a sentence containing the word. One
 # carrier may govern several axes; one axis x arm may have only one carrier.
 CARRIER_Q1 = "Q1_LIVENESS_CLAUSE"              # KEPT only; Q1=B / Q5=B frozen bytes
-CARRIER_Q7 = "Q7_TIEBREAKER_LIST"              # both arms; generated here
+CARRIER_Q7 = "Q7_NON_TARGET_TIEBREAKER"        # both arms; generated here
+CARRIER_DOMAIN = "DOMAIN_KNOWLEDGE_BOUNDARY"   # both arms (D-H1a-12 sec 5)
 CARRIER_DEFAULT = "GLOBAL_DEFAULT_PERMISSION"  # both arms, byte-identical
 
-CARRIERS = (CARRIER_Q1, CARRIER_Q7, CARRIER_DEFAULT)
+CARRIERS = (CARRIER_Q1, CARRIER_Q7, CARRIER_DOMAIN, CARRIER_DEFAULT)
 
 # Which carriers can express which kind of state. Structural assertions 3 and 4
 # check the pairing, so a `forbidden` state can never be attributed to the
@@ -116,13 +122,33 @@ CARRIERS = (CARRIER_Q1, CARRIER_Q7, CARRIER_DEFAULT)
 _CARRIER_SEMANTICS = {
     CARRIER_Q1: _FORBIDDING_STATES,
     CARRIER_Q7: _FORBIDDING_STATES,
+    CARRIER_DOMAIN: _FORBIDDING_STATES,
     CARRIER_DEFAULT: frozenset({ALLOWED_BY_DEFAULT}),
 }
 
 # Scope constraints are NOT carriers (ruling sec 8). They bound where evidence
 # may come from without flipping any axis to forbidden, so they are recorded
 # here for the audit trail and deliberately excluded from carrier cardinality.
-SCOPE_CONSTRAINTS = ("PACKET_ONLY", "NO_EXTERNAL_SOURCES")
+SCOPE_CONSTRAINTS = ("PACKET_ONLY", "NO_EXTERNAL_SOURCES", "SCOPE_DISAMBIGUATION")
+
+# D-H1a-12 sec 4, third sentence. NOT a carrier: it flips no axis to
+# forbidden. It exists to stop the domain-knowledge boundary from being read
+# as also governing source evaluation -- which is precisely the subsumption
+# that made the previous cohort nonidentifying. Byte-identical in both arms.
+SCOPE_DISAMBIGUATION_ID = "SCOPE_DISAMBIGUATION"
+SCOPE_DISAMBIGUATION_TEXT = (
+    "- The restriction on outside domain or ontology knowledge does not "
+    "itself govern evaluation of the supplied evidence items as sources. "
+    "Source evaluation is governed by the arm-specific source-evaluation "
+    "clause."
+)
+
+# D-H1a-12 sec 4, second sentence. Carrier for outside_domain_knowledge and
+# external_source_retrieval in BOTH arms.
+DOMAIN_BOUNDARY_TEXT = (
+    "- Do not use outside domain or ontology knowledge to supply facts about "
+    "the concept-feature relation, and do not consult external sources."
+)
 
 # The scope constraint's own bytes (template lines 39-41, present verbatim and
 # identically in both arms -- it predates D-H1a-11 and is Q3=B's packet-
@@ -176,23 +202,15 @@ DECISION_BASIS_POLICY: dict[str, dict[str, dict[str, str]]] = {
         "kept": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q7},
         "removed": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q7},
     },
-    "outside_knowledge": {
-        "kept": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q7},
-        "removed": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q7},
+    "outside_domain_knowledge": {
+        "kept": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_DOMAIN},
+        "removed": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_DOMAIN},
     },
-    "source_kind_priority": {
-        "kept": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q1},
-        "removed": {"state": ALLOWED_BY_DEFAULT, "carrier": CARRIER_DEFAULT},
+    "external_source_retrieval": {
+        "kept": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_DOMAIN},
+        "removed": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_DOMAIN},
     },
-    "recency": {
-        "kept": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q1},
-        "removed": {"state": ALLOWED_BY_DEFAULT, "carrier": CARRIER_DEFAULT},
-    },
-    "authority": {
-        "kept": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q1},
-        "removed": {"state": ALLOWED_BY_DEFAULT, "carrier": CARRIER_DEFAULT},
-    },
-    "liveness": {
+    "source_meta_reasoning": {
         "kept": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q1},
         "removed": {"state": ALLOWED_BY_DEFAULT, "carrier": CARRIER_DEFAULT},
     },
@@ -206,21 +224,20 @@ DECISION_BASIS_POLICY: dict[str, dict[str, dict[str, str]]] = {
 AXIS_SURFACE_TOKENS: dict[str, tuple[str, ...]] = {
     "evidence_count": ("evidence item count", "evidence count"),
     "source_order": ("source order",),
-    "outside_knowledge": ("outside knowledge", "external sources"),
-    "source_kind_priority": ("source_kind priority", "source_kind", "우선순위"),
-    "recency": ("recency", "more recent", "더 최신", "최신인지"),
-    "authority": ("authority", "authoritative", "권위"),
-    "liveness": ("liveness", "still live", "살아있는"),
+    "outside_domain_knowledge": ("outside domain", "ontology knowledge",
+                                 "general ontology"),
+    "external_source_retrieval": ("external sources", "consult external"),
+    # D-H1a-12: the target axis is now the parent category; its subaxis
+    # tokens all belong to it.
+    "source_meta_reasoning": ("source_kind priority", "source_kind", "우선순위",
+                              "recency", "more recent", "더 최신", "최신인지",
+                              "authority", "authoritative", "권위",
+                              "liveness", "still live", "살아있는"),
 }
 
 _Q7_AXIS_PHRASE = {
     "evidence_count": "evidence item count",
     "source_order": "source order",
-    "outside_knowledge": "outside knowledge",
-    "source_kind_priority": "source_kind priority",
-    "recency": "recency",
-    "authority": "authority",
-    "liveness": "liveness",
 }
 
 
@@ -301,17 +318,45 @@ def render_policy_block(arm: str) -> list[tuple[str, str]]:
 
     out: list[tuple[str, str]] = [(CARRIER_DEFAULT, GLOBAL_DEFAULT_PERMISSION_TEXT)]
 
+    # Sentence 1 (D-H1a-12 sec 4): non-target tie-breakers only.
     forbidden = _q7_forbidden_axes(arm)
     if forbidden:
+        missing = [a for a in forbidden if a not in _Q7_AXIS_PHRASE]
+        if missing:
+            # An axis is carried by the tie-breaker sentence but has no
+            # declared phrase for it. Raise the contract error rather than
+            # KeyError: a bare KeyError here reads as a crash, while this is a
+            # policy/renderer disagreement -- exactly the class of defect this
+            # module exists to surface. Found by
+            # test_freeze_gate_runs_the_machine_checkable_conditions_before_failing
+            # when D-H1a-12's split left the target axis without a phrase.
+            raise PolicyContractError(
+                f"[render] axes carried by {CARRIER_Q7} have no declared "
+                f"phrase in _Q7_AXIS_PHRASE: {missing}"
+            )
         phrase = _join_english([_Q7_AXIS_PHRASE[a] for a in forbidden])
         out.append((
             CARRIER_Q7,
             _bullet(
-                f"Do not break ties using {phrase} unless that priority is "
-                f"directly stated inside an evidence item's text."
+                f"Do not break ties using {phrase} unless the packet "
+                f"explicitly authorizes that basis."
             ),
         ))
+
+    # Sentence 2: the domain-knowledge boundary. Emitted whenever any axis
+    # is carried by it -- both arms, by the D-H1a-12 sec 5 table.
+    if any(carrier_of(a, arm) == CARRIER_DOMAIN for a in AXES):
+        out.append((CARRIER_DOMAIN, _rewrap(DOMAIN_BOUNDARY_TEXT)))
+
+    # Sentence 3: scope disambiguation. Not a carrier (see SCOPE_CONSTRAINTS).
+    out.append((SCOPE_DISAMBIGUATION_ID, _rewrap(SCOPE_DISAMBIGUATION_TEXT)))
     return out
+
+
+def _rewrap(one_line_bullet: str) -> str:
+    """Re-wrap a pre-written bullet to the template's 76-column style."""
+    body = one_line_bullet[2:] if one_line_bullet.startswith("- ") else one_line_bullet
+    return _bullet(body)
 
 
 def render_policy_text(arm: str) -> str:
@@ -440,6 +485,14 @@ def assert_5_no_duplicate_forbidding_carrier(
         if arm == "PROHIBITION_KEPT" and q1_clause_text:
             remainder = remainder.replace(_normalize_ws(q1_clause_text), " ", 1)
         remainder = remainder.replace(_normalize_ws(SCOPE_CONSTRAINT_TEXT), " ", 1)
+        # D-H1a-12 sec 4 added two more arm-invariant spans. They must be
+        # stripped for the same reason the scope constraint is: they are
+        # known, declared, byte-identical-across-arms text, so their tokens
+        # are NOT evidence of a duplicate forbidding carrier. Failing to
+        # register a new carrier's span here is what this guard caught on
+        # the first implementation attempt -- keep them in lockstep.
+        for known in (DOMAIN_BOUNDARY_TEXT, SCOPE_DISAMBIGUATION_TEXT):
+            remainder = remainder.replace(_normalize_ws(known), " ", 1)
 
         for axis in AXES:
             if state_of(axis, arm) not in _FORBIDDING_STATES:

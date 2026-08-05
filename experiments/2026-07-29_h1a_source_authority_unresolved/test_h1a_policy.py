@@ -83,15 +83,24 @@ def test_all_twelve_structural_assertions_pass():
 
 
 def test_table_matches_the_ruling_sec_7_verbatim():
-    """D-H1a-11 sec 7 is a preregistration device; pin it cell by cell."""
+    """D-H1a-12 sec 5 is a preregistration device; pin it cell by cell.
+
+    RETARGETED from D-H1a-11 sec 7 (2026-08-05). Q12=F replaced that table:
+    `outside_knowledge` is split into `outside_domain_knowledge` +
+    `external_source_retrieval` (both arms forbidden, DOMAIN_KNOWLEDGE_BOUNDARY)
+    and the four former target axes become subaxes of `source_meta_reasoning`,
+    which Q1 alone governs. The proposition this test pins is unchanged --
+    every axis x arm has exactly the carrier the ruling assigns -- only the
+    ruling it pins moved.
+    """
     expected = {
-        "evidence_count": ("Q7_TIEBREAKER_LIST", "Q7_TIEBREAKER_LIST"),
-        "source_order": ("Q7_TIEBREAKER_LIST", "Q7_TIEBREAKER_LIST"),
-        "outside_knowledge": ("Q7_TIEBREAKER_LIST", "Q7_TIEBREAKER_LIST"),
-        "source_kind_priority": ("Q1_LIVENESS_CLAUSE", "GLOBAL_DEFAULT_PERMISSION"),
-        "recency": ("Q1_LIVENESS_CLAUSE", "GLOBAL_DEFAULT_PERMISSION"),
-        "authority": ("Q1_LIVENESS_CLAUSE", "GLOBAL_DEFAULT_PERMISSION"),
-        "liveness": ("Q1_LIVENESS_CLAUSE", "GLOBAL_DEFAULT_PERMISSION"),
+        "evidence_count": ("Q7_NON_TARGET_TIEBREAKER", "Q7_NON_TARGET_TIEBREAKER"),
+        "source_order": ("Q7_NON_TARGET_TIEBREAKER", "Q7_NON_TARGET_TIEBREAKER"),
+        "outside_domain_knowledge": ("DOMAIN_KNOWLEDGE_BOUNDARY",
+                                     "DOMAIN_KNOWLEDGE_BOUNDARY"),
+        "external_source_retrieval": ("DOMAIN_KNOWLEDGE_BOUNDARY",
+                                      "DOMAIN_KNOWLEDGE_BOUNDARY"),
+        "source_meta_reasoning": ("Q1_LIVENESS_CLAUSE", "GLOBAL_DEFAULT_PERMISSION"),
     }
     assert set(expected) == set(policy.AXES)
     for axis, (kept_carrier, removed_carrier) in expected.items():
@@ -102,13 +111,37 @@ def test_table_matches_the_ruling_sec_7_verbatim():
 def test_outside_knowledge_carrier_is_q7_only_not_the_packet_boundary():
     """D-H1a-11 sec 8: scope constraints are not carriers.
 
-    The first version of this module declared PACKET_BOUNDARY as a second
-    carrier for outside_knowledge. The ruling moved that to scope_constraints.
+    Axis renamed by D-H1a-12 (outside_knowledge -> outside_domain_knowledge)
+    and its carrier moved from Q7 to the new DOMAIN_KNOWLEDGE_BOUNDARY. The
+    proposition is unchanged: a scope constraint is never a carrier.
     """
     for arm in policy.ARMS:
-        assert policy.carrier_of("outside_knowledge", arm) == policy.CARRIER_Q7
+        assert policy.carrier_of("outside_domain_knowledge", arm) == policy.CARRIER_DOMAIN
     assert "PACKET_ONLY" in policy.SCOPE_CONSTRAINTS
     assert "PACKET_ONLY" not in policy.CARRIERS
+
+
+def test_domain_knowledge_and_source_meta_are_siblings_not_nested():
+    """D-H1a-12 sec 5: the whole point of Q12=F.
+
+    source_meta_reasoning must NOT be subsumed by outside_domain_knowledge --
+    that subsumption is what made the previous cohort nonidentifying. They are
+    separate top-level axes with different carriers, and the target axis is
+    the one Q1 alone governs.
+    """
+    assert "outside_domain_knowledge" in policy.AXES
+    assert "source_meta_reasoning" in policy.AXES
+    assert policy.TARGET_AXES == frozenset({"source_meta_reasoning"})
+    for arm in policy.ARMS:
+        assert policy.carrier_of("outside_domain_knowledge", arm) == policy.CARRIER_DOMAIN
+    # The domain boundary is arm-invariant; the target axis is not.
+    assert policy.state_of("outside_domain_knowledge", "PROHIBITION_KEPT") == \
+        policy.state_of("outside_domain_knowledge", "PROHIBITION_REMOVED")
+    assert policy.state_of("source_meta_reasoning", "PROHIBITION_KEPT") != \
+        policy.state_of("source_meta_reasoning", "PROHIBITION_REMOVED")
+    # The four former target axes survive as declared subaxes.
+    assert set(policy.SUBAXES["source_meta_reasoning"]) == {
+        "source_kind_priority", "recency", "authority", "liveness"}
 
 
 def test_removed_target_state_is_allowed_by_default_not_unspecified():
@@ -151,12 +184,25 @@ def test_default_permission_carries_the_demand_neutralizer():
 
 
 def test_common_q7_names_all_three_nontarget_axes_in_both_arms():
+    """RETARGETED by D-H1a-12 sec 4: the single Q7 bullet became THREE
+    sentences with different carriers. `outside knowledge` is no longer in the
+    tie-breaker sentence -- it moved to DOMAIN_KNOWLEDGE_BOUNDARY. Each
+    carrier is now checked against its own sentence, so a sentence carrying
+    the wrong axis is still caught.
+    """
     for arm in policy.ARMS:
-        q7 = policy._normalize_ws(
-            " ".join(t for c, t in policy.render_policy_block(arm) if c == policy.CARRIER_Q7)
+        blocks = dict(
+            (c, policy._normalize_ws(txt))
+            for c, txt in policy.render_policy_block(arm)
         )
-        for phrase in ("evidence item count", "source order", "outside knowledge"):
-            assert policy._normalize_ws(phrase) in q7, f"{arm}: {phrase!r} missing"
+        for phrase in ("evidence item count", "source order"):
+            assert policy._normalize_ws(phrase) in blocks[policy.CARRIER_Q7], \
+                f"{arm}: {phrase!r} missing from the tie-breaker sentence"
+        # The tie-breaker sentence must NOT name the domain axes any more.
+        assert "outside domain" not in blocks[policy.CARRIER_Q7]
+        for phrase in ("outside domain or ontology knowledge", "external sources"):
+            assert policy._normalize_ws(phrase) in blocks[policy.CARRIER_DOMAIN], \
+                f"{arm}: {phrase!r} missing from the domain-boundary sentence"
 
 
 def test_common_q7_omits_every_target_axis():
@@ -186,7 +232,11 @@ def test_every_rendered_block_is_traceable_to_a_carrier():
     """Q10.2 requirement 5."""
     for arm in policy.ARMS:
         for carrier, text in policy.render_policy_block(arm):
-            assert carrier in policy.CARRIERS
+            # D-H1a-12 sec 4 added a scope-disambiguation sentence. It is
+            # deliberately NOT a carrier (it flips no axis), but it still must
+            # be traceable to a declared ID -- untraceable prose is exactly
+            # what Q10.2 requirement 5 forbids.
+            assert carrier in policy.CARRIERS or carrier in policy.SCOPE_CONSTRAINTS
             assert text.strip()
 
 
@@ -245,7 +295,7 @@ def test_freeze_gate_runs_the_machine_checkable_conditions_before_failing():
     """
     original = copy.deepcopy(policy.DECISION_BASIS_POLICY)
     try:
-        policy.DECISION_BASIS_POLICY["liveness"]["removed"] = {
+        policy.DECISION_BASIS_POLICY["source_meta_reasoning"]["removed"] = {
             "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_Q7,
         }
         with pytest.raises(policy.PolicyContractError) as exc:
@@ -261,22 +311,30 @@ def test_freeze_gate_runs_the_machine_checkable_conditions_before_failing():
 # ==========================================================================
 def test_mutation_carrier_as_a_collection_is_caught(clean_policy):
     """D-H1a-11 sec 8: exactly one carrier per axis x arm."""
-    clean_policy["liveness"]["kept"]["carrier"] = (policy.CARRIER_Q1, policy.CARRIER_Q7)
+    clean_policy["source_meta_reasoning"]["kept"]["carrier"] = (policy.CARRIER_Q1, policy.CARRIER_Q7)
     with pytest.raises(policy.PolicyContractError, match=r"\[2\]"):
         policy.assert_2_exactly_one_valid_carrier_per_axis_arm()
 
 
 def test_mutation_restoring_a_target_axis_to_q7_in_kept_is_caught(clean_policy):
     """Q11.1=A forbids this; it is the Q10 duplicate-carrier structure."""
-    clean_policy["recency"]["kept"]["carrier"] = policy.CARRIER_Q7
+    clean_policy["source_meta_reasoning"]["kept"]["carrier"] = policy.CARRIER_Q7
     with pytest.raises(policy.PolicyContractError, match=r"\[7\]"):
         policy.assert_7_kept_target_axes_are_carried_only_by_q1()
-    with pytest.raises(policy.PolicyContractError, match=r"\[12\]"):
-        policy.assert_12_common_q7_excludes_target_axis_strings_and_aliases()
+    # D-H1a-12 note: assertion 12 no longer fires from this mutation alone.
+    # With the typed-scope split the tie-breaker sentence enumerates only
+    # non-target axes, so re-pointing the target axis's carrier changes the
+    # POLICY without changing that sentence's PROSE. Assertion 12's job (the
+    # rendered common sentence must not name a target axis) is pinned by
+    # test_common_q7_names_all_three_nontarget_axes_in_both_arms and by
+    # test_mutation_paraphrased_residual_prohibition_is_caught instead.
+    # Recorded rather than silently dropped -- see D-H1a-12 sec 8, which
+    # explicitly demotes lexical alias scanning to lint and requires the
+    # semantic check to carry certification.
 
 
 def test_mutation_forbidding_a_target_axis_in_removed_is_caught(clean_policy):
-    clean_policy["authority"]["removed"] = {
+    clean_policy["source_meta_reasoning"]["removed"] = {
         "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_Q7,
     }
     with pytest.raises(policy.PolicyContractError, match=r"\[6\]"):
@@ -284,7 +342,7 @@ def test_mutation_forbidding_a_target_axis_in_removed_is_caught(clean_policy):
 
 
 def test_mutation_allowed_by_default_on_a_non_default_carrier_is_caught(clean_policy):
-    clean_policy["liveness"]["removed"]["carrier"] = policy.CARRIER_Q7
+    clean_policy["source_meta_reasoning"]["removed"]["carrier"] = policy.CARRIER_Q7
     with pytest.raises(policy.PolicyContractError, match=r"\[4\]"):
         policy.assert_4_default_permission_states_use_the_default_carrier()
 
@@ -299,7 +357,7 @@ def test_mutation_forbidden_state_on_the_default_carrier_is_caught(clean_policy)
 
 def test_mutation_unspecified_removed_target_state_is_caught(clean_policy):
     """Q11=D explicitly rejects `unspecified` -- that was option A."""
-    clean_policy["recency"]["removed"]["state"] = policy.UNSPECIFIED
+    clean_policy["source_meta_reasoning"]["removed"]["state"] = policy.UNSPECIFIED
     with pytest.raises(policy.PolicyContractError):
         policy.assert_deductive_check()
 
@@ -313,7 +371,7 @@ def test_mutation_nontarget_axis_made_arm_varying_is_caught(clean_policy):
 
 
 def test_mutation_invalid_state_value_is_caught(clean_policy):
-    clean_policy["liveness"]["kept"]["state"] = "sort_of_forbidden"
+    clean_policy["source_meta_reasoning"]["kept"]["state"] = "sort_of_forbidden"
     with pytest.raises(policy.PolicyContractError, match=r"\[1\]"):
         policy.assert_1_every_axis_arm_has_a_state()
 
@@ -400,11 +458,19 @@ def test_wrapping_cannot_hide_an_axis_from_the_checker():
     knowledge" the moment the renderer began wrapping -- the guard would report
     an axis absent while it sat in the prompt, split across two lines.
     """
-    assert policy._normalize_ws("outside\n  knowledge") == "outside knowledge"
+    assert policy._normalize_ws("outside\n  domain") == "outside domain"
     for arm in policy.ARMS:
-        raw = " ".join(t for c, t in policy.render_policy_block(arm) if c == policy.CARRIER_Q7)
-        assert "\n" in raw, "the Q7 bullet should be hard-wrapped"
-        assert "outside knowledge" in policy._normalize_ws(raw)
+        # RETARGETED by D-H1a-12 sec 4: `outside knowledge` moved out of the
+        # tie-breaker sentence into DOMAIN_KNOWLEDGE_BOUNDARY. The proposition
+        # is unchanged -- a multi-word axis token split by the 76-column wrap
+        # must still be found -- so it is now checked on the sentence that
+        # actually carries such a token.
+        raw = " ".join(
+            txt for c, txt in policy.render_policy_block(arm)
+            if c == policy.CARRIER_DOMAIN
+        )
+        assert "\n" in raw, "the domain-boundary bullet should be hard-wrapped"
+        assert "outside domain or ontology knowledge" in policy._normalize_ws(raw)
 
 
 # ==========================================================================
