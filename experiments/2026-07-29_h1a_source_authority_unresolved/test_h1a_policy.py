@@ -759,3 +759,56 @@ def test_assert_9_catches_restoring_the_clause_section_8_removed(monkeypatch):
     monkeypatch.setattr(policy, "render_policy_block", _restore_removed_clause)
     with pytest.raises(policy.PolicyContractError, match=r"\[9\].*drifted"):
         policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+# ==========================================================================
+# Negative tests for the assertions added after independent review 5
+# (2026-08-06). The guard-coverage gate at the repo root demanded these --
+# it listed all three as raising guards with no test that makes them raise.
+# ==========================================================================
+def test_assert_0_catches_a_table_key_outside_the_declared_axes(clean_policy):
+    """Reviewer mutation M7's root cause: every other assertion iterates AXES,
+    so a key outside it is never visited by any of them."""
+    clean_policy["recency"] = {
+        "kept": {"state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_DOMAIN},
+        "removed": {"state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_DOMAIN},
+    }
+    with pytest.raises(policy.PolicyContractError, match=r"\[0\].*outside AXES"):
+        policy.assert_0_table_keys_are_exactly_the_declared_axes()
+
+
+def test_assert_0_catches_a_declared_axis_missing_from_the_table(clean_policy):
+    del clean_policy["source_order"]
+    with pytest.raises(policy.PolicyContractError, match=r"\[0\].*absent from the table"):
+        policy.assert_0_table_keys_are_exactly_the_declared_axes()
+
+
+def test_assert_0b_catches_reparenting_the_target_axis_under_the_domain_ban(monkeypatch):
+    """Reviewer mutation M1: the sibling claim lived only in a comment."""
+    monkeypatch.setitem(
+        policy.SUBAXES, "outside_domain_knowledge", ("source_meta_reasoning",)
+    )
+    with pytest.raises(policy.PolicyContractError, match=r"\[0b\].*subaxis of"):
+        policy.assert_0b_subaxes_are_not_reparented_under_a_sibling_category()
+
+
+def test_assert_0b_catches_the_domain_carrier_governing_the_target_axis(clean_policy):
+    """The substantive form of the subsumption, independent of SUBAXES."""
+    clean_policy["source_meta_reasoning"]["removed"]["carrier"] = policy.CARRIER_DOMAIN
+    with pytest.raises(policy.PolicyContractError, match=r"\[0b\].*would subsume"):
+        policy.assert_0b_subaxes_are_not_reparented_under_a_sibling_category()
+
+
+def test_assert_0c_catches_downgrading_a_forbidden_axis_to_unspecified(clean_policy):
+    """Reviewer mutations M3/M3b: the state column was unpinned, so the table
+    and the prompt could disagree while every assertion passed."""
+    clean_policy["external_source_retrieval"]["kept"]["state"] = policy.UNSPECIFIED
+    clean_policy["external_source_retrieval"]["removed"]["state"] = policy.UNSPECIFIED
+    with pytest.raises(policy.PolicyContractError, match=r"\[0c\].*ruling sec 5 states"):
+        policy.assert_0c_declared_states_match_the_ruling_table()
+
+
+def test_assert_0c_catches_flipping_the_target_axis_state_in_removed(clean_policy):
+    clean_policy["source_meta_reasoning"]["removed"]["state"] = policy.EXPLICITLY_FORBIDDEN
+    with pytest.raises(policy.PolicyContractError, match=r"\[0c\]"):
+        policy.assert_0c_declared_states_match_the_ruling_table()
