@@ -779,3 +779,221 @@ certification은 semantic이 진다")을, 이 amendment가 **워크스페이스 
 이 워크스페이스의 규율상 "계측기의 침묵은 그것이 말할 수 있음을 보인 뒤에만
 의미가 있다"(패턴 8)가 ②에도 적용되어야 한다. D-OWL-2 설계 시 또는 별도
 판정으로 다뤄야 할 자리다.
+
+---
+
+# Amendment 2 (2026-08-06) — policy_graph 인증 프로토콜
+
+**동결 문서이므로 위 본문과 Amendment 1을 수정하지 않고 여기에 추가한다.**
+Amendment 1 §A1.4가 미해결로 남긴 질문("②의 산출물 policy_graph를 무엇이
+인증하는가")에 대한 답이다. 아래는 수령 전문이며 운영 세션이 편집하지 않았다.
+
+- 수신: 2026-08-06
+- 발신: 실험 설계 권한 (외부), 사용자 경유 전달
+- 성격: Amendment 1의 **후속 판정**. 아키텍처는 그대로 두고 인증 프로토콜을
+  규정한다. **단, 발신자 스스로 "인증 프로토콜까지 완성한 것은 아니다"라고
+  §6에 명시했다** — 미확정 목록이 그 안에 있다.
+
+---
+
+## A2.1 확정된 것
+
+### 확정 1 — `policy_graph`는 측정값이지 정답이 아니다
+
+LLM 컴파일 산출물은 자연어 의미의 **관측 결과**다. 그대로 Rule Engine에
+넣으면 안 된다.
+
+```text
+LLM compilation ≠ certified semantics
+```
+
+정확한 지위:
+
+```yaml
+compiler_output:
+  assurance: PROPOSED
+```
+
+즉 `policy_graph` 자체도 obligation certificate나 provenance가 필요하다.
+
+### 확정 2 — Compiler와 Certifier는 분리해야 한다
+
+같은 LLM이 "이 문장은 anti-laundering prohibition이다"와 "위 분류는 맞다"를
+둘 다 하면 순환 검증이다. 최소 구조:
+
+```text
+Natural Language → Semantic Compiler → Candidate Policy Graph
+                 → Independent Semantic Validator
+                 → Certified/Unresolved Policy Graph
+```
+
+Compiler가 LLM이어도 되지만 Validator는 **독립된 관측 경로**를 가져야 한다.
+
+### 확정 3 — Rule Engine은 인증되지 않은 graph에 강한 assurance를 부여하면 안 된다
+
+```yaml
+verdict: duplicate_prohibition
+assurance: RULE_CHECKED
+input_assurance: PROPOSED
+overall_assurance: PROPOSED
+```
+
+형식화:
+
+```text
+A_output = min(A_input, A_rule)
+```
+
+Rule 자체가 결정적이어도 입력 semantics가 `PROPOSED`이면 전체 결론은
+`PROPOSED`를 넘으면 안 된다. **이것이 deterministic laundering 방지 규칙이다.**
+
+## A2.2 패턴 8을 ②에 적용하는 법
+
+compiler가 아무 prohibition도 못 찾았다고 `absent`로 판정하면 안 된다. 먼저
+compiler가 다음 변형들을 **같은 policy로 컴파일할 수 있음**을 입증해야 한다:
+
+```text
+Do not mark a relation verified merely because a tool returned it.
+Tool output alone is insufficient evidence of verification.
+A relationship requires explicit checking evidence before it may be called verified.
+Returned-by-tool status does not license a verified label.
+```
+
+그리고 `Return the tool output in JSON.`은 잡지 **않아야** 한다.
+즉 compiler 인증에는 **positive coverage와 false-positive control이 모두**
+필요하다.
+
+## A2.3 policy graph를 인증할 수 있는 계층
+
+**3.1 결정적 구조 검증** — JSON schema, enum, carrier 존재, span 범위, 원문
+quote 일치, sentence ID, policy ID registry membership, 동일 carrier 중복,
+graph cardinality, 해시 일치. 의미가 아니라 **표현 무결성**을 인증한다.
+→ `assurance: STRUCTURE_CHECKED`
+
+**3.2 사전 등록된 문구의 deterministic mapping** — 프롬프트가 제한된
+template에서 생성되면 가장 강한 방법. renderer가 문장을 생성하며 policy ID를
+동시에 붙인다.
+
+```text
+Policy DSL → Renderer → Prompt
+```
+
+의미의 단일 출처가 자연어가 아니라 typed policy다. **자유로운 LLM semantic
+normalization보다 훨씬 강한 인증 경로다.**
+
+**3.3 독립 LLM 또는 다중 리뷰어 의미 검증** — 다수결만으로 `REASONER_PROVED`가
+되지는 않는다. → `assurance: SEMANTIC_REVIEWED`
+
+**3.4 Golden semantic fixtures** — 패턴 8에 직접 대응하는 핵심 장치.
+mutation suite: 동의어 치환, 부정 범위 변경, 예외 조항 추가, 이중 부정,
+조건절, 문장 분리, 한국어/영어 변환, carrier 위치 이동.
+
+## A2.4 가장 현실적인 인증 구조
+
+```text
+① Prompt Policy DSL → ② Deterministic Renderer → ③ Rendered Prompt
+→ ④ Independent Semantic Compiler → ⑤ Expected Policy Graph와 비교
+→ ⑥ Rule Engine
+```
+
+핵심은 **semantic compiler가 진실의 원천이 아니라 renderer drift detector**가
+된다는 것이다. 정본은 `Policy DSL`이고 compiler는 "Rendered text가 정본
+의미를 보존했는가"를 검사한다.
+
+## A2.5 자유 자연어만 있는 경우
+
+```yaml
+semantic_claim:
+  policy_id: verification.tool_return_not_sufficient
+  source_span: sentence_4
+  compiler: llm_semantic_compiler_v1
+  compiler_output: forbidden
+  independent_reviews:
+    - reviewer_a: agree
+    - reviewer_b: agree
+  adversarial_fixture_suite: passed
+  assurance: SEMANTIC_REVIEWED
+```
+
+Rule Engine 결과는 이를 넘지 못한다. `REASONER_PROVED`나 `RULE_CHECKED`만
+단독으로 쓰면 안 된다.
+
+## A2.6 미확정으로 남은 것 (발신자 명시)
+
+```text
+policy graph의 source of truth
+compiler assurance ceiling
+negative coverage 기준
+semantic equivalence fixture family
+compiler와 reviewer 독립성
+불일치 시 human escalation
+absence 판정의 최소 recall 기준
+```
+
+**현재 amendment는 아키텍처 오류를 수정했지만 인증 프로토콜까지 완성한 것은
+아니다.**
+
+## A2.7 권고 판정
+
+> **policy graph의 정본은 가능한 경우 typed policy DSL로 두고, LLM Semantic
+> Compiler는 렌더된 자연어가 DSL 의미를 보존했는지 검사하는 독립 감사기로
+> 사용한다. 기존 자유 자연어는 golden semantic fixtures, 독립 리뷰 및
+> assurance ceiling을 적용하며, compiler가 탐지 능력을 입증하지 않은 policy의
+> 부재는 `absent`가 아니라 `unknown`으로 반환한다.**
+
+핵심 상태는 **세 가지**여야 한다:
+
+```text
+present
+absent_verified
+unknown
+```
+
+compiler가 아무것도 못 찾았을 때 기본값은 `unknown`이다. `absent_verified`는
+해당 policy family에 대한 음성 검출 능력이 입증된 범위에서만 허용한다.
+
+---
+
+## A2.8 운영 세션 메모 — 권고 구조가 이미 부분 구현돼 있다 (판정 아님)
+
+**§A2.4가 "가장 강한 인증 경로"로 지목한 구조가 이 저장소에 이미 두 조각
+존재한다.** 새로 만들 것이 아니라 잇는 것이 남았다는 뜻이므로 기록한다.
+
+**① assurance ladder는 실재한다** — `conceptgate/cg_obligations.py:39-56`:
+
+```
+PROPOSED=1  SOURCE_ANCHORED=2  RULE_CHECKED=3  REASONER_PROVED=4  HUMAN_APPROVED=5
+MAX_ASSURANCE[DeciderKind.LLM] = SOURCE_ANCHORED
+```
+
+그 파일 주석이 이미 *"LLM은 SOURCE_ANCHORED까지 — RULE_CHECKED 이상은
+결정론 검사기·"*라고 적고 있다. **확정 3의 `A_output = min(A_input, A_rule)`은
+이 `MAX_ASSURANCE` 상한 규칙의 일반형이다.** 다만 현재 ladder는 *decider
+종류*에 상한을 걸고, 확정 3은 *입력 assurance*에 상한을 건다 — 두 축이 다르며
+후자는 아직 코드에 없다.
+
+**② H1a가 이미 §A2.4의 ①→②→③ 구조다** —
+`experiments/2026-07-29_h1a_source_authority_unresolved/_h1a_policy.py`의
+`DECISION_BASIS_POLICY`(typed DSL)와 `render_policy_block()`(deterministic
+renderer). D-H1a-11 Q11.2=A가 "정책 표가 정본이고 프롬프트는 거기서
+생성된다"를 이미 명령했다.
+
+**그런데 같은 날 독립 리뷰가 BLOCKER 4 + MAJOR 9를 냈다.** 그 결함들이 나온
+자리가 정확히 §A2.4 구조가 **아직 닫지 못한 곳**이다:
+
+| H1a 결함 | §A2.4에서 빠진 조각 |
+|---|---|
+| `AXIS_SURFACE_TOKENS`의 한국어/영어 비대칭으로 판정문 처방 문구가 통과 | ④ 없음 — DSL→렌더는 있으나 **렌더 결과를 다시 컴파일해 대조하는 감사기가 없다** |
+| 리뷰어 의역이 lint finding 0으로 통과 | 같음. 남아 있던 문자열 검사가 ④의 대역을 하려다 실패 |
+| §4 처방 문장이 REMOVED에서 dangling reference | ⑤ 없음 — expected policy graph와 비교하는 단계가 없어 "가리킬 대상 없는 참조"가 ③에 남지 않는다 |
+
+즉 **H1a는 ①②③⑥을 갖고 ④⑤가 비어 있다.** Amendment 1이 ②를 승격시켰다면,
+Amendment 2는 그 ②를 **정본이 아니라 drift auditor로** 쓰라고 위치를 바로잡은
+것이고, H1a에 적용하면 "빠진 것은 semantic compiler를 정본으로 삼는 일이
+아니라 **렌더 결과를 DSL과 대조하는 ④⑤를 추가하는 일**"이 된다.
+
+**운영 세션이 임의로 정하지 않는 것**: §A2.6의 미확정 7항 중 특히
+`compiler와 reviewer 독립성`과 `absence 판정의 최소 recall 기준`은 H1a의
+동결 게이트 조건과 직접 충돌할 수 있다(현재 조건 11이 "독립 의미 리뷰"를
+요구하는데, 그 리뷰어가 곧 §A2.3의 3.3인지 별개인지 정해지지 않았다).
+D-H1a-13 또는 D-OWL-2 설계 시 함께 다뤄야 한다.
