@@ -205,3 +205,35 @@ E2.4가 30 trial 중 22개를 같은 이유로 잃었을 때 적용한 판정과
 
 재시도 시 위 세 축을 그대로 쓴다 — 축 분할과 지시문은 유효했고 실패 원인은
 용량이었다. 한도 리셋 후 재실행할 것.
+
+### 8.2 조건 11 재실행 결과 — FREEZE_BLOCKED (2026-08-06)
+
+한도 리셋 후 세 축을 그대로 재실행했다. **렌더된 프롬프트 축이
+`FREEZE_BLOCKED`를 냈다** — 전문은
+`../../docs/feedback/h1a_typed_scope_review_20260806.md`.
+
+**BLOCKER: §4의 세 번째 문장이 REMOVED arm에서 dangling reference다.**
+"Source evaluation is governed by the arm-specific source-evaluation clause."
+인데 REMOVED에는 그 절이 없다(Q1은 KEPT 전용). 제작 세션이 실측 확인:
+
+```
+PROHIBITION_KEPT:    Q1절=True   "arm-specific...clause" 참조=True
+PROHIBITION_REMOVED: Q1절=False  "arm-specific...clause" 참조=True
+```
+
+이 문장은 §4가 의존하는 기제를 스스로 무너뜨린다 — §4는 REMOVED가 작동하는
+이유를 "Q1이 없으므로 공통 기본허용 규칙이 적용된다"로 설명하는데, 이 문장이
+그 basis에 대해 **더 구체적인** 지배자를 지목하므로 specific-beats-general
+읽기에서 기본허용이 적용되지 않는다.
+
+**이 문장은 판정문 §4(line 189-191)가 verbatim으로 처방한 것이다.** 따라서
+운영 세션이 고칠 수 없다 — §4 문구 변경은 설계 판정이다. MAJOR 1·2(`source
+order`가 표적으로 읽힘, Evidence-reading rule + §7이 결합해 source 속성을
+warrant에서 배제)도 공통 템플릿 문장이라 같은 성격이다.
+
+**조치**: **D-H1a-13 상신 필요.** 그때까지 조건 11·12 미충족,
+`INDEPENDENT_SEMANTIC_REVIEW_PASSED = False` 유지, trial 0건 유지.
+
+이것이 D-H1a-11에서 이미 한 번 나온 "이식된 절이 선행사를 잃는다" 패턴의
+재발이며(`evidence-to-knowledge-promoter` 2026-08-01 로그 결함 1번), 이번엔
+판정문이 처방한 문장 자체가 그 결함을 갖고 있다는 점이 다르다.
