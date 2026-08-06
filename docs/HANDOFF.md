@@ -205,7 +205,7 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중 
 | `experiments/2026-07-29_h1a_source_authority_unresolved/DESIGN_DECISION_H1a_evidence_symmetry.md` | Q9=A(fixture 무변경, L3 한계 선언) / Q9.2(Q8.1 유지) — **2026-08-03 반입·적용 완료**(`notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`에서 byte-identical 복사, 원본은 `notes/`에 보존). `PREREGISTRATION.md` §0.1에 L3 등록 완료 |
 | `DESIGN_DECISION_H1a_residual_prohibition.md` | D-H1a-10, Q10=E(코호트 비식별 보존) / Q10.1~Q10.3 — **2026-08-03 반입·적용 완료** |
 | `DESIGN_DECISION_H1a_allowed_rendering.md` | D-H1a-11, Q11=D(공통 기본허용 규칙, 축별 permission 없음) / Q11.1=A / Q11.2=A — **적용 완료.** 독립 리뷰 3명 전원 `FREEZE_BLOCKED`(공허한 `assert_5`, 코호트 파괴 경로, 정책 계층 미배선 — 전부 이 세션에서 수정) |
-| `DESIGN_DECISION_H1a_identification_validity.md` | D-H1a-12(2026-08-05), Q12=F(`outside_domain_knowledge`/`source_meta_reasoning` typed-scope split) / Q12.1~Q12.4 + M4·M7·M8 — **판정만 반입, §16의 freeze 해제 조건 12개는 미구현.** 요청서: `correspondence/DESIGN_REQUEST_H1a_identification_validity.md` |
+| [`DESIGN_DECISION_H1a_identification_validity.md`](../experiments/2026-07-29_h1a_source_authority_unresolved/DESIGN_DECISION_H1a_identification_validity.md) | D-H1a-12(2026-08-05), Q12=F(`outside_domain_knowledge`/`source_meta_reasoning` typed-scope split) / Q12.1~Q12.4 + M4·M7·M8 — **판정만 반입, §16의 freeze 해제 조건 12개는 미구현.** 요청서: `correspondence/DESIGN_REQUEST_H1a_identification_validity.md` |
 
 > **2026-08-02 갱신**: `DESIGN_DECISION_H1a_prompt_surface.md`는 더 이상
 > 코드가 로드하는 파일이 **아니다.** Q5·Q6.1·Q7이 template을 셋으로 나눠
@@ -882,6 +882,21 @@ except ModuleNotFoundError as exc:
 > `DESIGN_D4_constraint_11_review.md`, 실행 기록은 등록부 [DONE] #25.
 
 ### 10.4 다음 세션이 반드시 할 일 (2026-08-05 추가)
+
+> **2026-08-06 추가 — 상신 대기 중인 것과 새 도구**
+>
+> - **Q13 상신 완료, 판정 대기**:
+>   [`correspondence/DESIGN_REQUEST_H1a_prescribed_sentence_defects.md`](../experiments/2026-07-29_h1a_source_authority_unresolved/correspondence/DESIGN_REQUEST_H1a_prescribed_sentence_defects.md)
+>   — D-H1a-12 가 처방한 문장들이 만든 결함 6건. 판정 전까지 §4·§6·§7
+>   문구를 건드리지 않는다.
+> - **인수인계 도달성 감사기**:
+>   [`scripts/handoff_reachability.py`](../scripts/handoff_reachability.py) —
+>   이 세션이 바꾼 파일이 이 문서에서 도달 가능한지 기계적으로 잰다.
+>   `python3 scripts/handoff_reachability.py --ref <base>`. 링크 도달성만
+>   재며 handoff 가 **이해 가능한지는 재지 않는다.** 양방향 테스트:
+>   [`test_handoff_reachability.py`](../test_handoff_reachability.py) —
+>   recall(깨진 링크는 보고)과 precision(깨진 *언급*은 보고 안 함)을
+>   고정한다. 후자가 첫 실행을 무용지물로 만든 404건의 원인이었다.
 
 우선순위 순. 근거는 §5 "2026-08-05" 로그와
 [`feedback/session_retrospective_20260805_search_trigger_and_h1a.md`](feedback/session_retrospective_20260805_search_trigger_and_h1a.md).
