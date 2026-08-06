@@ -997,3 +997,86 @@ Amendment 2는 그 ②를 **정본이 아니라 drift auditor로** 쓰라고 위
 동결 게이트 조건과 직접 충돌할 수 있다(현재 조건 11이 "독립 의미 리뷰"를
 요구하는데, 그 리뷰어가 곧 §A2.3의 3.3인지 별개인지 정해지지 않았다).
 D-H1a-13 또는 D-OWL-2 설계 시 함께 다뤄야 한다.
+
+---
+
+## A2.9 운영 세션 판정 — 충돌 후보 3건 실측 해소 (2026-08-06, 판정문 아님)
+
+§A2.8 말미에 "미확정 7항 중 2건이 H1a 조건 11과 충돌할 수 있다"고 적었다.
+**직접 검증한 결과 그중 하나는 운영 세션의 오해였다.** 실측으로 가른다.
+
+### 후보 1 — "조건 11의 리뷰어 = §A2.3의 3.3 인가" → **충돌 아님. 별개 역할이다.**
+
+실측: 오늘 실행한 독립 리뷰 3축 보고서(`h1a_typed_scope_review_20260806.md`)에서
+`policy_graph|semantic compil|컴파일` 검색 **0건**. 세 리뷰어는 정책 객체·
+렌더된 프롬프트·사전등록을 각각 **적대적으로 재현**했지 자연어를 policy graph로
+컴파일하지 않았다.
+
+두 역할은 입력·출력·실패 양식이 다르다:
+
+| | 조건 11 (독립 의미 리뷰) | §A2.3의 3.3 (독립 semantic 검증) |
+|---|---|---|
+| 입력 | 구현 전체(코드·문서·렌더 결과) | 특정 문장 ↔ candidate policy graph |
+| 출력 | BLOCKER/MAJOR/MINOR 발견 목록 | 문장별 entailment 판정, 누락 정책 |
+| 실패 | freeze 차단 | policy graph를 `unresolved`로 강등 |
+
+**판정: 별개다. 조건 11을 §A2.3의 3.3으로 대체하거나 그 반대로 해서는 안
+된다.** 3.3은 ④⑤가 구현된 뒤에야 존재할 수 있는 단계이고(현재 H1a에 없음),
+조건 11은 그것과 무관하게 지금 필요하다. **§A2.8의 "충돌 가능" 서술을
+이 문단으로 정정한다.**
+
+### 후보 2 — "absence 판정의 최소 recall 기준"이 조건 11과 충돌하는가 → **충돌 아님. 다른 대상이다.**
+
+§A2.2의 recall 기준은 **semantic compiler**의 탐지 능력에 대한 것이다. 조건
+11의 리뷰어는 absence를 판정하지 않는다 — 오늘 실제로 낸 것은 전부 **presence**
+발견(BLOCKER 4 + MAJOR 9)이었고, 아무것도 못 찾았을 때 그것을 `absent`로
+보고하라는 지시도 없었다.
+
+**판정: 별개 대상. 단, 파생 규칙 하나가 생긴다** — 조건 11 리뷰가 "문제
+없음"을 보고해도 그것은 `absent_verified`가 아니라 §A2.7의 `unknown`이다.
+리뷰어의 탐지 능력이 입증된 범위가 선언되지 않았기 때문이다. 오늘 리뷰는
+발견을 냈으므로 이 구분이 실무에 걸리지 않았지만, **다음 라운드에서 리뷰가
+clean을 내면 그것을 freeze 근거로 쓰기 전에 이 문단을 다시 읽어야 한다.**
+
+### 후보 3 — 확정 3의 입력-assurance 상한이 기존 ladder에 이미 있는가 → **없다. 진짜 공백이다.**
+
+실측(`conceptgate/cg_obligations.py:54-62`):
+
+```python
+# 결정론 세탁 차단의 핵심: decider가 자기 권한 밖의 보증을 발행할 수 없다.
+MAX_ASSURANCE: Dict[DeciderKind, Assurance] = {
+    DeciderKind.LLM: Assurance.SOURCE_ANCHORED,
+    DeciderKind.LOCAL_RULE: Assurance.RULE_CHECKED,
+    ...
+}
+```
+
+그리고 `ObligationSpec.min_assurance`는 **PASS 인정에 필요한 최소 보증**
+(문턱)이지 상한이 아니다.
+
+| 축 | 규칙 | 구현 |
+|---|---|---|
+| **누가** 발행하는가 | `MAX_ASSURANCE[decider]` | ✅ 있음 |
+| **무엇을 입력받아** 발행하는가 | `A_output = min(A_input, A_rule)` | ❌ **없음** |
+
+즉 현재 코드에서 `LOCAL_RULE` decider는 입력이 `PROPOSED`든 `REASONER_PROVED`든
+**동일하게 `RULE_CHECKED`를 발행할 수 있다.** 확정 3이 금지하는 바로 그
+경로가 열려 있다.
+
+**판정: 충돌이 아니라 미구현이다.** 기존 주석("결정론 세탁 차단의 핵심")이
+같은 목적을 선언하므로 확정 3은 그 선언의 **완성**이지 번복이 아니다.
+구현은 `Assurance` 계산 지점에 입력 assurance 인자를 추가하는 것이고,
+**정본 패키지(`conceptgate/`) 변경이라 실험 세션 권한 밖**이다 — 별도 승인
+대상으로 남긴다.
+
+### 요약
+
+| 후보 | 판정 | 근거 |
+|---|---|---|
+| 1. 리뷰어 역할 중복 | **충돌 아님** (제 오해, 정정) | 오늘 리뷰에 컴파일 관련 0건, 입출력·실패양식 상이 |
+| 2. absence recall 기준 | **충돌 아님**, 파생 규칙 1건 | 리뷰는 presence만 냄. clean 보고 시 `unknown` 처리 필요 |
+| 3. 입력-assurance 상한 | **미구현** (충돌 아님) | `MAX_ASSURANCE`는 decider 축만. 기존 주석이 같은 목적을 이미 선언 |
+
+**남은 미확정 5항**(source of truth, compiler assurance ceiling, fixture
+family, compiler-reviewer 독립성, human escalation)은 실측으로 가릴 수 없다 —
+설계 판정 대상이다. D-H1a-13 또는 D-OWL-2에서 다룬다.
