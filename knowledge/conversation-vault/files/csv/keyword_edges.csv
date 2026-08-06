@@ -1,0 +1,2539 @@
+keyword_a,keyword_b,cooccurrence_weight,explicit_edge_weight
+20/20,3/20,0,2
+20/20,A_ONLY,0,2
+20/20,B_ONLY,0,2
+20/20,C_ONLY,0,2
+20/20,complete state,1,0
+20/20,complete-state contract,0,1
+20/20,concept-gate-taxonomy,0,2
+20/20,decision schema,0,1
+20/20,destructive repair,0,1
+20/20,directed positive control,0,2
+20/20,E2 progression,0,1
+20/20,E2.2.1,0,2
+20/20,E2.2.2,1,0
+20/20,E2.2.3,0,2
+20/20,evidence contract,0,1
+20/20,experiment README,0,1
+20/20,factor sufficiency,0,2
+20/20,feature identity,0,1
+20/20,full-set preservation,0,1
+20/20,global consistency,1,0
+20/20,global consistency rule,0,1
+20/20,global feature-type invariant,0,1
+20/20,global invariant,0,1
+20/20,global state normalization,0,1
+20/20,MCP,0,1
+20/20,memory card,0,1
+20/20,MixRig,0,1
+20/20,next experiment,0,1
+20/20,OFAT ablation,0,2
+20/20,ontology,0,1
+20/20,reasoner,0,1
+20/20,repaired_concepts,0,1
+20/20,repo provenance,0,1
+20/20,schema minItems,1,0
+20/20,semantic obligation,0,1
+20/20,structural preservation,0,1
+20/20,structural_composition,0,2
+20/20,trial data,0,1
+20/20,vocabulary exposure,0,2
+3/20,complete state,0,2
+3/20,concept-gate-taxonomy,0,2
+3/20,contextual_usage,0,1
+3/20,decision schema,0,1
+3/20,directed positive control,1,0
+3/20,E2 progression,0,1
+3/20,E2.2.1,1,0
+3/20,E2.2.2,0,2
+3/20,essential_feature,0,1
+3/20,evidence contract,0,1
+3/20,experiment README,0,1
+3/20,FeatureType,0,1
+3/20,functional,0,1
+3/20,global consistency,0,2
+3/20,global invariant,0,1
+3/20,locational,0,1
+3/20,MCP,0,1
+3/20,memory card,0,1
+3/20,next experiment,0,1
+3/20,ontology,0,1
+3/20,reasoner,0,1
+3/20,repo provenance,0,1
+3/20,schema minItems,0,2
+3/20,semantic obligation,0,1
+3/20,social_treatment,0,1
+3/20,structural_composition,1,1
+3/20,trial data,0,1
+3/20,vocabulary exposure,1,0
+A_ONLY,adaptive screening,0,2
+A_ONLY,B_ONLY,1,0
+A_ONLY,C_ONLY,1,0
+A_ONLY,complete state,0,2
+A_ONLY,complete-state contract,0,1
+A_ONLY,concept-gate-taxonomy,0,2
+A_ONLY,decision schema,0,1
+A_ONLY,decoy resistance,0,2
+A_ONLY,destructive repair,0,1
+A_ONLY,E2 progression,0,1
+A_ONLY,E2.2.2,0,2
+A_ONLY,E2.2.3,1,0
+A_ONLY,E2.3,0,2
+A_ONLY,evidence contract,0,1
+A_ONLY,experiment README,0,1
+A_ONLY,factor sufficiency,1,0
+A_ONLY,feature identity,0,1
+A_ONLY,full-set preservation,0,1
+A_ONLY,global consistency,0,2
+A_ONLY,global consistency rule,0,1
+A_ONLY,global feature-type invariant,0,1
+A_ONLY,global invariant,0,1
+A_ONLY,global invariant generalization,0,2
+A_ONLY,global state normalization,0,1
+A_ONLY,MCP,0,1
+A_ONLY,memory card,0,1
+A_ONLY,MixRig,0,1
+A_ONLY,next experiment,0,1
+A_ONLY,OFAT ablation,1,0
+A_ONLY,ontology,0,1
+A_ONLY,paraphrase invariance,0,2
+A_ONLY,reasoner,0,1
+A_ONLY,repaired_concepts,0,1
+A_ONLY,repo provenance,0,1
+A_ONLY,schema minItems,0,2
+A_ONLY,semantic obligation,0,1
+A_ONLY,structural preservation,0,1
+A_ONLY,topology generalization,0,2
+A_ONLY,trial data,0,1
+A_REPO,adaptive screening,0,1
+A_REPO,claim abstain repair,0,1
+A_REPO,cold context,1,1
+A_REPO,commit provenance,0,3
+A_REPO,concept-gate-taxonomy,0,3
+A_REPO,conflicting evidence,0,1
+A_REPO,context contamination,0,1
+A_REPO,CONTRACT_REPO,2,0
+A_REPO,CONTROL_REPO,2,0
+A_REPO,decision schema,0,1
+A_REPO,decoy resistance,0,1
+A_REPO,design only,1,2
+A_REPO,deterministic scorer,0,2
+A_REPO,direct support,0,1
+A_REPO,E2.3,0,1
+A_REPO,E2.3 result,0,1
+A_REPO,E2.4,1,4
+A_REPO,E2.4 execution,1,0
+A_REPO,E2.4 fixtures,0,2
+A_REPO,E2.4 status,0,2
+A_REPO,evidence audit,0,1
+A_REPO,evidence packet,0,1
+A_REPO,evidence sufficiency,0,1
+A_REPO,exact excerpt,0,1
+A_REPO,experiment README,0,1
+A_REPO,feature identity,0,1
+A_REPO,generalization claim,0,1
+A_REPO,global consistency rule,0,1
+A_REPO,global feature-type invariant,0,1
+A_REPO,global invariant,0,1
+A_REPO,global invariant generalization,0,1
+A_REPO,global state normalization,0,1
+A_REPO,goodand/concept-gate-taxonomy,0,2
+A_REPO,hidden oracle,0,2
+A_REPO,mandatory abstention,0,1
+A_REPO,MCP,0,2
+A_REPO,MCP context isolation,0,1
+A_REPO,missing evidence,0,1
+A_REPO,missing scorer,0,2
+A_REPO,missing trials,0,2
+A_REPO,MixRig,0,1
+A_REPO,N=10,0,2
+A_REPO,not executed,0,2
+A_REPO,ontology,0,2
+A_REPO,packet-only,0,1
+A_REPO,paraphrase invariance,0,1
+A_REPO,protocol bounded,0,1
+A_REPO,provenance validator,0,2
+A_REPO,reasoner,0,2
+A_REPO,reasoning contract,0,1
+A_REPO,repairability,0,1
+A_REPO,repo provenance,0,1
+A_REPO,repo-derived evidence,0,1
+A_REPO,repo-grounded evidence,1,0
+A_REPO,repository-only evidence,0,2
+A_REPO,screened not confirmed,0,1
+A_REPO,screening,0,2
+A_REPO,semantic constraints,0,2
+A_REPO,semantic obligation,0,2
+A_REPO,source confinement,0,2
+A_REPO,source policy,0,2
+A_REPO,threshold 0.90,0,2
+A_REPO,tool output separation,0,1
+A_REPO,topology generalization,0,1
+A_REPO,trial data,0,1
+A_REPO,two-failure futility stop,0,2
+abstain,as-of date,0,1
+abstain,concept-gate-taxonomy,0,1
+abstain,date-bound claim,0,2
+abstain,hallucination mitigation,0,3
+abstain,literature evidence,0,2
+abstain,literature search,1,0
+abstain,literature-first,0,1
+abstain,literature-first workflow,1,0
+abstain,MCP,0,1
+abstain,ontology,0,1
+abstain,open,0,1
+abstain,open problem,0,1
+abstain,open problem database,1,0
+abstain,open problem status,0,2
+abstain,problem status,0,1
+abstain,reasoner,0,1
+abstain,research context,0,1
+abstain,resolved,0,1
+abstain,retrieval,0,1
+abstain,semantic obligation,0,1
+abstain,solution attempt gate,1,0
+abstain,uncertain,0,1
+abstain,uncertainty,0,2
+adaptive screening,B_ONLY,0,2
+adaptive screening,C_ONLY,0,2
+adaptive screening,concept-gate-taxonomy,0,2
+adaptive screening,CONTRACT_REPO,0,1
+adaptive screening,CONTROL_REPO,0,1
+adaptive screening,decision schema,0,1
+adaptive screening,decoy resistance,1,0
+adaptive screening,design only,0,1
+adaptive screening,E2 progression,0,1
+adaptive screening,E2.2.3,0,2
+adaptive screening,E2.3,1,0
+adaptive screening,E2.3 result,0,2
+adaptive screening,E2.4,0,2
+adaptive screening,evidence contract,0,1
+adaptive screening,experiment README,0,1
+adaptive screening,factor sufficiency,0,2
+adaptive screening,feature identity,0,1
+adaptive screening,generalization claim,0,2
+adaptive screening,global consistency rule,0,1
+adaptive screening,global feature-type invariant,0,1
+adaptive screening,global invariant,0,3
+adaptive screening,global invariant generalization,1,0
+adaptive screening,global state normalization,0,1
+adaptive screening,MCP,0,1
+adaptive screening,memory card,0,1
+adaptive screening,MixRig,0,1
+adaptive screening,N=10,0,1
+adaptive screening,next experiment,0,1
+adaptive screening,OFAT ablation,0,2
+adaptive screening,ontology,0,1
+adaptive screening,paraphrase invariance,1,0
+adaptive screening,protocol bounded,0,2
+adaptive screening,reasoner,0,1
+adaptive screening,repo provenance,0,1
+adaptive screening,repo-grounded evidence,0,1
+adaptive screening,screened not confirmed,0,2
+adaptive screening,screening,0,1
+adaptive screening,semantic obligation,0,1
+adaptive screening,threshold 0.90,0,1
+adaptive screening,topology generalization,1,0
+adaptive screening,trial data,0,1
+adaptive screening,two-failure futility stop,0,1
+as-of date,date-bound claim,0,1
+as-of date,hallucination mitigation,0,2
+as-of date,literature evidence,0,1
+as-of date,literature search,0,1
+as-of date,literature-first,0,1
+as-of date,literature-first workflow,0,1
+as-of date,open,1,0
+as-of date,open problem,0,1
+as-of date,open problem database,0,1
+as-of date,open problem status,0,1
+as-of date,problem status,1,0
+as-of date,research context,0,1
+as-of date,resolved,1,0
+as-of date,retrieval,0,1
+as-of date,solution attempt gate,0,1
+as-of date,uncertain,1,0
+as-of date,uncertainty,0,1
+atomic notes,backlink index,0,1
+atomic notes,canonical file,0,1
+atomic notes,canonical home,0,1
+atomic notes,canonical storage,0,2
+atomic notes,classification view,0,1
+atomic notes,concept-gate-taxonomy,0,1
+atomic notes,context coverage,0,1
+atomic notes,conversation provenance,0,1
+atomic notes,domain range validation,0,1
+atomic notes,E2 experiments,0,1
+atomic notes,edge review,1,0
+atomic notes,faceted navigation,0,1
+atomic notes,format-first storage,0,2
+atomic notes,keyword normalization,1,0
+atomic notes,MCP,0,1
+atomic notes,MCP isolation,0,1
+atomic notes,memory card,0,1
+atomic notes,no duplication,0,1
+atomic notes,Obsidian backlinks,0,2
+atomic notes,ontology,0,1
+atomic notes,reasoner,0,1
+atomic notes,relative symlink,0,1
+atomic notes,semantic authority,0,1
+atomic notes,semantic graph,0,1
+atomic notes,semantic obligation,0,1
+atomic notes,stable ID,0,1
+atomic notes,subagent enrichment,1,0
+atomic notes,symlink classification,0,1
+atomic notes,symlink views,0,2
+atomic notes,typed edge,0,1
+atomic notes,typed edge ledger,0,2
+atomic notes,typed graph,0,1
+atomic notes,vault architecture,0,1
+atomic notes,vault ingestion,1,0
+B_ONLY,C_ONLY,1,0
+B_ONLY,complete state,0,2
+B_ONLY,complete-state contract,0,1
+B_ONLY,concept-gate-taxonomy,0,2
+B_ONLY,decision schema,0,1
+B_ONLY,decoy resistance,0,2
+B_ONLY,destructive repair,0,1
+B_ONLY,E2 progression,0,1
+B_ONLY,E2.2.2,0,2
+B_ONLY,E2.2.3,1,0
+B_ONLY,E2.3,0,2
+B_ONLY,evidence contract,0,1
+B_ONLY,experiment README,0,1
+B_ONLY,factor sufficiency,1,0
+B_ONLY,feature identity,0,1
+B_ONLY,full-set preservation,0,1
+B_ONLY,global consistency,0,2
+B_ONLY,global consistency rule,0,1
+B_ONLY,global feature-type invariant,0,1
+B_ONLY,global invariant,0,1
+B_ONLY,global invariant generalization,0,2
+B_ONLY,global state normalization,0,1
+B_ONLY,MCP,0,1
+B_ONLY,memory card,0,1
+B_ONLY,MixRig,0,1
+B_ONLY,next experiment,0,1
+B_ONLY,OFAT ablation,1,0
+B_ONLY,ontology,0,1
+B_ONLY,paraphrase invariance,0,2
+B_ONLY,reasoner,0,1
+B_ONLY,repaired_concepts,0,1
+B_ONLY,repo provenance,0,1
+B_ONLY,schema minItems,0,2
+B_ONLY,semantic obligation,0,1
+B_ONLY,structural preservation,0,1
+B_ONLY,topology generalization,0,2
+B_ONLY,trial data,0,1
+backlink index,canonical file,0,1
+backlink index,canonical storage,0,1
+backlink index,classification view,0,1
+backlink index,domain range validation,1,0
+backlink index,edge review,0,1
+backlink index,faceted navigation,0,1
+backlink index,format-first storage,0,1
+backlink index,keyword normalization,0,1
+backlink index,no duplication,0,1
+backlink index,Obsidian backlinks,0,1
+backlink index,relative symlink,0,1
+backlink index,semantic graph,1,0
+backlink index,stable ID,1,0
+backlink index,subagent enrichment,0,1
+backlink index,symlink views,0,1
+backlink index,typed edge,1,0
+backlink index,typed edge ledger,0,1
+backlink index,vault ingestion,0,1
+C_ONLY,complete state,0,2
+C_ONLY,complete-state contract,0,1
+C_ONLY,concept-gate-taxonomy,0,2
+C_ONLY,decision schema,0,1
+C_ONLY,decoy resistance,0,2
+C_ONLY,destructive repair,0,1
+C_ONLY,E2 progression,0,1
+C_ONLY,E2.2.2,0,2
+C_ONLY,E2.2.3,1,0
+C_ONLY,E2.3,0,2
+C_ONLY,evidence contract,0,1
+C_ONLY,experiment README,0,1
+C_ONLY,factor sufficiency,1,0
+C_ONLY,feature identity,0,1
+C_ONLY,full-set preservation,0,1
+C_ONLY,global consistency,0,2
+C_ONLY,global consistency rule,0,1
+C_ONLY,global feature-type invariant,0,1
+C_ONLY,global invariant,0,1
+C_ONLY,global invariant generalization,0,2
+C_ONLY,global state normalization,0,1
+C_ONLY,MCP,0,1
+C_ONLY,memory card,0,1
+C_ONLY,MixRig,0,1
+C_ONLY,next experiment,0,1
+C_ONLY,OFAT ablation,1,0
+C_ONLY,ontology,0,1
+C_ONLY,paraphrase invariance,0,2
+C_ONLY,reasoner,0,1
+C_ONLY,repaired_concepts,0,1
+C_ONLY,repo provenance,0,1
+C_ONLY,schema minItems,0,2
+C_ONLY,semantic obligation,0,1
+C_ONLY,structural preservation,0,1
+C_ONLY,topology generalization,0,2
+C_ONLY,trial data,0,1
+canonical file,canonical storage,0,2
+canonical file,classification view,1,0
+canonical file,domain range validation,0,1
+canonical file,edge review,0,1
+canonical file,faceted navigation,1,0
+canonical file,format-first storage,0,2
+canonical file,keyword normalization,0,1
+canonical file,no duplication,1,0
+canonical file,Obsidian backlinks,0,2
+canonical file,relative symlink,1,0
+canonical file,semantic graph,0,1
+canonical file,stable ID,0,1
+canonical file,subagent enrichment,0,1
+canonical file,symlink views,0,2
+canonical file,typed edge,0,1
+canonical file,typed edge ledger,0,2
+canonical file,vault ingestion,0,1
+canonical home,canonical storage,0,1
+canonical home,concept-gate-taxonomy,0,1
+canonical home,edge review,0,1
+canonical home,format-first storage,0,1
+canonical home,keyword normalization,0,1
+canonical home,MCP,0,1
+canonical home,memory card,1,0
+canonical home,Obsidian backlinks,0,1
+canonical home,ontology,0,1
+canonical home,reasoner,0,1
+canonical home,semantic authority,1,0
+canonical home,semantic obligation,0,1
+canonical home,subagent enrichment,0,1
+canonical home,symlink classification,1,0
+canonical home,symlink views,0,1
+canonical home,typed edge ledger,0,1
+canonical home,typed graph,1,0
+canonical home,vault ingestion,0,1
+canonical storage,classification view,0,2
+canonical storage,concept-gate-taxonomy,0,2
+canonical storage,context coverage,0,2
+canonical storage,conversation provenance,0,2
+canonical storage,domain range validation,0,1
+canonical storage,E2 experiments,0,2
+canonical storage,edge review,0,2
+canonical storage,faceted navigation,0,2
+canonical storage,format-first storage,1,0
+canonical storage,keyword normalization,0,2
+canonical storage,knowledge vault,1,0
+canonical storage,MCP,0,2
+canonical storage,MCP isolation,0,2
+canonical storage,memory card,0,1
+canonical storage,no duplication,0,2
+canonical storage,Obsidian backlink,1,0
+canonical storage,Obsidian backlinks,1,0
+canonical storage,ontology,0,2
+canonical storage,reasoner,0,2
+canonical storage,relative symlink,0,2
+canonical storage,semantic authority,0,1
+canonical storage,semantic graph,0,1
+canonical storage,semantic obligation,0,2
+canonical storage,stable ID,0,1
+canonical storage,subagent enrichment,0,2
+canonical storage,symlink classification,0,1
+canonical storage,symlink view,1,0
+canonical storage,symlink views,1,0
+canonical storage,typed edge,1,1
+canonical storage,typed edge ledger,1,0
+canonical storage,typed graph,0,1
+canonical storage,vault architecture,0,2
+canonical storage,vault ingestion,0,2
+claim abstain repair,complete-state contract,0,2
+claim abstain repair,conflicting evidence,0,2
+claim abstain repair,CONTRACT_REPO,0,1
+claim abstain repair,CONTROL_REPO,0,1
+claim abstain repair,design only,0,1
+claim abstain repair,destructive repair,0,2
+claim abstain repair,direct support,0,2
+claim abstain repair,E2.4,0,1
+claim abstain repair,evidence audit,0,3
+claim abstain repair,evidence sufficiency,0,2
+claim abstain repair,evidence-first,0,1
+claim abstain repair,feature identity,0,1
+claim abstain repair,final decision,0,1
+claim abstain repair,full-set preservation,0,2
+claim abstain repair,global consistency rule,0,1
+claim abstain repair,global feature-type invariant,0,1
+claim abstain repair,global state normalization,0,1
+claim abstain repair,invariant check,0,1
+claim abstain repair,mandatory abstention,1,0
+claim abstain repair,missing evidence,1,0
+claim abstain repair,MixRig,0,1
+claim abstain repair,packet-only,0,2
+claim abstain repair,reasoning contract,1,0
+claim abstain repair,repairability,1,0
+claim abstain repair,repaired_concepts,0,2
+claim abstain repair,repo-grounded evidence,0,1
+claim abstain repair,structural preservation,0,2
+claim abstain repair,sufficiency gate,0,1
+classification view,domain range validation,0,1
+classification view,edge review,0,1
+classification view,faceted navigation,1,0
+classification view,format-first storage,0,2
+classification view,keyword normalization,0,1
+classification view,no duplication,1,0
+classification view,Obsidian backlinks,0,2
+classification view,relative symlink,1,0
+classification view,semantic graph,0,1
+classification view,stable ID,0,1
+classification view,subagent enrichment,0,1
+classification view,symlink views,0,2
+classification view,typed edge,0,1
+classification view,typed edge ledger,0,2
+classification view,vault ingestion,0,1
+cold context,commit provenance,0,1
+cold context,concept-gate-taxonomy,0,1
+cold context,context contamination,1,1
+cold context,CONTRACT_REPO,1,1
+cold context,CONTROL_REPO,1,1
+cold context,design only,0,1
+cold context,deterministic scorer,0,1
+cold context,E2.4,0,2
+cold context,E2.4 execution,1,1
+cold context,E2.4 fixtures,0,1
+cold context,E2.4 status,0,1
+cold context,evidence packet,0,1
+cold context,exact excerpt,0,1
+cold context,hidden oracle,0,1
+cold context,MCP,0,1
+cold context,MCP context isolation,1,1
+cold context,missing scorer,0,1
+cold context,missing trials,0,1
+cold context,N=10,0,2
+cold context,not executed,0,1
+cold context,ontology,0,1
+cold context,provenance validator,0,1
+cold context,reasoner,0,1
+cold context,repo-derived evidence,0,1
+cold context,screening,0,2
+cold context,semantic constraints,0,1
+cold context,semantic obligation,0,1
+cold context,source confinement,1,2
+cold context,threshold 0.90,0,2
+cold context,tool output separation,1,1
+cold context,two-failure futility stop,0,2
+commit provenance,concept-gate-taxonomy,0,2
+commit provenance,conflicting evidence,0,1
+commit provenance,context contamination,0,1
+commit provenance,CONTRACT_REPO,0,3
+commit provenance,CONTROL_REPO,0,3
+commit provenance,decision schema,0,1
+commit provenance,design only,0,3
+commit provenance,direct support,0,1
+commit provenance,E2.4,1,4
+commit provenance,evidence audit,0,2
+commit provenance,evidence packet,1,1
+commit provenance,evidence sufficiency,0,1
+commit provenance,evidence-first,0,1
+commit provenance,exact excerpt,1,1
+commit provenance,experiment README,0,1
+commit provenance,final decision,0,1
+commit provenance,goodand/concept-gate-taxonomy,1,1
+commit provenance,invariant check,0,1
+commit provenance,MCP,0,1
+commit provenance,MCP context isolation,0,1
+commit provenance,ontology,0,1
+commit provenance,packet-only,0,1
+commit provenance,reasoner,0,1
+commit provenance,repo provenance,0,1
+commit provenance,repo-derived evidence,1,1
+commit provenance,repo-grounded evidence,0,3
+commit provenance,repository-only evidence,1,1
+commit provenance,semantic obligation,0,1
+commit provenance,source confinement,1,2
+commit provenance,source policy,1,1
+commit provenance,sufficiency gate,0,1
+commit provenance,tool output separation,0,1
+commit provenance,trial data,0,1
+complete state,complete-state contract,0,1
+complete state,concept-gate-taxonomy,0,2
+complete state,decision schema,0,1
+complete state,destructive repair,0,1
+complete state,directed positive control,0,2
+complete state,E2 progression,0,1
+complete state,E2.2.1,0,2
+complete state,E2.2.2,1,0
+complete state,E2.2.3,0,2
+complete state,evidence contract,0,1
+complete state,experiment README,0,1
+complete state,factor sufficiency,0,2
+complete state,feature identity,0,1
+complete state,full-set preservation,0,1
+complete state,global consistency,1,0
+complete state,global consistency rule,0,1
+complete state,global feature-type invariant,0,1
+complete state,global invariant,0,1
+complete state,global state normalization,0,1
+complete state,MCP,0,1
+complete state,memory card,0,1
+complete state,MixRig,0,1
+complete state,next experiment,0,1
+complete state,OFAT ablation,0,2
+complete state,ontology,0,1
+complete state,reasoner,0,1
+complete state,repaired_concepts,0,1
+complete state,repo provenance,0,1
+complete state,schema minItems,1,0
+complete state,semantic obligation,0,1
+complete state,structural preservation,0,1
+complete state,structural_composition,0,2
+complete state,trial data,0,1
+complete state,vocabulary exposure,0,2
+complete-state contract,destructive repair,1,0
+complete-state contract,E2.2.2,0,1
+complete-state contract,E2.2.3,0,1
+complete-state contract,evidence audit,0,1
+complete-state contract,evidence-first,0,1
+complete-state contract,factor sufficiency,0,1
+complete-state contract,final decision,0,1
+complete-state contract,full-set preservation,1,0
+complete-state contract,global consistency,0,1
+complete-state contract,invariant check,0,1
+complete-state contract,mandatory abstention,0,2
+complete-state contract,missing evidence,0,2
+complete-state contract,OFAT ablation,0,1
+complete-state contract,reasoning contract,0,2
+complete-state contract,repairability,0,2
+complete-state contract,repaired_concepts,1,0
+complete-state contract,schema minItems,0,1
+complete-state contract,structural preservation,1,0
+complete-state contract,sufficiency gate,0,1
+concept-gate-taxonomy,context coverage,0,1
+concept-gate-taxonomy,CONTRACT_REPO,0,3
+concept-gate-taxonomy,CONTROL_REPO,0,3
+concept-gate-taxonomy,conversation provenance,0,1
+concept-gate-taxonomy,date-bound claim,0,1
+concept-gate-taxonomy,decision schema,1,1
+concept-gate-taxonomy,decoy resistance,0,2
+concept-gate-taxonomy,design only,0,5
+concept-gate-taxonomy,deterministic scorer,0,1
+concept-gate-taxonomy,directed positive control,0,2
+concept-gate-taxonomy,E2 experiments,0,1
+concept-gate-taxonomy,E2 progression,0,1
+concept-gate-taxonomy,E2.2.1,0,2
+concept-gate-taxonomy,E2.2.2,0,2
+concept-gate-taxonomy,E2.2.3,0,2
+concept-gate-taxonomy,E2.3,0,2
+concept-gate-taxonomy,E2.3 result,0,3
+concept-gate-taxonomy,E2.4,0,5
+concept-gate-taxonomy,E2.4 execution,0,1
+concept-gate-taxonomy,E2.4 fixtures,0,1
+concept-gate-taxonomy,E2.4 status,0,3
+concept-gate-taxonomy,edge review,0,1
+concept-gate-taxonomy,evidence audit,0,1
+concept-gate-taxonomy,evidence contract,0,2
+concept-gate-taxonomy,evidence-first,0,1
+concept-gate-taxonomy,experiment progression,0,1
+concept-gate-taxonomy,experiment README,1,1
+concept-gate-taxonomy,factor sufficiency,0,2
+concept-gate-taxonomy,final decision,0,1
+concept-gate-taxonomy,format-first storage,0,2
+concept-gate-taxonomy,generalization claim,0,3
+concept-gate-taxonomy,global consistency,0,2
+concept-gate-taxonomy,global invariant,0,4
+concept-gate-taxonomy,global invariant generalization,0,2
+concept-gate-taxonomy,goodand/concept-gate-taxonomy,0,2
+concept-gate-taxonomy,hallucination mitigation,0,1
+concept-gate-taxonomy,hidden oracle,0,1
+concept-gate-taxonomy,invariant check,0,1
+concept-gate-taxonomy,keyword normalization,0,1
+concept-gate-taxonomy,knowledge ingestion,0,1
+concept-gate-taxonomy,knowledge vault,0,1
+concept-gate-taxonomy,literature evidence,0,1
+concept-gate-taxonomy,literature search,0,1
+concept-gate-taxonomy,literature-first workflow,0,1
+concept-gate-taxonomy,MCP,1,1
+concept-gate-taxonomy,MCP evaluation,0,1
+concept-gate-taxonomy,MCP isolation,0,1
+concept-gate-taxonomy,memory card,0,2
+concept-gate-taxonomy,missing scorer,0,3
+concept-gate-taxonomy,missing trials,0,3
+concept-gate-taxonomy,MOC,0,2
+concept-gate-taxonomy,N=10,0,1
+concept-gate-taxonomy,next experiment,0,1
+concept-gate-taxonomy,not executed,0,3
+concept-gate-taxonomy,Obsidian backlink,0,1
+concept-gate-taxonomy,Obsidian backlinks,0,1
+concept-gate-taxonomy,OFAT ablation,0,2
+concept-gate-taxonomy,ontology,1,2
+concept-gate-taxonomy,open problem database,0,1
+concept-gate-taxonomy,open problem status,0,1
+concept-gate-taxonomy,paraphrase invariance,0,2
+concept-gate-taxonomy,protocol bounded,0,3
+concept-gate-taxonomy,provenance validator,0,1
+concept-gate-taxonomy,reasoner,1,1
+concept-gate-taxonomy,repo provenance,1,1
+concept-gate-taxonomy,repo-grounded evidence,0,2
+concept-gate-taxonomy,repository-only evidence,0,2
+concept-gate-taxonomy,schema minItems,0,2
+concept-gate-taxonomy,screened not confirmed,0,3
+concept-gate-taxonomy,screening,0,1
+concept-gate-taxonomy,semantic authority,0,1
+concept-gate-taxonomy,semantic constraints,0,1
+concept-gate-taxonomy,semantic graph,0,1
+concept-gate-taxonomy,semantic obligation,1,1
+concept-gate-taxonomy,solution attempt gate,0,1
+concept-gate-taxonomy,source policy,0,2
+concept-gate-taxonomy,structural_composition,0,2
+concept-gate-taxonomy,subagent enrichment,0,1
+concept-gate-taxonomy,sufficiency gate,0,1
+concept-gate-taxonomy,symlink classification,0,1
+concept-gate-taxonomy,symlink view,0,1
+concept-gate-taxonomy,symlink views,0,1
+concept-gate-taxonomy,threshold 0.90,0,1
+concept-gate-taxonomy,topology generalization,0,2
+concept-gate-taxonomy,tree classification,0,1
+concept-gate-taxonomy,trial data,1,1
+concept-gate-taxonomy,two-failure futility stop,0,1
+concept-gate-taxonomy,typed edge,0,1
+concept-gate-taxonomy,typed edge ledger,0,1
+concept-gate-taxonomy,typed graph,0,1
+concept-gate-taxonomy,uncertainty,0,1
+concept-gate-taxonomy,vault architecture,0,1
+concept-gate-taxonomy,vault ingestion,0,1
+concept-gate-taxonomy,vocabulary exposure,0,2
+conflicting evidence,CONTRACT_REPO,0,1
+conflicting evidence,CONTROL_REPO,0,1
+conflicting evidence,design only,0,1
+conflicting evidence,direct support,1,0
+conflicting evidence,E2.4,0,1
+conflicting evidence,evidence audit,1,1
+conflicting evidence,evidence packet,0,1
+conflicting evidence,evidence sufficiency,1,0
+conflicting evidence,evidence-first,0,1
+conflicting evidence,exact excerpt,0,1
+conflicting evidence,final decision,0,1
+conflicting evidence,invariant check,0,1
+conflicting evidence,mandatory abstention,0,2
+conflicting evidence,missing evidence,0,2
+conflicting evidence,packet-only,1,0
+conflicting evidence,reasoning contract,0,2
+conflicting evidence,repairability,0,2
+conflicting evidence,repo-derived evidence,0,1
+conflicting evidence,repo-grounded evidence,0,1
+conflicting evidence,source confinement,0,1
+conflicting evidence,sufficiency gate,0,1
+context contamination,CONTRACT_REPO,0,1
+context contamination,CONTROL_REPO,0,1
+context contamination,E2.4 execution,0,1
+context contamination,evidence packet,0,1
+context contamination,exact excerpt,0,1
+context contamination,MCP context isolation,1,0
+context contamination,repo-derived evidence,0,1
+context contamination,source confinement,1,1
+context contamination,tool output separation,1,0
+context coverage,conversation provenance,1,0
+context coverage,date-bound claim,0,1
+context coverage,E2 experiments,1,0
+context coverage,edge review,0,1
+context coverage,format-first storage,0,2
+context coverage,hallucination mitigation,0,1
+context coverage,keyword normalization,0,1
+context coverage,literature evidence,0,1
+context coverage,MCP,0,1
+context coverage,MCP isolation,1,0
+context coverage,Obsidian backlinks,0,2
+context coverage,ontology,0,1
+context coverage,open problem status,0,1
+context coverage,reasoner,0,1
+context coverage,semantic obligation,0,1
+context coverage,subagent enrichment,0,1
+context coverage,symlink views,0,2
+context coverage,typed edge ledger,0,2
+context coverage,uncertainty,0,1
+context coverage,vault architecture,1,0
+context coverage,vault ingestion,0,1
+contextual_usage,directed positive control,0,1
+contextual_usage,E2.2.1,0,1
+contextual_usage,essential_feature,1,0
+contextual_usage,feature identity,0,1
+contextual_usage,FeatureType,1,0
+contextual_usage,functional,1,0
+contextual_usage,global consistency rule,0,1
+contextual_usage,global feature-type invariant,0,1
+contextual_usage,global state normalization,0,1
+contextual_usage,has-a,0,1
+contextual_usage,is-a,0,1
+contextual_usage,locational,1,0
+contextual_usage,MixRig,0,1
+contextual_usage,part-of,0,1
+contextual_usage,social_treatment,1,0
+contextual_usage,structural composition,0,1
+contextual_usage,structural_composition,1,1
+contextual_usage,taxonomy DAG,0,1
+contextual_usage,vocabulary exposure,0,1
+CONTRACT_REPO,CONTROL_REPO,2,0
+CONTRACT_REPO,decision schema,0,1
+CONTRACT_REPO,decoy resistance,0,1
+CONTRACT_REPO,design only,1,2
+CONTRACT_REPO,deterministic scorer,0,2
+CONTRACT_REPO,direct support,0,1
+CONTRACT_REPO,E2.3,0,1
+CONTRACT_REPO,E2.3 result,0,1
+CONTRACT_REPO,E2.4,1,4
+CONTRACT_REPO,E2.4 execution,1,0
+CONTRACT_REPO,E2.4 fixtures,0,2
+CONTRACT_REPO,E2.4 status,0,2
+CONTRACT_REPO,evidence audit,0,1
+CONTRACT_REPO,evidence packet,0,1
+CONTRACT_REPO,evidence sufficiency,0,1
+CONTRACT_REPO,exact excerpt,0,1
+CONTRACT_REPO,experiment README,0,1
+CONTRACT_REPO,feature identity,0,1
+CONTRACT_REPO,generalization claim,0,1
+CONTRACT_REPO,global consistency rule,0,1
+CONTRACT_REPO,global feature-type invariant,0,1
+CONTRACT_REPO,global invariant,0,1
+CONTRACT_REPO,global invariant generalization,0,1
+CONTRACT_REPO,global state normalization,0,1
+CONTRACT_REPO,goodand/concept-gate-taxonomy,0,2
+CONTRACT_REPO,hidden oracle,0,2
+CONTRACT_REPO,mandatory abstention,0,1
+CONTRACT_REPO,MCP,0,2
+CONTRACT_REPO,MCP context isolation,0,1
+CONTRACT_REPO,missing evidence,0,1
+CONTRACT_REPO,missing scorer,0,2
+CONTRACT_REPO,missing trials,0,2
+CONTRACT_REPO,MixRig,0,1
+CONTRACT_REPO,N=10,0,2
+CONTRACT_REPO,not executed,0,2
+CONTRACT_REPO,ontology,0,2
+CONTRACT_REPO,packet-only,0,1
+CONTRACT_REPO,paraphrase invariance,0,1
+CONTRACT_REPO,protocol bounded,0,1
+CONTRACT_REPO,provenance validator,0,2
+CONTRACT_REPO,reasoner,0,2
+CONTRACT_REPO,reasoning contract,0,1
+CONTRACT_REPO,repairability,0,1
+CONTRACT_REPO,repo provenance,0,1
+CONTRACT_REPO,repo-derived evidence,0,1
+CONTRACT_REPO,repo-grounded evidence,1,0
+CONTRACT_REPO,repository-only evidence,0,2
+CONTRACT_REPO,screened not confirmed,0,1
+CONTRACT_REPO,screening,0,2
+CONTRACT_REPO,semantic constraints,0,2
+CONTRACT_REPO,semantic obligation,0,2
+CONTRACT_REPO,source confinement,0,2
+CONTRACT_REPO,source policy,0,2
+CONTRACT_REPO,threshold 0.90,0,2
+CONTRACT_REPO,tool output separation,0,1
+CONTRACT_REPO,topology generalization,0,1
+CONTRACT_REPO,trial data,0,1
+CONTRACT_REPO,two-failure futility stop,0,2
+CONTROL_REPO,decision schema,0,1
+CONTROL_REPO,decoy resistance,0,1
+CONTROL_REPO,design only,1,2
+CONTROL_REPO,deterministic scorer,0,2
+CONTROL_REPO,direct support,0,1
+CONTROL_REPO,E2.3,0,1
+CONTROL_REPO,E2.3 result,0,1
+CONTROL_REPO,E2.4,1,4
+CONTROL_REPO,E2.4 execution,1,0
+CONTROL_REPO,E2.4 fixtures,0,2
+CONTROL_REPO,E2.4 status,0,2
+CONTROL_REPO,evidence audit,0,1
+CONTROL_REPO,evidence packet,0,1
+CONTROL_REPO,evidence sufficiency,0,1
+CONTROL_REPO,exact excerpt,0,1
+CONTROL_REPO,experiment README,0,1
+CONTROL_REPO,feature identity,0,1
+CONTROL_REPO,generalization claim,0,1
+CONTROL_REPO,global consistency rule,0,1
+CONTROL_REPO,global feature-type invariant,0,1
+CONTROL_REPO,global invariant,0,1
+CONTROL_REPO,global invariant generalization,0,1
+CONTROL_REPO,global state normalization,0,1
+CONTROL_REPO,goodand/concept-gate-taxonomy,0,2
+CONTROL_REPO,hidden oracle,0,2
+CONTROL_REPO,mandatory abstention,0,1
+CONTROL_REPO,MCP,0,2
+CONTROL_REPO,MCP context isolation,0,1
+CONTROL_REPO,missing evidence,0,1
+CONTROL_REPO,missing scorer,0,2
+CONTROL_REPO,missing trials,0,2
+CONTROL_REPO,MixRig,0,1
+CONTROL_REPO,N=10,0,2
+CONTROL_REPO,not executed,0,2
+CONTROL_REPO,ontology,0,2
+CONTROL_REPO,packet-only,0,1
+CONTROL_REPO,paraphrase invariance,0,1
+CONTROL_REPO,protocol bounded,0,1
+CONTROL_REPO,provenance validator,0,2
+CONTROL_REPO,reasoner,0,2
+CONTROL_REPO,reasoning contract,0,1
+CONTROL_REPO,repairability,0,1
+CONTROL_REPO,repo provenance,0,1
+CONTROL_REPO,repo-derived evidence,0,1
+CONTROL_REPO,repo-grounded evidence,1,0
+CONTROL_REPO,repository-only evidence,0,2
+CONTROL_REPO,screened not confirmed,0,1
+CONTROL_REPO,screening,0,2
+CONTROL_REPO,semantic constraints,0,2
+CONTROL_REPO,semantic obligation,0,2
+CONTROL_REPO,source confinement,0,2
+CONTROL_REPO,source policy,0,2
+CONTROL_REPO,threshold 0.90,0,2
+CONTROL_REPO,tool output separation,0,1
+CONTROL_REPO,topology generalization,0,1
+CONTROL_REPO,trial data,0,1
+CONTROL_REPO,two-failure futility stop,0,2
+conversation provenance,date-bound claim,0,1
+conversation provenance,E2 experiments,1,0
+conversation provenance,edge review,0,1
+conversation provenance,format-first storage,0,2
+conversation provenance,hallucination mitigation,0,1
+conversation provenance,keyword normalization,0,1
+conversation provenance,literature evidence,0,1
+conversation provenance,MCP,0,1
+conversation provenance,MCP isolation,1,0
+conversation provenance,Obsidian backlinks,0,2
+conversation provenance,ontology,0,1
+conversation provenance,open problem status,0,1
+conversation provenance,reasoner,0,1
+conversation provenance,semantic obligation,0,1
+conversation provenance,subagent enrichment,0,1
+conversation provenance,symlink views,0,2
+conversation provenance,typed edge ledger,0,2
+conversation provenance,uncertainty,0,1
+conversation provenance,vault architecture,1,0
+conversation provenance,vault ingestion,0,1
+date-bound claim,E2 experiments,0,1
+date-bound claim,hallucination mitigation,1,0
+date-bound claim,literature evidence,1,0
+date-bound claim,literature search,0,2
+date-bound claim,literature-first workflow,0,2
+date-bound claim,MCP,0,1
+date-bound claim,MCP isolation,0,1
+date-bound claim,ontology,0,1
+date-bound claim,open,0,1
+date-bound claim,open problem database,0,2
+date-bound claim,open problem status,1,0
+date-bound claim,problem status,0,1
+date-bound claim,reasoner,0,1
+date-bound claim,resolved,0,1
+date-bound claim,semantic obligation,0,1
+date-bound claim,solution attempt gate,0,2
+date-bound claim,uncertain,0,1
+date-bound claim,uncertainty,1,0
+date-bound claim,vault architecture,0,1
+decision schema,decoy resistance,0,1
+decision schema,design only,0,3
+decision schema,directed positive control,0,1
+decision schema,E2.2.1,0,1
+decision schema,E2.2.2,0,1
+decision schema,E2.2.3,0,1
+decision schema,E2.3,0,1
+decision schema,E2.3 result,0,2
+decision schema,E2.4,0,2
+decision schema,E2.4 status,0,2
+decision schema,experiment README,1,0
+decision schema,factor sufficiency,0,1
+decision schema,generalization claim,0,2
+decision schema,global consistency,0,1
+decision schema,global invariant,0,2
+decision schema,global invariant generalization,0,1
+decision schema,goodand/concept-gate-taxonomy,0,1
+decision schema,MCP,0,1
+decision schema,missing scorer,0,2
+decision schema,missing trials,0,2
+decision schema,not executed,0,2
+decision schema,OFAT ablation,0,1
+decision schema,ontology,0,1
+decision schema,paraphrase invariance,0,1
+decision schema,protocol bounded,0,2
+decision schema,reasoner,0,1
+decision schema,repo provenance,1,0
+decision schema,repo-grounded evidence,0,1
+decision schema,repository-only evidence,0,1
+decision schema,schema minItems,0,1
+decision schema,screened not confirmed,0,2
+decision schema,semantic obligation,0,1
+decision schema,source policy,0,1
+decision schema,structural_composition,0,1
+decision schema,topology generalization,0,1
+decision schema,trial data,1,0
+decision schema,vocabulary exposure,0,1
+decoy resistance,design only,0,1
+decoy resistance,E2 progression,0,1
+decoy resistance,E2.2.3,0,2
+decoy resistance,E2.3,1,0
+decoy resistance,E2.3 result,0,2
+decoy resistance,E2.4,0,2
+decoy resistance,evidence contract,0,1
+decoy resistance,experiment README,0,1
+decoy resistance,factor sufficiency,0,2
+decoy resistance,feature identity,0,1
+decoy resistance,generalization claim,0,2
+decoy resistance,global consistency rule,0,1
+decoy resistance,global feature-type invariant,0,1
+decoy resistance,global invariant,0,3
+decoy resistance,global invariant generalization,1,0
+decoy resistance,global state normalization,0,1
+decoy resistance,MCP,0,1
+decoy resistance,memory card,0,1
+decoy resistance,MixRig,0,1
+decoy resistance,N=10,0,1
+decoy resistance,next experiment,0,1
+decoy resistance,OFAT ablation,0,2
+decoy resistance,ontology,0,1
+decoy resistance,paraphrase invariance,1,0
+decoy resistance,protocol bounded,0,2
+decoy resistance,reasoner,0,1
+decoy resistance,repo provenance,0,1
+decoy resistance,repo-grounded evidence,0,1
+decoy resistance,screened not confirmed,0,2
+decoy resistance,screening,0,1
+decoy resistance,semantic obligation,0,1
+decoy resistance,threshold 0.90,0,1
+decoy resistance,topology generalization,1,0
+decoy resistance,trial data,0,1
+decoy resistance,two-failure futility stop,0,1
+design only,deterministic scorer,0,2
+design only,direct support,0,1
+design only,E2 progression,0,1
+design only,E2.3,0,1
+design only,E2.3 result,0,1
+design only,E2.4,1,3
+design only,E2.4 execution,0,1
+design only,E2.4 fixtures,0,2
+design only,E2.4 status,1,1
+design only,evidence audit,0,1
+design only,evidence contract,0,1
+design only,evidence packet,0,1
+design only,evidence sufficiency,0,1
+design only,exact excerpt,0,1
+design only,experiment README,0,3
+design only,feature identity,0,1
+design only,generalization claim,0,1
+design only,global consistency rule,0,1
+design only,global feature-type invariant,0,1
+design only,global invariant,0,2
+design only,global invariant generalization,0,1
+design only,global state normalization,0,1
+design only,goodand/concept-gate-taxonomy,0,2
+design only,hidden oracle,0,2
+design only,mandatory abstention,0,1
+design only,MCP,0,2
+design only,memory card,0,1
+design only,missing evidence,0,1
+design only,missing scorer,1,1
+design only,missing trials,1,1
+design only,MixRig,0,1
+design only,next experiment,0,1
+design only,not executed,1,1
+design only,ontology,0,2
+design only,packet-only,0,1
+design only,paraphrase invariance,0,1
+design only,protocol bounded,0,1
+design only,provenance validator,0,2
+design only,reasoner,0,2
+design only,reasoning contract,0,1
+design only,repairability,0,1
+design only,repo provenance,0,3
+design only,repo-derived evidence,0,1
+design only,repo-grounded evidence,1,1
+design only,repository-only evidence,0,2
+design only,screened not confirmed,0,1
+design only,semantic constraints,0,2
+design only,semantic obligation,0,2
+design only,source confinement,0,1
+design only,source policy,0,2
+design only,topology generalization,0,1
+design only,trial data,0,3
+destructive repair,E2.2.2,0,1
+destructive repair,E2.2.3,0,1
+destructive repair,evidence audit,0,1
+destructive repair,evidence-first,0,1
+destructive repair,factor sufficiency,0,1
+destructive repair,final decision,0,1
+destructive repair,full-set preservation,1,0
+destructive repair,global consistency,0,1
+destructive repair,invariant check,0,1
+destructive repair,mandatory abstention,0,2
+destructive repair,missing evidence,0,2
+destructive repair,OFAT ablation,0,1
+destructive repair,reasoning contract,0,2
+destructive repair,repairability,0,2
+destructive repair,repaired_concepts,1,0
+destructive repair,schema minItems,0,1
+destructive repair,structural preservation,1,0
+destructive repair,sufficiency gate,0,1
+deterministic scorer,E2.4,0,1
+deterministic scorer,E2.4 execution,0,1
+deterministic scorer,E2.4 fixtures,1,0
+deterministic scorer,E2.4 status,0,1
+deterministic scorer,evidence audit,0,1
+deterministic scorer,evidence-first,0,1
+deterministic scorer,final decision,0,1
+deterministic scorer,hidden oracle,1,0
+deterministic scorer,invariant check,0,1
+deterministic scorer,MCP,0,1
+deterministic scorer,missing scorer,0,1
+deterministic scorer,missing trials,0,1
+deterministic scorer,not executed,0,1
+deterministic scorer,ontology,0,1
+deterministic scorer,provenance validator,1,0
+deterministic scorer,reasoner,0,1
+deterministic scorer,repo-grounded evidence,0,1
+deterministic scorer,semantic constraints,1,0
+deterministic scorer,semantic obligation,0,1
+deterministic scorer,sufficiency gate,0,1
+direct support,E2.4,0,1
+direct support,evidence audit,1,1
+direct support,evidence packet,0,1
+direct support,evidence sufficiency,1,0
+direct support,evidence-first,0,1
+direct support,exact excerpt,0,1
+direct support,final decision,0,1
+direct support,invariant check,0,1
+direct support,mandatory abstention,0,2
+direct support,missing evidence,0,2
+direct support,packet-only,1,0
+direct support,reasoning contract,0,2
+direct support,repairability,0,2
+direct support,repo-derived evidence,0,1
+direct support,repo-grounded evidence,0,1
+direct support,source confinement,0,1
+direct support,sufficiency gate,0,1
+directed positive control,E2 progression,0,1
+directed positive control,E2.2.1,1,0
+directed positive control,E2.2.2,0,2
+directed positive control,essential_feature,0,1
+directed positive control,evidence contract,0,1
+directed positive control,experiment README,0,1
+directed positive control,FeatureType,0,1
+directed positive control,functional,0,1
+directed positive control,global consistency,0,2
+directed positive control,global invariant,0,1
+directed positive control,locational,0,1
+directed positive control,MCP,0,1
+directed positive control,memory card,0,1
+directed positive control,next experiment,0,1
+directed positive control,ontology,0,1
+directed positive control,reasoner,0,1
+directed positive control,repo provenance,0,1
+directed positive control,schema minItems,0,2
+directed positive control,semantic obligation,0,1
+directed positive control,social_treatment,0,1
+directed positive control,structural_composition,1,1
+directed positive control,trial data,0,1
+directed positive control,vocabulary exposure,1,0
+domain range validation,edge review,0,1
+domain range validation,faceted navigation,0,1
+domain range validation,format-first storage,0,1
+domain range validation,keyword normalization,0,1
+domain range validation,no duplication,0,1
+domain range validation,Obsidian backlinks,0,1
+domain range validation,relative symlink,0,1
+domain range validation,semantic graph,1,0
+domain range validation,stable ID,1,0
+domain range validation,subagent enrichment,0,1
+domain range validation,symlink views,0,1
+domain range validation,typed edge,1,0
+domain range validation,typed edge ledger,0,1
+domain range validation,vault ingestion,0,1
+E2 experiments,edge review,0,1
+E2 experiments,format-first storage,0,2
+E2 experiments,hallucination mitigation,0,1
+E2 experiments,keyword normalization,0,1
+E2 experiments,literature evidence,0,1
+E2 experiments,MCP,0,1
+E2 experiments,MCP isolation,1,0
+E2 experiments,Obsidian backlinks,0,2
+E2 experiments,ontology,0,1
+E2 experiments,open problem status,0,1
+E2 experiments,reasoner,0,1
+E2 experiments,semantic obligation,0,1
+E2 experiments,subagent enrichment,0,1
+E2 experiments,symlink views,0,2
+E2 experiments,typed edge ledger,0,2
+E2 experiments,uncertainty,0,1
+E2 experiments,vault architecture,1,0
+E2 experiments,vault ingestion,0,1
+E2 progression,E2.2.1,0,1
+E2 progression,E2.2.2,0,1
+E2 progression,E2.2.3,0,1
+E2 progression,E2.3,0,1
+E2 progression,E2.4 status,0,1
+E2 progression,evidence contract,1,0
+E2 progression,factor sufficiency,0,1
+E2 progression,global consistency,0,1
+E2 progression,global invariant,1,0
+E2 progression,global invariant generalization,0,1
+E2 progression,MCP,0,1
+E2 progression,memory card,1,0
+E2 progression,missing scorer,0,1
+E2 progression,missing trials,0,1
+E2 progression,next experiment,1,0
+E2 progression,not executed,0,1
+E2 progression,OFAT ablation,0,1
+E2 progression,ontology,0,1
+E2 progression,paraphrase invariance,0,1
+E2 progression,reasoner,0,1
+E2 progression,schema minItems,0,1
+E2 progression,semantic obligation,0,1
+E2 progression,structural_composition,0,1
+E2 progression,topology generalization,0,1
+E2 progression,vocabulary exposure,0,1
+E2.2.1,E2.2.2,0,2
+E2.2.1,essential_feature,0,1
+E2.2.1,evidence contract,0,1
+E2.2.1,experiment README,0,1
+E2.2.1,FeatureType,0,1
+E2.2.1,functional,0,1
+E2.2.1,global consistency,0,2
+E2.2.1,global invariant,0,1
+E2.2.1,locational,0,1
+E2.2.1,MCP,0,1
+E2.2.1,memory card,0,1
+E2.2.1,next experiment,0,1
+E2.2.1,ontology,0,1
+E2.2.1,reasoner,0,1
+E2.2.1,repo provenance,0,1
+E2.2.1,schema minItems,0,2
+E2.2.1,semantic obligation,0,1
+E2.2.1,social_treatment,0,1
+E2.2.1,structural_composition,1,1
+E2.2.1,trial data,0,1
+E2.2.1,vocabulary exposure,1,0
+E2.2.2,E2.2.3,0,2
+E2.2.2,evidence contract,0,1
+E2.2.2,experiment README,0,1
+E2.2.2,factor sufficiency,0,2
+E2.2.2,feature identity,0,1
+E2.2.2,full-set preservation,0,1
+E2.2.2,global consistency,1,0
+E2.2.2,global consistency rule,0,1
+E2.2.2,global feature-type invariant,0,1
+E2.2.2,global invariant,0,1
+E2.2.2,global state normalization,0,1
+E2.2.2,MCP,0,1
+E2.2.2,memory card,0,1
+E2.2.2,MixRig,0,1
+E2.2.2,next experiment,0,1
+E2.2.2,OFAT ablation,0,2
+E2.2.2,ontology,0,1
+E2.2.2,reasoner,0,1
+E2.2.2,repaired_concepts,0,1
+E2.2.2,repo provenance,0,1
+E2.2.2,schema minItems,1,0
+E2.2.2,semantic obligation,0,1
+E2.2.2,structural preservation,0,1
+E2.2.2,structural_composition,0,2
+E2.2.2,trial data,0,1
+E2.2.2,vocabulary exposure,0,2
+E2.2.3,E2.3,0,2
+E2.2.3,evidence contract,0,1
+E2.2.3,experiment README,0,1
+E2.2.3,factor sufficiency,1,0
+E2.2.3,feature identity,0,1
+E2.2.3,full-set preservation,0,1
+E2.2.3,global consistency,0,2
+E2.2.3,global consistency rule,0,1
+E2.2.3,global feature-type invariant,0,1
+E2.2.3,global invariant,0,1
+E2.2.3,global invariant generalization,0,2
+E2.2.3,global state normalization,0,1
+E2.2.3,MCP,0,1
+E2.2.3,memory card,0,1
+E2.2.3,MixRig,0,1
+E2.2.3,next experiment,0,1
+E2.2.3,OFAT ablation,1,0
+E2.2.3,ontology,0,1
+E2.2.3,paraphrase invariance,0,2
+E2.2.3,reasoner,0,1
+E2.2.3,repaired_concepts,0,1
+E2.2.3,repo provenance,0,1
+E2.2.3,schema minItems,0,2
+E2.2.3,semantic obligation,0,1
+E2.2.3,structural preservation,0,1
+E2.2.3,topology generalization,0,2
+E2.2.3,trial data,0,1
+E2.3,E2.3 result,0,2
+E2.3,E2.4,0,2
+E2.3,evidence contract,0,1
+E2.3,experiment README,0,1
+E2.3,factor sufficiency,0,2
+E2.3,feature identity,0,1
+E2.3,generalization claim,0,2
+E2.3,global consistency rule,0,1
+E2.3,global feature-type invariant,0,1
+E2.3,global invariant,0,3
+E2.3,global invariant generalization,1,0
+E2.3,global state normalization,0,1
+E2.3,MCP,0,1
+E2.3,memory card,0,1
+E2.3,MixRig,0,1
+E2.3,N=10,0,1
+E2.3,next experiment,0,1
+E2.3,OFAT ablation,0,2
+E2.3,ontology,0,1
+E2.3,paraphrase invariance,1,0
+E2.3,protocol bounded,0,2
+E2.3,reasoner,0,1
+E2.3,repo provenance,0,1
+E2.3,repo-grounded evidence,0,1
+E2.3,screened not confirmed,0,2
+E2.3,screening,0,1
+E2.3,semantic obligation,0,1
+E2.3,threshold 0.90,0,1
+E2.3,topology generalization,1,0
+E2.3,trial data,0,1
+E2.3,two-failure futility stop,0,1
+E2.3 result,E2.4,0,1
+E2.3 result,experiment README,0,2
+E2.3 result,generalization claim,1,0
+E2.3 result,global invariant,1,0
+E2.3 result,global invariant generalization,0,2
+E2.3 result,MCP,0,1
+E2.3 result,ontology,0,1
+E2.3 result,paraphrase invariance,0,2
+E2.3 result,protocol bounded,1,0
+E2.3 result,reasoner,0,1
+E2.3 result,repo provenance,0,2
+E2.3 result,repo-grounded evidence,0,1
+E2.3 result,screened not confirmed,1,0
+E2.3 result,semantic obligation,0,1
+E2.3 result,topology generalization,0,2
+E2.3 result,trial data,0,2
+E2.4,E2.4 execution,0,2
+E2.4,E2.4 fixtures,0,1
+E2.4,E2.4 status,0,1
+E2.4,evidence audit,0,1
+E2.4,evidence packet,0,2
+E2.4,evidence sufficiency,0,1
+E2.4,exact excerpt,0,2
+E2.4,experiment README,0,2
+E2.4,feature identity,0,1
+E2.4,generalization claim,0,1
+E2.4,global consistency rule,0,1
+E2.4,global feature-type invariant,0,1
+E2.4,global invariant,0,1
+E2.4,global invariant generalization,0,2
+E2.4,global state normalization,0,1
+E2.4,goodand/concept-gate-taxonomy,1,2
+E2.4,hidden oracle,0,1
+E2.4,mandatory abstention,0,1
+E2.4,MCP,0,3
+E2.4,missing evidence,0,1
+E2.4,missing scorer,0,1
+E2.4,missing trials,0,1
+E2.4,MixRig,0,1
+E2.4,N=10,1,0
+E2.4,not executed,0,1
+E2.4,ontology,0,3
+E2.4,packet-only,0,1
+E2.4,paraphrase invariance,0,2
+E2.4,protocol bounded,0,1
+E2.4,provenance validator,0,1
+E2.4,reasoner,0,3
+E2.4,reasoning contract,0,1
+E2.4,repairability,0,1
+E2.4,repo provenance,0,2
+E2.4,repo-derived evidence,0,2
+E2.4,repo-grounded evidence,1,2
+E2.4,repository-only evidence,1,2
+E2.4,screened not confirmed,0,1
+E2.4,screening,1,0
+E2.4,semantic constraints,0,1
+E2.4,semantic obligation,0,3
+E2.4,source confinement,0,2
+E2.4,source policy,1,2
+E2.4,threshold 0.90,1,0
+E2.4,topology generalization,0,2
+E2.4,trial data,0,2
+E2.4,two-failure futility stop,1,0
+E2.4 execution,E2.4 fixtures,0,1
+E2.4 execution,E2.4 status,0,1
+E2.4 execution,hidden oracle,0,1
+E2.4 execution,MCP,0,1
+E2.4 execution,MCP context isolation,0,1
+E2.4 execution,missing scorer,0,1
+E2.4 execution,missing trials,0,1
+E2.4 execution,N=10,0,2
+E2.4 execution,not executed,0,1
+E2.4 execution,ontology,0,1
+E2.4 execution,provenance validator,0,1
+E2.4 execution,reasoner,0,1
+E2.4 execution,screening,0,2
+E2.4 execution,semantic constraints,0,1
+E2.4 execution,semantic obligation,0,1
+E2.4 execution,source confinement,0,1
+E2.4 execution,threshold 0.90,0,2
+E2.4 execution,tool output separation,0,1
+E2.4 execution,two-failure futility stop,0,2
+E2.4 fixtures,E2.4 status,0,1
+E2.4 fixtures,evidence audit,0,1
+E2.4 fixtures,evidence-first,0,1
+E2.4 fixtures,final decision,0,1
+E2.4 fixtures,hidden oracle,1,0
+E2.4 fixtures,invariant check,0,1
+E2.4 fixtures,MCP,0,1
+E2.4 fixtures,missing scorer,0,1
+E2.4 fixtures,missing trials,0,1
+E2.4 fixtures,not executed,0,1
+E2.4 fixtures,ontology,0,1
+E2.4 fixtures,provenance validator,1,0
+E2.4 fixtures,reasoner,0,1
+E2.4 fixtures,repo-grounded evidence,0,1
+E2.4 fixtures,semantic constraints,1,0
+E2.4 fixtures,semantic obligation,0,1
+E2.4 fixtures,sufficiency gate,0,1
+E2.4 status,evidence contract,0,1
+E2.4 status,experiment README,0,2
+E2.4 status,global invariant,0,1
+E2.4 status,hidden oracle,0,1
+E2.4 status,MCP,0,1
+E2.4 status,memory card,0,1
+E2.4 status,missing scorer,1,0
+E2.4 status,missing trials,1,0
+E2.4 status,next experiment,0,1
+E2.4 status,not executed,1,0
+E2.4 status,ontology,0,1
+E2.4 status,provenance validator,0,1
+E2.4 status,reasoner,0,1
+E2.4 status,repo provenance,0,2
+E2.4 status,repo-grounded evidence,0,1
+E2.4 status,semantic constraints,0,1
+E2.4 status,semantic obligation,0,1
+E2.4 status,trial data,0,2
+edge review,faceted navigation,0,1
+edge review,format-first storage,0,2
+edge review,keyword normalization,1,0
+edge review,MCP,0,1
+edge review,MCP isolation,0,1
+edge review,memory card,0,1
+edge review,no duplication,0,1
+edge review,Obsidian backlinks,0,2
+edge review,ontology,0,1
+edge review,reasoner,0,1
+edge review,relative symlink,0,1
+edge review,semantic authority,0,1
+edge review,semantic graph,0,1
+edge review,semantic obligation,0,1
+edge review,stable ID,0,1
+edge review,subagent enrichment,1,0
+edge review,symlink classification,0,1
+edge review,symlink views,0,2
+edge review,typed edge,0,1
+edge review,typed edge ledger,0,2
+edge review,typed graph,0,1
+edge review,vault architecture,0,1
+edge review,vault ingestion,1,0
+essential_feature,feature identity,0,1
+essential_feature,FeatureType,1,0
+essential_feature,functional,1,0
+essential_feature,global consistency rule,0,1
+essential_feature,global feature-type invariant,0,1
+essential_feature,global state normalization,0,1
+essential_feature,has-a,0,1
+essential_feature,is-a,0,1
+essential_feature,locational,1,0
+essential_feature,MixRig,0,1
+essential_feature,part-of,0,1
+essential_feature,social_treatment,1,0
+essential_feature,structural composition,0,1
+essential_feature,structural_composition,1,1
+essential_feature,taxonomy DAG,0,1
+essential_feature,vocabulary exposure,0,1
+evidence audit,evidence packet,0,2
+evidence audit,evidence sufficiency,1,1
+evidence audit,evidence-first,1,1
+evidence audit,exact excerpt,0,2
+evidence audit,feature identity,0,1
+evidence audit,final decision,1,1
+evidence audit,full-set preservation,0,1
+evidence audit,global consistency rule,0,1
+evidence audit,global feature-type invariant,0,1
+evidence audit,global state normalization,0,1
+evidence audit,hidden oracle,0,1
+evidence audit,invariant check,1,1
+evidence audit,mandatory abstention,0,3
+evidence audit,MCP,0,1
+evidence audit,missing evidence,0,3
+evidence audit,MixRig,0,1
+evidence audit,ontology,0,1
+evidence audit,packet-only,1,1
+evidence audit,provenance validator,0,1
+evidence audit,reasoner,0,1
+evidence audit,reasoning contract,0,3
+evidence audit,repairability,0,3
+evidence audit,repaired_concepts,0,1
+evidence audit,repo-derived evidence,0,2
+evidence audit,repo-grounded evidence,0,1
+evidence audit,semantic constraints,0,1
+evidence audit,semantic obligation,0,1
+evidence audit,source confinement,0,2
+evidence audit,structural preservation,0,1
+evidence audit,sufficiency gate,1,1
+evidence contract,experiment progression,1,0
+evidence contract,factor sufficiency,0,1
+evidence contract,global consistency,0,1
+evidence contract,global invariant,1,0
+evidence contract,global invariant generalization,0,1
+evidence contract,MCP,0,2
+evidence contract,MCP evaluation,1,0
+evidence contract,memory card,1,0
+evidence contract,missing scorer,0,1
+evidence contract,missing trials,0,1
+evidence contract,MOC,1,0
+evidence contract,next experiment,1,0
+evidence contract,not executed,0,1
+evidence contract,OFAT ablation,0,1
+evidence contract,ontology,1,2
+evidence contract,paraphrase invariance,0,1
+evidence contract,reasoner,0,2
+evidence contract,schema minItems,0,1
+evidence contract,semantic obligation,0,2
+evidence contract,structural_composition,0,1
+evidence contract,topology generalization,0,1
+evidence contract,vocabulary exposure,0,1
+evidence packet,evidence sufficiency,0,1
+evidence packet,evidence-first,0,1
+evidence packet,exact excerpt,1,0
+evidence packet,final decision,0,1
+evidence packet,goodand/concept-gate-taxonomy,0,1
+evidence packet,invariant check,0,1
+evidence packet,MCP context isolation,0,1
+evidence packet,packet-only,0,1
+evidence packet,repo-derived evidence,1,0
+evidence packet,repo-grounded evidence,0,1
+evidence packet,repository-only evidence,0,1
+evidence packet,source confinement,1,1
+evidence packet,source policy,0,1
+evidence packet,sufficiency gate,0,1
+evidence packet,tool output separation,0,1
+evidence sufficiency,evidence-first,0,1
+evidence sufficiency,exact excerpt,0,1
+evidence sufficiency,final decision,0,1
+evidence sufficiency,invariant check,0,1
+evidence sufficiency,mandatory abstention,0,2
+evidence sufficiency,missing evidence,0,2
+evidence sufficiency,packet-only,1,0
+evidence sufficiency,reasoning contract,0,2
+evidence sufficiency,repairability,0,2
+evidence sufficiency,repo-derived evidence,0,1
+evidence sufficiency,repo-grounded evidence,0,1
+evidence sufficiency,source confinement,0,1
+evidence sufficiency,sufficiency gate,0,1
+evidence-first,exact excerpt,0,1
+evidence-first,feature identity,0,1
+evidence-first,final decision,1,0
+evidence-first,full-set preservation,0,1
+evidence-first,global consistency rule,0,1
+evidence-first,global feature-type invariant,0,1
+evidence-first,global state normalization,0,1
+evidence-first,hidden oracle,0,1
+evidence-first,invariant check,1,0
+evidence-first,mandatory abstention,0,1
+evidence-first,MCP,0,1
+evidence-first,missing evidence,0,1
+evidence-first,MixRig,0,1
+evidence-first,ontology,0,1
+evidence-first,packet-only,0,1
+evidence-first,provenance validator,0,1
+evidence-first,reasoner,0,1
+evidence-first,reasoning contract,0,1
+evidence-first,repairability,0,1
+evidence-first,repaired_concepts,0,1
+evidence-first,repo-derived evidence,0,1
+evidence-first,semantic constraints,0,1
+evidence-first,semantic obligation,0,1
+evidence-first,source confinement,0,1
+evidence-first,structural preservation,0,1
+evidence-first,sufficiency gate,1,0
+exact excerpt,final decision,0,1
+exact excerpt,goodand/concept-gate-taxonomy,0,1
+exact excerpt,invariant check,0,1
+exact excerpt,MCP context isolation,0,1
+exact excerpt,packet-only,0,1
+exact excerpt,repo-derived evidence,1,0
+exact excerpt,repo-grounded evidence,0,1
+exact excerpt,repository-only evidence,0,1
+exact excerpt,source confinement,1,1
+exact excerpt,source policy,0,1
+exact excerpt,sufficiency gate,0,1
+exact excerpt,tool output separation,0,1
+experiment progression,MCP,0,1
+experiment progression,MCP evaluation,1,0
+experiment progression,MOC,1,0
+experiment progression,ontology,1,1
+experiment progression,reasoner,0,1
+experiment progression,semantic obligation,0,1
+experiment README,factor sufficiency,0,1
+experiment README,generalization claim,0,2
+experiment README,global consistency,0,1
+experiment README,global invariant,0,2
+experiment README,global invariant generalization,0,1
+experiment README,goodand/concept-gate-taxonomy,0,1
+experiment README,MCP,0,1
+experiment README,missing scorer,0,2
+experiment README,missing trials,0,2
+experiment README,not executed,0,2
+experiment README,OFAT ablation,0,1
+experiment README,ontology,0,1
+experiment README,paraphrase invariance,0,1
+experiment README,protocol bounded,0,2
+experiment README,reasoner,0,1
+experiment README,repo provenance,1,0
+experiment README,repo-grounded evidence,0,1
+experiment README,repository-only evidence,0,1
+experiment README,schema minItems,0,1
+experiment README,screened not confirmed,0,2
+experiment README,semantic obligation,0,1
+experiment README,source policy,0,1
+experiment README,structural_composition,0,1
+experiment README,topology generalization,0,1
+experiment README,trial data,1,0
+experiment README,vocabulary exposure,0,1
+faceted navigation,format-first storage,0,2
+faceted navigation,keyword normalization,0,1
+faceted navigation,no duplication,1,0
+faceted navigation,Obsidian backlinks,0,2
+faceted navigation,relative symlink,1,0
+faceted navigation,semantic graph,0,1
+faceted navigation,stable ID,0,1
+faceted navigation,subagent enrichment,0,1
+faceted navigation,symlink views,0,2
+faceted navigation,typed edge,0,1
+faceted navigation,typed edge ledger,0,2
+faceted navigation,vault ingestion,0,1
+factor sufficiency,feature identity,0,1
+factor sufficiency,full-set preservation,0,1
+factor sufficiency,global consistency,0,2
+factor sufficiency,global consistency rule,0,1
+factor sufficiency,global feature-type invariant,0,1
+factor sufficiency,global invariant,0,1
+factor sufficiency,global invariant generalization,0,2
+factor sufficiency,global state normalization,0,1
+factor sufficiency,MCP,0,1
+factor sufficiency,memory card,0,1
+factor sufficiency,MixRig,0,1
+factor sufficiency,next experiment,0,1
+factor sufficiency,OFAT ablation,1,0
+factor sufficiency,ontology,0,1
+factor sufficiency,paraphrase invariance,0,2
+factor sufficiency,reasoner,0,1
+factor sufficiency,repaired_concepts,0,1
+factor sufficiency,repo provenance,0,1
+factor sufficiency,schema minItems,0,2
+factor sufficiency,semantic obligation,0,1
+factor sufficiency,structural preservation,0,1
+factor sufficiency,topology generalization,0,2
+factor sufficiency,trial data,0,1
+feature identity,FeatureType,0,1
+feature identity,final decision,0,1
+feature identity,functional,0,1
+feature identity,global consistency,0,1
+feature identity,global consistency rule,1,0
+feature identity,global feature-type invariant,1,0
+feature identity,global invariant generalization,0,1
+feature identity,global state normalization,1,0
+feature identity,invariant check,0,1
+feature identity,locational,0,1
+feature identity,mandatory abstention,0,1
+feature identity,missing evidence,0,1
+feature identity,MixRig,1,0
+feature identity,OFAT ablation,0,1
+feature identity,paraphrase invariance,0,1
+feature identity,reasoning contract,0,1
+feature identity,repairability,0,1
+feature identity,repo-grounded evidence,0,1
+feature identity,schema minItems,0,1
+feature identity,social_treatment,0,1
+feature identity,structural_composition,0,1
+feature identity,sufficiency gate,0,1
+feature identity,topology generalization,0,1
+FeatureType,functional,1,0
+FeatureType,global consistency rule,0,1
+FeatureType,global feature-type invariant,0,1
+FeatureType,global state normalization,0,1
+FeatureType,has-a,0,1
+FeatureType,is-a,0,1
+FeatureType,locational,1,0
+FeatureType,MixRig,0,1
+FeatureType,part-of,0,1
+FeatureType,social_treatment,1,0
+FeatureType,structural composition,0,1
+FeatureType,structural_composition,1,1
+FeatureType,taxonomy DAG,0,1
+FeatureType,vocabulary exposure,0,1
+final decision,full-set preservation,0,1
+final decision,global consistency rule,0,1
+final decision,global feature-type invariant,0,1
+final decision,global state normalization,0,1
+final decision,hidden oracle,0,1
+final decision,invariant check,1,0
+final decision,mandatory abstention,0,1
+final decision,MCP,0,1
+final decision,missing evidence,0,1
+final decision,MixRig,0,1
+final decision,ontology,0,1
+final decision,packet-only,0,1
+final decision,provenance validator,0,1
+final decision,reasoner,0,1
+final decision,reasoning contract,0,1
+final decision,repairability,0,1
+final decision,repaired_concepts,0,1
+final decision,repo-derived evidence,0,1
+final decision,semantic constraints,0,1
+final decision,semantic obligation,0,1
+final decision,source confinement,0,1
+final decision,structural preservation,0,1
+final decision,sufficiency gate,1,0
+format-first storage,keyword normalization,0,2
+format-first storage,knowledge ingestion,1,0
+format-first storage,MCP,0,2
+format-first storage,MCP isolation,0,2
+format-first storage,memory card,0,1
+format-first storage,MOC,1,0
+format-first storage,no duplication,0,2
+format-first storage,Obsidian backlinks,1,0
+format-first storage,ontology,0,2
+format-first storage,reasoner,0,2
+format-first storage,relative symlink,0,2
+format-first storage,semantic authority,0,1
+format-first storage,semantic graph,1,1
+format-first storage,semantic obligation,0,2
+format-first storage,stable ID,0,1
+format-first storage,subagent enrichment,0,2
+format-first storage,symlink classification,0,1
+format-first storage,symlink views,1,0
+format-first storage,tree classification,1,0
+format-first storage,typed edge,0,1
+format-first storage,typed edge ledger,1,0
+format-first storage,typed graph,0,1
+format-first storage,vault architecture,0,2
+format-first storage,vault ingestion,0,2
+full-set preservation,global consistency,0,1
+full-set preservation,invariant check,0,1
+full-set preservation,mandatory abstention,0,2
+full-set preservation,missing evidence,0,2
+full-set preservation,OFAT ablation,0,1
+full-set preservation,reasoning contract,0,2
+full-set preservation,repairability,0,2
+full-set preservation,repaired_concepts,1,0
+full-set preservation,schema minItems,0,1
+full-set preservation,structural preservation,1,0
+full-set preservation,sufficiency gate,0,1
+functional,global consistency rule,0,1
+functional,global feature-type invariant,0,1
+functional,global state normalization,0,1
+functional,has-a,0,1
+functional,is-a,0,1
+functional,locational,1,0
+functional,MixRig,0,1
+functional,part-of,0,1
+functional,social_treatment,1,0
+functional,structural composition,0,1
+functional,structural_composition,1,1
+functional,taxonomy DAG,0,1
+functional,vocabulary exposure,0,1
+generalization claim,global invariant,1,0
+generalization claim,global invariant generalization,0,2
+generalization claim,MCP,0,1
+generalization claim,ontology,0,1
+generalization claim,paraphrase invariance,0,2
+generalization claim,protocol bounded,1,0
+generalization claim,reasoner,0,1
+generalization claim,repo provenance,0,2
+generalization claim,repo-grounded evidence,0,1
+generalization claim,screened not confirmed,1,0
+generalization claim,semantic obligation,0,1
+generalization claim,topology generalization,0,2
+generalization claim,trial data,0,2
+global consistency,global consistency rule,0,1
+global consistency,global feature-type invariant,0,1
+global consistency,global invariant,0,1
+global consistency,global state normalization,0,1
+global consistency,MCP,0,1
+global consistency,memory card,0,1
+global consistency,MixRig,0,1
+global consistency,next experiment,0,1
+global consistency,OFAT ablation,0,2
+global consistency,ontology,0,1
+global consistency,reasoner,0,1
+global consistency,repaired_concepts,0,1
+global consistency,repo provenance,0,1
+global consistency,schema minItems,1,0
+global consistency,semantic obligation,0,1
+global consistency,structural preservation,0,1
+global consistency,structural_composition,0,2
+global consistency,trial data,0,1
+global consistency,vocabulary exposure,0,2
+global consistency rule,global feature-type invariant,1,0
+global consistency rule,global invariant generalization,0,1
+global consistency rule,global state normalization,1,0
+global consistency rule,invariant check,0,1
+global consistency rule,locational,0,1
+global consistency rule,mandatory abstention,0,1
+global consistency rule,missing evidence,0,1
+global consistency rule,MixRig,1,0
+global consistency rule,OFAT ablation,0,1
+global consistency rule,paraphrase invariance,0,1
+global consistency rule,reasoning contract,0,1
+global consistency rule,repairability,0,1
+global consistency rule,repo-grounded evidence,0,1
+global consistency rule,schema minItems,0,1
+global consistency rule,social_treatment,0,1
+global consistency rule,structural_composition,0,1
+global consistency rule,sufficiency gate,0,1
+global consistency rule,topology generalization,0,1
+global feature-type invariant,global invariant generalization,0,1
+global feature-type invariant,global state normalization,1,0
+global feature-type invariant,invariant check,0,1
+global feature-type invariant,locational,0,1
+global feature-type invariant,mandatory abstention,0,1
+global feature-type invariant,missing evidence,0,1
+global feature-type invariant,MixRig,1,0
+global feature-type invariant,OFAT ablation,0,1
+global feature-type invariant,paraphrase invariance,0,1
+global feature-type invariant,reasoning contract,0,1
+global feature-type invariant,repairability,0,1
+global feature-type invariant,repo-grounded evidence,0,1
+global feature-type invariant,schema minItems,0,1
+global feature-type invariant,social_treatment,0,1
+global feature-type invariant,structural_composition,0,1
+global feature-type invariant,sufficiency gate,0,1
+global feature-type invariant,topology generalization,0,1
+global invariant,global invariant generalization,0,3
+global invariant,MCP,0,2
+global invariant,memory card,1,0
+global invariant,missing scorer,0,1
+global invariant,missing trials,0,1
+global invariant,next experiment,1,0
+global invariant,not executed,0,1
+global invariant,OFAT ablation,0,1
+global invariant,ontology,0,2
+global invariant,paraphrase invariance,0,3
+global invariant,protocol bounded,1,0
+global invariant,reasoner,0,2
+global invariant,repo provenance,0,2
+global invariant,repo-grounded evidence,0,1
+global invariant,schema minItems,0,1
+global invariant,screened not confirmed,1,0
+global invariant,semantic obligation,0,2
+global invariant,structural_composition,0,1
+global invariant,topology generalization,0,3
+global invariant,trial data,0,2
+global invariant,vocabulary exposure,0,1
+global invariant generalization,global state normalization,0,1
+global invariant generalization,MCP,0,1
+global invariant generalization,memory card,0,1
+global invariant generalization,MixRig,0,1
+global invariant generalization,N=10,0,1
+global invariant generalization,next experiment,0,1
+global invariant generalization,OFAT ablation,0,2
+global invariant generalization,ontology,0,1
+global invariant generalization,paraphrase invariance,1,0
+global invariant generalization,protocol bounded,0,2
+global invariant generalization,reasoner,0,1
+global invariant generalization,repo provenance,0,1
+global invariant generalization,repo-grounded evidence,0,1
+global invariant generalization,screened not confirmed,0,2
+global invariant generalization,screening,0,1
+global invariant generalization,semantic obligation,0,1
+global invariant generalization,threshold 0.90,0,1
+global invariant generalization,topology generalization,1,0
+global invariant generalization,trial data,0,1
+global invariant generalization,two-failure futility stop,0,1
+global state normalization,invariant check,0,1
+global state normalization,locational,0,1
+global state normalization,mandatory abstention,0,1
+global state normalization,missing evidence,0,1
+global state normalization,MixRig,1,0
+global state normalization,OFAT ablation,0,1
+global state normalization,paraphrase invariance,0,1
+global state normalization,reasoning contract,0,1
+global state normalization,repairability,0,1
+global state normalization,repo-grounded evidence,0,1
+global state normalization,schema minItems,0,1
+global state normalization,social_treatment,0,1
+global state normalization,structural_composition,0,1
+global state normalization,sufficiency gate,0,1
+global state normalization,topology generalization,0,1
+goodand/concept-gate-taxonomy,MCP,0,1
+goodand/concept-gate-taxonomy,ontology,0,1
+goodand/concept-gate-taxonomy,reasoner,0,1
+goodand/concept-gate-taxonomy,repo provenance,0,1
+goodand/concept-gate-taxonomy,repo-derived evidence,0,1
+goodand/concept-gate-taxonomy,repo-grounded evidence,0,2
+goodand/concept-gate-taxonomy,repository-only evidence,1,0
+goodand/concept-gate-taxonomy,semantic obligation,0,1
+goodand/concept-gate-taxonomy,source confinement,0,1
+goodand/concept-gate-taxonomy,source policy,1,0
+goodand/concept-gate-taxonomy,trial data,0,1
+hallucination mitigation,literature evidence,1,0
+hallucination mitigation,literature search,0,3
+hallucination mitigation,literature-first,1,0
+hallucination mitigation,literature-first workflow,0,3
+hallucination mitigation,MCP,0,1
+hallucination mitigation,MCP isolation,0,1
+hallucination mitigation,ontology,0,1
+hallucination mitigation,open,0,2
+hallucination mitigation,open problem,1,0
+hallucination mitigation,open problem database,0,3
+hallucination mitigation,open problem status,1,0
+hallucination mitigation,problem status,0,2
+hallucination mitigation,reasoner,0,1
+hallucination mitigation,research context,1,0
+hallucination mitigation,resolved,0,2
+hallucination mitigation,retrieval,1,0
+hallucination mitigation,semantic obligation,0,1
+hallucination mitigation,solution attempt gate,0,3
+hallucination mitigation,uncertain,0,2
+hallucination mitigation,uncertainty,1,0
+hallucination mitigation,vault architecture,0,1
+has-a,is-a,1,0
+has-a,locational,0,1
+has-a,part-of,1,0
+has-a,social_treatment,0,1
+has-a,structural composition,1,0
+has-a,structural_composition,0,1
+has-a,taxonomy DAG,1,0
+hidden oracle,invariant check,0,1
+hidden oracle,MCP,0,1
+hidden oracle,missing scorer,0,1
+hidden oracle,missing trials,0,1
+hidden oracle,not executed,0,1
+hidden oracle,ontology,0,1
+hidden oracle,provenance validator,1,0
+hidden oracle,reasoner,0,1
+hidden oracle,repo-grounded evidence,0,1
+hidden oracle,semantic constraints,1,0
+hidden oracle,semantic obligation,0,1
+hidden oracle,sufficiency gate,0,1
+invariant check,mandatory abstention,0,1
+invariant check,MCP,0,1
+invariant check,missing evidence,0,1
+invariant check,MixRig,0,1
+invariant check,ontology,0,1
+invariant check,packet-only,0,1
+invariant check,provenance validator,0,1
+invariant check,reasoner,0,1
+invariant check,reasoning contract,0,1
+invariant check,repairability,0,1
+invariant check,repaired_concepts,0,1
+invariant check,repo-derived evidence,0,1
+invariant check,semantic constraints,0,1
+invariant check,semantic obligation,0,1
+invariant check,source confinement,0,1
+invariant check,structural preservation,0,1
+invariant check,sufficiency gate,1,0
+is-a,locational,0,1
+is-a,part-of,1,0
+is-a,social_treatment,0,1
+is-a,structural composition,1,0
+is-a,structural_composition,0,1
+is-a,taxonomy DAG,1,0
+keyword normalization,MCP,0,1
+keyword normalization,MCP isolation,0,1
+keyword normalization,memory card,0,1
+keyword normalization,no duplication,0,1
+keyword normalization,Obsidian backlinks,0,2
+keyword normalization,ontology,0,1
+keyword normalization,reasoner,0,1
+keyword normalization,relative symlink,0,1
+keyword normalization,semantic authority,0,1
+keyword normalization,semantic graph,0,1
+keyword normalization,semantic obligation,0,1
+keyword normalization,stable ID,0,1
+keyword normalization,subagent enrichment,1,0
+keyword normalization,symlink classification,0,1
+keyword normalization,symlink views,0,2
+keyword normalization,typed edge,0,1
+keyword normalization,typed edge ledger,0,2
+keyword normalization,typed graph,0,1
+keyword normalization,vault architecture,0,1
+keyword normalization,vault ingestion,1,0
+knowledge ingestion,MCP,0,1
+knowledge ingestion,MOC,1,0
+knowledge ingestion,ontology,0,1
+knowledge ingestion,reasoner,0,1
+knowledge ingestion,semantic graph,1,0
+knowledge ingestion,semantic obligation,0,1
+knowledge ingestion,tree classification,1,0
+knowledge vault,MCP,0,1
+knowledge vault,Obsidian backlink,1,0
+knowledge vault,ontology,0,1
+knowledge vault,reasoner,0,1
+knowledge vault,semantic obligation,0,1
+knowledge vault,symlink view,1,0
+knowledge vault,typed edge,1,0
+literature evidence,literature search,0,2
+literature evidence,literature-first workflow,0,2
+literature evidence,MCP,0,1
+literature evidence,MCP isolation,0,1
+literature evidence,ontology,0,1
+literature evidence,open,0,1
+literature evidence,open problem database,0,2
+literature evidence,open problem status,1,0
+literature evidence,problem status,0,1
+literature evidence,reasoner,0,1
+literature evidence,resolved,0,1
+literature evidence,semantic obligation,0,1
+literature evidence,solution attempt gate,0,2
+literature evidence,uncertain,0,1
+literature evidence,uncertainty,1,0
+literature evidence,vault architecture,0,1
+literature search,literature-first,0,1
+literature search,literature-first workflow,1,0
+literature search,MCP,0,1
+literature search,ontology,0,1
+literature search,open,0,1
+literature search,open problem,0,1
+literature search,open problem database,1,0
+literature search,open problem status,0,2
+literature search,problem status,0,1
+literature search,reasoner,0,1
+literature search,research context,0,1
+literature search,resolved,0,1
+literature search,retrieval,0,1
+literature search,semantic obligation,0,1
+literature search,solution attempt gate,1,0
+literature search,uncertain,0,1
+literature search,uncertainty,0,2
+literature-first,literature-first workflow,0,1
+literature-first,open,0,1
+literature-first,open problem,1,0
+literature-first,open problem database,0,1
+literature-first,problem status,0,1
+literature-first,research context,1,0
+literature-first,resolved,0,1
+literature-first,retrieval,1,0
+literature-first,solution attempt gate,0,1
+literature-first,uncertain,0,1
+literature-first workflow,MCP,0,1
+literature-first workflow,ontology,0,1
+literature-first workflow,open,0,1
+literature-first workflow,open problem,0,1
+literature-first workflow,open problem database,1,0
+literature-first workflow,open problem status,0,2
+literature-first workflow,problem status,0,1
+literature-first workflow,reasoner,0,1
+literature-first workflow,research context,0,1
+literature-first workflow,resolved,0,1
+literature-first workflow,retrieval,0,1
+literature-first workflow,semantic obligation,0,1
+literature-first workflow,solution attempt gate,1,0
+literature-first workflow,uncertain,0,1
+literature-first workflow,uncertainty,0,2
+locational,MixRig,0,1
+locational,part-of,0,1
+locational,social_treatment,1,0
+locational,structural composition,0,1
+locational,structural_composition,1,1
+locational,taxonomy DAG,0,1
+locational,vocabulary exposure,0,1
+mandatory abstention,missing evidence,1,0
+mandatory abstention,MixRig,0,1
+mandatory abstention,packet-only,0,2
+mandatory abstention,reasoning contract,1,0
+mandatory abstention,repairability,1,0
+mandatory abstention,repaired_concepts,0,2
+mandatory abstention,repo-grounded evidence,0,1
+mandatory abstention,structural preservation,0,2
+mandatory abstention,sufficiency gate,0,1
+MCP,MCP evaluation,0,1
+MCP,MCP isolation,0,1
+MCP,memory card,0,2
+MCP,missing scorer,0,1
+MCP,missing trials,0,1
+MCP,MOC,0,2
+MCP,N=10,0,1
+MCP,next experiment,0,1
+MCP,not executed,0,1
+MCP,Obsidian backlink,0,1
+MCP,Obsidian backlinks,0,1
+MCP,OFAT ablation,0,1
+MCP,ontology,1,1
+MCP,open problem database,0,1
+MCP,open problem status,0,1
+MCP,paraphrase invariance,0,1
+MCP,protocol bounded,0,1
+MCP,provenance validator,0,1
+MCP,reasoner,1,0
+MCP,repo provenance,0,1
+MCP,repo-grounded evidence,0,1
+MCP,repository-only evidence,0,1
+MCP,schema minItems,0,1
+MCP,screened not confirmed,0,1
+MCP,screening,0,1
+MCP,semantic authority,0,1
+MCP,semantic constraints,0,1
+MCP,semantic graph,0,1
+MCP,semantic obligation,1,0
+MCP,solution attempt gate,0,1
+MCP,source policy,0,1
+MCP,structural_composition,0,1
+MCP,subagent enrichment,0,1
+MCP,sufficiency gate,0,1
+MCP,symlink classification,0,1
+MCP,symlink view,0,1
+MCP,symlink views,0,1
+MCP,threshold 0.90,0,1
+MCP,topology generalization,0,1
+MCP,tree classification,0,1
+MCP,trial data,0,1
+MCP,two-failure futility stop,0,1
+MCP,typed edge,0,1
+MCP,typed edge ledger,0,1
+MCP,typed graph,0,1
+MCP,uncertainty,0,1
+MCP,vault architecture,0,1
+MCP,vault ingestion,0,1
+MCP,vocabulary exposure,0,1
+MCP context isolation,repo-derived evidence,0,1
+MCP context isolation,source confinement,1,1
+MCP context isolation,tool output separation,1,0
+MCP evaluation,MOC,1,0
+MCP evaluation,ontology,1,1
+MCP evaluation,reasoner,0,1
+MCP evaluation,semantic obligation,0,1
+MCP isolation,Obsidian backlinks,0,2
+MCP isolation,ontology,0,1
+MCP isolation,open problem status,0,1
+MCP isolation,reasoner,0,1
+MCP isolation,semantic obligation,0,1
+MCP isolation,subagent enrichment,0,1
+MCP isolation,symlink views,0,2
+MCP isolation,typed edge ledger,0,2
+MCP isolation,uncertainty,0,1
+MCP isolation,vault architecture,1,0
+MCP isolation,vault ingestion,0,1
+memory card,missing scorer,0,1
+memory card,missing trials,0,1
+memory card,next experiment,1,0
+memory card,not executed,0,1
+memory card,Obsidian backlinks,0,1
+memory card,OFAT ablation,0,1
+memory card,ontology,0,2
+memory card,paraphrase invariance,0,1
+memory card,reasoner,0,2
+memory card,schema minItems,0,1
+memory card,semantic authority,1,0
+memory card,semantic obligation,0,2
+memory card,structural_composition,0,1
+memory card,subagent enrichment,0,1
+memory card,symlink classification,1,0
+memory card,symlink views,0,1
+memory card,topology generalization,0,1
+memory card,typed edge ledger,0,1
+memory card,typed graph,1,0
+memory card,vault ingestion,0,1
+memory card,vocabulary exposure,0,1
+missing evidence,MixRig,0,1
+missing evidence,packet-only,0,2
+missing evidence,reasoning contract,1,0
+missing evidence,repairability,1,0
+missing evidence,repaired_concepts,0,2
+missing evidence,repo-grounded evidence,0,1
+missing evidence,structural preservation,0,2
+missing evidence,sufficiency gate,0,1
+missing scorer,missing trials,1,0
+missing scorer,next experiment,0,1
+missing scorer,not executed,1,0
+missing scorer,ontology,0,1
+missing scorer,provenance validator,0,1
+missing scorer,reasoner,0,1
+missing scorer,repo provenance,0,2
+missing scorer,repo-grounded evidence,0,1
+missing scorer,semantic constraints,0,1
+missing scorer,semantic obligation,0,1
+missing scorer,trial data,0,2
+missing trials,next experiment,0,1
+missing trials,not executed,1,0
+missing trials,ontology,0,1
+missing trials,provenance validator,0,1
+missing trials,reasoner,0,1
+missing trials,repo provenance,0,2
+missing trials,repo-grounded evidence,0,1
+missing trials,semantic constraints,0,1
+missing trials,semantic obligation,0,1
+missing trials,trial data,0,2
+MixRig,OFAT ablation,0,1
+MixRig,paraphrase invariance,0,1
+MixRig,reasoning contract,0,1
+MixRig,repairability,0,1
+MixRig,repo-grounded evidence,0,1
+MixRig,schema minItems,0,1
+MixRig,social_treatment,0,1
+MixRig,structural_composition,0,1
+MixRig,sufficiency gate,0,1
+MixRig,topology generalization,0,1
+MOC,ontology,1,2
+MOC,reasoner,0,2
+MOC,semantic graph,1,0
+MOC,semantic obligation,0,2
+MOC,tree classification,1,0
+N=10,ontology,0,1
+N=10,paraphrase invariance,0,1
+N=10,reasoner,0,1
+N=10,screening,1,0
+N=10,semantic obligation,0,1
+N=10,threshold 0.90,1,0
+N=10,topology generalization,0,1
+N=10,two-failure futility stop,1,0
+next experiment,not executed,0,1
+next experiment,OFAT ablation,0,1
+next experiment,ontology,0,1
+next experiment,paraphrase invariance,0,1
+next experiment,reasoner,0,1
+next experiment,schema minItems,0,1
+next experiment,semantic obligation,0,1
+next experiment,structural_composition,0,1
+next experiment,topology generalization,0,1
+next experiment,vocabulary exposure,0,1
+no duplication,Obsidian backlinks,0,2
+no duplication,relative symlink,1,0
+no duplication,semantic graph,0,1
+no duplication,stable ID,0,1
+no duplication,subagent enrichment,0,1
+no duplication,symlink views,0,2
+no duplication,typed edge,0,1
+no duplication,typed edge ledger,0,2
+no duplication,vault ingestion,0,1
+not executed,ontology,0,1
+not executed,provenance validator,0,1
+not executed,reasoner,0,1
+not executed,repo provenance,0,2
+not executed,repo-grounded evidence,0,1
+not executed,semantic constraints,0,1
+not executed,semantic obligation,0,1
+not executed,trial data,0,2
+Obsidian backlink,ontology,0,1
+Obsidian backlink,reasoner,0,1
+Obsidian backlink,semantic obligation,0,1
+Obsidian backlink,symlink view,1,0
+Obsidian backlink,typed edge,1,0
+Obsidian backlinks,ontology,0,1
+Obsidian backlinks,reasoner,0,1
+Obsidian backlinks,relative symlink,0,2
+Obsidian backlinks,semantic authority,0,1
+Obsidian backlinks,semantic graph,0,1
+Obsidian backlinks,semantic obligation,0,1
+Obsidian backlinks,stable ID,0,1
+Obsidian backlinks,subagent enrichment,0,2
+Obsidian backlinks,symlink classification,0,1
+Obsidian backlinks,symlink views,1,0
+Obsidian backlinks,typed edge,0,1
+Obsidian backlinks,typed edge ledger,1,0
+Obsidian backlinks,typed graph,0,1
+Obsidian backlinks,vault architecture,0,2
+Obsidian backlinks,vault ingestion,0,2
+OFAT ablation,ontology,0,1
+OFAT ablation,paraphrase invariance,0,2
+OFAT ablation,reasoner,0,1
+OFAT ablation,repaired_concepts,0,1
+OFAT ablation,repo provenance,0,1
+OFAT ablation,schema minItems,0,2
+OFAT ablation,semantic obligation,0,1
+OFAT ablation,structural preservation,0,1
+OFAT ablation,topology generalization,0,2
+OFAT ablation,trial data,0,1
+ontology,open problem database,0,1
+ontology,open problem status,0,1
+ontology,paraphrase invariance,0,1
+ontology,protocol bounded,0,1
+ontology,provenance validator,0,1
+ontology,reasoner,1,1
+ontology,repo provenance,0,1
+ontology,repo-grounded evidence,0,1
+ontology,repository-only evidence,0,1
+ontology,schema minItems,0,1
+ontology,screened not confirmed,0,1
+ontology,screening,0,1
+ontology,semantic authority,0,1
+ontology,semantic constraints,0,1
+ontology,semantic graph,0,1
+ontology,semantic obligation,1,1
+ontology,solution attempt gate,0,1
+ontology,source policy,0,1
+ontology,structural_composition,0,1
+ontology,subagent enrichment,0,1
+ontology,sufficiency gate,0,1
+ontology,symlink classification,0,1
+ontology,symlink view,0,1
+ontology,symlink views,0,1
+ontology,threshold 0.90,0,1
+ontology,topology generalization,0,1
+ontology,tree classification,0,1
+ontology,trial data,0,1
+ontology,two-failure futility stop,0,1
+ontology,typed edge,0,1
+ontology,typed edge ledger,0,1
+ontology,typed graph,0,1
+ontology,uncertainty,0,1
+ontology,vault architecture,0,1
+ontology,vault ingestion,0,1
+ontology,vocabulary exposure,0,1
+open,open problem,0,1
+open,open problem database,0,1
+open,open problem status,0,1
+open,problem status,1,0
+open,research context,0,1
+open,resolved,1,0
+open,retrieval,0,1
+open,solution attempt gate,0,1
+open,uncertain,1,0
+open,uncertainty,0,1
+open problem,open problem database,0,1
+open problem,problem status,0,1
+open problem,research context,1,0
+open problem,resolved,0,1
+open problem,retrieval,1,0
+open problem,solution attempt gate,0,1
+open problem,uncertain,0,1
+open problem database,open problem status,0,2
+open problem database,problem status,0,1
+open problem database,reasoner,0,1
+open problem database,research context,0,1
+open problem database,resolved,0,1
+open problem database,retrieval,0,1
+open problem database,semantic obligation,0,1
+open problem database,solution attempt gate,1,0
+open problem database,uncertain,0,1
+open problem database,uncertainty,0,2
+open problem status,problem status,0,1
+open problem status,reasoner,0,1
+open problem status,resolved,0,1
+open problem status,semantic obligation,0,1
+open problem status,solution attempt gate,0,2
+open problem status,uncertain,0,1
+open problem status,uncertainty,1,0
+open problem status,vault architecture,0,1
+packet-only,reasoning contract,0,2
+packet-only,repairability,0,2
+packet-only,repo-derived evidence,0,1
+packet-only,repo-grounded evidence,0,1
+packet-only,source confinement,0,1
+packet-only,sufficiency gate,0,1
+paraphrase invariance,protocol bounded,0,2
+paraphrase invariance,reasoner,0,1
+paraphrase invariance,repo provenance,0,1
+paraphrase invariance,repo-grounded evidence,0,1
+paraphrase invariance,screened not confirmed,0,2
+paraphrase invariance,screening,0,1
+paraphrase invariance,semantic obligation,0,1
+paraphrase invariance,threshold 0.90,0,1
+paraphrase invariance,topology generalization,1,0
+paraphrase invariance,trial data,0,1
+paraphrase invariance,two-failure futility stop,0,1
+part-of,social_treatment,0,1
+part-of,structural composition,1,0
+part-of,structural_composition,0,1
+part-of,taxonomy DAG,1,0
+problem status,research context,0,1
+problem status,resolved,1,0
+problem status,retrieval,0,1
+problem status,solution attempt gate,0,1
+problem status,uncertain,1,0
+problem status,uncertainty,0,1
+protocol bounded,reasoner,0,1
+protocol bounded,repo provenance,0,2
+protocol bounded,repo-grounded evidence,0,1
+protocol bounded,screened not confirmed,1,0
+protocol bounded,semantic obligation,0,1
+protocol bounded,topology generalization,0,2
+protocol bounded,trial data,0,2
+provenance validator,reasoner,0,1
+provenance validator,repo-grounded evidence,0,1
+provenance validator,semantic constraints,1,0
+provenance validator,semantic obligation,0,1
+provenance validator,sufficiency gate,0,1
+reasoner,repo provenance,0,1
+reasoner,repo-grounded evidence,0,1
+reasoner,repository-only evidence,0,1
+reasoner,schema minItems,0,1
+reasoner,screened not confirmed,0,1
+reasoner,screening,0,1
+reasoner,semantic authority,0,1
+reasoner,semantic constraints,0,1
+reasoner,semantic graph,0,1
+reasoner,semantic obligation,1,0
+reasoner,solution attempt gate,0,1
+reasoner,source policy,0,1
+reasoner,structural_composition,0,1
+reasoner,subagent enrichment,0,1
+reasoner,sufficiency gate,0,1
+reasoner,symlink classification,0,1
+reasoner,symlink view,0,1
+reasoner,symlink views,0,1
+reasoner,threshold 0.90,0,1
+reasoner,topology generalization,0,1
+reasoner,tree classification,0,1
+reasoner,trial data,0,1
+reasoner,two-failure futility stop,0,1
+reasoner,typed edge,0,1
+reasoner,typed edge ledger,0,1
+reasoner,typed graph,0,1
+reasoner,uncertainty,0,1
+reasoner,vault architecture,0,1
+reasoner,vault ingestion,0,1
+reasoner,vocabulary exposure,0,1
+reasoning contract,repairability,1,0
+reasoning contract,repaired_concepts,0,2
+reasoning contract,repo-grounded evidence,0,1
+reasoning contract,structural preservation,0,2
+reasoning contract,sufficiency gate,0,1
+relative symlink,semantic graph,0,1
+relative symlink,stable ID,0,1
+relative symlink,subagent enrichment,0,1
+relative symlink,symlink views,0,2
+relative symlink,typed edge,0,1
+relative symlink,typed edge ledger,0,2
+relative symlink,vault ingestion,0,1
+repairability,repaired_concepts,0,2
+repairability,repo-grounded evidence,0,1
+repairability,structural preservation,0,2
+repairability,sufficiency gate,0,1
+repaired_concepts,schema minItems,0,1
+repaired_concepts,structural preservation,1,0
+repaired_concepts,sufficiency gate,0,1
+repo provenance,repo-grounded evidence,0,1
+repo provenance,repository-only evidence,0,1
+repo provenance,schema minItems,0,1
+repo provenance,screened not confirmed,0,2
+repo provenance,semantic obligation,0,1
+repo provenance,source policy,0,1
+repo provenance,structural_composition,0,1
+repo provenance,topology generalization,0,1
+repo provenance,trial data,1,0
+repo provenance,vocabulary exposure,0,1
+repo-derived evidence,repo-grounded evidence,0,1
+repo-derived evidence,repository-only evidence,0,1
+repo-derived evidence,source confinement,1,1
+repo-derived evidence,source policy,0,1
+repo-derived evidence,sufficiency gate,0,1
+repo-derived evidence,tool output separation,0,1
+repo-grounded evidence,repository-only evidence,0,2
+repo-grounded evidence,screened not confirmed,0,1
+repo-grounded evidence,semantic constraints,0,1
+repo-grounded evidence,semantic obligation,0,1
+repo-grounded evidence,source confinement,0,1
+repo-grounded evidence,source policy,0,2
+repo-grounded evidence,topology generalization,0,1
+repo-grounded evidence,trial data,0,1
+repository-only evidence,semantic obligation,0,1
+repository-only evidence,source confinement,0,1
+repository-only evidence,source policy,1,0
+repository-only evidence,trial data,0,1
+research context,resolved,0,1
+research context,retrieval,1,0
+research context,solution attempt gate,0,1
+research context,uncertain,0,1
+resolved,retrieval,0,1
+resolved,solution attempt gate,0,1
+resolved,uncertain,1,0
+resolved,uncertainty,0,1
+retrieval,solution attempt gate,0,1
+retrieval,uncertain,0,1
+schema minItems,semantic obligation,0,1
+schema minItems,structural preservation,0,1
+schema minItems,structural_composition,0,2
+schema minItems,trial data,0,1
+schema minItems,vocabulary exposure,0,2
+screened not confirmed,semantic obligation,0,1
+screened not confirmed,topology generalization,0,2
+screened not confirmed,trial data,0,2
+screening,semantic obligation,0,1
+screening,threshold 0.90,1,0
+screening,topology generalization,0,1
+screening,two-failure futility stop,1,0
+semantic authority,semantic obligation,0,1
+semantic authority,subagent enrichment,0,1
+semantic authority,symlink classification,1,0
+semantic authority,symlink views,0,1
+semantic authority,typed edge ledger,0,1
+semantic authority,typed graph,1,0
+semantic authority,vault ingestion,0,1
+semantic constraints,semantic obligation,0,1
+semantic constraints,sufficiency gate,0,1
+semantic graph,semantic obligation,0,1
+semantic graph,stable ID,1,0
+semantic graph,subagent enrichment,0,1
+semantic graph,symlink views,0,1
+semantic graph,tree classification,1,0
+semantic graph,typed edge,1,0
+semantic graph,typed edge ledger,0,1
+semantic graph,vault ingestion,0,1
+semantic obligation,solution attempt gate,0,1
+semantic obligation,source policy,0,1
+semantic obligation,structural_composition,0,1
+semantic obligation,subagent enrichment,0,1
+semantic obligation,sufficiency gate,0,1
+semantic obligation,symlink classification,0,1
+semantic obligation,symlink view,0,1
+semantic obligation,symlink views,0,1
+semantic obligation,threshold 0.90,0,1
+semantic obligation,topology generalization,0,1
+semantic obligation,tree classification,0,1
+semantic obligation,trial data,0,1
+semantic obligation,two-failure futility stop,0,1
+semantic obligation,typed edge,0,1
+semantic obligation,typed edge ledger,0,1
+semantic obligation,typed graph,0,1
+semantic obligation,uncertainty,0,1
+semantic obligation,vault architecture,0,1
+semantic obligation,vault ingestion,0,1
+semantic obligation,vocabulary exposure,0,1
+social_treatment,structural composition,0,1
+social_treatment,structural_composition,1,1
+social_treatment,taxonomy DAG,0,1
+social_treatment,vocabulary exposure,0,1
+solution attempt gate,uncertain,0,1
+solution attempt gate,uncertainty,0,2
+source confinement,source policy,0,1
+source confinement,sufficiency gate,0,1
+source confinement,tool output separation,1,1
+source policy,trial data,0,1
+stable ID,subagent enrichment,0,1
+stable ID,symlink views,0,1
+stable ID,typed edge,1,0
+stable ID,typed edge ledger,0,1
+stable ID,vault ingestion,0,1
+structural composition,structural_composition,0,1
+structural composition,taxonomy DAG,1,0
+structural preservation,sufficiency gate,0,1
+structural_composition,taxonomy DAG,0,1
+structural_composition,trial data,0,1
+structural_composition,vocabulary exposure,1,1
+subagent enrichment,symlink classification,0,1
+subagent enrichment,symlink views,0,2
+subagent enrichment,typed edge,0,1
+subagent enrichment,typed edge ledger,0,2
+subagent enrichment,typed graph,0,1
+subagent enrichment,vault architecture,0,1
+subagent enrichment,vault ingestion,1,0
+symlink classification,symlink views,0,1
+symlink classification,typed edge ledger,0,1
+symlink classification,typed graph,1,0
+symlink classification,vault ingestion,0,1
+symlink view,typed edge,1,0
+symlink views,typed edge,0,1
+symlink views,typed edge ledger,1,0
+symlink views,typed graph,0,1
+symlink views,vault architecture,0,2
+symlink views,vault ingestion,0,2
+threshold 0.90,topology generalization,0,1
+threshold 0.90,two-failure futility stop,1,0
+topology generalization,trial data,0,1
+topology generalization,two-failure futility stop,0,1
+trial data,vocabulary exposure,0,1
+typed edge,typed edge ledger,0,1
+typed edge,vault ingestion,0,1
+typed edge ledger,typed graph,0,1
+typed edge ledger,vault architecture,0,2
+typed edge ledger,vault ingestion,0,2
+typed graph,vault ingestion,0,1
+uncertain,uncertainty,0,1
+uncertainty,vault architecture,0,1
+vault architecture,vault ingestion,0,1

@@ -1,0 +1,1 @@
+../../../files/markdown/mem-vault-operating-rule.md

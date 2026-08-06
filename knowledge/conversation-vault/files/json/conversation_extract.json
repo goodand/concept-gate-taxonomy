@@ -1,0 +1,66 @@
+{
+  "record_class": "conversation_context_extract",
+  "captured_at": "2026-07-26T00:00:00+09:00",
+  "timezone": "Asia/Seoul",
+  "project": "Ontology_and_reasoner_MCP_Project",
+  "coverage": {
+    "included": [
+      "project memory summary for MCP isolation and taxonomy discussions",
+      "supplied external message segment 330-363",
+      "current implementation request",
+      "repo source files for E2.2.1-E2.4"
+    ],
+    "excluded": [
+      "conversation messages omitted by the product before this turn",
+      "unavailable verbatim transcripts from other conversations"
+    ],
+    "completeness": "partial_but_sufficient_for_bounded_project_vault"
+  },
+  "events": [
+    {
+      "order": 1,
+      "topic": "MCP context isolation",
+      "summary": "The project tested how to define transformer attention using only prompt input and concept-gate-taxonomy MCP output, while separating tool output from model interpretation."
+    },
+    {
+      "order": 2,
+      "topic": "is-a versus has-a/part-of",
+      "summary": "The conversation identified recurring confusion between classificatory definition and compositional decomposition when names and code artifacts are treated as concepts."
+    },
+    {
+      "order": 3,
+      "topic": "E2.2.1",
+      "summary": "FeatureType vocabulary exposure raised directed repair from the prior 0/10 pattern to 3/20, below the 0.80 threshold."
+    },
+    {
+      "order": 4,
+      "topic": "E2.2.2",
+      "summary": "A combined global-consistency, complete-state, and schema-minItems contract produced 20/20."
+    },
+    {
+      "order": 5,
+      "topic": "E2.2.3",
+      "summary": "OFAT ablation found A_ONLY 20/20, B_ONLY 1/20, and C_ONLY 0/20."
+    },
+    {
+      "order": 6,
+      "topic": "E2.3",
+      "summary": "Generalization screening reported CONTROL 0/2, A_ONLY 10/10, A_PARAPHRASE 9/10, A_TOPOLOGY 9/10, and A_DECOY 10/10."
+    },
+    {
+      "order": 7,
+      "topic": "E2.4 design",
+      "summary": "The next bridge experiment was designed around repo-only evidence sufficiency and a claim/abstain/repair boundary."
+    },
+    {
+      "order": 8,
+      "topic": "knowledge vault",
+      "summary": "The user chose file-format canonical storage, conceptual classification through symlink views, Obsidian backlinks, and a typed edge ledger enriched by subagent keyword extraction."
+    },
+    {
+      "order": 9,
+      "topic": "literature-first future behavior",
+      "summary": "Open-problem material should preserve source text, search literature before attempting a solution, date-bind status claims, and abstain when current status is uncertain."
+    }
+  ]
+}

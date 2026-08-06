@@ -1,0 +1,1 @@
+../../files/markdown/moc-vault-architecture.md

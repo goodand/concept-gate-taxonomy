@@ -1,0 +1,1 @@
+../../../files/markdown/claim-global-invariant-generalizes.md
