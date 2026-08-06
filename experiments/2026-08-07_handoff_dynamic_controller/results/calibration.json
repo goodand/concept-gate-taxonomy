@@ -1,0 +1,595 @@
+{
+  "rows": [
+    {
+      "kind": "positive",
+      "id": "HD01",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive",
+      "id": "HD02",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive",
+      "id": "HD03",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive",
+      "id": "HD04",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive",
+      "id": "DS05",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive",
+      "id": "DS06",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive",
+      "id": "DS07",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive",
+      "id": "HD08",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive-runner",
+      "id": "S_STATIC",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive-runner",
+      "id": "S_DYNAMIC",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive-runner",
+      "id": "R_STATIC",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "positive-runner",
+      "id": "R_DYNAMIC",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "HD01:critical path removed",
+      "ok": true,
+      "codes": [
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD02:critical path removed",
+      "ok": true,
+      "codes": [
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD03:critical path removed",
+      "ok": true,
+      "codes": [
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD04:critical path removed",
+      "ok": true,
+      "codes": [
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS05:critical path removed",
+      "ok": true,
+      "codes": [
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS06:critical path removed",
+      "ok": true,
+      "codes": [
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS07:critical path removed",
+      "ok": true,
+      "codes": [
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD08:critical path removed",
+      "ok": true,
+      "codes": [
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD02:authority replaced by stale",
+      "ok": true,
+      "codes": [
+        "I1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD01:current state set to previous",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "HD01:stop condition removed",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "HD02:stop condition removed",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "HD03:stop condition removed",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "HD04:stop condition removed",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "DS05:stop condition removed",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "DS06:stop condition removed",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "DS07:stop condition removed",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "HD08:stop condition removed",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "HD01:citation outside exposure",
+      "ok": true,
+      "codes": [
+        "X1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD02:citation outside exposure",
+      "ok": true,
+      "codes": [
+        "X1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD03:citation outside exposure",
+      "ok": true,
+      "codes": [
+        "X1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD04:citation outside exposure",
+      "ok": true,
+      "codes": [
+        "X1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS05:citation outside exposure",
+      "ok": true,
+      "codes": [
+        "X1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS06:citation outside exposure",
+      "ok": true,
+      "codes": [
+        "X1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS07:citation outside exposure",
+      "ok": true,
+      "codes": [
+        "X1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD08:citation outside exposure",
+      "ok": true,
+      "codes": [
+        "X1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD04:navigation declared authority",
+      "ok": true,
+      "codes": [
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD01:basename only",
+      "ok": true,
+      "codes": [
+        "C4",
+        "D0",
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD02:basename only",
+      "ok": true,
+      "codes": [
+        "C4",
+        "D0",
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD03:basename only",
+      "ok": true,
+      "codes": [
+        "C4",
+        "D0",
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD04:basename only",
+      "ok": true,
+      "codes": [
+        "C4",
+        "D0",
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS05:basename only",
+      "ok": true,
+      "codes": [
+        "C4",
+        "D0",
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS06:basename only",
+      "ok": true,
+      "codes": [
+        "C4",
+        "D0",
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS07:basename only",
+      "ok": true,
+      "codes": [
+        "C4",
+        "D0",
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD08:basename only",
+      "ok": true,
+      "codes": [
+        "C4",
+        "D0",
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS07:false absence",
+      "ok": true,
+      "codes": [
+        "A1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD01:cites a path never read",
+      "ok": true,
+      "codes": [
+        "C4"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD02:cites a path never read",
+      "ok": true,
+      "codes": [
+        "C4"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD03:cites a path never read",
+      "ok": true,
+      "codes": [
+        "C4"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD04:cites a path never read",
+      "ok": true,
+      "codes": [
+        "C4"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS05:cites a path never read",
+      "ok": true,
+      "codes": [
+        "C4"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS06:cites a path never read",
+      "ok": true,
+      "codes": [
+        "C4"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS07:cites a path never read",
+      "ok": true,
+      "codes": [
+        "C4"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD08:cites a path never read",
+      "ok": true,
+      "codes": [
+        "C4"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD01:gold key leaked to runtime",
+      "ok": true,
+      "codes": [
+        "E1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD02:gold key leaked to runtime",
+      "ok": true,
+      "codes": [
+        "E1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD03:gold key leaked to runtime",
+      "ok": true,
+      "codes": [
+        "E1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD04:gold key leaked to runtime",
+      "ok": true,
+      "codes": [
+        "E1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS05:gold key leaked to runtime",
+      "ok": true,
+      "codes": [
+        "E1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS06:gold key leaked to runtime",
+      "ok": true,
+      "codes": [
+        "E1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS07:gold key leaked to runtime",
+      "ok": true,
+      "codes": [
+        "E1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "HD08:gold key leaked to runtime",
+      "ok": true,
+      "codes": [
+        "E1"
+      ]
+    },
+    {
+      "kind": "negative",
+      "id": "DS06:unsafe action recommended",
+      "ok": true,
+      "codes": [
+        "S1"
+      ]
+    },
+    {
+      "kind": "negative-controller",
+      "id": "terminates below budget",
+      "ok": true,
+      "codes": [
+        "C1"
+      ]
+    },
+    {
+      "kind": "negative-controller",
+      "id": "action outside the set",
+      "ok": true,
+      "codes": [
+        "C2"
+      ]
+    },
+    {
+      "kind": "negative-controller",
+      "id": "cites without reading",
+      "ok": true,
+      "codes": [
+        "C4",
+        "D0",
+        "R1",
+        "R2",
+        "T1"
+      ]
+    },
+    {
+      "kind": "negative-controller",
+      "id": "abstains after one search",
+      "ok": true,
+      "codes": [
+        "C1"
+      ]
+    },
+    {
+      "kind": "negative-controller",
+      "id": "leaky subagent",
+      "ok": true,
+      "codes": [
+        "C3"
+      ]
+    }
+  ],
+  "failures": [],
+  "frozen_surface_hashes": {
+    "PREREGISTRATION.md": "00ee61f2f18f1d14227a01e7d07618d706e6f73423905df1717a2325a3ec5fc0",
+    "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652",
+    "_controllers.py": "464396bb4c8ef374b108c6803aa991f751453a75877548e2f06a587703f28088",
+    "_evaluator.py": "24e44043b0008b5c90113abe417d9de940b4b555318c735387452d8505f18c50",
+    "_runner.py": "638a1932664fbfbc72d90d571255b96e87203904234669b3e9caaa3f83486cb2",
+    "build_corpus.py": "1368b5f31ab1666132b7f180431cb090e611269f0d535c27cb70c46cd639bfd6",
+    "run_calibration.py": "6514d9032c4634dcb787749f6416d2628dc7da5e9e6ba9d66b7e1bbc0e83626f",
+    "run_smoke.py": "6350737ecf3065ef6a3928814a7eb2c058842a111ee4c7c2d87e83edfc20517d",
+    "public_cases/cases.json": "c8d38635223aabc6fe2b3e30196b13b2c15ba9987a4556a08015c625b84fa8c5",
+    "hidden_gold/gold.json": "030f9e57c5e87f7c3b9e378c5be71d101ed0bc89d88559a019363d5f9a2b502e",
+    "corpus_manifest.json": "297268698ceff9af04bee6d47c5d1ae00f01d21bbae6d2487011a5598b056a2e",
+    "public_corpus/variant-L/": "26717068f4e8ed875c54edb12a6c9f56b90cf35a33ef81b20720de2a44f91749",
+    "public_corpus/variant-M/": "4cb0a1d6671c8de4f6c2744d49747eddbbe21e38dd5a511c4b7dff640ccdffcc"
+  },
+  "positive_controls": 8,
+  "negative_detected": 58,
+  "negative_total": 58
+}

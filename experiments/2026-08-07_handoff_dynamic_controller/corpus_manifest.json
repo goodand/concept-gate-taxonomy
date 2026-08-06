@@ -1,0 +1,30 @@
+{
+  "variant-L": {
+    "archive/2026-06/DECISION_freeze_policy.md": "ba9a26fe7e018dc669e7619d2909d3a95795dc70f6373a8406b3fb00b225012a",
+    "docs/DECISION_freeze_policy.md": "2ee510f822f2f1003a525b49a9f4e33023450dd37e36502b6faea7383c90e68f",
+    "docs/HANDOFF.md": "cb8f343062761ce206ba23ecb03897120724b0016d0056a68487fde2efdc1815",
+    "docs/MOC_index.md": "b92b367310f9a48df5e785cde3ade81eb5318b738e077f68c5dd9f7a34bf51c7",
+    "docs/directory-cleanup-plan.md": "44825ebddbc8cec985b882be7f5f4abde1e76e3c3aaf6a23df9daccab9ac143a",
+    "docs/fixtures-retirement.md": "ffcccba147df392f90ff4ceafd6ee29db227a74809b8e8c45981a8be3f2f5fb7",
+    "docs/glossary.md": "d29d2d41a187e2706d29d61e9087c4ab936dc7b82eeb187d7ab3ebb0b6112163",
+    "docs/policy-retention.md": "a143fa134e241ae289c5f60440ad3d1bcfa1947487b6182e775f6964514f934c",
+    "docs/runbook-nightly.md": "ae2a1546978396724cc1393543c3ff2eadd01a7982639c1ce93aee229c6e78b9",
+    "notes/audits/two-shapes-2026-06-11.md": "57b539547fc07dec7872338a10048be96c26aed5b4e78b00a4163c1176801b4c",
+    "notes/incidents/quiet-hours-2026-07-02.md": "802c9e3145960a7c989b90a94a05f00ae6d62ce573eba74e2a3c7a9ddc19bc97",
+    "subproject/HANDOFF.md": "ebccc800423db5048b0a81ec4b95ed6fdc7c70612d9657a2b05fed774255ca2c"
+  },
+  "variant-M": {
+    "archive/2026-06/DECISION_freeze_policy.md": "ba9a26fe7e018dc669e7619d2909d3a95795dc70f6373a8406b3fb00b225012a",
+    "docs/DECISION_freeze_policy.md": "2ee510f822f2f1003a525b49a9f4e33023450dd37e36502b6faea7383c90e68f",
+    "docs/HANDOFF.md": "5e17df8014308b6eda867dbd6591ad8951d51fb5bc8a9642121a7db1a0f68971",
+    "docs/MOC_index.md": "b92b367310f9a48df5e785cde3ade81eb5318b738e077f68c5dd9f7a34bf51c7",
+    "docs/directory-cleanup-plan.md": "44825ebddbc8cec985b882be7f5f4abde1e76e3c3aaf6a23df9daccab9ac143a",
+    "docs/fixtures-retirement.md": "ffcccba147df392f90ff4ceafd6ee29db227a74809b8e8c45981a8be3f2f5fb7",
+    "docs/glossary.md": "d29d2d41a187e2706d29d61e9087c4ab936dc7b82eeb187d7ab3ebb0b6112163",
+    "docs/policy-retention.md": "a143fa134e241ae289c5f60440ad3d1bcfa1947487b6182e775f6964514f934c",
+    "docs/runbook-nightly.md": "ae2a1546978396724cc1393543c3ff2eadd01a7982639c1ce93aee229c6e78b9",
+    "notes/audits/two-shapes-2026-06-11.md": "57b539547fc07dec7872338a10048be96c26aed5b4e78b00a4163c1176801b4c",
+    "notes/incidents/quiet-hours-2026-07-02.md": "802c9e3145960a7c989b90a94a05f00ae6d62ce573eba74e2a3c7a9ddc19bc97",
+    "subproject/HANDOFF.md": "ebccc800423db5048b0a81ec4b95ed6fdc7c70612d9657a2b05fed774255ca2c"
+  }
+}
