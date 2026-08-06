@@ -379,6 +379,83 @@ def render_policy_text(arm: str) -> str:
 # --------------------------------------------------------------------------
 # The twelve structural assertions (D-H1a-11 sec 10), in the ruling's order
 # --------------------------------------------------------------------------
+def assert_0_table_keys_are_exactly_the_declared_axes() -> None:
+    """Every assertion iterates AXES, so a table key OUTSIDE AxES is never
+    visited by any of them. Independent review (2026-08-06, M7) added a
+    `recency` entry forbidden by CARRIER_DOMAIN in both arms -- the substantive
+    subsumption -- and all 167 tests passed because no assertion looks at keys
+    it does not already expect. Pin the key set itself.
+    """
+    declared = set(AXES)
+    actual = set(DECISION_BASIS_POLICY)
+    extra = actual - declared
+    missing = declared - actual
+    if extra:
+        raise PolicyContractError(
+            f"[0] DECISION_BASIS_POLICY has keys outside AXES: {sorted(extra)}. "
+            f"No other assertion visits them, so they are unchecked policy."
+        )
+    if missing:
+        raise PolicyContractError(f"[0] AXES declared but absent from the table: {sorted(missing)}")
+
+
+def assert_0b_subaxes_are_not_reparented_under_a_sibling_category() -> None:
+    """D-H1a-12 sec 5's non-subsumption, ENFORCED rather than asserted.
+
+    Independent review (2026-08-06, M1) declared `source_meta_reasoning` a
+    subaxis of `outside_domain_knowledge` and nothing caught it -- the sibling
+    claim lived only in a comment and a test name. The two categories must not
+    contain each other in either direction, and no target axis may be declared
+    a child of any non-target axis.
+    """
+    for parent, subs in SUBAXES.items():
+        for sub in subs:
+            if sub in TARGET_AXES and parent not in TARGET_AXES:
+                raise PolicyContractError(
+                    f"[0b] target axis {sub!r} is declared a subaxis of "
+                    f"non-target {parent!r} -- that is the subsumption Q12=F removed"
+                )
+            if sub in AXES:
+                raise PolicyContractError(
+                    f"[0b] {sub!r} is both a top-level axis and a subaxis of "
+                    f"{parent!r}; the containment structure is ambiguous"
+                )
+    # And the domain carrier must never govern the target axis or its subaxes.
+    for axis in sorted(TARGET_AXES):
+        for sub in (axis,) + tuple(SUBAXES.get(axis, ())):
+            if sub in DECISION_BASIS_POLICY:
+                for arm in ARMS:
+                    if carrier_of(sub, arm) == CARRIER_DOMAIN:
+                        raise PolicyContractError(
+                            f"[0b] {arm}: {sub!r} is carried by {CARRIER_DOMAIN}; "
+                            f"the domain ban would subsume the target mechanism"
+                        )
+
+
+def assert_0c_declared_states_match_the_ruling_table() -> None:
+    """MAJOR (2026-08-06, M3/M3b): the state column was unpinned.
+
+    assert_3 only inspects forbidding states and assert_4 only
+    allowed_by_default, so downgrading a ruling-forbidden axis to `unspecified`
+    in BOTH arms passed everything while the prose kept forbidding it -- table
+    and prompt disagreeing, which is the Q10 defect in the opposite direction.
+    """
+    ruling = {
+        "evidence_count": (EXPLICITLY_FORBIDDEN, EXPLICITLY_FORBIDDEN),
+        "source_order": (EXPLICITLY_FORBIDDEN, EXPLICITLY_FORBIDDEN),
+        "outside_domain_knowledge": (EXPLICITLY_FORBIDDEN, EXPLICITLY_FORBIDDEN),
+        "external_source_retrieval": (EXPLICITLY_FORBIDDEN, EXPLICITLY_FORBIDDEN),
+        "source_meta_reasoning": (EXPLICITLY_FORBIDDEN, ALLOWED_BY_DEFAULT),
+    }
+    for axis, (want_kept, want_removed) in ruling.items():
+        got = (state_of(axis, ARMS[0]), state_of(axis, ARMS[1]))
+        if got != (want_kept, want_removed):
+            raise PolicyContractError(
+                f"[0c] {axis!r}: ruling sec 5 states {(want_kept, want_removed)}, "
+                f"table says {got}"
+            )
+
+
 def assert_1_every_axis_arm_has_a_state() -> None:
     for axis in AXES:
         for arm in ARMS:
@@ -768,10 +845,14 @@ def assert_12_common_q7_generates_only_nontarget_forbidden_states() -> None:
             if parent in TARGET_AXES:
                 for sub in subs:
                     if sub in DECISION_BASIS_POLICY and \
-                       carrier_of(sub, arm) == CARRIER_Q7:
+                       carrier_of(sub, arm) != CARRIER_Q1 and \
+                       state_of(sub, arm) in _FORBIDDING_STATES:
+                        # Was `== CARRIER_Q7` only; independent review (M7)
+                        # forbade a subaxis via CARRIER_DOMAIN undetected.
                         raise PolicyContractError(
                             f"[12] {arm}: subaxis {sub!r} of target axis "
-                            f"{parent!r} is carried directly by {CARRIER_Q7}"
+                            f"{parent!r} is forbidden by "
+                            f"{carrier_of(sub, arm)}, not {CARRIER_Q1}"
                         )
 
 
@@ -803,6 +884,9 @@ def lint_common_q7(arm: str) -> list[str]:
 
 
 STRUCTURAL_ASSERTIONS_NO_ARGS = (
+    assert_0_table_keys_are_exactly_the_declared_axes,
+    assert_0b_subaxes_are_not_reparented_under_a_sibling_category,
+    assert_0c_declared_states_match_the_ruling_table,
     assert_1_every_axis_arm_has_a_state,
     assert_2_exactly_one_valid_carrier_per_axis_arm,
     assert_3_forbidden_states_use_forbidding_carriers,
@@ -861,8 +945,9 @@ def target_mechanism_allowed(arm: str) -> bool:
 # caller and default to the values the ruling's post-repair table asserts --
 # but `assert_licensed_path_contrast` requires the caller to pass them
 # explicitly, so a stale default can never silently certify a freeze.
-SOURCE_ATTRIBUTES_VISIBLE_DEFAULT = True
-HARD_DEFER_MAPPING_DEFAULT = False
+# NO module-level defaults. Independent review (2026-08-06) noted that keeping
+# them let a one-argument call certify both fixture facts silently. Callers must
+# state them; there is nowhere for a stale value to hide.
 
 
 def _domain_ban_subsumes_source_meta() -> bool:
@@ -890,8 +975,8 @@ def _residual_prohibition(arm: str) -> bool:
 
 def licensed_source_evaluation_path(
     arm: str,
-    source_attributes_visible: bool = SOURCE_ATTRIBUTES_VISIBLE_DEFAULT,
-    hard_defer_mapping: bool = HARD_DEFER_MAPPING_DEFAULT,
+    source_attributes_visible: bool,
+    hard_defer_mapping: bool,
 ) -> dict:
     """Return each conjunct plus the conjunction (D-H1a-12 sec 10).
 
@@ -1001,14 +1086,38 @@ def assert_deductive_check() -> dict:
 INDEPENDENT_SEMANTIC_REVIEW_PASSED = False
 
 
-def assert_freezable(rendered: dict[str, str], q1_clause_text: str) -> dict:
-    """All five D-H1a-11 freeze conditions, as a conjunction."""
+def assert_freezable(
+    rendered: dict[str, str],
+    q1_clause_text: str,
+    *,
+    source_attributes_visible: bool,
+    hard_defer_mapping: bool,
+) -> dict:
+    """D-H1a-11's five conditions PLUS D-H1a-12 sec 10's licensed-path contrast.
+
+    BLOCKER fixed 2026-08-06 (independent review): this function did not call
+    `assert_licensed_path_contrast`, so sec 10's replacement predicate ran only
+    in tests while the production path (`_h1a_cohort.build_cohort`) certified
+    freezes using `deductive_check`'s `target_mechanism_contrast` -- the very
+    predicate sec 10 line 466 says does not guarantee the needed proposition.
+    That is the "policy layer is not on the execution path" defect, reproduced
+    one layer up from where it was first found.
+
+    V and H are KEYWORD-ONLY and have NO defaults on purpose. They are fixture
+    and shared-prompt facts that this module cannot derive, and a positional
+    call with stale module defaults is exactly how an unverified fixture fact
+    would silently certify a freeze.
+    """
     assert_structural_no_args()
     assert_5_no_duplicate_forbidding_carrier(rendered, q1_clause_text)
     assert_6b_removed_prose_has_no_target_prohibition(rendered)
     assert_10_q1_clause_is_kept_only_and_unchanged(rendered, q1_clause_text)
     assert_11_removed_has_no_axis_specific_permission_text(rendered)
+    licensed = assert_licensed_path_contrast(
+        source_attributes_visible, hard_defer_mapping
+    )
     proof = assert_deductive_check()
+    proof["licensed_source_evaluation_path"] = licensed
     if not INDEPENDENT_SEMANTIC_REVIEW_PASSED:
         raise FreezeGateBlocked(
             "freeze condition 5 unmet: independent semantic review has not been "

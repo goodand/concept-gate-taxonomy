@@ -328,7 +328,9 @@ def test_freeze_is_blocked_until_the_independent_review_is_recorded():
         "in the same change -- do not flip it to make this test pass"
     )
     with pytest.raises(policy.FreezeGateBlocked, match="independent semantic review"):
-        policy.assert_freezable(_repaired_rendered(), Q1)
+        policy.assert_freezable(_repaired_rendered(), Q1,
+                                source_attributes_visible=True,
+                                hard_defer_mapping=False)
 
 
 def test_freeze_gate_runs_the_machine_checkable_conditions_before_failing():
@@ -343,7 +345,9 @@ def test_freeze_gate_runs_the_machine_checkable_conditions_before_failing():
             "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_Q7,
         }
         with pytest.raises(policy.PolicyContractError) as exc:
-            policy.assert_freezable(_repaired_rendered(), Q1)
+            policy.assert_freezable(_repaired_rendered(), Q1,
+                                source_attributes_visible=True,
+                                hard_defer_mapping=False)
         assert "independent semantic review" not in str(exc.value)
     finally:
         policy.DECISION_BASIS_POLICY.clear()
@@ -636,8 +640,13 @@ def test_assert_9_passes_against_the_frozen_golden_contract():
 def test_golden_contract_is_internally_consistent():
     golden = policy._load_golden_common_block()
     assert hashlib.sha256(golden["text"].encode()).hexdigest() == golden["sha256"]
+    # Q7 added 2026-08-06 (independent review MAJOR): the tie-breaker sentence
+    # is byte-identical across arms and part of the common block, but was
+    # omitted, so it had no frozen bytes and mutation M2 -- restoring the exact
+    # clause sec 8 ordered removed -- reached the trial surface undetected.
     assert golden["carriers_included"] == [
-        policy.CARRIER_DEFAULT, policy.CARRIER_DOMAIN, policy.SCOPE_DISAMBIGUATION_ID,
+        policy.CARRIER_DEFAULT, policy.CARRIER_Q7, policy.CARRIER_DOMAIN,
+        policy.SCOPE_DISAMBIGUATION_ID,
     ]
 
 
@@ -718,4 +727,35 @@ def test_assert_9_fires_when_BOTH_arms_are_changed_identically(monkeypatch):
     )
     assert a == b, "precondition: the mutation must keep the arms identical"
     with pytest.raises(policy.PolicyContractError, match=r"\[9\].*drifted from the frozen golden"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_assert_9_catches_restoring_the_clause_section_8_removed(monkeypatch):
+    """Regression for independent review M2 (2026-08-06).
+
+    The reviewer restored the exact wording D-H1a-12 sec 8 ordered removed
+    ("unless that priority is directly stated inside an evidence item's text")
+    and all 167 tests passed while it reached the shipped prompt. lint stayed
+    silent because bare `priority` is absent from AXIS_SURFACE_TOKENS -- which
+    is the same incidental gap sec 8 cited when demoting lexical scanning. The
+    golden contract, now covering the tie-breaker carrier, is what catches it.
+    """
+    _real = policy.render_policy_block
+
+    def _restore_removed_clause(arm):
+        # Rebuild the bullet rather than string-replacing: the rendered text is
+        # hard-wrapped at 76 columns, so the phrase straddles a newline and a
+        # naive replace silently no-ops (this test's own first version did).
+        out = []
+        for cid, txt in _real(arm):
+            if cid == policy.CARRIER_Q7:
+                txt = policy._bullet(
+                    "Do not break ties using evidence item count or source "
+                    "order unless that priority is directly stated inside an "
+                    "evidence item's text."
+                )
+            out.append((cid, txt))
+        return out
+    monkeypatch.setattr(policy, "render_policy_block", _restore_removed_clause)
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*drifted"):
         policy.assert_9_default_permission_is_byte_identical_across_arms()

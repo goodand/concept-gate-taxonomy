@@ -141,7 +141,14 @@ def build_cohort() -> dict:
     # (INDEPENDENT_SEMANTIC_REVIEW_PASSED = False), this also means
     # build_cohort() cannot produce a manifest until that flag is set --
     # freeze() cannot outrun the freeze gate.
-    policy.assert_freezable(arm_templates, contract.LIVENESS_CLAUSE_TEXT)
+    policy.assert_freezable(
+        arm_templates,
+        contract.LIVENESS_CLAUSE_TEXT,
+        # D-H1a-12 sec 10: fixture facts this module cannot derive. Stated
+        # explicitly at the call site so a stale default cannot certify.
+        source_attributes_visible=True,
+        hard_defer_mapping=False,
+    )
 
     rendered_prompts = {
         arm: surface.render_prompt(arm_templates[arm], model_payload)
