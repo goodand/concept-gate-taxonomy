@@ -658,3 +658,124 @@ D-OWL-1:
     zero_laundering_attributable_to_provenance: false
     zero_laundering_attributable_to_instruction: false
 ```
+
+---
+
+# Amendment 1 (2026-08-06) — Semantic Compiler를 명시적 계층으로 승격
+
+**동결 문서이므로 위 본문을 수정하지 않고 여기에 추가한다.** 아래는 수령한
+수정·추가 요청 전문이며 운영 세션이 편집하지 않았다.
+
+- 수신: 2026-08-06
+- 발신: 실험 설계 권한 (외부), 사용자 경유 전달
+- 성격: D-OWL-1 **수정 + 추가**. §4.2의 `common_instruction_audit`와 residual
+  prohibition audit의 **작동 방식**을 바꾼다. 판정 F(C+E 적용, laundering은
+  D-OWL-2로 분리)와 §5의 금지 목록은 그대로 유지된다.
+
+---
+
+## A1.1 D-OWL-1을 이렇게 바꾼다
+
+Audit에 다음을 **먼저** 추가한다:
+
+```yaml
+semantic_compilation:
+  required: true
+  input:
+    rendered_prompt
+  output:
+    policy_graph
+```
+
+그리고 Residual Prohibition Audit도 다음으로 바꾼다:
+
+```text
+Sentence
+   ↓
+Policy Graph
+   ↓
+Rule
+```
+
+예를 들면:
+
+```text
+Rule:
+  carrier(authority)=Q1
+  carrier(authority)=Q7
+   ↓
+  duplicate
+```
+
+**문자열을 Rule이 보는 것이 아니다.**
+
+## A1.2 이번 Wolfram MCP가 오히려 알려준 것
+
+가장 크게 배운 것은 **Wolfram은 Semantic Normalization을 절대로 대신하지
+못한다**는 점이다. Wolfram은 Natural Language를 이해해서
+
+```yaml
+authority:
+  forbidden
+```
+
+를 만들지 않는다. 하지만 한 번 그것이 만들어지면 그 이후에는 굉장히 강력하다.
+carrier 수, policy 충돌, licensed path, contrast 존재, factorial
+identifiability 같은 것은 거의 완벽하게 계산한다.
+
+## A1.3 아키텍처 인사이트 — 5계층 분리
+
+```text
+① Natural Language Prompt
+          │
+          ▼
+② Semantic Compiler
+   (LLM + Rule Hybrid)
+          │
+          ▼
+③ Typed Policy Graph
+   (JSON / DSL)
+          │
+          ▼
+④ Rule Engine
+   (Residual, Carrier, DAG, Constraints)
+          │
+          ▼
+⑤ Deductive Reasoner
+   (HermiT / Wolfram)
+```
+
+즉 **Semantic Normalization은 Rule Engine의 책임이 아니라 그 앞단의 독립
+계층이다.**
+
+이전의 D-OWL-1에는 ④(Rule Engine)와 ⑤(Reasoner)의 사고방식은 반영되어 있지만
+**②(Semantic Compiler)를 명시적인 컴포넌트로 승격시키지는 못했으므로** 이 점을
+반영한다.
+
+---
+
+## A1.4 운영 세션 메모 — 이 amendment가 도착 직전 H1a에서 실측된 것 (판정 아님)
+
+**이 amendment는 같은 날 H1a 독립 리뷰 5차가 찾은 결함들의 정확한 처방이다.**
+판정의 일부가 아니라, 이 지시가 실제 사례를 이미 갖고 있다는 기록이다.
+
+`concept-gate-h1a-scope-wt`의 D-H1a-12 §16 구현에 대해 리뷰어 3명이
+BLOCKER 4 + MAJOR 9를 냈는데, **문자열을 보는 검사가 원리상 놓치는 것들**이
+그 중심에 있었다:
+
+| H1a 실측 | 이 amendment가 지정하는 층 |
+|---|---|
+| `AXIS_SURFACE_TOKENS`가 한국어 `우선순위`는 선언하고 영어 `priority`는 누락 → 판정문 자신의 처방 문구가 그 구멍으로 통과 | ② 부재. ①에서 ④로 직행했다 |
+| 리뷰어가 공통 문장을 `"how recently a source was updated"`로 바꾸자 모든 단언 통과, lint finding 0 (`more recent`는 토큰에 있고 `recent`는 없음) | ② 부재. 의역이 ③에 도달하지 못한다 |
+| §4 처방 문장이 REMOVED arm에서 dangling reference인데 arm-diff 증명·잔여금지 tripwire가 **구조적으로** 못 봄 | ②가 있었다면 `governed_by(source_evaluation) = <미해결 참조>`가 ③에 남아 ④가 잡는다 |
+| `assert_12`를 D-H1a-12 §8이 이미 lexical → semantic으로 바꾸라 명령 | 그 명령의 일반형이 이 amendment다 |
+
+D-H1a-12 §8이 한 실험 안에서 부분적으로 지시한 것("문자열 스캔은 lint로 남기고
+certification은 semantic이 진다")을, 이 amendment가 **워크스페이스 전역
+아키텍처로 승격**한다. 두 지시가 충돌하지 않으며 후자가 전자를 포함한다.
+
+**미해결로 남는 것 (이 amendment가 답하지 않음)**: ②의 산출물인 policy_graph를
+**무엇이 인증하는가.** LLM이 컴파일하면 그 컴파일 자체가 검증 대상이 되고,
+이 워크스페이스의 규율상 "계측기의 침묵은 그것이 말할 수 있음을 보인 뒤에만
+의미가 있다"(패턴 8)가 ②에도 적용되어야 한다. D-OWL-2 설계 시 또는 별도
+판정으로 다뤄야 할 자리다.
