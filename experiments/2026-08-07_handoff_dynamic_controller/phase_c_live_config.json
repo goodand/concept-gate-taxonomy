@@ -1,0 +1,27 @@
+{
+  "contract_version": "handoff-dyn-phase-c-config-v1",
+  "frozen_at": "2026-08-07T00:00:00+09:00",
+  "provider": "codex-cli",
+  "cli_version": "0.146.0",
+  "model": "gpt-5.6-sol",
+  "reasoning_effort": "medium",
+  "subject_mode": "ephemeral-public-bundle",
+  "tool_policy": "host-owned-search-read-finish-v1",
+  "sandbox_policy": "macos-seatbelt-deny-project-root-control-plus-codex-bypass-in-external-sandbox",
+  "timeout_seconds": 600,
+  "retry_count": 0,
+  "invalid_run_policy": "record-V1-and-do-not-replace",
+  "max_actions": 24,
+  "max_terminal_attempts": 3,
+  "pilot": {
+    "case_ids": ["HD01"],
+    "arms": ["S_STATIC", "R_STATIC", "S_DYNAMIC", "R_DYNAMIC"],
+    "interpretation": "qualification-only; never estimate arm effects"
+  },
+  "primary": {
+    "case_ids": ["HD01", "HD02", "HD03", "HD04", "DS05", "DS06", "DS07", "HD08"],
+    "arms": ["S_STATIC", "R_STATIC", "S_DYNAMIC", "R_DYNAMIC"],
+    "replicates_per_cell": 1,
+    "run_only_after": "pilot boundary, schema, guard, and judge checks pass"
+  }
+}

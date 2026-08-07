@@ -36,6 +36,24 @@ python3 -m pytest -q test_protocol.py
 `run_smoke.py`는 calibration 결과가 현재 evaluator, controller, corpus, cases,
 hidden gold, manifest와 정확히 같은 frozen surface에서 나온 경우에만 실행한다.
 
+## Phase C live subject
+
+```bash
+python3 run_calibration.py
+python3 -m pytest -q
+python3 run_live_phase_c.py --pilot --output-name live_pilot_attemptN
+```
+
+`--output-name`은 기존 live artifact overwrite를 거부한다. 실행은 macOS에서만
+지원한다. host가 `/private/tmp`에 disposable bundle을 만들고, Codex subject는
+`subject/`의 public task와 socket client만 받는다. outer Seatbelt가 repository와
+`control/corpus`를 차단하므로 Codex의 inner sandbox는 사용하지 않는다. final answer의
+path/range는 model self-report가 아니라 host action log와 clean judge로 확인된다.
+
+primary (`--primary`)는 pilot 결과와 별개로 비용이 드는 32-cell sweep이다. pilot
+qualification을 arm-effect estimate로 해석하지 말고, primary 실행 여부를 명시적으로
+결정한 뒤에만 호출한다.
+
 ## 파일
 
 | 파일 | 역할 |
@@ -49,6 +67,9 @@ hidden gold, manifest와 정확히 같은 frozen surface에서 나온 경우에�
 | `build_corpus.py` | 합성 adversarial bundle 생성 |
 | `run_calibration.py` / `run_smoke.py` | Phase A/A′ / Phase B |
 | `test_protocol.py` | 프로토콜 게이트(양방향) |
+| `build_live_public_bundle.py` | public subject / host-only corpus bundle + immutable-input manifest |
+| `run_live_phase_c.py` | Seatbelt-isolated Codex subject, host action server, Phase C scoring |
+| `test_live_phase_c.py` | bundle, guard, static recovery, schema, subagent exposure regression tests |
 
-**live subject run은 0건이다.** smoke 수치로 arm 효과를 주장하지 마라 —
-이유는 `RESULTS.md` §5.
+최종 Phase C qualification pilot은 `results/live_pilot_attempt9.json`에 기록되어 있다.
+이 4-cell pilot으로 arm 효과를 주장하지 마라 — 이유는 `RESULTS.md` §7.

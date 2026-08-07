@@ -175,3 +175,47 @@ python3 -m pytest -q test_protocol.py    # 30 passed
 
 산출물: `results/calibration.json`, `results/smoke.json`,
 `results/smoke_traces.json`(arm별 전체 trace), `corpus_manifest.json`.
+
+## 7. Phase C live-subject pilot
+
+최종 qualification artifact: `results/live_pilot_attempt9.json`.
+provider는 `codex exec` 0.146.0, `gpt-5.6-sol`, reasoning effort `medium`이며,
+`HD01 × 4 arm × 1`만 실행했다. 이는 pilot이므로 arm effect, 비용 우열, 일반화 성능을
+추정하지 않는다.
+
+| arm | valid (`V1` 없음) | critical Recall | hard gate | 관측된 예외 |
+|---|---:|---:|---:|---|
+| `S_STATIC` | 예 | 1.0 | 통과 | guard refusal 1회 뒤 bounded recovery read |
+| `R_STATIC` | 예 | 1.0 | 미통과 | `next_action_accuracy=false`, failure code 없음 |
+| `S_DYNAMIC` | 예 | 1.0 | 통과 | 잘못된 read range 1회는 host가 거부, 최종 trace는 유효 |
+| `R_DYNAMIC` | 예 | 1.0 | 통과 | guard refusal 1회 뒤 reformulation/re-read |
+
+qualification으로 확인된 것:
+
+1. subject는 `subject/`의 public task와 socket client만 보았고, direct `control/corpus`
+   read는 macOS Seatbelt에서 `Operation not permitted`로 차단됐다.
+2. host가 search/read/finish 및 range exposure를 기록했고, final citation은 subject의
+   own-read trace와 clean judge로 대조됐다.
+3. retrieval-only process는 candidate/range/trace/uncertainty contract를 지키며 두 R
+   arm에 같은 hint를 제공했고, main subject는 그 hint를 다시 읽어야 했다.
+4. post-run immutable-input hash/symlink check와 clean judge가 성공했다.
+
+### 7.1 보존한 invalid attempts
+
+초기 attempt를 삭제하거나 최종 pilot에 합치지 않았다. 각각은 하네스 결함을 발견한
+`V1`/pre-score artifact이며 arm data가 아니다.
+
+| artifact | 원인 | 해결 |
+|---|---|---|
+| `live_pilot.json` | ambient `TMPDIR`가 AF_UNIX socket 길이 제한 초과 | socket root를 `/private/tmp/hdyn-*`으로 고정 |
+| `live_pilot_attempt2.json` | launch diagnostics 부족 상태의 Codex exit 1 | stdout/stderr tail을 V1 artifact에 기록 |
+| `live_pilot_attempt3.json` | `const`만 가진 JSON Schema를 provider가 거부 | enum/const field에 explicit type 추가 |
+| `live_pilot_attempt4.json` | `subject/run/` output을 immutable input drift로 오판, subagent `uniqueItems` 미지원 | run directory 제외, uniqueness를 host validator로 이동 |
+| attempt 5 | host가 retrieval state를 `None`으로 재할당해 artifact 전 score exception | state lifecycle 수정; artifact 없음 |
+| `live_pilot_attempt6.json` | nested Seatbelt가 client 실행 전 실패 | outer Seatbelt만 enforcement로 사용 |
+| `live_pilot_attempt7.json` | static finish-recovery branch가 host protocol에 없음 | bounded `read_candidate → finish` recovery suffix |
+| `live_pilot_attempt8.json` | subagent narrower read range를 exact equality로 C3 | containment-based range validation |
+
+attempt 9만 현재 frozen implementation의 qualification 결과다. 다음 primary sweep은
+`8 case × 4 arm × 1`이지만, one-replicate descriptive run이고 synthetic corpus의
+외부 일반화나 causal arm effect를 주장할 수 없다.

@@ -314,3 +314,229 @@ controller, gold, corpus, question, threshold는 변경하지 않았고 live sub
 
 이 정정은 smoke arm 수치를 보고 한 것이 아니라, `-E`에서
 `PYTHONPYCACHEPREFIX`가 `None`으로 남는 실제 interpreter 동작을 재현해 발견했다.
+
+---
+
+## Amendment 3 — 2026-08-07, Phase C live subject run 0건 시점
+
+Phase B는 scripted controller뿐이어서 OS-level subject 격리를 검증하지 않았다.
+이 amendment는 **아직 live subject 호출 0건인 시점**에 Phase C 실행 경계를
+동결한다. gold, corpus, question, evaluator, arm 정의, threshold는 바꾸지 않는다.
+
+### C1. Provider와 실행 단위
+
+- provider: `codex exec` 0.146.0, model `gpt-5.6-sol`,
+  `model_reasoning_effort="medium"`.
+- Claude CLI는 이 host에서 로그인 상태가 아니므로 Phase C provider로 쓰지 않는다.
+  이는 provider 선택의 실험 결과가 아니라 실행 가능성 기록이다.
+- cell은 `(case, arm, variant-L)` 하나의 새 ephemeral Codex process다. pilot은
+  `HD01 × 4 arm` 한 번뿐이며 **qualification-only**다. 이 네 건으로 arm 효과를
+  추정하거나 비교하지 않는다.
+- primary는 pilot의 boundary/schema/guard/clean-judge 조건을 만족한 뒤에만
+  `8 case × 4 arm × 1 replicate`로 실행한다. retry는 0회이고 timeout/API/schema/
+  sandbox failure는 `V1`로 남긴다. invalid cell을 대체하지 않는다.
+
+### C2. Visibility와 filesystem boundary
+
+각 cell은 `/private/tmp`의 새 bundle을 갖는다.
+
+| surface | subject가 읽는가 | host/evaluator가 읽는가 | 내용 |
+|---|---:|---:|---|
+| `subject/` | 예 | 예 | public case, socket client, final JSON schema |
+| `control/corpus/` | **아니오** | 예 | public Markdown corpus snapshot |
+| experiment directory | **아니오** | 예 | hidden gold, evaluator, calibration, source |
+| `results/` | **아니오** | 예 | prior traces and scores |
+
+subject process는 macOS Seatbelt에서 `Project_in_progress` 전체와 그 cell의
+`control/`을 read/write deny한다. Codex 내부 shell은 disposable `subject/`에서만
+workspace-write다. 따라서 subject가 shell `rg`, `cat`, relative traversal로 corpus,
+gold, evaluator, prior trace를 읽는 경로는 OS policy로 실패해야 한다.
+
+source exposure는 host-owned Unix socket의 닫힌 action set으로만 이뤄진다:
+`search`, `follow_link`, `expand_candidates`, `read_candidate`, `finish`. Host가
+in-memory corpus와 candidates, read ranges, guard refusals를 기록한다. 최종 JSON의
+citation은 그 host read log와 대조한다. 모델의 self-report만으로 C1/C4를 통과할 수
+없다. run 뒤 immutable input hash와 symlink 부재를 재검사하며, drift는 `V1`이다.
+
+### C3. Arm operationalization
+
+- `S_STATIC`: host가 `search → expand_candidates → read_candidate → follow_link →
+  read_candidate → finish` 순서를 강제한다. 그 순서 밖 action은 invalid `V1`이다.
+- `S_DYNAMIC`: 같은 닫힌 action set과 24 action budget 안에서 다음 행동과 종료를
+  스스로 선택한다. terminal action은 `BudgetGuard`가 재정의한 recall-first 조건
+  전에는 거부한다.
+- `R_*`: 별도 ephemeral retrieval-only Codex process가 먼저 후보, read range,
+  search trace, uncertainty 네 key만 반환한다. conclusion/authority/state/extra key,
+  관측하지 않은 path/range는 `C3`이며 두 R cell은 모두 `V1`로 남긴다.
+- 공정한 factor contrast를 위해 한 case의 valid retrieval-only output은
+  `R_STATIC`과 `R_DYNAMIC`에 **동일하게** 전달한다. main subject는 그 후보를
+  authority로 간주할 수 없고 자기 host read가 없으면 `C4`다.
+
+### C4. Pilot qualification gates
+
+pilot 결과는 다음만 확인한다. arm 평균, 비용 우열, recall 차이는 보고하지 않는다.
+
+1. subject bundle의 task가 public-case contract만 포함하고 gold key가 없다.
+2. Seatbelt 경계 안에서 host socket client가 동작하고 direct corpus/repository read는
+   허용되지 않는다.
+3. host action log가 final citation, terminal action, guard rejection과 일치한다.
+4. post-run hash/symlink check와 clean judge가 성공하거나, 실패한 cell을 `V1`로
+   보존한다.
+5. `R` factor의 retrieval-only payload가 four-key contract와 host observation에
+   일치한다.
+
+Phase C script, public bundle builder, schemas, config은 frozen-surface hash에 포함한다.
+이 amendment 뒤 그 surface가 바뀌면 calibration을 새로 수행하고, 이미 실행한 live
+결과와 같은 run으로 합치지 않는다.
+
+---
+
+## Amendment 4 — 2026-08-07, live pilot attempt 1 후
+
+pilot attempt 1은 `HD01 × 4 arm`을 예약했지만 **subject 모델 호출 전** host가
+`AF_UNIX path too long`로 socket server를 열지 못해 네 cell 모두 `V1`이었다.
+`results/live_pilot.json`은 삭제하거나 덮어쓰지 않는다. R arm의 `C3`도 model
+출력이 아니라 retrieval socket 생성 실패의 파생 기록이다. 따라서 이 attempt는
+retrieval/interpretation/arm 효과에 대해 관측값이 없다.
+
+수정은 `run_live_phase_c.py`의 runtime socket 위치뿐이다. Python의 ambient `TMPDIR`
+경로는 macOS AF_UNIX 길이 제한을 넘을 수 있으므로, 새 disposable bundle root를
+`/private/tmp/hdyn-*`으로 고정한다. subject visibility, corpus/gold, action set,
+guard threshold, model, prompt, schema, evaluator, retry policy는 변경하지 않았다.
+
+code가 frozen surface에 포함되므로 Phase A/A′ calibration을 다시 수행한 뒤, pilot
+attempt 2는 새 artifact `results/live_pilot_attempt2.json`으로 기록한다. attempt 1을
+대체하거나 arm 평균에 합치지 않는다.
+
+---
+
+## Amendment 5 — 2026-08-07, live pilot attempt 2 후
+
+attempt 2는 AF_UNIX socket server 생성은 통과했지만 Codex child가 tool action 0건인
+채 exit 1로 끝나 네 main cell이 `V1`이었다. `results/live_pilot_attempt2.json`을
+보존한다. 이 역시 answer/retrieval 관측이 없으므로 arm 효과와 합치지 않는다.
+
+host runner는 nonzero Codex exit에서 stderr뿐 아니라 stdout 마지막 1,200자도
+attempt artifact의 `V1.tool_errors`로 보존하도록 변경한다. 이 변경은 단지
+launch-failure 진단을 관측 가능하게 하며 model/prompt/corpus/gold/evaluator/action/
+threshold를 변경하지 않는다. macOS Seatbelt 안의 `codex --version`은 정상 종료한
+것을 별도 확인했다. Phase A/A′를 다시 통과한 뒤 새 artifact `live_pilot_attempt3`
+으로 재시도한다.
+
+---
+
+## Amendment 6 — 2026-08-07, live pilot attempt 3 후
+
+attempt 3의 확장 diagnostics가 정확한 provider error를 보였다: Codex response
+format validator는 `contract_version`의 JSON Schema가 `const`만 있고 `type`이 없다는
+이유로 request를 400으로 거부했다. host socket 및 subject model action은 여전히
+0건이고 모든 cell은 `V1`; `results/live_pilot_attempt3.json`을 보존한다.
+
+두 final-output schema에서 `contract_version`에 `type: string`을, enum-only field에
+명시적 string type을 추가한다. unit test는 이후 모든 const/enum node가 type을
+가지는지 검사한다. 이는 provider가 요구하는 schema 표현의 호환성 수정이고,
+semantics, allowed key, arm definition, evaluator, task/corpus/gold에는 변화를 주지
+않는다. new frozen-surface calibration 후 pilot attempt 4를 별도 artifact로 기록한다.
+
+---
+
+## Amendment 7 — 2026-08-07, live pilot attempt 4 후
+
+attempt 4는 처음으로 main subject의 Codex final response까지 도달했지만, host
+post-run manifest가 `subject/run/main.json`과 raw JSONL을 immutable input drift로
+잘못 분류해 S arm을 `V1`으로 처리했다. `subject/run/`은 애초에 model final output과
+raw diagnostic만 쓰도록 지정한 mutable output directory다. R arm은 별개의 provider
+schema rejection이었다: Codex response-format validator가 `uniqueItems` keyword를
+지원하지 않았다. attempt 4 artifact는 보존하며, main answer 내용은 V1이므로 점수나
+arm 비교에 사용하지 않는다.
+
+수정은 다음 두 구현 호환성 항목뿐이다.
+
+1. input manifest는 `subject/run/`만 제외하고 task, client, schema, host corpus의
+   추가·수정·symlink는 계속 drift로 거부한다. unit test는 output file 허용과 다른
+   `subject/` file 추가 거부를 함께 검사한다.
+2. retrieval schema에서 `uniqueItems`를 제거하고 candidate deduplication은 host의
+   `_subagent_output` validator가 `C3`로 검사한다.
+
+이 수정은 evidence visibility, prompts, arms, guard, score, model 및 corpus/gold를
+변경하지 않는다. Phase A/A′ 후 pilot attempt 5를 새 artifact로 수행한다.
+
+---
+
+## Amendment 8 — 2026-08-07, pilot attempt 5 host exception
+
+attempt 5의 retrieval-only Codex process는 provider schema를 통과해 final response를
+반환했지만, host `_run_retrieval_subagent`가 이미 생성한 `LiveToolState`를 뒤이어
+`None`으로 재할당한 구현 결함으로 `AttributeError`를 냈다. runner가 score artifact를
+쓰기 전에 종료했으므로 `results/live_pilot_attempt5.json`은 존재하지 않는다. 이 event는
+subject output이나 arm data가 아니다.
+
+state declaration을 try block 전에 두고, bundle/corpus/state/socket 생성 뒤에만
+`ToolServer`와 validator를 호출하도록 고친다. retrieval-only result가 실제 host action
+state와 대조되는 조건은 변경하지 않는다. new calibration 뒤 pilot attempt 6를 새
+artifact로 실행한다.
+
+---
+
+## Amendment 9 — 2026-08-07, live pilot attempt 6 후
+
+attempt 6은 five model processes가 모두 final JSON을 만들었고 retrieval-only output도
+contract validation을 통과했다. 그러나 host action log는 전부 0이었다. raw trace의
+공통 원인은 `python3 live_subject_tool.py ...`가 실행되기 전 Codex inner sandbox가
+`sandbox-exec: sandbox_apply: Operation not permitted`로 실패한 것이다. 즉 outer
+macOS Seatbelt 안에서 Codex의 `--sandbox workspace-write`가 **두 번째 Seatbelt**를
+만들려는 nested-sandbox 충돌이다. `results/live_pilot_attempt6.json`은 V1 artifact로
+보존하며 answer 내용은 score/arm 비교에 쓰지 않는다.
+
+Phase C runner는 Codex의 inner sandbox를
+`--dangerously-bypass-approvals-and-sandbox`로 bypass하고, 이미 검증한 outer Seatbelt를
+유일한 OS enforcement point로 사용한다. outer profile은 `Project_in_progress` 전체와
+각 bundle `control/`을 read/write deny하므로 subject가 gold/evaluator/corpus를 직접
+읽을 수 없고, model-generated shell은 disposable `subject/`만 작업 surface로 받는다.
+이 bypass flag는 **outer Seatbelt invocation 없이는 사용하지 않는 runner 내부
+implementation**이다. config와 unit test에 그 의존성을 기록한다. visibility, action
+set, model, prompts, score, retry policy는 변경하지 않는다. calibration 뒤 pilot attempt
+7을 새 artifact로 실행한다.
+
+---
+
+## Amendment 10 — 2026-08-07, first valid live pilot trace (attempt 7) 후
+
+attempt 7은 처음으로 host-owned actions를 가진 valid live traces를 만들었다. 이는
+pilot qualification의 boundary/socket/trace 조건을 충족한다. `R_DYNAMIC`은 full hard
+gate를 통과했고 `S_DYNAMIC`은 V1 없이 critical recall 1.0에 도달했지만, pilot은
+`HD01 × 1`이므로 이 값을 arm 효과로 해석하지 않는다.
+
+`S_STATIC`의 V1은 새로운 protocol contradiction을 드러냈다. host는 static sequence를
+`search → expand → read → follow → read → finish`으로 닫아 두었지만, finish가
+recall-first guard에서 거부될 때 prompt는 "returned requirement를 만족하고 retry"하라고
+지시했다. 실제 subject는 guard가 요구한 추가 read를 하려 했고 host가 그 action을
+V1으로 막았다. 이는 subject 성능이 아니라 **실행 불가능한 static recovery branch**다.
+
+static arm은 initial fixed sequence 뒤 terminal 거부가 있을 때만, 이미 관측했으나 아직
+읽지 않은 candidate 한 개를 `read_candidate`로 읽고 `finish`를 재시도하는 bounded
+recovery suffix를 허용한다. 다른 action, query 재작성, 순서 변경은 계속 V1이다.
+recovery가 다시 guard를 통과하지 못하면 기존 최대 terminal-attempt `C1` 규칙을 따른다.
+unit test는 정확히 이 suffix와 sequence 이탈 거부를 모두 확인한다.
+
+이 수정은 static arm이 guard와 논리적으로 함께 실행될 수 있게 할 뿐, evidence source,
+gold, evaluator, threshold, dynamic action space, model 또는 answer scoring을 변경하지
+않는다. attempt 7과 수정 후 attempt 8은 같은 arm-effect estimate로 합치지 않으며,
+attempt 8 역시 qualification artifact로만 기록한다.
+
+---
+
+## Amendment 11 — 2026-08-07, live pilot attempt 8 후
+
+attempt 8에서 `S_STATIC`과 `S_DYNAMIC`은 full hard gate를 통과했다. R subagent도
+host socket에서 9 actions와 4 reads를 수행했지만 C3가 났다. 원인은 subagent가 host의
+`1-40` read 안에 포함되는 더 좁은 range를 보고했는데 validator가 `(path,start,end)`
+완전 일치만 인정한 것이었다. 이는 main citation evaluator가 이미 쓰는 exposure rule
+(`host_start <= declared_start`, `declared_end <= host_end`)과 불일치한다.
+
+retrieval-only validator도 같은 containment rule로 바꾼다. path, integer ordering,
+candidate observation은 계속 검증하며 host read보다 넓거나 다른 path range는 C3다.
+새 unit test는 `1-40` host read에 `5-9` declaration이 통과하고 `1-41`은 거부됨을
+확인한다. 이는 subagent가 source authority를 결정할 수 있게 하는 변경이 아니며,
+four-key boundary와 main-agent re-read C4 rule은 그대로다. new calibration 뒤 attempt
+9를 별도 qualification artifact로 실행한다.
