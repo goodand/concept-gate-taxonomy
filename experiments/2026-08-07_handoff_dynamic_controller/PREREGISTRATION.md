@@ -540,3 +540,86 @@ candidate observation은 계속 검증하며 host read보다 넓거나 다른 pa
 확인한다. 이는 subagent가 source authority를 결정할 수 있게 하는 변경이 아니며,
 four-key boundary와 main-agent re-read C4 rule은 그대로다. new calibration 뒤 attempt
 9를 별도 qualification artifact로 실행한다.
+
+---
+
+## Amendment 12 — 2026-08-07, provider red-team 후 v2 qualification 강제
+
+Claude adapter red-team 뒤 독립 검토에서, 문서상 권고와 실행 강제가 다른 네 경로를
+확인했다. 이 시점까지 Claude case/gold live run은 0건이며 Codex-v2 run도 0건이다.
+
+1. `phase_c_claude_config.json`이 존재해도 runner가 항상
+   `phase_c_live_config.json`만 읽어 Claude adapter가 CLI entrypoint에서 선택되지
+   않았다.
+2. 신규 `_providers.py`와 provider config가 frozen-surface hash 밖이라 calibration이
+   adapter drift를 검출하지 못했다.
+3. `host action >= 1`은 문서의 qualification 권고일 뿐 artifact 판정과 primary gate에
+   연결되지 않았다.
+4. Codex-v2 재검증을 요구했지만 Codex 실행 함수는 항상 v1 profile을 만들었다.
+
+수정 후 runner는 동결된 세 config만 `--config`로 선택한다. `_providers.py`, Claude 및
+Codex-v2 config, provider-isolation red-team script를 frozen surface에 추가한다.
+Seatbelt-v2 config를 선택한 Codex와 Claude는 동일한 v2 OS deny profile을 사용한다.
+v2 run은 현재 frozen hash와 일치하고 `hardened_profile_passed=true`인 red-team artifact가
+없으면 시작하지 않는다.
+
+pilot qualification은 score와 별도로 각 main cell의 host action 1건 이상, R arm에서
+retrieval-only process의 host action 1건 이상, `invalid_run=false`를 모두 요구한다.
+primary는 현재 frozen hash와 일치하는 provider별 passing pilot artifact가 없으면 모델
+호출 전에 거부한다. Claude primary는 Claude-v2와 Codex-v2 qualification 둘 다 요구한다.
+이는 arm 성능 기준이 아니라 측정 도구가 실제 retrieval 경로를 사용했다는 실행
+compliance 기준이다.
+
+Claude adapter의 사후 schema validator는 실제 response schema가 사용하는 `const`,
+`minLength`, `minimum`까지 검사한다. JSON 추출은 문자열 내부 brace를 구조 brace로
+오인하지 않도록 `JSONDecoder.raw_decode` 기반으로 바꾼다. evaluator metric, gold,
+corpus, action set, BudgetGuard, four-key contract는 변경하지 않는다.
+
+v1 pilot artifacts는 홈 transcript 채널이 열렸던 과거 조건과 이전 frozen hash의
+기록으로만 보존한다. v2 결과와 합치거나 qualification 근거로 재사용하지 않는다.
+이 amendment 후 calibration, hardened red-team, 전체 unit test를 다시 통과해야만 v2
+live pilot을 실행한다.
+
+## Amendment 13 — 2026-08-07, provider-v2 qualification attempt 1 후
+
+Codex-v2와 Claude-v2 qualification attempt 1은 모두 4개 cell이 `V1`이었고 검색
+성능 관측으로 사용하지 않는다. 두 artifact는 덮어쓰지 않고 보존한다.
+
+- `live_pilot_codex_v2.json`: v2 profile이 `~/.codex` 전체를 deny하면서
+  `~/.local/bin/codex` symlink의 실제 binary와 OAuth token file도 차단해 provider가
+  exit 71로 종료했다. `auth.json`만 허용하면 model-generated Bash도 access/refresh
+  token을 읽을 수 있으므로 예외 허용하지 않는다. Codex-v2는 credential과 subject
+  tool 권한을 분리하는 별도 architecture 전에는 재실행하지 않는다.
+- `live_pilot_claude.json`: adapter schema validation에서 main은 `answer_text`,
+  retrieval-only는 `contract_version` 누락으로 실패했다. 당시 runner는 provider가
+  host action 뒤 final payload만 실패해도 `LiveToolState`를 빈 invalid trace로 바꾸고
+  raw envelope와 provider metadata를 버렸다. 따라서 artifact의 action 0은 실제
+  미호출을 증명하지 못한다.
+
+로컬 CLI 2.1.223의 실제 `claude --help`는 초기 보고와 달리 `--json-schema`를
+지원한다. attempt 2부터 Claude command는 native structured output을 요구하고,
+`structured_output`을 우선 사용한 뒤 같은 schema로 adapter 재검증한다. prose JSON
+추출은 호환 fallback일 뿐 primary 경로가 아니다. built-in tool surface는 `--tools
+Bash`로 닫고 safe mode, slash command disable, Chrome disable을 함께 사용한다.
+
+provider/schema 오류가 나도 runner는 host-owned actions, reads, guard rejections와
+provider raw/cost/turn metadata를 V1 artifact에 보존한다. qualification은 여전히
+`invalid_run=false`를 요구하므로 이 관측 보존이 실패를 통과시키지는 않는다. 기존
+Claude attempt 1을 교체하지 않고 `live_pilot_claude_attempt2.json`을 새 artifact로
+사용한다. 이 변경 후 calibration, red-team, unit test를 재통과해야 한다.
+
+---
+
+## Amendment 14 — 2026-08-07, Claude-v2 qualification attempt 2 후
+
+`live_pilot_claude_attempt2.json`은 모델 호출 전에 약 3초 만에 종료됐고 모든 cell이
+provider launch `V1`이다. Claude CLI의 `--json-schema` parser가 원본 schema의
+`$schema: https://json-schema.org/draft/2020-12/schema` URI를 알지 못해 요청을
+거부했다. host action은 실제로 0이며 provider metadata가 없어 비용 관측도 없다.
+
+CLI 전달용 schema 사본에서 draft를 선언하는 메타 키 `$schema`만 제거한다. required,
+properties, additionalProperties, type, enum, const, minLength, minimum과 nested 구조는
+그대로 유지한다. adapter는 계속 `$schema`를 포함한 원본 파일로 결과를 재검증한다.
+attempt 2는 덮어쓰지 않고 다음 qualification은
+`live_pilot_claude_attempt3.json`으로 기록한다. calibration, red-team, unit test를
+재통과한 뒤에만 실행한다.

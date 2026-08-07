@@ -18,6 +18,7 @@ observable even when a model's final JSON is otherwise well formed.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -37,12 +38,19 @@ sys.path.insert(0, str(HERE))
 from _contract import (ARM_HAS_SUBAGENT, ARM_IS_DYNAMIC, ARMS, SUBAGENT_VERSION,
                        TRACE_VERSION, ContractError, validate_subagent_output,
                        validate_trace)
-from _evaluator import (frozen_surface_drift, run_clean_judge, source_hashes)
+from _evaluator import (frozen_surface_drift, frozen_surface_hashes,
+                        run_clean_judge, source_hashes)
 from _runner import BudgetGuard, Corpus, MAX_ACTIONS, MAX_TERMINAL_ATTEMPTS
+from _providers import ProviderError, resolve_provider, seatbelt_profile_v2
 from build_live_public_bundle import BundleError, build_bundle, verify_bundle
 from run_calibration import load
 
 CONFIG_PATH = HERE / "phase_c_live_config.json"
+ALLOWED_CONFIG_NAMES = (
+    "phase_c_live_config.json",
+    "phase_c_codex_v2_config.json",
+    "phase_c_claude_config.json",
+)
 RESULTS_DIR = HERE / "results"
 MAX_READ_END = 200
 
@@ -51,8 +59,16 @@ class LiveRunError(RuntimeError):
     """A live process could not yield a valid, evaluable subject artifact."""
 
 
-def load_config() -> dict[str, Any]:
-    config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+def load_config(path: str | Path = CONFIG_PATH) -> dict[str, Any]:
+    selected = Path(path)
+    if not selected.is_absolute():
+        selected = HERE / selected
+    selected = selected.resolve()
+    allowed = {(HERE / name).resolve() for name in ALLOWED_CONFIG_NAMES}
+    if selected not in allowed:
+        raise LiveRunError(
+            f"config is not part of the frozen provider set: {selected}")
+    config = json.loads(selected.read_text(encoding="utf-8"))
     if config.get("contract_version") != "handoff-dyn-phase-c-config-v1":
         raise LiveRunError("unsupported Phase C config")
     if tuple(config.get("pilot", {}).get("arms", [])) != ARMS:
@@ -368,7 +384,9 @@ def _run_codex(subject: Path, socket_path: Path, prompt: str, schema_name: str,
     run_dir.mkdir(exist_ok=True)
     output_path = run_dir / f"{run_name}.json"
     raw_path = run_dir / f"{run_name}.jsonl"
-    profile = seatbelt_profile(project_root, host_control)
+    profile = (seatbelt_profile_v2(project_root, host_control)
+               if "seatbelt-v2" in config.get("sandbox_policy", "")
+               else seatbelt_profile(project_root, host_control))
     command = [
         str(seatbelt), "-p", profile, codex, "exec", "--ephemeral",
         "--skip-git-repo-check", "--ignore-user-config", "--ignore-rules",
@@ -403,7 +421,12 @@ def _run_codex(subject: Path, socket_path: Path, prompt: str, schema_name: str,
     except json.JSONDecodeError as exc:
         raise LiveRunError(f"Codex final response is not JSON: {exc}") from exc
     return {"payload": payload, "raw": raw_path.read_text(encoding="utf-8"),
-            "elapsed_ms": int((time.perf_counter() - started) * 1000)}
+            "elapsed_ms": int((time.perf_counter() - started) * 1000),
+            "provider_meta": {
+                "provider": "codex-cli",
+                "sandbox_profile": "v2" if "seatbelt-v2" in config.get(
+                    "sandbox_policy", "") else "v1",
+            }}
 
 
 def _subagent_output(payload: dict[str, Any], state: LiveToolState) -> dict[str, Any]:
@@ -462,16 +485,33 @@ def _trace_from_subject(case: dict, arm: str, state: LiveToolState,
     return trace
 
 
-def _invalid_trace(case: dict, arm: str, message: str, *, subagent: dict | None = None) -> dict[str, Any]:
+def _invalid_trace(case: dict, arm: str, message: str, *, subagent: dict | None = None,
+                   state: LiveToolState | None = None) -> dict[str, Any]:
+    fields = state.trace_fields() if state is not None else {
+        "actions": [], "reads": [], "guard_rejections": [],
+        "failure_codes": [], "tool_errors": [], "stop_reason": None,
+        "n_search": 0, "n_read": 0, "wall_clock_ms": 0,
+    }
+    fields["failure_codes"] = sorted(set(fields["failure_codes"] + ["V1"]))
+    fields["tool_errors"] = fields["tool_errors"] + [message]
+    fields["stop_reason"] = "V1"
     return {
         "contract_version": TRACE_VERSION, "case_id": case["id"], "arm": arm,
-        "subagent_output": subagent, "actions": [], "reads": [], "claims": [],
+        "subagent_output": subagent, "claims": [],
         "current_state": "", "next_action": "", "stop_conditions": [],
         "uncertainties": [], "recommended_actions": [], "answer_text": "",
-        "declared_absent": False, "guard_rejections": [], "failure_codes": ["V1"],
-        "tool_errors": [message], "stop_reason": "V1", "n_search": 0, "n_read": 0,
-        "wall_clock_ms": 0,
+        "declared_absent": False, **fields,
     }
+
+
+def _provider_error_details(exc: Exception) -> dict[str, Any]:
+    details: dict[str, Any] = {"error": str(exc)}
+    if isinstance(exc, ProviderError):
+        if exc.raw:
+            details["raw"] = exc.raw
+        if exc.provider_meta:
+            details["provider_meta"] = exc.provider_meta
+    return details
 
 
 def _run_retrieval_subagent(case: dict, variant: str, config: dict[str, Any],
@@ -484,17 +524,21 @@ def _run_retrieval_subagent(case: dict, variant: str, config: dict[str, Any],
         state = LiveToolState(corpus, case, initial_candidates=None, guard_enabled=False)
         socket_path = temp_root / "retrieval-subagent.sock"
         with ToolServer(socket_path, state):
-            run = _run_codex(bundle / "subject", socket_path,
+            run = resolve_provider(config, _run_codex)(
+                             bundle / "subject", socket_path,
                              _prompt(case, "R_DYNAMIC", retrieval_only=True),
                              "retrieval_subagent_response.schema.json", config,
                              project_root=HERE.parents[2], host_control=bundle / "control",
                              run_name="subagent")
         verify_bundle(bundle, manifest)
-        return _subagent_output(run["payload"], state), {"raw": run["raw"],
-                                                          "elapsed_ms": run["elapsed_ms"],
-                                                          "host_actions": state.actions}
-    except (BundleError, LiveRunError, OSError, ValueError) as exc:
-        return None, {"error": str(exc), "host_actions": state.actions if state else []}
+        return _subagent_output(run["payload"], state), {
+            "raw": run["raw"], "elapsed_ms": run["elapsed_ms"],
+            "host_actions": state.actions,
+            "provider_meta": run.get("provider_meta", {}),
+        }
+    except (BundleError, LiveRunError, ProviderError, OSError, ValueError) as exc:
+        return None, {**_provider_error_details(exc),
+                      "host_actions": state.actions if state else []}
 
 
 def run_cell(case: dict, gold: dict, arm: str, variant: str, config: dict[str, Any],
@@ -509,6 +553,7 @@ def run_cell(case: dict, gold: dict, arm: str, variant: str, config: dict[str, A
         return trace, {"error": "R arm not run because retrieval-only component was invalid",
                        "subagent": subagent_meta}
     bundle = temp_root / f"main-{arm.lower()}"
+    state: LiveToolState | None = None
     try:
         manifest = build_bundle(bundle, variant, case["id"])
         corpus = Corpus(bundle / "control" / "corpus")
@@ -516,23 +561,43 @@ def run_cell(case: dict, gold: dict, arm: str, variant: str, config: dict[str, A
                                guard_enabled=True, strict_static=not ARM_IS_DYNAMIC[arm])
         socket_path = temp_root / f"{arm.lower()}.sock"
         with ToolServer(socket_path, state):
-            run = _run_codex(bundle / "subject", socket_path, _prompt(case, arm, subagent=subagent),
+            run = resolve_provider(config, _run_codex)(
+                             bundle / "subject", socket_path, _prompt(case, arm, subagent=subagent),
                              "live_subject_response.schema.json", config,
                              project_root=HERE.parents[2], host_control=bundle / "control",
                              run_name="main")
         verify_bundle(bundle, manifest)
         trace = _trace_from_subject(case, arm, state, run["payload"], subagent)
         trace["variant"] = variant
-        return trace, {"raw": run["raw"], "subject_elapsed_ms": run["elapsed_ms"],
-                       "subagent": subagent_meta}
-    except (BundleError, LiveRunError, OSError, ValueError, json.JSONDecodeError) as exc:
-        trace = _invalid_trace(case, arm, str(exc), subagent=subagent)
+        return trace, {
+            "raw": run["raw"], "subject_elapsed_ms": run["elapsed_ms"],
+            "provider_meta": run.get("provider_meta", {}),
+            "subagent": subagent_meta,
+        }
+    except (BundleError, LiveRunError, ProviderError, OSError, ValueError,
+            json.JSONDecodeError) as exc:
+        trace = _invalid_trace(case, arm, str(exc), subagent=subagent, state=state)
         trace["variant"] = variant
-        return trace, {"error": str(exc), "subagent": subagent_meta}
+        return trace, {**_provider_error_details(exc), "subagent": subagent_meta}
 
 
-def _assert_ready() -> dict[str, Any]:
-    config = load_config()
+def _assert_provider_preflight(config: dict[str, Any]) -> None:
+    if "seatbelt-v2" not in config.get("sandbox_policy", ""):
+        return
+    path = RESULTS_DIR / "redteam_provider_isolation.json"
+    if not path.is_file():
+        raise LiveRunError("refusing v2 run: provider-isolation red-team is missing")
+    report = json.loads(path.read_text(encoding="utf-8"))
+    if report.get("hardened_profile_passed") is not True:
+        raise LiveRunError("refusing v2 run: hardened provider-isolation red-team failed")
+    drift = frozen_surface_drift(report.get("frozen_surface_hashes"))
+    if drift:
+        raise LiveRunError(
+            f"refusing v2 run: provider-isolation red-team is stale: {drift}")
+
+
+def _assert_ready(config_path: str | Path = CONFIG_PATH) -> dict[str, Any]:
+    config = load_config(config_path)
     calibration_path = RESULTS_DIR / "calibration.json"
     if not calibration_path.is_file():
         raise LiveRunError("refusing live run: calibration.json is missing")
@@ -542,7 +607,53 @@ def _assert_ready() -> dict[str, Any]:
     drift = frozen_surface_drift(calibration.get("frozen_surface_hashes"))
     if drift:
         raise LiveRunError(f"refusing live run: frozen surface drifted: {drift}")
+    _assert_provider_preflight(config)
     return config
+
+
+def _host_action_compliance(trace: dict[str, Any], details: dict[str, Any]) -> dict[str, Any]:
+    main_count = len(trace.get("actions", []))
+    subagent_required = ARM_HAS_SUBAGENT[trace["arm"]]
+    subagent_meta = details.get("subagent") or {}
+    subagent_count = len(subagent_meta.get("host_actions", []))
+    failures = []
+    if main_count < 1:
+        failures.append("main-host-action-missing")
+    if subagent_required and subagent_count < 1:
+        failures.append("subagent-host-action-missing")
+    return {
+        "passed": not failures,
+        "main_host_actions": main_count,
+        "subagent_host_actions": subagent_count,
+        "subagent_required": subagent_required,
+        "failures": failures,
+    }
+
+
+def _assert_primary_qualifications(config: dict[str, Any]) -> None:
+    specs = config["primary"].get("required_qualification_artifacts") or [{
+        "file": "live_pilot.json",
+        "provider": config["provider"],
+        "sandbox_policy": config["sandbox_policy"],
+    }]
+    for spec in specs:
+        path = RESULTS_DIR / spec["file"]
+        if not path.is_file():
+            raise LiveRunError(f"refusing primary: qualification artifact is missing: {path}")
+        artifact = json.loads(path.read_text(encoding="utf-8"))
+        if artifact.get("kind") != "live-subject-pilot":
+            raise LiveRunError(f"refusing primary: not a pilot artifact: {path}")
+        if artifact.get("qualification", {}).get("passed") is not True:
+            raise LiveRunError(f"refusing primary: qualification did not pass: {path}")
+        artifact_config = artifact.get("config", {})
+        for key in ("provider", "sandbox_policy"):
+            if artifact_config.get(key) != spec[key]:
+                raise LiveRunError(
+                    f"refusing primary: {path.name} has wrong {key}")
+        drift = frozen_surface_drift(artifact.get("frozen_surface_hashes"))
+        if drift:
+            raise LiveRunError(
+                f"refusing primary: qualification artifact is stale: {path.name}: {drift}")
 
 
 def _score(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -560,8 +671,11 @@ def _score(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return results
 
 
-def run_phase(case_ids: list[str], arms: list[str], *, output_name: str) -> int:
-    config = _assert_ready()
+def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
+              phase_name: str = "pilot", config_path: str | Path = CONFIG_PATH) -> int:
+    config = _assert_ready(config_path)
+    if phase_name == "primary":
+        _assert_primary_qualifications(config)
     output_path = RESULTS_DIR / f"{output_name}.json"
     if output_path.exists():
         raise LiveRunError(f"refusing to overwrite an existing live result: {output_path}")
@@ -587,9 +701,14 @@ def run_phase(case_ids: list[str], arms: list[str], *, output_name: str) -> int:
                 trace, details = run_cell(case, gold[case_id], arm, variant, config,
                                           temp_root / f"{case_id}-{arm}",
                                           subagent=subagent, subagent_meta=meta)
-                records.append({"trace": trace, "gold": gold[case_id], "case": case})
-                raw[f"{case_id}:{arm}"] = details
+                key = f"{case_id}:{arm}"
+                records.append({"trace": trace, "gold": gold[case_id], "case": case,
+                                "details": details, "key": key})
+                raw[key] = details
     results = _score(records)
+    for result, record in zip(results, records):
+        result["host_action_compliance"] = _host_action_compliance(
+            record["trace"], record["details"])
     by_arm: dict[str, dict[str, Any]] = {}
     for arm in arms:
         rows = [row for row in results if row["arm"] == arm]
@@ -597,16 +716,36 @@ def run_phase(case_ids: list[str], arms: list[str], *, output_name: str) -> int:
             "n": len(rows),
             "full_hard_gate_rate": round(sum(r["full_hard_gate"] for r in rows) / len(rows), 3),
             "invalid_run_rate": round(sum(r["invalid_run"] for r in rows) / len(rows), 3),
+            "host_action_compliance_rate": round(sum(
+                r["host_action_compliance"]["passed"] for r in rows) / len(rows), 3),
             "critical_path_recall": round(sum(r["critical_path_recall"] for r in rows) / len(rows), 3),
             "failure_codes": dict(Counter(code for r in rows for code in r["failure_codes"])),
         }
+    qualification_failures = [
+        f"{row['case_id']}:{row['arm']}"
+        for row in results
+        if row["invalid_run"] or not row["host_action_compliance"]["passed"]
+    ]
+    qualification = {
+        "passed": phase_name == "pilot" and not qualification_failures,
+        "criteria": ["invalid_run == false", "main host actions >= 1",
+                     "retrieval-subagent host actions >= 1 for R arms"],
+        "failed_cells": qualification_failures,
+    }
+    selected_config_path = Path(config_path)
+    if not selected_config_path.is_absolute():
+        selected_config_path = HERE / selected_config_path
     out = {
-        "kind": "live-subject-pilot" if output_name == "live_pilot" else "live-subject-primary",
+        "kind": "live-subject-pilot" if phase_name == "pilot" else "live-subject-primary",
         "interpretation": ("qualification-only; this small pilot must not be used to estimate "
-                           "arm effects" if output_name == "live_pilot" else
+                           "arm effects" if phase_name == "pilot" else
                            "descriptive one-replicate live-subject run; no causal claim"),
         "config": config,
+        "config_file": selected_config_path.name,
+        "config_sha256": hashlib.sha256(selected_config_path.read_bytes()).hexdigest(),
         "judge_pins": source_hashes(),
+        "frozen_surface_hashes": frozen_surface_hashes(),
+        "qualification": qualification,
         "n_runs": len(results), "per_arm": by_arm, "results": results,
         "traces": [record["trace"] for record in records], "raw": raw,
     }
@@ -614,7 +753,8 @@ def run_phase(case_ids: list[str], arms: list[str], *, output_name: str) -> int:
     output_path.write_text(
         json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"output": str(output_path),
-                      "n_runs": len(results), "per_arm": by_arm}, ensure_ascii=False, indent=2))
+                      "n_runs": len(results), "qualification": qualification,
+                      "per_arm": by_arm}, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -626,13 +766,18 @@ def main() -> int:
     parser.add_argument("--case-id", action="append", help="override configured case ids")
     parser.add_argument("--arm", choices=ARMS, action="append", help="override configured arms")
     parser.add_argument("--output-name", help="new result artifact name; never overwrite a prior attempt")
+    parser.add_argument("--config", default=CONFIG_PATH.name, choices=ALLOWED_CONFIG_NAMES,
+                        help="frozen provider config")
     args = parser.parse_args()
     try:
-        config = load_config()
+        config = load_config(args.config)
         phase = config["pilot"] if args.pilot else config["primary"]
-        default_output = "live_pilot" if args.pilot else "live_primary"
+        phase_name = "pilot" if args.pilot else "primary"
+        default_output = config.get("result_names", {}).get(
+            phase_name, "live_pilot" if args.pilot else "live_primary")
         return run_phase(args.case_id or phase["case_ids"], args.arm or phase["arms"],
-                         output_name=args.output_name or default_output)
+                         output_name=args.output_name or default_output,
+                         phase_name=phase_name, config_path=args.config)
     except LiveRunError as exc:
         print(str(exc), file=sys.stderr)
         return 2

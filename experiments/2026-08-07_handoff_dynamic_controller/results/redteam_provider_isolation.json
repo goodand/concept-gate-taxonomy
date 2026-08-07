@@ -1,0 +1,282 @@
+{
+  "n_probes": 29,
+  "leaks": [
+    {
+      "q": "Q4/v1",
+      "probe": "~/.claude/projects transcripts of THIS workspace",
+      "reachable": true,
+      "expected_reachable": false,
+      "leak": true,
+      "detail": "-Users-jaehyuntak"
+    },
+    {
+      "q": "Q1/v1",
+      "probe": "~/.codex history",
+      "reachable": true,
+      "expected_reachable": false,
+      "leak": true,
+      "detail": "ambient-suggestions"
+    }
+  ],
+  "hardened_profile_leaks": [],
+  "hardened_profile_passed": true,
+  "frozen_surface_hashes": {
+    "PREREGISTRATION.md": "314214e193b456dab626eee6732238c9603242a000f6e299a35a2edac8a98957",
+    "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652",
+    "_controllers.py": "464396bb4c8ef374b108c6803aa991f751453a75877548e2f06a587703f28088",
+    "_evaluator.py": "d3f65d8181ed5cfe106f9e75c774f7b7f692735c2651d8ab0be7c8350ea433c1",
+    "_runner.py": "638a1932664fbfbc72d90d571255b96e87203904234669b3e9caaa3f83486cb2",
+    "build_corpus.py": "1368b5f31ab1666132b7f180431cb090e611269f0d535c27cb70c46cd639bfd6",
+    "build_live_public_bundle.py": "7e542609dff888c0a724c7b292f8e51e48188ee696f2e3daebd35b31b7dd81a8",
+    "live_subject_tool.py": "d5bc3b78374740b0c3da43788d37d9c3978cc82b9cca73a4f54d2f7409e19772",
+    "live_subject_response.schema.json": "fefd9d14a06ed98085a53577f9a76534062653efb4e34ebecf26a1e406fc9cf5",
+    "retrieval_subagent_response.schema.json": "78b890813ca048cbb5504838d48ba097269a015c3facbfdf86ddf25d20b174f8",
+    "_providers.py": "cf4f8d31c81cef7f770a715004259b2eb3491f2645f2b5e66207550d687f9d90",
+    "phase_c_claude_config.json": "ba5ff7897b41e9194c9ab7db5df8e473aec15f1ae5af28b7f46fb8764200fdd7",
+    "phase_c_codex_v2_config.json": "cbc6776e58c4a344328f016dfc725952c621779b1b19736955f56355dd3f7169",
+    "phase_c_live_config.json": "e35b35630f89f76e8f9ca4467dad8044ed7926e72f7227b06675c65fb7c380d3",
+    "redteam_provider_isolation.py": "41a13a395b5ad6570d20810f6e29b83e607135e02f03b564672d88ec34cff11d",
+    "run_calibration.py": "6514d9032c4634dcb787749f6416d2628dc7da5e9e6ba9d66b7e1bbc0e83626f",
+    "run_live_phase_c.py": "3fdc6f0107b44b8dd36dc6f286398908f455a485b279bc72deb3c2c7982fed3d",
+    "run_smoke.py": "6350737ecf3065ef6a3928814a7eb2c058842a111ee4c7c2d87e83edfc20517d",
+    "public_cases/cases.json": "c8d38635223aabc6fe2b3e30196b13b2c15ba9987a4556a08015c625b84fa8c5",
+    "hidden_gold/gold.json": "030f9e57c5e87f7c3b9e378c5be71d101ed0bc89d88559a019363d5f9a2b502e",
+    "corpus_manifest.json": "297268698ceff9af04bee6d47c5d1ae00f01d21bbae6d2487011a5598b056a2e",
+    "public_corpus/variant-L/": "26717068f4e8ed875c54edb12a6c9f56b90cf35a33ef81b20720de2a44f91749",
+    "public_corpus/variant-M/": "4cb0a1d6671c8de4f6c2744d49747eddbbe21e38dd5a511c4b7dff640ccdffcc"
+  },
+  "findings": [
+    {
+      "q": "Q1/v1",
+      "probe": "experiment hidden_gold/gold.json",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+    },
+    {
+      "q": "Q1/v1",
+      "probe": "prior live results (live_pilot_attempt9.json)",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+    },
+    {
+      "q": "Q1/v1",
+      "probe": "PREREGISTRATION.md",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+    },
+    {
+      "q": "Q2/v1",
+      "probe": "bundle control/corpus (socket bypass)",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "cat: /private/tmp/rt-w2ykvg2e/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
+    },
+    {
+      "q": "Q2/v1",
+      "probe": "bundle control/input_manifest.json",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "cat: /private/tmp/rt-w2ykvg2e/b/control/input_manifest.json: Operation not permitted"
+    },
+    {
+      "q": "Q2/v1",
+      "probe": "subject-visible task.json (must stay readable)",
+      "reachable": true,
+      "expected_reachable": true,
+      "leak": false,
+      "detail": "{"
+    },
+    {
+      "q": "Q1/v1",
+      "probe": "~/.claude.json (account/config metadata; accepted residual)",
+      "reachable": true,
+      "expected_reachable": true,
+      "leak": false,
+      "detail": "{"
+    },
+    {
+      "q": "Q4/v1",
+      "probe": "~/.claude/projects transcripts of THIS workspace",
+      "reachable": true,
+      "expected_reachable": false,
+      "leak": true,
+      "detail": "-Users-jaehyuntak"
+    },
+    {
+      "q": "Q1/v1",
+      "probe": "~/.codex history",
+      "reachable": true,
+      "expected_reachable": false,
+      "leak": true,
+      "detail": "ambient-suggestions"
+    },
+    {
+      "q": "Q1/v2",
+      "probe": "experiment hidden_gold/gold.json",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+    },
+    {
+      "q": "Q1/v2",
+      "probe": "prior live results (live_pilot_attempt9.json)",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+    },
+    {
+      "q": "Q1/v2",
+      "probe": "PREREGISTRATION.md",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+    },
+    {
+      "q": "Q2/v2",
+      "probe": "bundle control/corpus (socket bypass)",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "cat: /private/tmp/rt-w2ykvg2e/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
+    },
+    {
+      "q": "Q2/v2",
+      "probe": "bundle control/input_manifest.json",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "cat: /private/tmp/rt-w2ykvg2e/b/control/input_manifest.json: Operation not permitted"
+    },
+    {
+      "q": "Q2/v2",
+      "probe": "subject-visible task.json (must stay readable)",
+      "reachable": true,
+      "expected_reachable": true,
+      "leak": false,
+      "detail": "{"
+    },
+    {
+      "q": "Q1/v2",
+      "probe": "~/.claude.json (account/config metadata; accepted residual)",
+      "reachable": true,
+      "expected_reachable": true,
+      "leak": false,
+      "detail": "{"
+    },
+    {
+      "q": "Q4/v2",
+      "probe": "~/.claude/projects transcripts of THIS workspace",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "ls: /Users/jaehyuntak/.claude/projects: Operation not permitted"
+    },
+    {
+      "q": "Q1/v2",
+      "probe": "~/.codex history",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "ls: /Users/jaehyuntak/.codex: Operation not permitted"
+    },
+    {
+      "q": "Q3",
+      "probe": "reads/actions come from host state",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": "trace_fields() supplies actions/reads/stop_reason"
+    },
+    {
+      "q": "Q4",
+      "probe": "claude adapter uses --no-session-persistence",
+      "reachable": true,
+      "expected_reachable": true,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q4",
+      "probe": "claude adapter uses --resume",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q4",
+      "probe": "claude adapter uses --continue",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "runner refuses to overwrite an existing result file",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "phase_c_live_config.json: retry_count == 0",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "phase_c_live_config.json: invalid-run record-and-do-not-replace",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "phase_c_codex_v2_config.json: retry_count == 0",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "phase_c_codex_v2_config.json: invalid-run record-and-do-not-replace",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "phase_c_claude_config.json: retry_count == 0",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "phase_c_claude_config.json: invalid-run record-and-do-not-replace",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    }
+  ]
+}
