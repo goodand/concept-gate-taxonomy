@@ -111,6 +111,41 @@ def test_static_host_allows_the_fixed_finish_recovery_suffix():
     assert state.dispatch({"action": "finish", "terminal_action": "answer"})["ok"]
 
 
+def test_static_follow_returns_and_enforces_the_exact_next_read_for_a_linkless_authority():
+    cases, _ = load()
+    corpus = Corpus(HERE / "public_corpus" / "variant-L")
+    state = LiveToolState(corpus, cases["HD01"], initial_candidates=None,
+                          guard_enabled=True, strict_static=True)
+    assert state.dispatch({"action": "search", "query": cases["HD01"]["query"]})["ok"]
+    assert state.dispatch({"action": "expand_candidates"})["ok"]
+    assert state.dispatch({"action": "read_candidate", "path": "docs/HANDOFF.md",
+                           "start": 1, "end": 40})["ok"]
+    follow = state.dispatch({"action": "follow_link", "path": "docs/DECISION_freeze_policy.md"})
+    assert follow["ok"]
+    assert follow["result_paths"] == []
+    assert follow["static_next"] == {
+        "action": "read_candidate", "path": "docs/DECISION_freeze_policy.md"}
+    assert state.dispatch({"action": "read_candidate", "path": "docs/DECISION_freeze_policy.md",
+                           "start": 1, "end": 40})["ok"]
+
+
+def test_static_follow_rejects_a_different_read_path_before_the_required_read():
+    cases, _ = load()
+    corpus = Corpus(HERE / "public_corpus" / "variant-L")
+    state = LiveToolState(corpus, cases["HD01"], initial_candidates=None,
+                          guard_enabled=True, strict_static=True)
+    assert state.dispatch({"action": "search", "query": cases["HD01"]["query"]})["ok"]
+    assert state.dispatch({"action": "expand_candidates"})["ok"]
+    assert state.dispatch({"action": "read_candidate", "path": "docs/HANDOFF.md",
+                           "start": 1, "end": 40})["ok"]
+    assert state.dispatch({"action": "follow_link", "path": "docs/DECISION_freeze_policy.md"})["ok"]
+    rejected = state.dispatch({"action": "read_candidate", "path": "docs/directory-cleanup-plan.md",
+                               "start": 1, "end": 40})
+    assert not rejected["ok"]
+    assert "expected read_candidate" in rejected["error"]
+    assert state.trace_fields()["stop_reason"] == "V1"
+
+
 def test_subagent_may_report_a_narrower_range_inside_its_host_read():
     cases, _, = load()
     corpus = Corpus(HERE / "public_corpus" / "variant-L")
@@ -137,6 +172,13 @@ def test_live_config_matches_contract_limits():
     assert config["retry_count"] == 0
     assert config["invalid_run_policy"] == "record-V1-and-do-not-replace"
     assert config["sandbox_policy"].endswith("codex-bypass-in-external-sandbox")
+
+
+def test_codex_mcp_config_is_a_separate_qualification_surface():
+    config = load_config("phase_c_codex_mcp_config.json")
+    assert config["provider"] == "codex-mcp-cli"
+    assert config["tool_policy"] == "single-stdio-mcp-handoff_action-v1"
+    assert config["retry_count"] == 0
 
 
 def test_codex_output_schema_declares_types_for_const_and_enum_properties():

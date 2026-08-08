@@ -142,7 +142,8 @@ def main() -> int:
     q5_checks = [("runner refuses to overwrite an existing result file",
                   refuses_overwrite)]
     for filename in ("phase_c_live_config.json", "phase_c_codex_v2_config.json",
-                     "phase_c_claude_config.json"):
+                     "phase_c_claude_config.json", "phase_c_codex_mcp_v7_config.json",
+                     "phase_c_claude_mcp_surface_v2_config.json"):
         config = json.loads((HERE / filename).read_text(encoding="utf-8"))
         q5_checks.extend([
             (f"{filename}: retry_count == 0", config.get("retry_count") == 0),

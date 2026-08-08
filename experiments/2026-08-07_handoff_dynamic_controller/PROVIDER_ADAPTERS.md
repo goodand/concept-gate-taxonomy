@@ -1,5 +1,11 @@
 # Provider adapters — Codex CLI vs Claude CLI
 
+> Amendment 21 status: v6 Codex and Claude surface v1 qualifications are
+> historical after the pre-primary gate revision. The next eligible surfaces
+> are `phase_c_codex_mcp_v7_config.json` and
+> `phase_c_claude_mcp_surface_v2_config.json`. Primary remains unapproved and
+> additionally requires qualification and authorization ledgers.
+
 - 작성: 2026-08-07, worktree `claude-provider-adapter`, 기준 커밋 `8b333bc`
 - 역할: harness developer / red-team. **피험자가 아니다.**
 - **outcome 실험·primary sweep 미실행.** live pilot도 실행하지 않았다.
@@ -141,11 +147,30 @@ case도 gold도 쓰지 않는 최소 확인 2회(유료).
 **기계적으로는 가능하다.** 로그인돼 있고, adapter가 Seatbelt v2 안에서 기동해
 host client를 통해 trace를 남기고 스키마를 통과하는 것까지 확인했다.
 
-실행 전 권장 순서:
+> **2026-08-07 갱신 — Amendment 21 이후 현재 순서.** 아래 §7 원문은 Amendment 12
+> 시점(v2 config)의 기록으로 보존한다. **현재 실행 가능한 유일한 순서는
+> `PREREGISTRATION.md` Amendment 21이다** — `phase_c_codex_v2_config.json`과
+> `phase_c_claude_config.json`은 primary spec 앵커가 없어 fail-closed다(재감사
+> A1 전수 확인). 현재 순서:
+> 1. local test 전체 (`test_preprimary_gates.py`, `test_protocol.py`,
+>    `test_live_phase_c.py`, `test_live_phase_c_claude.py`,
+>    `test_codex_mcp_provider.py`) → **107 passed** (실측, 이 문서 §7의 옛 "91
+>    passed"를 대체)
+> 2. `python3 run_calibration.py`
+> 3. `python3 redteam_codex_mcp_isolation.py`와
+>    `python3 redteam_provider_isolation.py` 둘 다
+> 4. Codex v7 qualification: `--config phase_c_codex_mcp_v7_config.json`
+> 5. Claude surface v2 qualification: `--config
+>    phase_c_claude_mcp_surface_v2_config.json`
+> 6. 두 artifact가 `qualification_ledger.jsonl`과 해시 일치할 때만
+>    `PRIMARY_AUTHORIZATION.json`을 사람이 작성 — primary는 그 뒤에도 여전히
+>    미승인이다.
+
+실행 전 권장 순서 (Amendment 12 시점 기록, historical):
 
 1. `python3 run_calibration.py` (Amendment 12 surface로 재통과)
 2. `python3 -m pytest -q test_protocol.py test_live_phase_c.py test_live_phase_c_claude.py`
-   → **91 passed**
+   → 91 passed (Amendment 12 시점 수치. 현재는 위 갱신 안내 참조)
 3. `python3 redteam_provider_isolation.py` → historical v1 leak 2, hardened v2 leak 0
 4. Codex-v2 qualification:
    `python3 run_live_phase_c.py --pilot --config phase_c_codex_v2_config.json`
@@ -154,7 +179,8 @@ host client를 통해 trace를 남기고 스키마를 통과하는 것까지 확
 6. 두 artifact의 `qualification.passed=true`일 때만 Claude primary 실행
 
 runner가 위 순서를 강제한다. passing artifact가 없거나 frozen hash가 다르면 primary는
-provider 호출 전에 종료한다.
+provider 호출 전에 종료한다. **이 6단계는 v2 config를 가리키는 historical 기록이며
+현재 실행 경로가 아니다** — 현재는 위 갱신 안내의 Amendment 21 순서를 따른다.
 
 **Codex 결과와 합치지 말 것.** provider, sandbox 버전, 스키마 강제 지점,
 frozen surface 지문이 모두 다르다. `phase_c_claude_config.json`의
@@ -221,3 +247,45 @@ attempt 3 qualification은 통과했다.
 Claude primary는 의도대로 아직 거부된다. Claude qualification은 통과했지만
 `live_pilot_codex_v2.json`이 provider launch `V1`이기 때문이다. Codex OAuth token을
 subject Bash에 노출하는 예외 허용으로 이 gate를 우회하지 않는다.
+
+## 12. Codex MCP-only adapter (new qualification surface)
+
+`codex-mcp-cli`는 Codex parent가 기존 OAuth state를 읽게 두되, evaluated model에는
+`handoff_action` stdio MCP tool 하나만 준다. 이 분리는 OAuth token file을 subject Bash에
+예외 허용하는 방식보다 좁다. native shell/file/network/browser/app capability는 feature
+disable flags로 닫고 `--dangerously-bypass-approvals-and-sandbox`는 사용하지 않는다.
+
+`live_subject_mcp.py`는 corpus나 gold를 읽지 않는다. action payload를 host socket으로
+전달할 뿐이며 host가 action validation, evidence response, trace를 권위 있게 기록한다.
+MCP child process에는 dynamic socket path를 `mcp_servers.handoff.env`로 명시 전달한다.
+이 경로는 local FastMCP stdio smoke에서 tool listing `['handoff_action']`와 host search
+action 기록으로 확인했다.
+
+새 run은 `results/redteam_codex_mcp_isolation.json`이 frozen surface와 일치하고 통과해야
+시작한다. raw provider event에서 `command_execution` 또는 non-handoff MCP tool은 즉시
+거부한다. 이 adapter의 `HD01 × 4`는 qualification-only이며, primary는 실행하지 않는다.
+
+첫 `live_pilot_codex_mcp_v1.json`은 Codex default approval policy가 모든 MCP call을
+`user cancelled MCP tool call`로 취소해 4/4 invalid였다. event는 `handoff_action`만 보였고
+다른 native tool, session/thread ID 노출은 없었다. `phase_c_codex_mcp_v2_config.json`은
+`--ask-for-approval never`로 이 대기만 닫는다. bypass flag는 계속 금지하며 v2 결과는 v1과
+pooling하지 않는다.
+
+v2는 `--ask-for-approval`가 `codex exec` option이 아니라 parser exit 2로 끝났다. v3는
+valid config override `-c approval_policy="never"`를 사용한다. parser smoke를 통과한 이
+새 config도 별도 qualification surface이며, primary 실행 권한은 주지 않는다.
+
+v4는 `--approve-for-me`를 추가하되 bypass flag는 계속 금지한다. 먼저 one-cell vehicle
+probe에서 MCP action이 host trace에 실제 기록되는지만 본다. primary gate는 passing pilot
+artifact가 config의 전체 arm × case matrix를 포함하는지도 확인하므로 probe는 qualification을
+대체할 수 없다.
+
+v4 vehicle probe는 `--sandbox`와 `--approve-for-me`를 동시에 받을 수 없다는 Codex parser
+exit 2로 끝났다. v5는 automatic-review mode에서 explicit sandbox flag를 제거한다. 이 모드는
+workspace-write review를 사용하지만 model shell/unified exec/native discovery feature는 계속
+disable되고 working root는 disposable subject bundle이다. bypass flag는 계속 금지한다.
+
+v5 full qualification은 transport를 통과했지만 `R_STATIC`가 linkless freeze policy를 follow한
+뒤 두 번째 follow를 시도해 `V1`이 됐다. v6 host response는 `static_next.path`로 follow 후
+정확히 읽을 path를 결정한다. static model은 그 path를 read해야 하며, source path/target 중
+임의 선택을 다시 하지 않는다. v6 is a fresh qualification surface; v5 remains failed evidence.

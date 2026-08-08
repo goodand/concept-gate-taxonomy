@@ -623,3 +623,144 @@ properties, additionalProperties, type, enum, const, minLength, minimum과 neste
 attempt 2는 덮어쓰지 않고 다음 qualification은
 `live_pilot_claude_attempt3.json`으로 기록한다. calibration, red-team, unit test를
 재통과한 뒤에만 실행한다.
+
+---
+
+## Amendment 15 — 2026-08-07, Codex OAuth-parent / MCP-only qualification surface
+
+Codex-v2는 `~/.codex` deny가 binary와 OAuth credential을 함께 막아 provider launch
+`V1`로 끝났다. credential을 Seatbelt 예외로 허용하면 evaluated model의 Bash도 token을
+읽을 수 있으므로 이 예외는 허용하지 않는다.
+
+대신 새 provider `codex-mcp-cli`는 OAuth를 읽는 **Codex parent**를 Seatbelt-v2로 감싸지
+않고, model-facing native capability를 닫는다. `shell_tool`, `unified_exec`, apps,
+browser, computer use, code mode, image generation, multi-agent를 disable하고, stdio MCP
+server `live_subject_mcp.py`의 단일 도구 `handoff_action`만 제공한다. MCP server는
+resource/prompt를 제공하지 않으며 disposable Unix socket 경로를 server-specific env로
+받아 기존 host-owned `LiveToolState.dispatch`로 한 action만 전달한다. corpus, gold,
+evaluator, guard, trace authority는 모두 host에 남는다.
+
+raw Codex event stream에서 `command_execution`, browser/file/web tool event, 이름이 다른
+MCP tool event는 fail-closed로 `V1` 처리한다. `handoff_action` 호출 여부는 raw event가
+아니라 기존 host action log로 qualification에서 별도 요구한다. provider raw artifact에서는
+`session_id`, `thread_id`를 저장 전에 제거한다.
+
+새 config/artifact는 `phase_c_codex_mcp_config.json` /
+`live_pilot_codex_mcp_v1.json`이다. 기존 `phase_c_codex_v2_config.json`과 실패 artifact는
+historical record로 변경하지 않는다. shared frozen surface가 바뀌므로 Claude도
+`phase_c_claude_mcp_surface_config.json` /
+`live_pilot_claude_mcp_surface_v1.json`으로 재-qualification해야 한다. 이 amendment는
+primary를 승인하지 않는다. 순서는: calibration → Codex-MCP red-team → local stdio bridge
+smoke → Codex `HD01 × 4` qualification → Claude 재-qualification이다.
+
+---
+
+## Amendment 16 — 2026-08-07, Codex MCP qualification v1 결과 후 approval policy
+
+`live_pilot_codex_mcp_v1.json`은 `HD01 × 4`를 실제 실행했지만 4/4 `V1`이므로 performance
+result가 아니다. raw event에서 native tool은 없고 `handoff_action`만 관측됐으며 session/thread
+identifier는 저장되지 않았다. 그러나 Codex default approval policy가 각 MCP call을
+`user cancelled MCP tool call`로 종료해 host action은 0이었다.
+
+새 provider config `phase_c_codex_mcp_v2_config.json`은 `--ask-for-approval never`를 명시한다.
+이는 `--dangerously-bypass-approvals-and-sandbox`를 사용하지 않으며, v1과 같은 native
+tool disable set 및 하나의 `handoff_action` MCP server를 유지한다. noninteractive approval이
+모델의 권한을 넓히지 않는 근거는 shell/file/browser/apps/computer tool이 launch command에서
+disable되어 있고 event allowlist가 다른 tool event를 fail-closed한다는 점이다.
+
+v1 artifact/config은 수정하거나 qualification 근거로 재사용하지 않는다. v2 calibration과
+red-team을 재동결한 뒤 `HD01 × 4` qualification만 실행한다. primary는 여전히 실행하지 않는다.
+
+---
+
+## Amendment 17 — 2026-08-07, v2 CLI parse failure 후 valid Codex config override
+
+`live_pilot_codex_mcp_v2.json`은 model 호출 전 `V1`이다. `--ask-for-approval`는 Codex
+top-level option이고 `codex exec` subcommand option이 아니어서 parser가 exit 2로 거부했다.
+이 artifact도 overwrite하지 않는다.
+
+`phase_c_codex_mcp_v3_config.json`은 같은 `approval_policy: "never"`를 valid
+`-c approval_policy="never"` config override로 전달한다. local `codex exec -c
+approval_policy="never" --help` parser smoke가 이 형식을 수용했음을 확인한다. v3는 v1/v2와
+pooling하지 않으며 calibration/red-team을 새 hash로 통과한 뒤 `HD01 × 4` qualification만
+실행한다. primary는 계속 승인되지 않았다.
+
+---
+
+## Amendment 18 — 2026-08-07, MCP approval vehicle probe and qualification-matrix gate
+
+v3도 valid config override를 사용했지만 MCP call이 `user cancelled MCP tool call`로 끝났다.
+Codex가 제공하는 다음 non-bypass option인 `--approve-for-me`를 v4에 추가한다. 이는 approval
+요청을 automatic review로 보내는 것이며, `--dangerously-bypass-approvals-and-sandbox`는 계속
+금지된다. `shell_tool`, `unified_exec`와 native discovery capability disable은 그대로다.
+
+full `HD01 × 4` 전에 `S_DYNAMIC` 한 cell vehicle probe를 별도 artifact로 실행해 host action이
+실제로 기록되는지만 확인한다. probe는 primary qualification artifact 이름이 될 수 없고,
+runner는 이제 primary 전에 qualification artifact의 `n_runs`, arms, case coverage가 config의
+전체 pilot matrix와 일치하는지도 강제한다. 따라서 한-arm probe 또는 부분 실행은 primary
+gate를 통과할 수 없다.
+
+---
+
+## Amendment 19 — 2026-08-07, Codex auto-approval / explicit-sandbox incompatibility
+
+v4 vehicle probe는 model 호출 전 CLI가 `--sandbox`와 `--approve-for-me`를 동시에 사용할 수
+없다고 exit 2로 거부했다. v4 artifact를 보존한다. v5는 Codex automatic-review mode의 documented
+constraint에 따라 explicit `--sandbox` flag만 제거한다. `--approve-for-me`는 workspace-write
+review mode를 선택하지만, evaluated model의 shell, unified exec, browser, apps, computer use,
+code mode, image generation, multi-agent capability는 계속 disable된다. 실행 cwd도 disposable
+subject bundle이다.
+
+v5 red-team은 bypass flag와 explicit sandbox가 모두 없는지, native tool disable set과 단일
+MCP server가 유지되는지를 검사한다. full qualification 전에 one-cell vehicle probe를 다시
+실행한다. primary는 계속 승인되지 않는다.
+
+---
+
+## Amendment 20 — 2026-08-07, v5 `R_STATIC` post-follow ambiguity
+
+v5 transport vehicle은 통과했고 full `HD01 x 4`에서 `S_STATIC`, `S_DYNAMIC`, `R_DYNAMIC`은
+valid였다. `R_STATIC`만 `search -> expand -> read -> follow` 뒤 host가 요구한
+`read_candidate` 대신 두 번째 `follow_link`를 호출해 `V1`이 됐다. 처음 follow한 freeze
+policy는 linkless authority였고 prompt의 “newly surfaced candidate”는 이 경우 어떤 문서를
+읽어야 하는지 결정하지 못했다.
+
+v6은 static arm의 accepted `follow_link` response에 `static_next`를 넣는다. target이 있으면
+첫 unread target, 없으면 followed authority 자체, 마지막으로 첫 unread candidate를 deterministic
+으로 지정한다. 다음 static read는 정확히 그 path여야 하며 다른 read/추가 follow/finish는 계속
+`V1`이다. positive test는 linkless authority를 follow한 뒤 authority read가 통과함을, negative
+test는 다른 read path가 `V1`임을 검증한다. v5 artifact를 수정하거나 pooling하지 않는다.
+
+---
+
+## Amendment 21 — 2026-08-07, independent pre-primary red-team gates
+
+독립 Claude red-team은 primary 선행조건에서 네 문제를 확인했다. qualification matrix가
+artifact 자신의 `config.pilot` 신고와 대조되어 1-cell 축소 artifact가 통과했고, artifact
+자체는 외부 해시에 결속되지 않았으며, CLI 기본 config는 superseded v1 surface를 가리켰다.
+또한 qualification 통과와 사용자 primary 승인 사이에 실행 가능한 승인 경계가 없었다.
+
+새 surface는 다음을 강제한다.
+
+1. `required_qualification_artifacts` 각 항목이 `config_file`, `case_ids`, `arms`를 외부
+   앵커로 소유한다. artifact의 pilot 신고와 다르면 거부한다.
+2. pilot 완료 시 artifact SHA-256을 `results/qualification_ledger.jsonl`에 append한다.
+   primary는 실제 파일 hash와 ledger가 정확히 한 번 일치해야 한다.
+3. `--config`는 필수다. superseded `phase_c_live_config.json`은 역사적 동결 파일로
+   수정하지 않으며, 명시적 qualification spec이 없으므로 primary에서 fail-closed한다.
+4. primary는 사람이 만든 `results/PRIMARY_AUTHORIZATION.json`의 config hash,
+   qualification hashes, exact matrix, `max_attempts`를 검증한다. 실행 전에
+   `primary_attempt_ledger.jsonl`에 시도를 기록하므로 output 이름 변경으로 시도 제한을
+   우회할 수 없다. 이 파일은 사용자 의사를 암호학적으로 증명하지 않지만 승인 대상과
+   실행 시도를 사후 구별 가능하게 한다. 이 amendment는 authorization 파일을 만들지 않으며
+   primary를 승인하지 않는다.
+5. qualification artifact는 `arm_effect_estimable=false`, `n_per_cell=1`을 기계 필드로
+   기록한다. primary의 host-action 미준수는 outcome failure와 분리된 `C5` execution code로
+   기록하고, clean judge가 받은 cell payload hash를 저장한다.
+6. 모든 `test_*.py`와 새 Codex v7 / Claude surface v2 config를 frozen surface에 포함한다.
+
+새 결과 이름은 `live_pilot_codex_mcp_v7.json`과
+`live_pilot_claude_mcp_surface_v2.json`이다. 이전 v6/v1 qualification은 역사적 증거로
+보존하지만 runner surface가 바뀌었으므로 primary 전제로 재사용하지 않는다. 새 live
+qualification 전 순서는 local tests → calibration → 두 red-team → Codex v7 qualification →
+Claude surface v2 qualification이다. primary는 계속 승인되지 않았다.

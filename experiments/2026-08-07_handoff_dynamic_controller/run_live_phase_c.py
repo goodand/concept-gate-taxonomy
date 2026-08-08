@@ -18,6 +18,7 @@ observable even when a model's final JSON is otherwise well formed.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import hashlib
 import json
 import os
@@ -49,14 +50,63 @@ CONFIG_PATH = HERE / "phase_c_live_config.json"
 ALLOWED_CONFIG_NAMES = (
     "phase_c_live_config.json",
     "phase_c_codex_v2_config.json",
+    "phase_c_codex_mcp_config.json",
+    "phase_c_codex_mcp_v2_config.json",
+    "phase_c_codex_mcp_v3_config.json",
+    "phase_c_codex_mcp_v4_config.json",
+    "phase_c_codex_mcp_v5_config.json",
+    "phase_c_codex_mcp_v6_config.json",
+    "phase_c_codex_mcp_v7_config.json",
     "phase_c_claude_config.json",
+    "phase_c_claude_mcp_surface_config.json",
+    "phase_c_claude_mcp_surface_v2_config.json",
 )
 RESULTS_DIR = HERE / "results"
+QUALIFICATION_LEDGER_NAME = "qualification_ledger.jsonl"
+PRIMARY_AUTHORIZATION_NAME = "PRIMARY_AUTHORIZATION.json"
+PRIMARY_ATTEMPT_LEDGER_NAME = "primary_attempt_ledger.jsonl"
 MAX_READ_END = 200
 
 
 class LiveRunError(RuntimeError):
     """A live process could not yield a valid, evaluable subject artifact."""
+
+
+def _sha256_path(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _canonical_json_bytes(value: object) -> bytes:
+    return json.dumps(
+        value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+
+
+def _read_jsonl(path: Path) -> list[dict[str, Any]]:
+    if not path.is_file():
+        return []
+    records = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise LiveRunError(
+                f"invalid JSONL record in {path.name}:{line_number}: {exc}"
+            ) from exc
+        if not isinstance(record, dict):
+            raise LiveRunError(f"non-object JSONL record in {path.name}:{line_number}")
+        records.append(record)
+    return records
+
+
+def _append_jsonl(path: Path, record: dict[str, Any]) -> None:
+    path.parent.mkdir(exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
 
 
 def load_config(path: str | Path = CONFIG_PATH) -> dict[str, Any]:
@@ -101,6 +151,7 @@ class LiveToolState:
         self.strict_static = strict_static
         self.static_steps = ["search", "expand_candidates", "read_candidate",
                              "follow_link", "read_candidate", "finish"]
+        self.static_required_read_path: str | None = None
         self.started = time.perf_counter()
         self.candidates: list[str] = []
         self.actions: list[dict[str, Any]] = []
@@ -175,6 +226,14 @@ class LiveToolState:
                     self.stop_reason = "V1"
                     return self._reject(
                         f"static arm protocol violation: expected {sorted(allowed)}, got {name}")
+                if name == "read_candidate" and self.static_required_read_path:
+                    requested_path = _safe_rel(request.get("path"))
+                    if requested_path != self.static_required_read_path:
+                        self.failure_codes.append("V1")
+                        self.stop_reason = "V1"
+                        return self._reject(
+                            "static arm protocol violation: expected read_candidate "
+                            f"for {self.static_required_read_path!r}, got {requested_path!r}")
             if self.stop_reason:
                 return self._reject(f"run has already stopped: {self.stop_reason}")
             if self._budget_exhausted():
@@ -204,8 +263,25 @@ class LiveToolState:
                     self._add_candidate(target)
                 self.guard.observe("follow_link", None, path)
                 self._record("follow_link", before)
-                return {"ok": True, "action": "follow_link", "from_path": path,
-                        "result_paths": result, "candidates": list(self.candidates)}
+                response = {"ok": True, "action": "follow_link", "from_path": path,
+                            "result_paths": result, "candidates": list(self.candidates)}
+                if self.strict_static:
+                    read_paths = {item["path"] for item in self.reads}
+                    # A link target is preferred. A linkless authority still has
+                    # to be read before another graph hop is permitted.
+                    choices = [*result, path, *self.candidates]
+                    self.static_required_read_path = next(
+                        (candidate for candidate in choices if candidate not in read_paths),
+                        None)
+                    if not self.static_required_read_path:
+                        self.failure_codes.append("V1")
+                        self.stop_reason = "V1"
+                        return self._reject("static arm has no unread candidate after follow_link")
+                    response["static_next"] = {
+                        "action": "read_candidate",
+                        "path": self.static_required_read_path,
+                    }
+                return response
 
             if name == "expand_candidates":
                 result: list[str] = []
@@ -234,6 +310,8 @@ class LiveToolState:
                 self.reads.append(read_range)
                 self.guard.observe("read_candidate", None, path)
                 self._record("read_candidate", before, read_range=read_range)
+                if self.strict_static and path == self.static_required_read_path:
+                    self.static_required_read_path = None
                 return {"ok": True, "action": "read_candidate", "path": path,
                         "start": start, "end": end, "content": numbered,
                         "candidates": list(self.candidates)}
@@ -321,19 +399,31 @@ def seatbelt_profile(project_root: Path, host_control: Path) -> str:
     ))
 
 
+def _client_instructions(transport: str) -> str:
+    if transport == "mcp":
+        return ("Use ONLY the `handoff_action` MCP tool to obtain source evidence. "
+                "Call it with action `search`, `follow_link`, `expand_candidates`, "
+                "`read_candidate`, `status`, or `finish`; supply the matching named "
+                "arguments (`query`, `path`, `start`/`end`, or `terminal_action`).")
+    return ("Use ONLY `python3 live_subject_tool.py` to obtain source evidence. "
+            "The client exposes `search QUERY`, `follow_link PATH`, "
+            "`expand_candidates`, `read_candidate PATH --start N --end N`, `status`, "
+            "and `finish answer|abstain`.")
+
+
 def _prompt(case: dict, arm: str, *, subagent: dict | None = None,
-            retrieval_only: bool = False) -> str:
+            retrieval_only: bool = False, transport: str = "cli") -> str:
     task = json.dumps(case, ensure_ascii=False, indent=2)
+    client = _client_instructions(transport)
     if retrieval_only:
         return f"""You are the retrieval-only component of a controlled evaluation.
 
 The public task is:
 {task}
 
-Use ONLY `python3 live_subject_tool.py` for evidence. Do not use shell search,
-file reads, network access, or tools outside the closed host client. You may use
-the client actions `search`, `follow_link`, `expand_candidates`, and
-`read_candidate`. You must not answer the task. Return only the required JSON
+{client} Do not use shell search, file reads, network access, or tools outside
+the closed host client. You may use the client actions `search`, `follow_link`,
+`expand_candidates`, and `read_candidate`. You must not answer the task. Return only the required JSON
 schema: candidate_paths, read_ranges, search_trace, and uncertainty. Candidate
 paths and read ranges must come from host-client observations. Do not include
 any conclusion, authority label, state, or extra key.
@@ -341,7 +431,8 @@ any conclusion, authority label, state, or extra key.
     mode = "dynamic: choose the next host action from the evidence returned" if ARM_IS_DYNAMIC[arm] else (
         "static: use this fixed sequence: search the task query; expand candidates; "
         "read the handoff or best candidate; follow one observed candidate link; "
-        "read a newly surfaced candidate; then finish. If finish is refused, read one "
+        "then use the host response's `static_next.path` for the required read; then finish. "
+        "Do not issue another follow or finish before that exact read. If finish is refused, read one "
         "additional observed candidate that you have not read, then retry finish. Do not "
         "change the sequence in any other way.")
     subagent_text = "none"
@@ -354,10 +445,8 @@ The public task is:
 
 Mode: {mode}
 
-Use ONLY `python3 live_subject_tool.py` to obtain source evidence. Do not use
-shell search, direct file reads, network access, or any other discovery tool.
-The client exposes `search QUERY`, `follow_link PATH`, `expand_candidates`,
-`read_candidate PATH --start N --end N`, `status`, and `finish answer|abstain`.
+{client} Do not use shell search, direct file reads, network access, or any
+other discovery tool.
 Every source used in the final answer must first be read via `read_candidate`.
 Call `finish` before emitting final JSON. If it returns a refusal, keep
 exploring according to the returned reason. A search miss is not proof of
@@ -526,7 +615,8 @@ def _run_retrieval_subagent(case: dict, variant: str, config: dict[str, Any],
         with ToolServer(socket_path, state):
             run = resolve_provider(config, _run_codex)(
                              bundle / "subject", socket_path,
-                             _prompt(case, "R_DYNAMIC", retrieval_only=True),
+                             _prompt(case, "R_DYNAMIC", retrieval_only=True,
+                                     transport="mcp" if config["provider"] == "codex-mcp-cli" else "cli"),
                              "retrieval_subagent_response.schema.json", config,
                              project_root=HERE.parents[2], host_control=bundle / "control",
                              run_name="subagent")
@@ -562,7 +652,9 @@ def run_cell(case: dict, gold: dict, arm: str, variant: str, config: dict[str, A
         socket_path = temp_root / f"{arm.lower()}.sock"
         with ToolServer(socket_path, state):
             run = resolve_provider(config, _run_codex)(
-                             bundle / "subject", socket_path, _prompt(case, arm, subagent=subagent),
+                             bundle / "subject", socket_path, _prompt(
+                                 case, arm, subagent=subagent,
+                                 transport="mcp" if config["provider"] == "codex-mcp-cli" else "cli"),
                              "live_subject_response.schema.json", config,
                              project_root=HERE.parents[2], host_control=bundle / "control",
                              run_name="main")
@@ -582,6 +674,18 @@ def run_cell(case: dict, gold: dict, arm: str, variant: str, config: dict[str, A
 
 
 def _assert_provider_preflight(config: dict[str, Any]) -> None:
+    if config.get("provider") == "codex-mcp-cli":
+        path = RESULTS_DIR / "redteam_codex_mcp_isolation.json"
+        if not path.is_file():
+            raise LiveRunError("refusing Codex MCP run: MCP-isolation red-team is missing")
+        report = json.loads(path.read_text(encoding="utf-8"))
+        if report.get("passed") is not True:
+            raise LiveRunError("refusing Codex MCP run: MCP-isolation red-team failed")
+        drift = frozen_surface_drift(report.get("frozen_surface_hashes"))
+        if drift:
+            raise LiveRunError(
+                f"refusing Codex MCP run: MCP-isolation red-team is stale: {drift}")
+        return
     if "seatbelt-v2" not in config.get("sandbox_policy", ""):
         return
     path = RESULTS_DIR / "redteam_provider_isolation.json"
@@ -630,13 +734,22 @@ def _host_action_compliance(trace: dict[str, Any], details: dict[str, Any]) -> d
     }
 
 
-def _assert_primary_qualifications(config: dict[str, Any]) -> None:
-    specs = config["primary"].get("required_qualification_artifacts") or [{
-        "file": "live_pilot.json",
-        "provider": config["provider"],
-        "sandbox_policy": config["sandbox_policy"],
-    }]
+def _assert_primary_qualifications(config: dict[str, Any]) -> dict[str, str]:
+    primary = config.get("primary", {})
+    if primary.get("blocked_reason"):
+        raise LiveRunError(f"refusing primary: {primary['blocked_reason']}")
+    specs = primary.get("required_qualification_artifacts")
+    if not isinstance(specs, list) or not specs:
+        raise LiveRunError(
+            "refusing primary: required_qualification_artifacts must be explicit")
+    ledger_path = RESULTS_DIR / QUALIFICATION_LEDGER_NAME
+    ledger = _read_jsonl(ledger_path)
+    verified: dict[str, str] = {}
     for spec in specs:
+        required = {"file", "config_file", "provider", "sandbox_policy", "arms", "case_ids"}
+        if not isinstance(spec, dict) or not required.issubset(spec):
+            raise LiveRunError(
+                "refusing primary: qualification spec lacks an external matrix/config anchor")
         path = RESULTS_DIR / spec["file"]
         if not path.is_file():
             raise LiveRunError(f"refusing primary: qualification artifact is missing: {path}")
@@ -650,16 +763,132 @@ def _assert_primary_qualifications(config: dict[str, Any]) -> None:
             if artifact_config.get(key) != spec[key]:
                 raise LiveRunError(
                     f"refusing primary: {path.name} has wrong {key}")
+        config_file = HERE / spec["config_file"]
+        if (artifact.get("config_file") != spec["config_file"] or
+                not config_file.is_file() or
+                artifact.get("config_sha256") != _sha256_path(config_file)):
+            raise LiveRunError(
+                f"refusing primary: {path.name} has wrong qualification config identity")
+        pilot = artifact_config.get("pilot", {})
+        expected_arms = spec["arms"]
+        expected_cases = spec["case_ids"]
+        if (pilot.get("arms") != expected_arms or pilot.get("case_ids") != expected_cases):
+            raise LiveRunError(
+                f"refusing primary: {path.name} qualification matrix declaration differs from spec")
+        if artifact.get("n_runs") != len(expected_arms) * len(expected_cases):
+            raise LiveRunError(
+                f"refusing primary: incomplete qualification matrix: {path.name}")
+        per_arm = artifact.get("per_arm", {})
+        if set(per_arm) != set(expected_arms) or any(
+                per_arm[arm].get("n") != len(expected_cases) for arm in expected_arms):
+            raise LiveRunError(
+                f"refusing primary: qualification arm coverage is incomplete: {path.name}")
         drift = frozen_surface_drift(artifact.get("frozen_surface_hashes"))
         if drift:
             raise LiveRunError(
                 f"refusing primary: qualification artifact is stale: {path.name}: {drift}")
+        artifact_sha256 = _sha256_path(path)
+        matches = [entry for entry in ledger if (
+            entry.get("file") == path.name
+            and entry.get("sha256") == artifact_sha256
+            and entry.get("config_sha256") == artifact.get("config_sha256")
+            and entry.get("arms") == expected_arms
+            and entry.get("case_ids") == expected_cases
+        )]
+        if len(matches) != 1:
+            raise LiveRunError(
+                f"refusing primary: qualification ledger mismatch: {path.name}")
+        verified[path.name] = artifact_sha256
+    return verified
 
 
-def _score(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _assert_primary_authorization(
+        config: dict[str, Any], config_path: str | Path,
+        qualification_hashes: dict[str, str], case_ids: list[str], arms: list[str]
+        ) -> tuple[str, int]:
+    authorization_path = RESULTS_DIR / PRIMARY_AUTHORIZATION_NAME
+    if not authorization_path.is_file():
+        raise LiveRunError("refusing primary: explicit authorization file is missing")
+    authorization = json.loads(authorization_path.read_text(encoding="utf-8"))
+    selected_config = Path(config_path)
+    if not selected_config.is_absolute():
+        selected_config = HERE / selected_config
+    expected = {
+        "config_file": selected_config.name,
+        "config_sha256": _sha256_path(selected_config),
+        "qualification_sha256": qualification_hashes,
+        "matrix": {"case_ids": case_ids, "arms": arms},
+    }
+    for key, value in expected.items():
+        if authorization.get(key) != value:
+            raise LiveRunError(f"refusing primary: authorization has wrong {key}")
+    if not isinstance(authorization.get("authorized_by"), str) or not authorization["authorized_by"].strip():
+        raise LiveRunError("refusing primary: authorization lacks authorized_by")
+    if not isinstance(authorization.get("authorized_at"), str) or not authorization["authorized_at"].strip():
+        raise LiveRunError("refusing primary: authorization lacks authorized_at")
+    max_attempts = authorization.get("max_attempts")
+    if not isinstance(max_attempts, int) or isinstance(max_attempts, bool) or max_attempts < 1:
+        raise LiveRunError("refusing primary: authorization max_attempts must be positive")
+    authorization_sha256 = _sha256_path(authorization_path)
+    return authorization_sha256, max_attempts
+
+
+def _claim_primary_attempt(authorization_sha256: str, max_attempts: int,
+                           record: dict[str, Any]) -> None:
+    """Atomically consume one authorized attempt before any provider call."""
+    path = RESULTS_DIR / PRIMARY_ATTEMPT_LEDGER_NAME
+    path.parent.mkdir(exist_ok=True)
+    with path.open("a+", encoding="utf-8") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        handle.seek(0)
+        attempts = []
+        for line_number, line in enumerate(handle, 1):
+            if not line.strip():
+                continue
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError as exc:
+                raise LiveRunError(
+                    f"invalid JSONL record in {path.name}:{line_number}: {exc}"
+                ) from exc
+            if not isinstance(entry, dict):
+                raise LiveRunError(
+                    f"non-object JSONL record in {path.name}:{line_number}")
+            attempts.append(entry)
+        used = sum(
+            entry.get("authorization_sha256") == authorization_sha256
+            for entry in attempts)
+        if used >= max_attempts:
+            raise LiveRunError("refusing primary: authorization attempt limit exhausted")
+        entry = {**record, "authorization_sha256": authorization_sha256}
+        handle.seek(0, os.SEEK_END)
+        handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def _record_qualification(output_path: Path, out: dict[str, Any]) -> None:
+    pilot = out["config"]["pilot"]
+    _append_jsonl(RESULTS_DIR / QUALIFICATION_LEDGER_NAME, {
+        "file": output_path.name,
+        "sha256": _sha256_path(output_path),
+        "config_file": out["config_file"],
+        "config_sha256": out["config_sha256"],
+        "arms": pilot["arms"],
+        "case_ids": pilot["case_ids"],
+        "qualification_passed": out["qualification"]["passed"],
+        "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    })
+
+
+def _score(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, str]]:
     payload = [{"trace": {k: v for k, v in record["trace"].items() if k != "variant"},
                 "gold": record["gold"], "case": record["case"]}
                for record in records]
+    payload_hashes = {
+        record["key"]: hashlib.sha256(_canonical_json_bytes(item)).hexdigest()
+        for record, item in zip(records, payload)
+    }
     with tempfile.TemporaryDirectory(prefix="handoff-live-judge-") as directory:
         path = Path(directory) / "payload.json"
         path.write_text(json.dumps(payload), encoding="utf-8")
@@ -668,17 +897,29 @@ def _score(records: list[dict[str, Any]]) -> list[dict[str, Any]]:
         raise LiveRunError(f"clean judge failed: {results}")
     for result, record in zip(results, records):
         result["variant"] = record["trace"]["variant"]
-    return results
+    return results, payload_hashes
 
 
 def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
               phase_name: str = "pilot", config_path: str | Path = CONFIG_PATH) -> int:
     config = _assert_ready(config_path)
+    authorization_sha256: str | None = None
     if phase_name == "primary":
-        _assert_primary_qualifications(config)
+        qualification_hashes = _assert_primary_qualifications(config)
+        authorization_sha256, max_attempts = _assert_primary_authorization(
+            config, config_path, qualification_hashes, case_ids, arms)
     output_path = RESULTS_DIR / f"{output_name}.json"
     if output_path.exists():
         raise LiveRunError(f"refusing to overwrite an existing live result: {output_path}")
+    if phase_name == "primary":
+        _claim_primary_attempt(authorization_sha256, max_attempts, {
+            "config_file": Path(config_path).name,
+            "output_file": output_path.name,
+            "case_ids": case_ids,
+            "arms": arms,
+            "status": "started",
+            "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        })
     cases, gold = load()
     unknown = set(case_ids) - set(cases)
     if unknown:
@@ -705,10 +946,13 @@ def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
                 records.append({"trace": trace, "gold": gold[case_id], "case": case,
                                 "details": details, "key": key})
                 raw[key] = details
-    results = _score(records)
+    results, judged_payload_hashes = _score(records)
     for result, record in zip(results, records):
-        result["host_action_compliance"] = _host_action_compliance(
+        compliance = _host_action_compliance(
             record["trace"], record["details"])
+        result["host_action_compliance"] = compliance
+        result["execution_failure_codes"] = [] if compliance["passed"] else ["C5"]
+        result["judged_payload_sha256"] = judged_payload_hashes[record["key"]]
     by_arm: dict[str, dict[str, Any]] = {}
     for arm in arms:
         rows = [row for row in results if row["arm"] == arm]
@@ -718,6 +962,8 @@ def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
             "invalid_run_rate": round(sum(r["invalid_run"] for r in rows) / len(rows), 3),
             "host_action_compliance_rate": round(sum(
                 r["host_action_compliance"]["passed"] for r in rows) / len(rows), 3),
+            "execution_noncompliance_count": sum(
+                not r["host_action_compliance"]["passed"] for r in rows),
             "critical_path_recall": round(sum(r["critical_path_recall"] for r in rows) / len(rows), 3),
             "failure_codes": dict(Counter(code for r in rows for code in r["failure_codes"])),
         }
@@ -749,9 +995,14 @@ def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
         "n_runs": len(results), "per_arm": by_arm, "results": results,
         "traces": [record["trace"] for record in records], "raw": raw,
     }
+    if phase_name == "pilot":
+        out["arm_effect_estimable"] = False
+        out["n_per_cell"] = 1
     RESULTS_DIR.mkdir(exist_ok=True)
     output_path.write_text(
         json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    if phase_name == "pilot":
+        _record_qualification(output_path, out)
     print(json.dumps({"output": str(output_path),
                       "n_runs": len(results), "qualification": qualification,
                       "per_arm": by_arm}, ensure_ascii=False, indent=2))
@@ -766,8 +1017,8 @@ def main() -> int:
     parser.add_argument("--case-id", action="append", help="override configured case ids")
     parser.add_argument("--arm", choices=ARMS, action="append", help="override configured arms")
     parser.add_argument("--output-name", help="new result artifact name; never overwrite a prior attempt")
-    parser.add_argument("--config", default=CONFIG_PATH.name, choices=ALLOWED_CONFIG_NAMES,
-                        help="frozen provider config")
+    parser.add_argument("--config", required=True, choices=ALLOWED_CONFIG_NAMES,
+                        help="explicit frozen provider config; no historical default")
     args = parser.parse_args()
     try:
         config = load_config(args.config)

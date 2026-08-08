@@ -39,6 +39,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -52,6 +53,15 @@ CLAUDE_DENIED_TOOLS = (
     "Edit", "Write", "NotebookEdit", "TodoWrite",
 )
 
+# OAuth remains available to the Codex parent process. These switches remove
+# every model-facing capability other than the explicitly configured MCP tool.
+CODEX_MCP_DISABLED_FEATURES = (
+    "apps", "browser_use", "browser_use_external", "code_mode",
+    "computer_use", "image_generation", "multi_agent", "multi_agent_v2",
+    "shell_tool", "unified_exec",
+)
+_TRANSIENT_PROVIDER_KEYS = frozenset(("session_id", "thread_id"))
+
 
 class ProviderError(RuntimeError):
     """A provider failed to produce a usable payload. Becomes V1 upstream."""
@@ -61,6 +71,77 @@ class ProviderError(RuntimeError):
         super().__init__(message)
         self.raw = raw
         self.provider_meta = provider_meta or {}
+
+
+def _remove_transient_keys(value: Any) -> Any:
+    """Remove run-local provider identifiers before a raw transcript is saved."""
+    if isinstance(value, dict):
+        return {key: _remove_transient_keys(item) for key, item in value.items()
+                if key not in _TRANSIENT_PROVIDER_KEYS}
+    if isinstance(value, list):
+        return [_remove_transient_keys(item) for item in value]
+    return value
+
+
+def sanitize_provider_raw(raw: str) -> str:
+    """Preserve JSONL diagnostics while excluding transient provider session IDs."""
+    out: list[str] = []
+    for line in raw.splitlines():
+        try:
+            decoded = json.loads(line)
+        except json.JSONDecodeError:
+            out.append(line)
+        else:
+            out.append(json.dumps(_remove_transient_keys(decoded), ensure_ascii=False,
+                                  separators=(",", ":")))
+    return "\n".join(out)
+
+
+def _codex_event_summary(raw: str) -> dict[str, Any]:
+    """Reject any native tool event except the one host-owned MCP action tool.
+
+    The checker is deliberately fail-closed for a reported tool event. Ordinary
+    lifecycle and message events remain allowed; host action counts separately
+    prove that the MCP bridge was actually used.
+    """
+    seen: list[str] = []
+    mcp_tools: list[str] = []
+    forbidden: list[str] = []
+    for line in raw.split("\n-- STDERR --\n", 1)[0].splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        item = event.get("item") if isinstance(event, dict) else None
+        if not isinstance(item, dict):
+            continue
+        item_type = item.get("type")
+        if not isinstance(item_type, str):
+            continue
+        seen.append(item_type)
+        lowered = item_type.lower()
+        if item_type == "command_execution" or any(token in lowered for token in (
+                "file_change", "browser", "computer", "web_search")):
+            forbidden.append(item_type)
+            continue
+        if "mcp" not in lowered:
+            if "tool" in lowered:
+                forbidden.append(item_type)
+            continue
+        names = [item.get(key) for key in ("tool", "tool_name", "name")]
+        names = [name for name in names if isinstance(name, str)]
+        if names != ["handoff_action"]:
+            forbidden.append(f"{item_type}:{names or 'unnamed'}")
+        else:
+            mcp_tools.extend(names)
+    if forbidden:
+        raise ProviderError(
+            f"Codex emitted a forbidden or unrecognized tool event: {sorted(set(forbidden))}",
+            provider_meta={"provider": "codex-mcp-cli", "tool_event_summary": {
+                "event_types": sorted(set(seen)), "mcp_tools": mcp_tools,
+                "forbidden": sorted(set(forbidden))}})
+    return {"event_types": sorted(set(seen)), "mcp_tools": mcp_tools,
+            "forbidden": []}
 
 
 # --------------------------------------------------------------------------
@@ -270,12 +351,13 @@ def run_claude_cli(subject: Path, socket_path: Path, prompt: str, schema_name: s
                               env=env, cwd=subject,
                               timeout=config["timeout_seconds"], check=False)
     except subprocess.TimeoutExpired as exc:
-        raw_path.write_text((exc.stdout or "") + "\n" + (exc.stderr or ""),
-                            encoding="utf-8")
+        raw = sanitize_provider_raw((exc.stdout or "") + "\n-- STDERR --\n" +
+                                    (exc.stderr or ""))
+        raw_path.write_text(raw, encoding="utf-8")
         raise ProviderError(
-            f"Claude CLI timed out after {config['timeout_seconds']} seconds") from exc
+            f"Claude CLI timed out after {config['timeout_seconds']} seconds", raw=raw) from exc
 
-    raw = proc.stdout + "\n-- STDERR --\n" + proc.stderr
+    raw = sanitize_provider_raw(proc.stdout + "\n-- STDERR --\n" + proc.stderr)
     raw_path.write_text(raw, encoding="utf-8")
     if proc.returncode != 0:
         tail = ("stdout=" + proc.stdout[-1200:] + " stderr=" + proc.stderr[-1200:]).strip()
@@ -288,8 +370,7 @@ def run_claude_cli(subject: Path, socket_path: Path, prompt: str, schema_name: s
         raise ProviderError(f"Claude CLI reported an error: "
                             f"{str(envelope.get('result'))[:300]}", raw=raw)
 
-    provider_meta = {"provider": "claude-cli", "session_id": session_id,
-                     "cost_usd": envelope.get("total_cost_usd"),
+    provider_meta = {"provider": "claude-cli", "cost_usd": envelope.get("total_cost_usd"),
                      "num_turns": envelope.get("num_turns"),
                      "sandbox_profile": "v2",
                      "structured_output": isinstance(
@@ -309,6 +390,103 @@ def run_claude_cli(subject: Path, socket_path: Path, prompt: str, schema_name: s
 
 
 # --------------------------------------------------------------------------
+# Codex CLI with exactly one stdio MCP action bridge
+# --------------------------------------------------------------------------
+def codex_mcp_command(codex: str, subject: Path, socket_path: Path,
+                      schema_path: Path, output_path: Path,
+                      config: dict[str, Any]) -> list[str]:
+    """Build a Codex command where OAuth is parent-only and tools are closed."""
+    server = Path(__file__).resolve().parent / "live_subject_mcp.py"
+    overrides = (
+        f"mcp_servers.handoff.command={json.dumps(sys.executable)}",
+        f"mcp_servers.handoff.args={json.dumps([str(server)])}",
+        "mcp_servers.handoff.env={ HANDOFF_LIVE_TOOL_SOCKET = " +
+        json.dumps(str(socket_path)) + " }",
+        'mcp_servers.handoff.enabled_tools=["handoff_action"]',
+    )
+    command = [
+        codex, "exec", "--ephemeral", "--skip-git-repo-check",
+        "--ignore-user-config", "--ignore-rules",
+        "-C", str(subject), "-m", config["model"], "-c",
+        f'model_reasoning_effort={json.dumps(config["reasoning_effort"])}',
+        "-c", f'approval_policy={json.dumps(config.get("approval_policy", "on-request"))}',
+    ]
+    if config.get("auto_approve_mcp") is True:
+        command.append("--approve-for-me")
+    else:
+        command.extend(("--sandbox", "read-only"))
+    for override in overrides:
+        command.extend(("-c", override))
+    for feature in CODEX_MCP_DISABLED_FEATURES:
+        command.extend(("--disable", feature))
+    return command + [
+        "--output-schema", str(schema_path), "--output-last-message", str(output_path),
+        "--json", "-",
+    ]
+
+
+def run_codex_mcp_cli(subject: Path, socket_path: Path, prompt: str, schema_name: str,
+                      config: dict[str, Any], *, project_root: Path,
+                      host_control: Path, run_name: str) -> dict[str, Any]:
+    """Run Codex without model shell/file tools; only ``handoff_action`` exists.
+
+    Do not put the Codex parent under Seatbelt v2. The parent needs its own
+    OAuth credentials to start. Capability isolation is instead explicit in
+    the CLI feature set and the sole stdio MCP server; its event stream is
+    checked before the response is accepted.
+    """
+    del project_root, host_control  # The parent must retain OAuth access.
+    codex = shutil.which("codex")
+    if not codex:
+        raise ProviderError("Codex CLI is unavailable")
+    try:
+        import fastmcp  # noqa: F401  # runner interpreter must start the bridge
+    except ImportError as exc:
+        raise ProviderError("FastMCP is not installed for the runner interpreter") from exc
+    run_dir = subject / "run"
+    run_dir.mkdir(exist_ok=True)
+    output_path = run_dir / f"{run_name}.json"
+    raw_path = run_dir / f"{run_name}.jsonl"
+    schema_path = subject / schema_name
+    command = codex_mcp_command(codex, subject, socket_path, schema_path, output_path, config)
+    env = dict(os.environ)
+    env["HANDOFF_LIVE_TOOL_SOCKET"] = str(socket_path)
+    started = time.perf_counter()
+    try:
+        proc = subprocess.run(command, input=prompt, text=True, capture_output=True,
+                              env=env, cwd=subject,
+                              timeout=config["timeout_seconds"], check=False)
+    except subprocess.TimeoutExpired as exc:
+        raw = sanitize_provider_raw((exc.stdout or "") + "\n-- STDERR --\n" +
+                                    (exc.stderr or ""))
+        raw_path.write_text(raw, encoding="utf-8")
+        raise ProviderError(
+            f"Codex MCP CLI timed out after {config['timeout_seconds']} seconds", raw=raw) from exc
+    raw = sanitize_provider_raw(proc.stdout + "\n-- STDERR --\n" + proc.stderr)
+    raw_path.write_text(raw, encoding="utf-8")
+    if proc.returncode != 0:
+        tail = ("stdout=" + proc.stdout[-1200:] + " stderr=" + proc.stderr[-1200:]).strip()
+        raise ProviderError(f"Codex MCP CLI exited {proc.returncode}: {tail}", raw=raw)
+    event_summary = _codex_event_summary(raw)
+    if not output_path.is_file():
+        raise ProviderError("Codex MCP CLI did not produce a final JSON response", raw=raw,
+                            provider_meta={"provider": "codex-mcp-cli",
+                                           "tool_event_summary": event_summary})
+    try:
+        payload = json.loads(output_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ProviderError(f"Codex MCP final response is not JSON: {exc}", raw=raw) from exc
+    return {"payload": payload, "raw": raw,
+            "elapsed_ms": int((time.perf_counter() - started) * 1000),
+            "provider_meta": {
+                "provider": "codex-mcp-cli",
+                "tool_policy": "single-stdio-mcp-handoff_action-v1",
+                "auth_boundary": "codex-parent-oauth-only",
+                "tool_event_summary": event_summary,
+            }}
+
+
+# --------------------------------------------------------------------------
 # registry
 # --------------------------------------------------------------------------
 def resolve_provider(config: dict[str, Any],
@@ -324,4 +502,6 @@ def resolve_provider(config: dict[str, Any],
         return codex_impl
     if name == "claude-cli":
         return run_claude_cli
+    if name == "codex-mcp-cli":
+        return run_codex_mcp_cli
     raise ProviderError(f"unknown provider: {name!r}")

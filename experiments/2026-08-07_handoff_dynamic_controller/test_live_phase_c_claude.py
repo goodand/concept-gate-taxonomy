@@ -31,6 +31,8 @@ from run_calibration import load  # noqa: E402
 CLAUDE_CONFIG = json.loads((HERE / "phase_c_claude_config.json").read_text(encoding="utf-8"))
 CODEX_CONFIG = json.loads((HERE / "phase_c_live_config.json").read_text(encoding="utf-8"))
 CODEX_V2_CONFIG = json.loads((HERE / "phase_c_codex_v2_config.json").read_text(encoding="utf-8"))
+CLAUDE_SURFACE_V2_CONFIG = json.loads(
+    (HERE / "phase_c_claude_mcp_surface_v2_config.json").read_text(encoding="utf-8"))
 
 
 # --------------------------------------------------------------------------
@@ -50,6 +52,9 @@ def test_each_frozen_provider_config_is_selectable():
     assert live.load_config("phase_c_claude_config.json")["provider"] == "claude-cli"
     assert "seatbelt-v2" in live.load_config(
         "phase_c_codex_v2_config.json")["sandbox_policy"]
+    assert live.load_config("phase_c_codex_mcp_config.json")["provider"] == "codex-mcp-cli"
+    assert live.load_config("phase_c_codex_mcp_v7_config.json")["provider"] == "codex-mcp-cli"
+    assert live.load_config("phase_c_claude_mcp_surface_v2_config.json")["provider"] == "claude-cli"
 
 
 def test_an_unfrozen_config_is_refused(tmp_path):
@@ -419,7 +424,10 @@ def test_the_adapter_did_not_modify_the_frozen_surface(name):
 def test_provider_execution_inputs_are_in_the_frozen_surface():
     from _evaluator import FROZEN_SURFACE_FILES
     for name in ("_providers.py", "phase_c_claude_config.json",
-                 "phase_c_codex_v2_config.json", "redteam_provider_isolation.py"):
+                 "phase_c_claude_mcp_surface_config.json", "phase_c_codex_mcp_config.json",
+                 "phase_c_claude_mcp_surface_v2_config.json", "phase_c_codex_mcp_v7_config.json",
+                 "phase_c_codex_v2_config.json", "live_subject_mcp.py",
+                 "redteam_provider_isolation.py", "redteam_codex_mcp_isolation.py"):
         assert name in FROZEN_SURFACE_FILES
 
 
@@ -442,25 +450,8 @@ def test_host_action_compliance_is_separate_from_retrieval_score():
 
 
 def test_primary_requires_a_current_passing_qualification(monkeypatch, tmp_path):
-    from _evaluator import frozen_surface_hashes
     monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
-    spec = CLAUDE_CONFIG["primary"]["required_qualification_artifacts"][0]
-    artifact = {
-        "kind": "live-subject-pilot",
-        "qualification": {"passed": True},
-        "config": {"provider": spec["provider"],
-                   "sandbox_policy": spec["sandbox_policy"]},
-        "frozen_surface_hashes": frozen_surface_hashes(),
-    }
-    (tmp_path / spec["file"]).write_text(json.dumps(artifact), encoding="utf-8")
+    spec = CLAUDE_SURFACE_V2_CONFIG["primary"]["required_qualification_artifacts"][0]
     with pytest.raises(live.LiveRunError, match="qualification artifact is missing"):
-        live._assert_primary_qualifications(CLAUDE_CONFIG)
-    second = CLAUDE_CONFIG["primary"]["required_qualification_artifacts"][1]
-    artifact["config"] = {"provider": second["provider"],
-                          "sandbox_policy": second["sandbox_policy"]}
-    (tmp_path / second["file"]).write_text(json.dumps(artifact), encoding="utf-8")
-    live._assert_primary_qualifications(CLAUDE_CONFIG)
-    artifact["qualification"]["passed"] = False
-    (tmp_path / spec["file"]).write_text(json.dumps(artifact), encoding="utf-8")
-    with pytest.raises(live.LiveRunError, match="qualification did not pass"):
-        live._assert_primary_qualifications(CLAUDE_CONFIG)
+        live._assert_primary_qualifications(CLAUDE_SURFACE_V2_CONFIG)
+    assert spec["arms"] == ["S_STATIC", "R_STATIC", "S_DYNAMIC", "R_DYNAMIC"]
