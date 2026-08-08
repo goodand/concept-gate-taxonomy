@@ -15,6 +15,36 @@ The next question is no longer whether the invariant works. The next question
 is whether a client agent can keep the boundary between **claim, abstain,
 and repair** when the evidence is derived from real repository artifacts.
 
+## Design Decisions
+
+Added 2026-08-07 (orphan audit — these three decisions had no incoming link
+in the vault before this edit; classification and relationships below are
+from reading each file directly, not inferred from filenames).
+
+- [`DESIGN_DECISION_surface_separation.md`](DESIGN_DECISION_surface_separation.md)
+  (decided 2026-07-28, input:
+  [`DIRECTIVE_model_facing_surface_redesign.md`](DIRECTIVE_model_facing_surface_redesign.md))
+  is the **earliest and foundational** decision of the three: it separates
+  the fabrication fixture surface from the model-facing surface and moves
+  liveness verification out of model scope. The H3 decisions below build on
+  top of this separated surface.
+- [`DESIGN_DECISION_H3.md`](DESIGN_DECISION_H3.md) (D-H3-1, decided
+  2026-07-29, input: [`DESIGN_REQUEST_H3.md`](DESIGN_REQUEST_H3.md)) redefines
+  the CONTROL/A/CONTRACT_REPO 3-arm comparison as measurement-invariant — the
+  original 3-arm design could not decompose observed abstention differences
+  from expressive-power differences in each arm's output vocabulary. Status
+  in the file itself: **"재정의 필요"** — this decision statement was itself
+  provisional/redefinition-pending, so read `DESIGN_DECISION_H3_CONFIRMATORY.md`
+  alongside it, not as a superseding replacement.
+- [`DESIGN_DECISION_H3_CONFIRMATORY.md`](DESIGN_DECISION_H3_CONFIRMATORY.md)
+  (D-H3C-1..6, decided 2026-07-30, input:
+  [`DESIGN_REQUEST_H3_confirmatory.md`](DESIGN_REQUEST_H3_confirmatory.md),
+  explicitly builds on `DESIGN_DECISION_H3.md` as "prior local artifact")
+  resolves the probability-space/independence/measurement-grammar questions
+  H3 left open. Status: **"존재 주장으로 종료, 전칭/우월성 확증은 별도
+  재료 확보 과제로 분리"** — existence-claim scope only; universal/superiority
+  claims are explicitly deferred to future work, not answered here.
+
 ## Evidence Source Decision
 
 Use this repository, `goodand/concept-gate-taxonomy`, as the only evidence
