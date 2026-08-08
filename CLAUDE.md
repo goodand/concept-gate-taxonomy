@@ -120,7 +120,7 @@ worktree 사이로 파일을 손으로 복사하지 말 것.** worktree들은 **
 저장소를 공유**하므로 파일이 다른 worktree에 도달하는 정상 경로는 복사가 아니라
 커밋 → 머지 → rebase다. 손으로 복사하면 위에서 없앤 그 실패 모드(사본 두 벌,
 한쪽만 수정, 거짓 통과)를 정확히 되살린다. 2026-08-05 실측: repo 전역 게이트
-(`test_guard_negative_coverage.py`)를 worktree마다 넣을 파일로 읽어 두 트리에
+([`test_guard_negative_coverage.py`](test_guard_negative_coverage.py))를 worktree마다 넣을 파일로 읽어 두 트리에
 손으로 복사하려 했고, 세션 격리가 거부해서 분기가 생기지 않았다. 게이트·하네스
 파일은 경로 독립으로 쓰고(`Path(__file__).parent`) **한 곳에 커밋해 전파시켜라.**
 실험 폴더의 동명 모듈 중복은 동결 규율이 강제하는 예외이며, 새 파일에 그 예외를
@@ -154,25 +154,21 @@ venv/bin/python scripts/run_gates.py  # exit 0 = FAIL 없음; 머지는 BLOCKED 
 `sys.modules`를 선점해 **다른 실험이 남의 evaluator로 조용히 실행된다**
 (실제로 발생했던 결함). 실험별 프로세스 분리가 유일하게 확장 가능한
 해법이고, 새 실험은 아무 조치도 필요 없다. 상세 근거는
-`scripts/run_gates.py` 헤더 주석.
+[`scripts/run_gates.py`](scripts/run_gates.py) 헤더 주석.
 
-**PASS / FAIL / BLOCKED**: 선택적 의존성(`fastmcp`, `owlready2`) 미설치로
-게이트가 **시작조차 못 하면** BLOCKED로 분리 보고하고 exit code에 반영하지
-않는다. 테스트가 실행된 뒤 실패한 것은 실패 메시지가 모듈 누락을 언급해도
-FAIL이다 — 그러지 않으면 환경 의존 테스트 하나가 같은 suite의 실제 회귀를
-가린다.
-
-세 값의 정확한 계약(`scripts/run_gates.py` 헤더가 정본):
+**PASS / FAIL / BLOCKED** — 정확한 계약은 `scripts/run_gates.py` 헤더가 정본:
 
 | 상태 | 뜻 | exit code 기여 | 머지 |
 |---|---|---|---|
 | PASS | 게이트가 돌았고 통과 | 0 | 허용 조건 |
-| FAIL | 게이트가 돌았고 실패. 결과를 못 낸 것도 FAIL(침묵을 성공으로 읽지 않기 위해) | **1** | 차단 |
-| BLOCKED | 게이트가 **시작조차 못 함**(optional dep 부재) | **없음** | **판정 보류 — 자동 허용 아님** |
+| FAIL | 게이트가 돌았고 실패. **결과를 못 낸 것도 FAIL**(모듈 누락으로 실패 메시지가 나도 마찬가지 — 침묵을 성공으로 읽지 않기 위해) | **1** | 차단 |
+| BLOCKED | 게이트가 **시작조차 못 함**(`fastmcp`·`owlready2` 등 선택적 의존성 부재) | **없음** | **판정 보류 — 자동 허용 아님** |
 
-`BLOCKED`는 "검증하지 못함"이지 "실패함"도 "성공함"도 아니다. 이 3값 구분은
-이 저장소가 게이트 신뢰를 유지하는 방식이며, **검색 계층에도 같은 어휘를
-쓴다**(아래 "무언가를 찾을 때" 절의 `rg-only`).
+`BLOCKED`는 "검증하지 못함"이지 "실패함"도 "성공함"도 아니다 — exit code에
+반영 안 되므로 실행된 뒤 실패한 것과 섞으면 환경 의존 테스트 하나가 같은
+suite의 실제 회귀를 가린다. 이 3값 구분은 이 저장소가 게이트 신뢰를 유지하는
+방식이며, **검색 계층에도 같은 어휘를 쓴다**(아래 "무언가를 찾을 때" 절의
+`rg-only`).
 
 ### 가드를 쓰면 음성 테스트가 함께 온다 — 이건 규율이 아니라 게이트다
 
@@ -182,16 +178,17 @@ FAIL이다 — 그러지 않으면 환경 의존 테스트 하나가 같은 suit
 완전히 공허한 채로 긍정 테스트를 통과했고, 잡은 것은 suite가 아니라 외부
 리뷰어였다.
 
-`docs/H1A_PROBLEM_ANALYSIS.md`가 이 패턴(P1)을 **6건** 기록하고
-`NEXT_SESSION_TRAPS.md` §7.3이 "일곱 번째가 없다고 가정하지 마라"고 예고했는데
-일곱 번째가 났다. **"두 명제를 적어 대조하라"는 규율은 7/7 실패했다.** 그래서
-기제로 옮겼다 — `test_guard_negative_coverage.py`(루트)가 AST로 가드를 수집해
-음성 테스트 없는 것을 실패시킨다. core pytest가 이미 수집하므로 배선은 없다.
+[`docs/H1A_PROBLEM_ANALYSIS.md`](docs/H1A_PROBLEM_ANALYSIS.md)가 이 패턴(P1)을
+**6건** 기록하고 [`docs/NEXT_SESSION_TRAPS.md`](docs/NEXT_SESSION_TRAPS.md)
+§7.3이 "일곱 번째가 없다고 가정하지 마라"고 예고했는데 일곱 번째가 났다.
+**"두 명제를 적어 대조하라"는 규율은 7/7 실패했다.** 그래서 기제로 옮겼다 —
+`test_guard_negative_coverage.py`(루트)가 AST로 가드를 수집해 음성 테스트
+없는 것을 실패시킨다. core pytest가 이미 수집하므로 배선은 없다.
 
 도달 불가한 raise 경로처럼 음성 테스트를 정직하게 쓸 수 없는 경우가 있다.
 그때 **모킹으로 통과시키지 말고** `KNOWN_UNPROVEN`에 이유와 담당을 적어라 —
 모킹 기반 음성 테스트는 게이트를 초록으로 만들면서 아무것도 증명하지 않는다.
-근거와 실측은 `docs/HARNESS_KNOWHOW.md` §B4a.
+근거와 실측은 [`docs/HARNESS_KNOWHOW.md`](docs/HARNESS_KNOWHOW.md) §B4a.
 
 ## 설계 판정을 상신하기 전 — "아직 안 풀렸다"고 단정하지 마라
 
@@ -210,8 +207,9 @@ FAIL이다 — 그러지 않으면 환경 의존 테스트 하나가 같은 suit
 **적용 — 새 설계 문제를 만들거나 DESIGN_REQUEST를 쓰기 전에:**
 
 1. **먼저 확인**: 이 저장소에 이미 있는 구현(`conceptgate/`, `vendor/*`
-   subtree), 과거 `DESIGN_DECISION*.md` 판정, `H1A_ISSUE_REGISTER.md` /
-   `H1A_PROBLEM_ANALYSIS.md` 같은 패턴 기록, skills-catalog에 이미 승격된
+   subtree), 과거 `DESIGN_DECISION*.md` 판정,
+   [`docs/H1A_ISSUE_REGISTER.md`](docs/H1A_ISSUE_REGISTER.md) /
+   `docs/H1A_PROBLEM_ANALYSIS.md` 같은 패턴 기록, skills-catalog에 이미 승격된
    knowhow가 같은 문제나 그 일부를 이미 다뤘는지부터 찾는다. `grep`만으로
    끝내지 말 것 — 위 섹션대로 backlink까지 따라간다.
 2. **모른다고 "미해결"이라 쓰지 않는다.** DESIGN_REQUEST에 "이 문제는
@@ -234,7 +232,7 @@ FAIL이다 — 그러지 않으면 환경 의존 테스트 하나가 같은 suit
 못한다.** 결정 문서의 **경로(파일명)**가 네 질문의 어휘를 하나도 포함하지
 않을 수 있기 때문이다. 2026-08-01 실측: 활성 폴더 정리를 설계하며 "디렉토리
 정리 / DESIGN_DECISION / canonical"로 **파일명**을 훑었으나 이미 채택된 결정
-(`notes/audits/vault/symlink-vs-moc-2026-07-30.md`)이 안 걸렸다 — 그 파일의
+([`notes/audits/vault/symlink-vs-moc-2026-07-30.md`](../notes/audits/vault/symlink-vs-moc-2026-07-30.md))이 안 걸렸다 — 그 파일의
 **경로**가 저 키워드를 하나도 포함하지 않기 때문이다(2026-08-02 재확인:
 `find notes -iname "*canonical*" -o -iname "*design_decision*"`가 이 파일을
 반환하지 않음). **본문**에는 `canonical`이 8회 등장한다 — 본문 grep이었다면
@@ -276,7 +274,7 @@ CLI 불가   → rg-only → BLOCKED
 절차 전문은 이미 있고 검증됐다. 다시 만들지 마라 —
 `../.vault-harness/vault-md-retrieval/AGENT_PROMPT.md`(Required Procedure),
 `multiturn_retrieval.py "QUERY" --policy recall-first-v2 --max-turns 4`.
-탐색 레시피와 함정 4개는 `docs/WORKSPACE_NAVIGATION.md`.
+탐색 레시피와 함정 4개는 [`docs/WORKSPACE_NAVIGATION.md`](docs/WORKSPACE_NAVIGATION.md).
 
 
 ## Git
