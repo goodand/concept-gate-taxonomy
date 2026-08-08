@@ -1,0 +1,44 @@
+%%  §17 핵심 명제 — 단일 생성 문제 → 타입 증명 의무 분해 상태 전이 문제
+%%  세 메커니즘(§3.1 obligation / §3.2 proposer-verifier / §3.3 modality)을 포괄하는 거시적 변화
+
+flowchart LR
+
+  subgraph BEFORE["BEFORE  단일 생성 파이프라인"]
+    direction TB
+    B1["🤖 LLM\n단일 생성\n(개념 + 관계 + OWL 타입)"]
+    B2["⚙️ ConceptGate\n이진 검사\nPASS / FAIL"]
+    B3["📄 OWL 직렬화\n(의미 보장 없음)"]
+    B1 --> B2
+    B2 -->|PASS| B3
+    B2 -->|FAIL| B_err["❌ 전체 거부\n(재시도 없음)"]
+  end
+
+  subgraph AFTER["AFTER  타입 증명 의무 분해 파이프라인"]
+    direction TB
+    A1["🤖 LLM\n제안 Proposer\n(differentia 후보만)"]
+    A2["📋 의무 타이핑 §3.1\n모든 semantic claim에\n타입 + decider 지정"]
+
+    subgraph DECIDERS["Decider 계층 §3.2"]
+      direction LR
+      D1["LLM 판정\n(개념 정의 적합성\n출처 span 선택)"]
+      D2["Gate 판정\n(부분-전체 제약\nUFO 반패턴)"]
+      D3["Reasoner 판정\n(존재 포함 entailment\n일관성 검사)"]
+    end
+
+    A3["🗂️ 의무 상태 집계\nPASS / FAIL / UNKNOWN\nper obligation §3.3"]
+    A4["✅ 인증된 OWL\n(전체 PASS일 때만)"]
+    A5["🔄 선택적 롤백\n(FAIL obligation만\n재제안)"]
+
+    A1 --> A2
+    A2 --> DECIDERS
+    DECIDERS --> A3
+    A3 -->|"모든 obligation PASS"| A4
+    A3 -->|"FAIL / UNKNOWN"| A5
+    A5 -->|재제안| A1
+  end
+
+  BEFORE -.->|"§17 변환\n'검사'에서 '증명'으로"| AFTER
+
+  style BEFORE fill:#fef3c7,stroke:#d97706,color:#000
+  style AFTER fill:#d1fae5,stroke:#059669,color:#000
+  style DECIDERS fill:#ede9fe,stroke:#7c3aed,color:#000

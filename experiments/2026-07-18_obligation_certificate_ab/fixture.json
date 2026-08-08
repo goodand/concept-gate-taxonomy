@@ -1,0 +1,219 @@
+{
+ "input_concepts": [
+  {
+   "name": "개",
+   "features": [
+    {
+     "feature": "꼬리",
+     "type": "essential_feature",
+     "evidence": "개는 꼬리를 가짐"
+    },
+    {
+     "feature": "갯과",
+     "type": "essential_feature",
+     "evidence": "개는 갯과"
+    }
+   ]
+  },
+  {
+   "name": "고양이",
+   "features": [
+    {
+     "feature": "꼬리",
+     "type": "functional",
+     "evidence": "고양이 꼬리는 균형 기능"
+    },
+    {
+     "feature": "묘과",
+     "type": "essential_feature",
+     "evidence": "고양이는 묘과"
+    }
+   ]
+  }
+ ],
+ "response_full": {
+  "status": "PASS_WITH_WARNING",
+  "dag": {},
+  "levels": {
+   "고양이": 0,
+   "개": 0
+  },
+  "definitions": {},
+  "isolated": [
+   "개",
+   "고양이"
+  ],
+  "aux_relations": [
+   {
+    "concept": "고양이",
+    "feature": "꼬리",
+    "type": "functional"
+   }
+  ],
+  "composition": {
+   "edges": [],
+   "shared_parts": {}
+  },
+  "expansion_actions": [
+   {
+    "action_type": "correction",
+    "target_concepts": [
+     "개",
+     "고양이"
+    ],
+    "shared_attrs": [
+     "꼬리"
+    ],
+    "parent_name": null,
+    "reason": "\"꼬리\" rigidity 혼합: ['essential_feature', 'functional']"
+   }
+  ],
+  "repairs": [],
+  "warnings": [],
+  "signature_issues": [],
+  "post_dag_issues": [],
+  "composition_issues": [],
+  "anti_patterns": [
+   {
+    "pattern": "MixRig",
+    "subject": "꼬리",
+    "detail": "\"꼬리\" rigidity 혼합: ['essential_feature', 'functional']",
+    "involved": [
+     "개",
+     "고양이"
+    ]
+   }
+  ],
+  "obligations": {
+   "ok": false,
+   "verdict": "fail",
+   "errors": [],
+   "results": [
+    {
+     "obligation": "relation.antisymmetry",
+     "verdict": "pass",
+     "assurance": "RULE_CHECKED",
+     "decider": "gate",
+     "evidence": "CompositionGate: antisymmetry 위반 0건",
+     "reason": "",
+     "depends_on": []
+    },
+    {
+     "obligation": "relation.acyclicity",
+     "verdict": "pass",
+     "assurance": "RULE_CHECKED",
+     "decider": "gate",
+     "evidence": "CompositionGate: cycle 위반 0건",
+     "reason": "",
+     "depends_on": []
+    },
+    {
+     "obligation": "relation.isa_hasa_exclusivity",
+     "verdict": "pass",
+     "assurance": "RULE_CHECKED",
+     "decider": "gate",
+     "evidence": "CompositionGate: isa_hasa_conflict 위반 0건",
+     "reason": "",
+     "depends_on": []
+    },
+    {
+     "obligation": "ufo.no_antipattern",
+     "verdict": "fail",
+     "assurance": "RULE_CHECKED",
+     "decider": "gate",
+     "evidence": "anti_patterns",
+     "reason": "UFO 안티패턴 1건 감지",
+     "depends_on": []
+    }
+   ],
+   "verifier": {
+    "name": "cg_obligations",
+    "version": "0.1.0"
+   }
+  },
+  "lint": {
+   "status": "LINT_WARNING",
+   "issues": [
+    {
+     "severity": "warning",
+     "code": "NO_SHARED_ESSENTIAL_LABELS",
+     "message": "no pair of concepts shares any essential feature label, so the is-a DAG will be empty and every concept will be isolated.",
+     "suggestion": "If a hierarchy is intended: give the parent a small set of atomic essential labels, and make each child repeat ALL parent labels verbatim (character-identical) plus at least one new differentia label."
+    }
+   ],
+   "summary": {
+    "errors": 0,
+    "warnings": 1
+   }
+  }
+ },
+ "response_stripped": {
+  "status": "PASS_WITH_WARNING",
+  "dag": {},
+  "levels": {
+   "고양이": 0,
+   "개": 0
+  },
+  "definitions": {},
+  "isolated": [
+   "개",
+   "고양이"
+  ],
+  "aux_relations": [
+   {
+    "concept": "고양이",
+    "feature": "꼬리",
+    "type": "functional"
+   }
+  ],
+  "composition": {
+   "edges": [],
+   "shared_parts": {}
+  },
+  "expansion_actions": [
+   {
+    "action_type": "correction",
+    "target_concepts": [
+     "개",
+     "고양이"
+    ],
+    "shared_attrs": [
+     "꼬리"
+    ],
+    "parent_name": null,
+    "reason": "\"꼬리\" rigidity 혼합: ['essential_feature', 'functional']"
+   }
+  ],
+  "repairs": [],
+  "warnings": [],
+  "signature_issues": [],
+  "post_dag_issues": [],
+  "composition_issues": [],
+  "anti_patterns": [
+   {
+    "pattern": "MixRig",
+    "subject": "꼬리",
+    "detail": "\"꼬리\" rigidity 혼합: ['essential_feature', 'functional']",
+    "involved": [
+     "개",
+     "고양이"
+    ]
+   }
+  ],
+  "lint": {
+   "status": "LINT_WARNING",
+   "issues": [
+    {
+     "severity": "warning",
+     "code": "NO_SHARED_ESSENTIAL_LABELS",
+     "message": "no pair of concepts shares any essential feature label, so the is-a DAG will be empty and every concept will be isolated.",
+     "suggestion": "If a hierarchy is intended: give the parent a small set of atomic essential labels, and make each child repeat ALL parent labels verbatim (character-identical) plus at least one new differentia label."
+    }
+   ],
+   "summary": {
+    "errors": 0,
+    "warnings": 1
+   }
+  }
+ }
+}

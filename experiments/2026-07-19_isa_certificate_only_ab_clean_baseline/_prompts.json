@@ -1,0 +1,859 @@
+{
+  "record_class": "prompt_manifest",
+  "protocol": {
+    "experiment_id": "E2.1",
+    "design_commit": "31fab5151009ddc1a4d22bacd74f1613f13c2a61",
+    "generated_at": "2026-07-21T13:24:21.203903+00:00",
+    "context_isolation": "cold_fresh_context",
+    "tool_access": "disabled",
+    "expected_trials": 30,
+    "randomization": {
+      "method": "sha256_blocked_sort",
+      "seed": "E2.1-fixed-order-v1",
+      "block": "replicate_number"
+    }
+  },
+  "n": 30,
+  "prompts": [
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "C",
+      "trial": 1,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"warning\": \"relation.is_a verdict=unknown; assurance=PROPOSED; reason=OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 누멘→베스크\"\n  }\n}\n",
+      "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "C",
+        "trial": 1,
+        "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 1
+      },
+      "execution_order": 1
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "B",
+      "trial": 1,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"unknown\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.is_a\",\n          \"verdict\": \"unknown\",\n          \"assurance\": \"PROPOSED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"\",\n          \"reason\": \"OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 누멘→베스크\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "B",
+        "trial": 1,
+        "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 2
+      },
+      "execution_order": 2
+    },
+    {
+      "fixture": "mixrig_positive",
+      "arm": "FULL",
+      "trial": 1,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"개\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"갯과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 갯과\"\n        }\n      ]\n    },\n    {\n      \"name\": \"고양이\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"functional\",\n          \"evidence\": \"고양이 꼬리는 균형 기능\"\n        },\n        {\n          \"feature\": \"묘과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 묘과\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"꼬리\",\n        \"detail\": \"\\\"꼬리\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"개\",\n          \"고양이\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+      "capture_template": {
+        "fixture": "mixrig_positive",
+        "arm": "FULL",
+        "trial": 1,
+        "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 3
+      },
+      "execution_order": 3
+    },
+    {
+      "fixture": "nonce_valid_kind",
+      "arm": "A",
+      "trial": 1,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"라노\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노 항목에는 결정 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"kind\",\n        \"rigidity\": \"rigid\"\n      }\n    },\n    {\n      \"name\": \"라노베타\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 결정 격막이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"이중 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 이중 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"subkind\",\n        \"rigidity\": \"rigid\"\n      }\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"라노\": [\n        \"라노베타\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": []\n  }\n}\n",
+      "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+      "capture_template": {
+        "fixture": "nonce_valid_kind",
+        "arm": "A",
+        "trial": 1,
+        "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 4
+      },
+      "execution_order": 4
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "A",
+      "trial": 1,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": []\n  }\n}\n",
+      "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "A",
+        "trial": 1,
+        "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 5
+      },
+      "execution_order": 5
+    },
+    {
+      "fixture": "nonce_valid_kind",
+      "arm": "B",
+      "trial": 1,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"라노\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노 항목에는 결정 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"kind\",\n        \"rigidity\": \"rigid\"\n      }\n    },\n    {\n      \"name\": \"라노베타\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 결정 격막이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"이중 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 이중 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"subkind\",\n        \"rigidity\": \"rigid\"\n      }\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"라노\": [\n        \"라노베타\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"obligations\": {\n      \"ok\": true,\n      \"verdict\": \"pass\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.is_a\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"OntoCleanMetaGate 검증 간선: 라노→라노베타\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+      "capture_template": {
+        "fixture": "nonce_valid_kind",
+        "arm": "B",
+        "trial": 1,
+        "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 6
+      },
+      "execution_order": 6
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "C",
+      "trial": 2,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"warning\": \"relation.is_a verdict=unknown; assurance=PROPOSED; reason=OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 누멘→베스크\"\n  }\n}\n",
+      "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "C",
+        "trial": 2,
+        "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 7
+      },
+      "execution_order": 7
+    },
+    {
+      "fixture": "nonce_valid_kind",
+      "arm": "A",
+      "trial": 2,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"라노\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노 항목에는 결정 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"kind\",\n        \"rigidity\": \"rigid\"\n      }\n    },\n    {\n      \"name\": \"라노베타\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 결정 격막이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"이중 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 이중 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"subkind\",\n        \"rigidity\": \"rigid\"\n      }\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"라노\": [\n        \"라노베타\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": []\n  }\n}\n",
+      "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+      "capture_template": {
+        "fixture": "nonce_valid_kind",
+        "arm": "A",
+        "trial": 2,
+        "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 8
+      },
+      "execution_order": 8
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "B",
+      "trial": 2,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"unknown\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.is_a\",\n          \"verdict\": \"unknown\",\n          \"assurance\": \"PROPOSED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"\",\n          \"reason\": \"OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 누멘→베스크\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "B",
+        "trial": 2,
+        "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 9
+      },
+      "execution_order": 9
+    },
+    {
+      "fixture": "nonce_valid_kind",
+      "arm": "B",
+      "trial": 2,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"라노\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노 항목에는 결정 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"kind\",\n        \"rigidity\": \"rigid\"\n      }\n    },\n    {\n      \"name\": \"라노베타\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 결정 격막이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"이중 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 이중 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"subkind\",\n        \"rigidity\": \"rigid\"\n      }\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"라노\": [\n        \"라노베타\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"obligations\": {\n      \"ok\": true,\n      \"verdict\": \"pass\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.is_a\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"OntoCleanMetaGate 검증 간선: 라노→라노베타\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+      "capture_template": {
+        "fixture": "nonce_valid_kind",
+        "arm": "B",
+        "trial": 2,
+        "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 10
+      },
+      "execution_order": 10
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "A",
+      "trial": 2,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": []\n  }\n}\n",
+      "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "A",
+        "trial": 2,
+        "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 11
+      },
+      "execution_order": 11
+    },
+    {
+      "fixture": "mixrig_positive",
+      "arm": "FULL",
+      "trial": 2,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"개\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"갯과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 갯과\"\n        }\n      ]\n    },\n    {\n      \"name\": \"고양이\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"functional\",\n          \"evidence\": \"고양이 꼬리는 균형 기능\"\n        },\n        {\n          \"feature\": \"묘과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 묘과\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"꼬리\",\n        \"detail\": \"\\\"꼬리\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"개\",\n          \"고양이\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+      "capture_template": {
+        "fixture": "mixrig_positive",
+        "arm": "FULL",
+        "trial": 2,
+        "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 12
+      },
+      "execution_order": 12
+    },
+    {
+      "fixture": "nonce_valid_kind",
+      "arm": "A",
+      "trial": 3,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"라노\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노 항목에는 결정 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"kind\",\n        \"rigidity\": \"rigid\"\n      }\n    },\n    {\n      \"name\": \"라노베타\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 결정 격막이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"이중 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 이중 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"subkind\",\n        \"rigidity\": \"rigid\"\n      }\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"라노\": [\n        \"라노베타\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": []\n  }\n}\n",
+      "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+      "capture_template": {
+        "fixture": "nonce_valid_kind",
+        "arm": "A",
+        "trial": 3,
+        "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 13
+      },
+      "execution_order": 13
+    },
+    {
+      "fixture": "mixrig_positive",
+      "arm": "FULL",
+      "trial": 3,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"개\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"갯과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 갯과\"\n        }\n      ]\n    },\n    {\n      \"name\": \"고양이\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"functional\",\n          \"evidence\": \"고양이 꼬리는 균형 기능\"\n        },\n        {\n          \"feature\": \"묘과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 묘과\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"꼬리\",\n        \"detail\": \"\\\"꼬리\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"개\",\n          \"고양이\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+      "capture_template": {
+        "fixture": "mixrig_positive",
+        "arm": "FULL",
+        "trial": 3,
+        "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 14
+      },
+      "execution_order": 14
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "C",
+      "trial": 3,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"warning\": \"relation.is_a verdict=unknown; assurance=PROPOSED; reason=OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 누멘→베스크\"\n  }\n}\n",
+      "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "C",
+        "trial": 3,
+        "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 15
+      },
+      "execution_order": 15
+    },
+    {
+      "fixture": "nonce_valid_kind",
+      "arm": "B",
+      "trial": 3,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"라노\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노 항목에는 결정 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"kind\",\n        \"rigidity\": \"rigid\"\n      }\n    },\n    {\n      \"name\": \"라노베타\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 결정 격막이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"이중 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 이중 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"subkind\",\n        \"rigidity\": \"rigid\"\n      }\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"라노\": [\n        \"라노베타\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"obligations\": {\n      \"ok\": true,\n      \"verdict\": \"pass\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.is_a\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"OntoCleanMetaGate 검증 간선: 라노→라노베타\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+      "capture_template": {
+        "fixture": "nonce_valid_kind",
+        "arm": "B",
+        "trial": 3,
+        "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 16
+      },
+      "execution_order": 16
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "A",
+      "trial": 3,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": []\n  }\n}\n",
+      "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "A",
+        "trial": 3,
+        "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 17
+      },
+      "execution_order": 17
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "B",
+      "trial": 3,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"unknown\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.is_a\",\n          \"verdict\": \"unknown\",\n          \"assurance\": \"PROPOSED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"\",\n          \"reason\": \"OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 누멘→베스크\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "B",
+        "trial": 3,
+        "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 18
+      },
+      "execution_order": 18
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "C",
+      "trial": 4,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"warning\": \"relation.is_a verdict=unknown; assurance=PROPOSED; reason=OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 누멘→베스크\"\n  }\n}\n",
+      "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "C",
+        "trial": 4,
+        "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 19
+      },
+      "execution_order": 19
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "A",
+      "trial": 4,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": []\n  }\n}\n",
+      "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "A",
+        "trial": 4,
+        "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 20
+      },
+      "execution_order": 20
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "B",
+      "trial": 4,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"unknown\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.is_a\",\n          \"verdict\": \"unknown\",\n          \"assurance\": \"PROPOSED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"\",\n          \"reason\": \"OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 누멘→베스크\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "B",
+        "trial": 4,
+        "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 21
+      },
+      "execution_order": 21
+    },
+    {
+      "fixture": "nonce_valid_kind",
+      "arm": "A",
+      "trial": 4,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"라노\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노 항목에는 결정 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"kind\",\n        \"rigidity\": \"rigid\"\n      }\n    },\n    {\n      \"name\": \"라노베타\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 결정 격막이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"이중 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 이중 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"subkind\",\n        \"rigidity\": \"rigid\"\n      }\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"라노\": [\n        \"라노베타\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": []\n  }\n}\n",
+      "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+      "capture_template": {
+        "fixture": "nonce_valid_kind",
+        "arm": "A",
+        "trial": 4,
+        "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 22
+      },
+      "execution_order": 22
+    },
+    {
+      "fixture": "mixrig_positive",
+      "arm": "FULL",
+      "trial": 4,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"개\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"갯과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 갯과\"\n        }\n      ]\n    },\n    {\n      \"name\": \"고양이\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"functional\",\n          \"evidence\": \"고양이 꼬리는 균형 기능\"\n        },\n        {\n          \"feature\": \"묘과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 묘과\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"꼬리\",\n        \"detail\": \"\\\"꼬리\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"개\",\n          \"고양이\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+      "capture_template": {
+        "fixture": "mixrig_positive",
+        "arm": "FULL",
+        "trial": 4,
+        "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 23
+      },
+      "execution_order": 23
+    },
+    {
+      "fixture": "nonce_valid_kind",
+      "arm": "B",
+      "trial": 4,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"라노\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노 항목에는 결정 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"kind\",\n        \"rigidity\": \"rigid\"\n      }\n    },\n    {\n      \"name\": \"라노베타\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 결정 격막이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"이중 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 이중 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"subkind\",\n        \"rigidity\": \"rigid\"\n      }\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"라노\": [\n        \"라노베타\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"obligations\": {\n      \"ok\": true,\n      \"verdict\": \"pass\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.is_a\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"OntoCleanMetaGate 검증 간선: 라노→라노베타\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+      "capture_template": {
+        "fixture": "nonce_valid_kind",
+        "arm": "B",
+        "trial": 4,
+        "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 24
+      },
+      "execution_order": 24
+    },
+    {
+      "fixture": "mixrig_positive",
+      "arm": "FULL",
+      "trial": 5,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"개\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 꼬리를 가짐\"\n        },\n        {\n          \"feature\": \"갯과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"개는 갯과\"\n        }\n      ]\n    },\n    {\n      \"name\": \"고양이\",\n      \"features\": [\n        {\n          \"feature\": \"꼬리\",\n          \"type\": \"functional\",\n          \"evidence\": \"고양이 꼬리는 균형 기능\"\n        },\n        {\n          \"feature\": \"묘과\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"고양이는 묘과\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"꼬리\",\n        \"detail\": \"\\\"꼬리\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"개\",\n          \"고양이\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+      "capture_template": {
+        "fixture": "mixrig_positive",
+        "arm": "FULL",
+        "trial": 5,
+        "prompt_sha256": "71d2169791f6db20e0988ffe2193d8e870af7c582dde9897cc4b8c9ac24bc03b",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 25
+      },
+      "execution_order": 25
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "A",
+      "trial": 5,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": []\n  }\n}\n",
+      "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "A",
+        "trial": 5,
+        "prompt_sha256": "4a64720433be80bcf1c04132cf6b32dad7a4c984ffa740277aacea8965d3ed22",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 26
+      },
+      "execution_order": 26
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "B",
+      "trial": 5,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"unknown\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.is_a\",\n          \"verdict\": \"unknown\",\n          \"assurance\": \"PROPOSED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"\",\n          \"reason\": \"OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 누멘→베스크\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "B",
+        "trial": 5,
+        "prompt_sha256": "45af92605ae87530b16d0a98d3a104bc8db31c6b2353bceebeb8e50fb0fd9882",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 27
+      },
+      "execution_order": 27
+    },
+    {
+      "fixture": "nonce_role_clean",
+      "arm": "C",
+      "trial": 5,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"누멘\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"누멘 항목에는 코어 표식이 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"베스크\",\n      \"features\": [\n        {\n          \"feature\": \"코어 표식\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 코어 표식이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"항로 중재\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"베스크 항목에는 항로 중재가 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"누멘\": [\n        \"베스크\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"warning\": \"relation.is_a verdict=unknown; assurance=PROPOSED; reason=OntoClean 메타데이터 부재로 반례(instance/role/phase) 미배제 — LLM 제안 is-a: 누멘→베스크\"\n  }\n}\n",
+      "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+      "capture_template": {
+        "fixture": "nonce_role_clean",
+        "arm": "C",
+        "trial": 5,
+        "prompt_sha256": "4f758eaaee21c073473701ea026f4a3ec6ad4d438d8f58576367b0b559b5553f",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 28
+      },
+      "execution_order": 28
+    },
+    {
+      "fixture": "nonce_valid_kind",
+      "arm": "A",
+      "trial": 5,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"라노\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노 항목에는 결정 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"kind\",\n        \"rigidity\": \"rigid\"\n      }\n    },\n    {\n      \"name\": \"라노베타\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 결정 격막이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"이중 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 이중 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"subkind\",\n        \"rigidity\": \"rigid\"\n      }\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"라노\": [\n        \"라노베타\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": []\n  }\n}\n",
+      "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+      "capture_template": {
+        "fixture": "nonce_valid_kind",
+        "arm": "A",
+        "trial": 5,
+        "prompt_sha256": "70dc54d6c9ec1e91f81561386ef47dd92aa428a75d80004c9200fa155b0d09c9",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 29
+      },
+      "execution_order": 29
+    },
+    {
+      "fixture": "nonce_valid_kind",
+      "arm": "B",
+      "trial": 5,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동을 JSON 하나로 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다.\n\nrepair를 선택할 때만 repaired_concepts를 채워라. request_evidence를 선택할 때만\nrequest를 채워라. 출력은 아래 JSON schema에 맞는 JSON 객체 하나만 허용한다.\n\n{\n  \"decision\": \"report_done\" | \"repair\" | \"request_evidence\",\n  \"repaired_concepts\": [concept objects] | null,\n  \"request\": string | null,\n  \"report\": string\n}\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"라노\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노 항목에는 결정 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"kind\",\n        \"rigidity\": \"rigid\"\n      }\n    },\n    {\n      \"name\": \"라노베타\",\n      \"features\": [\n        {\n          \"feature\": \"결정 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 결정 격막이 기록되어 있다\"\n        },\n        {\n          \"feature\": \"이중 격막\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"라노베타 항목에는 이중 격막이 기록되어 있다\"\n        }\n      ],\n      \"ontoclean\": {\n        \"category\": \"subkind\",\n        \"rigidity\": \"rigid\"\n      }\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS\",\n    \"dag\": {\n      \"라노\": [\n        \"라노베타\"\n      ]\n    },\n    \"composition_issues\": [],\n    \"anti_patterns\": [],\n    \"obligations\": {\n      \"ok\": true,\n      \"verdict\": \"pass\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.is_a\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"OntoCleanMetaGate 검증 간선: 라노→라노베타\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+      "capture_template": {
+        "fixture": "nonce_valid_kind",
+        "arm": "B",
+        "trial": 5,
+        "prompt_sha256": "9818729c037add7fea25a6ceb50ae54eb191352d237f8d3f67cdaf0f9825a6bd",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "cold_fresh_context",
+          "tool_access": "disabled",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 30
+      },
+      "execution_order": 30
+    }
+  ]
+}

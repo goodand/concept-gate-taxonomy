@@ -1,0 +1,14 @@
+flowchart TD
+    T0["tests"]
+
+    T1["E1. 단순 동치<br/>Encoder ≡ Decoder"]
+    T2["E2. 전이적 동치<br/>A ≡ B, B ≡ C"]
+    T3["E3. imported/gUFO 오염 방지<br/>group에 gufo class 안 섞임"]
+    T4["E4. unsat와 동치 공존<br/>Nothing 판정과 그룹 수집이 충돌 안 함"]
+    T5["E5. representative 안정성<br/>입력 선언 순서 바꿔도 동일"]
+
+    T0 --> T1
+    T0 --> T2
+    T0 --> T3
+    T0 --> T4
+    T0 --> T5

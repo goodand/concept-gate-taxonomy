@@ -1,0 +1,1002 @@
+{
+  "records": [
+    {
+      "trial_id": "EA-CONTRACT_FLAT-01",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload is a single flat \"hierarchy\" map with no provenance markers (no asserted/inferred flags, no echo of the tool's inputs), so nothing distinguishes a declared edge from a computed one."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "This edge appears only as an entry in the same undifferentiated \"hierarchy\" listing, which carries no field indicating whether it was supplied as input or produced by reasoning."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "Although this edge would follow by transitivity from Square-Rectangle-Parallelogram, the payload gives no inference trace or origin label, so I cannot tell whether the tool derived it or it was declared directly."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "cannot_tell",
+            "basis": "It is listed among Square's parents with no accompanying origin annotation, and the payload contains no separate record of the tool's declared inputs to compare against."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "cannot_tell",
+            "basis": "Same as the other edges: the output reports only the final parent lists, so there is no evidence in the payload about whether this edge was asserted or inferred."
+          }
+        ],
+        "summary": "The tool's output I received consists of a single \\\"hierarchy\\\" structure listing five is-a relationships: Rectangle and Rhombus are each subclasses of Parallelogram, and Square is a subclass of Parallelogram, Rectangle, and Rhombus. Critically, this payload reports only the final, merged classification result. It contains no provenance information whatsoever - there are no per-edge flags marking a relationship as declared versus inferred, no copy or summary of the inputs that were given to the tool, and no inference trace or justification for any edge. Because asserted and derived relationships are presented identically and indistinguishably, I cannot determine the origin of any of the five relationships, and I have marked all five as \\\"cannot tell.\\\" I want to flag one specific temptation I deliberately avoided: Square being a subclass of Parallelogram is mathematically implied by the other edges and therefore looks like an obvious candidate for tool-derived output, but geometric necessity is not evidence about what the tool was told versus what it computed, and that edge could equally well have been declared outright in the input. If the distinction between asserted and derived edges matters for the decision at hand, this output shape cannot support it, and we should request a version of the result that labels each edge's origin or that returns the asserted input set alongside the inferred closure."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-02",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload contains only a flat \"hierarchy\" map of subject-to-parent lists with no provenance field, flag, or separate asserted/inferred section indicating where this edge came from."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "This edge appears in the same undifferentiated \"hierarchy\" map, which carries no marker distinguishing declared inputs from tool-computed results."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "Although this edge would follow from Square being under Rectangle or Rhombus, the payload gives no origin metadata, and I must not infer assertion or derivation from geometric or logical necessity alone."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload lists this parent for Square without any indication of whether it was supplied as input or produced by the tool's reasoning."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "cannot_tell",
+            "basis": "As with every other entry, this edge is presented only as a member of Square's parent list, with no input/output provenance recorded anywhere in the data."
+          }
+        ],
+        "summary": "The tool's output reports five is-a relationships: Rectangle and Rhombus are each subclasses of Parallelogram, and Square is a subclass of Parallelogram, Rectangle, and Rhombus. However, for none of these five can I determine whether it was directly declared as an input to the tool or produced by the tool's own reasoning. The payload consists of a single, undifferentiated \\\"hierarchy\\\" map from each class to its list of parents; it contains no provenance annotations, no flags marking edges as asserted versus inferred, no separate section listing the original inputs, and no explanation or justification trace for any edge. Absent that information, any claim about origin would be a guess. In particular, I am deliberately not treating edges as asserted merely because they look like standard geometric facts, nor treating Square is-a Parallelogram as derived merely because it is logically implied by the other Square edges — the payload itself supports neither conclusion. If the origin of these relationships matters for the decision at hand, the tool should be asked to emit explicit per-edge provenance (or separate asserted and inferred outputs), and this output should not be relied on for that distinction in the meantime."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-03",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload contains only a flat \"hierarchy\" map of subclass-to-superclass pairs with no provenance, source, or asserted/inferred marking of any kind."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload lists this pair without any field distinguishing declared inputs from tool-produced conclusions."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "Nothing in the payload separates input declarations from reasoning output, so even though this pair could follow from Square-Rectangle-Parallelogram, the payload does not say whether it was stated or computed."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "cannot_tell",
+            "basis": "The pair appears in the same undifferentiated list as every other pair, with no origin annotation."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "cannot_tell",
+            "basis": "The pair appears in the same undifferentiated list as every other pair, with no origin annotation."
+          }
+        ],
+        "summary": "The output I received is a single flat listing of five is-a relationships (Rectangle and Rhombus under Parallelogram; Square under Parallelogram, Rectangle, and Rhombus). It contains no provenance information whatsoever: there is no record of what was submitted to the tool, no asserted-versus-inferred flag, no explanation or justification fields, and no separation between an input model and a computed result. Because of that, I cannot responsibly tell the stakeholder which of these relationships were declared up front and which the tool concluded on its own — for all five, the honest answer is \"cannot tell.\" I have deliberately not inferred origin from geometric plausibility; for example, Square is-a Parallelogram would follow logically from the other pairs, but that tells us about logical redundancy, not about whether it was stated in the input. If origin matters for the decision at hand, we should ask for output that tags each relationship with its source or ships the original input assertions alongside the results."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-04",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload contains only a flat \"hierarchy\" map of subclass links with no provenance, axiom-source, or asserted/inferred marker for this edge."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "This edge appears in the same undifferentiated \"hierarchy\" listing, which carries no field indicating whether it was an input declaration or a tool-produced conclusion."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload gives no origin annotation for this edge, and nothing in the data distinguishes it from the other listed edges."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "cannot_tell",
+            "basis": "The data records only that this subclass link exists, with no input axiom list or inference/justification metadata to attribute it to either source."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "cannot_tell",
+            "basis": "As with every other entry, the payload reports the link alone and supplies no evidence about whether it was declared or computed."
+          }
+        ],
+        "summary": "The tool's output reports five is-a relationships: Rectangle and Rhombus are each subclasses of Parallelogram, and Square is a subclass of Parallelogram, Rectangle, and Rhombus. However, the output we received is a single flat hierarchy map with no provenance information whatsoever: there is no separate list of input declarations, no per-edge flag or justification, and no distinction of any kind between edges the tool was told and edges the tool worked out for itself. Consequently, for all five relationships we cannot responsibly say whether they were asserted as inputs or derived by the tool's reasoning; any such attribution would be our own assumption about geometry rather than a finding supported by the data. If the origin of these relationships matters for the decision at hand, we should request output that includes explicit asserted-versus-inferred labeling or the original input axioms alongside the results."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-05",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "raw": {
+        "basis": "The payload contains a single \"hierarchy\" map of subject to superclass lists, with no provenance, no separation of input assertions from tool output, and no inference markers, so origin cannot be determined for any edge.",
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload lists this edge only inside a flat \"hierarchy\" map with no field indicating whether it was an input declaration or a tool-produced inference."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The edge appears in the same undifferentiated \"hierarchy\" structure, which carries no asserted/inferred annotation or separate input listing."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "Although this edge would follow from Square-Rectangle-Parallelogram, the payload gives no provenance data, so I cannot tell whether the tool inferred it or it was declared directly."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "cannot_tell",
+            "basis": "It is listed among Square's superclasses with no accompanying marker distinguishing declared input from derived output."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "cannot_tell",
+            "basis": "It is listed among Square's superclasses with no accompanying marker distinguishing declared input from derived output."
+          }
+        ],
+        "summary": "The output I received is a single flat hierarchy listing five subclass relationships (Rectangle and Rhombus under Parallelogram; Square under Parallelogram, Rectangle, and Rhombus). Critically, the payload contains no provenance information: there is no separate record of what was fed into the tool, no per-edge flag marking an edge as declared versus inferred, and no explanation or justification attached to any edge. Everything is presented in one undifferentiated map, so for all five relationships I cannot determine whether they were directly declared as input or produced by the tool's reasoning. I want to flag explicitly that some of these edges (for example Square being a Parallelogram) look like they must follow logically from the others, but that intuition is about geometry, not about this data, and I have deliberately not used it to claim any edge was derived. If the distinction between declared and inferred facts matters for the decision at hand, we should request output that tags each relationship with its origin or that returns the original input assertions alongside the computed hierarchy."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-06",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload contains only a flat \"hierarchy\" map of subclass-to-superclass lists with no provenance, source, or asserted/inferred marking for any entry."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The single \"hierarchy\" field lists this pair identically to every other pair and carries no field distinguishing tool input from tool output."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "Nothing in the payload separates the three superclasses listed under \"Square\" into declared versus reasoned, so its origin is unrecorded even though transitivity through Rectangle or Rhombus would make it redundant."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload reports only the final classification result and includes no input axiom set, explanation, or justification data against which this edge could be checked."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "cannot_tell",
+            "basis": "As with every other entry, this edge appears solely as a member of a \"hierarchy\" list, with no metadata indicating whether it was declared or computed."
+          }
+        ],
+        "summary": "The tool's output gives us five is-a relationships (Rectangle and Rhombus each under Parallelogram; Square under Parallelogram, Rectangle, and Rhombus), but it does not tell us where any of them came from. The payload consists of a single \"hierarchy\" field that maps each class to a flat list of superclasses, with no accompanying record of the tool's inputs, no per-edge provenance or source labels, and no explanation or justification structure. Every relationship is presented in exactly the same form, so there is no basis in the data for separating those that were declared to the tool from those the tool worked out itself. I have therefore reported all five as \"cannot tell.\" I want to flag explicitly that this is a limitation of the output format, not a hedge about geometry: some of these edges (for example, Square being a Parallelogram given that it is a Rectangle) are logically redundant and are the kind of thing a reasoner typically adds, but the payload gives no evidence of that, and inferring origin from mathematical obviousness would be guessing rather than reporting. If origin matters for the decision at hand, we should ask for output that includes the original input axioms or per-edge asserted/inferred flags."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-07",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload contains only a flat \"hierarchy\" map of subject-to-superclass lists with no provenance, source, or asserted/inferred marker for any edge."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "This edge appears in the same undifferentiated \"hierarchy\" listing, which records no field indicating whether it was an input declaration or a tool-produced conclusion."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload gives no separate input/axiom section to compare against, so nothing distinguishes this edge from a directly declared one even though it could also follow transitively."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "cannot_tell",
+            "basis": "It is listed identically to every other edge under \"hierarchy\", with no annotation, justification, or explanation attached."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload reports only the final combined hierarchy, giving no way to tell which edges were supplied as input and which the tool added."
+          }
+        ],
+        "summary": "The tool's output consists of a single flat hierarchy listing five is-a relationships (Rectangle and Rhombus under Parallelogram; Square under Parallelogram, Rectangle, and Rhombus). Critically, the payload contains no provenance information whatsoever: there is no separation between declared inputs and tool-produced conclusions, no per-edge source or status marker, no justification or explanation, and no copy of the original input axioms to compare against. As a result, for every one of the five relationships I cannot determine whether it was directly declared to the tool or generated by the tool's own reasoning, and I am reporting all five as \"cannot tell.\" I have deliberately not inferred origin from geometric plausibility — for example, Square is-a Parallelogram would follow logically from the other edges, but that is a fact about geometry, not evidence about what this particular tool was given or what it concluded. If origin matters for the decision at hand, the tool should be asked to emit output that labels each edge as asserted or inferred, or to return the input axiom set alongside the resulting hierarchy."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-08",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "raw": {
+        "basis": "The payload is a single flat \"hierarchy\" map with no provenance fields, no echo of the tool's inputs, and no marker distinguishing declared from inferred edges, so nothing in the data tells me where any edge came from.",
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload lists this edge under \"hierarchy\" with no provenance, input echo, or asserted/inferred marker of any kind."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The edge appears only as an entry in the undifferentiated \"hierarchy\" map, which carries no indication of whether it was declared as input or produced by reasoning."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "cannot_tell",
+            "basis": "The payload contains no field separating input declarations from tool-generated conclusions, so this edge's origin is unstated even though transitivity through Rectangle or Rhombus would make it geometrically expected."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "cannot_tell",
+            "basis": "It is listed alongside the other parents of Square in the same flat list, with no per-edge annotation of source."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "cannot_tell",
+            "basis": "It is listed alongside the other parents of Square in the same flat list, with no per-edge annotation of source."
+          }
+        ],
+        "summary": "The tool output I received reports five is-a relationships: Rectangle and Rhombus are each subclasses of Parallelogram, and Square is a subclass of Parallelogram, Rectangle, and Rhombus. However, the output cannot support any claim about where these relationships came from. The payload consists of a single \"hierarchy\" object mapping each class to a plain list of parent classes, and nothing more. There is no record of what was submitted to the tool, no per-edge or per-class provenance annotation, no asserted-versus-inferred flag, no justification or explanation structure, and no separation of an input block from an output block. Because declared and reasoned relationships are presented in exactly the same undifferentiated form, I judge all five as \"cannot tell.\" I want to flag one temptation explicitly: it may look safe to assume that, for example, Square is-a Parallelogram was computed by the tool because it follows necessarily from the other edges, or conversely that the direct parent links were the declared inputs. Both are inferences from my own background knowledge of geometry and of how such tools usually behave, not from this data, and I have deliberately not made them. If the origin of these relationships matters for your decision, the tool needs to be asked to emit provenance metadata, or the original input needs to be obtained and compared against this output."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-01",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "raw": {
+        "basis": "The payload carries an explicit per-record origin field, which is the only evidence about input status; three records read asserted_and_entailed and two read derived.",
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The record's origin field is \"asserted_and_entailed,\" which states the axiom was present in the input as well as re-proved by the reasoner."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The record's origin field is \"asserted_and_entailed,\" indicating the relationship was declared in the input and additionally confirmed by HermiT."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The record's origin field is \"asserted_and_entailed,\" so per the payload it was declared as input even though it could also follow by transitivity; the label, not the geometry, governs."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "derived",
+            "basis": "The record's origin field is \"derived\" (with assurance REASONER_PROVED), marking it as produced by the reasoner rather than stated in the input."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "derived",
+            "basis": "The record's origin field is \"derived\" with assurance REASONER_PROVED, so the payload attributes it to the tool's inference rather than to a declared input axiom."
+          }
+        ],
+        "summary": "The tool returned five is-a relationships, and each one is individually tagged with its own origin, so the input-versus-inferred question can be answered directly from the data rather than by inference. Three relationships — Rectangle is-a Parallelogram, Rhombus is-a Parallelogram, and Square is-a Parallelogram — are labeled \"asserted_and_entailed,\" meaning they were supplied to the tool as declared input and the reasoner also independently confirmed them; these count as asserted. Two relationships — Square is-a Rectangle and Square is-a Rhombus — are labeled \"derived,\" meaning they appear nowhere in the input and exist in the output solely because the reasoner deduced them; these are the tool's genuine contribution. Every one of the five, asserted and derived alike, carries assurance \"REASONER_PROVED\" by HermiT, so the assurance level says nothing about origin and should not be read as an origin signal. One caution for interpretation: the payload supplies no legend defining its origin vocabulary, so these judgments rest on the plain reading of the label strings; notably, Square is-a Parallelogram is reported as asserted even though it would also follow logically from the two derived facts, and we have deliberately followed the payload's label rather than overriding it with what looks geometrically redundant."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-02",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The payload's own origin field for this row reads \"asserted_and_entailed\", which states the axiom was present in the tool's input (and additionally confirmed by the reasoner)."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "This row carries origin \"asserted_and_entailed\", indicating it was directly declared in the input as well as re-proved by HermiT."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The row's origin value is \"asserted_and_entailed\", so per the payload it was declared as an input axiom, even though it could also have followed from the two Square rows below."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "derived",
+            "basis": "The row's origin value is exactly \"derived\" with no assertion marker, and its assurance is \"REASONER_PROVED\" by HermiT, so the payload attributes it solely to the tool's inference."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "derived",
+            "basis": "The row's origin value is exactly \"derived\" with assurance \"REASONER_PROVED\" by HermiT, marking it as produced by reasoning rather than stated in the input."
+          }
+        ],
+        "summary": "The tool's output labels each of the five is-a relationships with an explicit provenance field, so the origin question can be answered directly from the data rather than inferred. Three relationships — Rectangle is-a Parallelogram, Rhombus is-a Parallelogram, and Square is-a Parallelogram — are tagged \"asserted_and_entailed\", meaning they were declared as inputs to the tool and were also independently confirmed by the reasoner. The remaining two — Square is-a Rectangle and Square is-a Rhombus — are tagged \"derived\", meaning they appear nowhere in the input and exist in the output only because the tool's reasoning produced them. All five rows report the same assurance level (\"REASONER_PROVED\") from the same reasoner (HermiT), so assurance does not distinguish asserted from derived content; only the origin field does. Two caveats worth noting for interpretation: Square is-a Parallelogram is reported as asserted even though it would also follow logically from the two derived Square relationships, so its presence in the input is a fact about the source data and not something the geometry forces; and the payload gives no view of the underlying input axioms themselves, so these judgments rest entirely on trusting the tool's own provenance labels."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-03",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The payload tags this edge origin=\"asserted_and_entailed\", which states it was declared in the input and additionally re-proved by the reasoner."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "Its origin field is \"asserted_and_entailed\", explicitly marking it as an input declaration that the reasoner also confirmed."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The payload labels this edge origin=\"asserted_and_entailed\", so the input contained it directly even though it would also follow from the other edges."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "derived",
+            "basis": "Its origin field is \"derived\" rather than \"asserted_and_entailed\", and the assurance field credits HermiT with proving it, indicating it came only from the tool's reasoning."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "derived",
+            "basis": "The payload marks this edge origin=\"derived\" with reasoner HermiT, distinguishing it from the edges flagged as asserted."
+          }
+        ],
+        "summary": "The tool returned five is-a (subclass) relationships and, importantly, it self-labels the provenance of each one, so no guesswork was required on our side. Three relationships were present in the input as declarations and were additionally confirmed by the reasoner: Rectangle is-a Parallelogram, Rhombus is-a Parallelogram, and Square is-a Parallelogram (each carries origin=\"asserted_and_entailed\"). Two relationships were not stated in the input and exist only because the reasoner concluded them: Square is-a Rectangle and Square is-a Rhombus (each carries origin=\"derived\"). All five carry the same assurance level, REASONER_PROVED, from the HermiT reasoner, meaning the tool claims formal proof for every edge regardless of whether it was also asserted; assurance therefore tells you nothing about origin here, only the origin field does. One presentational caveat worth flagging: the payload mixes asserted and derived edges into a single list named \"entailed_is_a\", so that list must not be read as \"new findings\" -- only the two Square-to-Rectangle and Square-to-Rhombus edges represent conclusions the tool added beyond what it was told."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-04",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The record carries origin \"asserted_and_entailed\", which states the relationship was present in the input (and additionally re-confirmed by the reasoner)."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The record carries origin \"asserted_and_entailed\", marking it as declared input as well as entailed."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The record's origin is \"asserted_and_entailed\", so per the payload this link was directly declared, even though it would also follow from Square's other superclasses."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "derived",
+            "basis": "The record's origin is \"derived\" with assurance REASONER_PROVED by HermiT, indicating it was not in the input and was produced by inference."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "derived",
+            "basis": "The record's origin is \"derived\" with assurance REASONER_PROVED by HermiT, indicating it came only from the tool's reasoning."
+          }
+        ],
+        "summary": "The tool returned five is-a (subclass) relationships and, for each one, labeled its origin explicitly, so the provenance question can be answered directly from the data rather than inferred. Three of the five — Rectangle is-a Parallelogram, Rhombus is-a Parallelogram, and Square is-a Parallelogram — are tagged \"asserted_and_entailed,\" meaning they were supplied as declared input and the reasoner also independently confirmed them. The remaining two — Square is-a Rectangle and Square is-a Rhombus — are tagged \"derived,\" meaning they appear nowhere in the input and exist only as conclusions the reasoner computed. Every one of the five, asserted or derived, carries the same assurance level (REASONER_PROVED) from the same reasoner (HermiT), so the derived links are backed by proof rather than heuristic guessing. One point worth flagging for interpretation: Square is-a Parallelogram is reported as asserted even though it would follow logically from the two derived links, so the input apparently stated it redundantly; the \"asserted\" label there reflects what the payload records, not a judgment that the link had to be stated. No relationship in this payload is ambiguous as to origin."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-05",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "raw": {
+        "basis": "Each of the five relationships carries an explicit per-edge `origin` field, so origin can be read directly off the payload rather than inferred.",
+        "summary": "The tool's output labels the origin of every relationship explicitly, so no guesswork was needed. Three of the five relationships — Rectangle is-a Parallelogram, Rhombus is-a Parallelogram, and Square is-a Parallelogram — are tagged `origin: \"asserted_and_entailed\"`, meaning they were directly declared in the input and the reasoner also independently confirmed them. The remaining two — Square is-a Rectangle and Square is-a Rhombus — are tagged `origin: \"derived\"`, meaning they appear nowhere in the input and exist only as products of the tool's own inference. This is worth flagging because the two derived edges are the ones a reader would most likely assume were stated up front: they look mathematically self-evident, yet the payload is clear that nobody wrote them down and the reasoner had to conclude them. Every edge, asserted or derived, carries `assurance: \"REASONER_PROVED\"` from the HermiT reasoner, so the confidence level is uniform across the set; the asserted/derived distinction is about provenance, not reliability. One caveat: the payload does not include a glossary defining its origin vocabulary, so the reading of `asserted_and_entailed` as \"declared in the input and also re-proved\" rests on the plain wording of the label itself.",
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The edge's `origin` field reads \"asserted_and_entailed\", whose \"asserted\" component states it was declared as input (with the reasoner also re-deriving it)."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The edge is tagged `origin: \"asserted_and_entailed\"`, indicating it was directly declared in the input as well as entailed."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "Despite also being deducible from the two derived edges below, the payload explicitly tags this edge `origin: \"asserted_and_entailed\"`, so it was declared as input."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "derived",
+            "basis": "The edge's `origin` field is exactly \"derived\", contrasting with the \"asserted_and_entailed\" tag used elsewhere in the same payload, so it was produced only by HermiT's reasoning and not stated in the input."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "derived",
+            "basis": "The edge is tagged `origin: \"derived\"` rather than \"asserted_and_entailed\", so on the payload's own terms it was never declared and came solely from the reasoner."
+          }
+        ]
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-06",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The entry carries origin \"asserted_and_entailed\", which states the relationship was declared in the input (and additionally confirmed by the reasoner), not invented by it."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The entry carries origin \"asserted_and_entailed\", indicating it was present as an input declaration as well as being reasoner-provable."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The payload marks this origin \"asserted_and_entailed\", so despite also following from Square-Rectangle-Parallelogram, it was itself directly declared in the input."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "derived",
+            "basis": "The entry's origin is \"derived\" (with assurance REASONER_PROVED by HermiT), marking it as absent from the input and produced only by the tool's reasoning."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "derived",
+            "basis": "The entry's origin is \"derived\" with assurance REASONER_PROVED, so the payload attributes it to the reasoner rather than to an input declaration."
+          }
+        ],
+        "summary": "The tool reported five is-a (subclass) relationships, and each one is self-labelled with its origin, so the provenance question can be answered directly from the data rather than inferred. Three of the five — Rectangle is-a Parallelogram, Rhombus is-a Parallelogram, and Square is-a Parallelogram — are tagged \"asserted_and_entailed\", meaning they were supplied as declarations in the tool's input and the reasoner independently confirmed them; these are therefore asserted, not new findings. The remaining two — Square is-a Rectangle and Square is-a Rhombus — are tagged \"derived\", meaning they appear nowhere in the input and exist only as conclusions the reasoner computed. Notably, the labelling does not track what looks obvious: Square is-a Parallelogram would follow automatically from the derived Square/Rectangle link, yet the payload records it as also directly asserted, while the two Square links a person might assume were stated up front are in fact the tool's own contributions. All five entries carry assurance \"REASONER_PROVED\" by the HermiT reasoner, so the confidence level is uniform across the set; the only distinction being drawn is where each statement came from. The one caveat is that the payload supplies no glossary for its origin values, so these judgments rest on the plain reading of the labels \"asserted_and_entailed\" and \"derived\"."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-07",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The payload tags this row with \"origin\": \"asserted_and_entailed\", meaning it was declared in the tool's input (and additionally confirmed by the reasoner), not produced only by inference."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "This row also carries \"origin\": \"asserted_and_entailed\", so the payload states it was present as an input declaration as well as being entailed."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "Despite also being inferable from the other links, the payload explicitly labels this row \"origin\": \"asserted_and_entailed\", indicating it was directly declared in the input."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "derived",
+            "basis": "The payload labels this row \"origin\": \"derived\", which contrasts with the \"asserted_and_entailed\" rows and indicates it appears nowhere in the input and came only from the reasoner."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "derived",
+            "basis": "This row is likewise marked \"origin\": \"derived\", so on the payload's own labeling it was produced by HermiT's reasoning rather than stated as input."
+          }
+        ],
+        "summary": "The tool returned five is-a (subclass) relationships, and the payload itself records the provenance of each one in an explicit \"origin\" field, so no guesswork was needed. Three of them — Rectangle is-a Parallelogram, Rhombus is-a Parallelogram, and Square is-a Parallelogram — are marked \"asserted_and_entailed\", meaning they were directly declared in the input the tool was given (and the reasoner additionally confirmed them). The remaining two — Square is-a Rectangle and Square is-a Rhombus — are marked \"derived\", meaning they were not stated anywhere in the input and exist in the output only because the tool's reasoner inferred them. Two points are worth flagging for interpretation: the \"assurance\" field is identical (\"REASONER_PROVED\", reasoner HermiT) on all five rows, so assurance does not distinguish asserted from derived content — only the \"origin\" field does; and Square is-a Parallelogram is labeled as asserted even though it would also follow logically from the other relationships, so the label reflects what was actually declared rather than what is merely logically necessary. All provenance claims here rest on the tool's own labels, which this summary takes at face value because no independent view of the input was available."
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-08",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Rectangle",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The payload tags this relationship origin as \"asserted_and_entailed\", which states it was declared in the input (and additionally confirmed by the reasoner)."
+          },
+          {
+            "subject": "Rhombus",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "Its origin field reads \"asserted_and_entailed\", indicating the edge was present in the tool's input as well as entailed."
+          },
+          {
+            "subject": "Square",
+            "object": "Parallelogram",
+            "origin_judgment": "asserted",
+            "basis": "The payload marks this edge \"asserted_and_entailed\", so per the data it was directly declared as input, regardless of the fact that it would also follow from the Square/Rectangle chain."
+          },
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "origin_judgment": "derived",
+            "basis": "Its origin field is \"derived\" with assurance \"REASONER_PROVED\" by HermiT, i.e. not stated in the input but produced by the reasoner."
+          },
+          {
+            "subject": "Square",
+            "object": "Rhombus",
+            "origin_judgment": "derived",
+            "basis": "Its origin field is \"derived\" with assurance \"REASONER_PROVED\" by HermiT, indicating it came only from the tool's own inference."
+          }
+        ],
+        "summary": "The tool reported five is-a relationships and, for each one, explicitly labeled where it came from, so the origin question can be answered directly from the data rather than inferred. Three edges — Rectangle is-a Parallelogram, Rhombus is-a Parallelogram, and Square is-a Parallelogram — carry the origin label \"asserted_and_entailed\", meaning they were supplied as declared inputs to the tool and were independently confirmed by the reasoner; they are therefore asserted, not new findings. Two edges — Square is-a Rectangle and Square is-a Rhombus — carry the origin label \"derived\", meaning they appear nowhere in the input and exist only as conclusions the reasoner drew; these are the tool's genuine added value here. Every one of the five, asserted or derived, has assurance \"REASONER_PROVED\" by the HermiT reasoner, so all are backed by proof rather than heuristic guessing. Two points of caution for interpretation: the assurance level says nothing about origin (a proved edge may still have been handed to the tool), and the direct Square-to-Parallelogram edge is recorded as asserted even though it would also follow logically from the two derived edges, so it should not be counted as a discovery."
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-01",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "cannot_tell",
+            "basis": "The payload gives only bare subject/object fields under \"is_a_relations\" with no provenance, reasoner, proof, entailment flag, confidence, or status field, so nothing in it indicates whether this relation was checked or merely proposed."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "cannot_tell",
+            "basis": "Identical structure: the entry carries no verification metadata of any kind (no justification, source axiom, or checked/inferred marker), so the payload is silent on how it was produced."
+          }
+        ],
+        "summary": "Neither relationship should be relied upon in production without further checking. The payload consists solely of an \\\"is_a_relations\\\" list containing bare subject/object pairs (Square is-a Rectangle; Trapezoid is-a Quadrilateral). It carries no provenance or verification signal whatsoever: no reasoner or engine identification, no entailment or proof/justification field, no source-axiom reference, no confidence score, and no status flag distinguishing checked entailments from unchecked suggestions. Because of that silence I record both as \\\"cannot tell\\\" rather than affirmatively verified or affirmatively unverified — the data does not establish either. For the production decision, however, the practical consequence is one-sided: absent any evidence of a checking process, both relations must be treated as unverified suggestions. Both happen to look plausible against ordinary geometric usage, but that is my own background judgment, not something the tool output demonstrates, and Square-is-a-Rectangle in particular depends on a definitional choice (inclusive vs. exclusive rectangle/trapezoid definitions) that the payload does not pin down. Before relying on these, ask the producing tool for output that includes explicit verification metadata — which relations are reasoner-entailed versus heuristically suggested, and the justifying axioms — or validate them independently against the intended ontology's definitions."
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-02",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "cannot_tell",
+            "basis": "The payload gives only bare subject/object fields with no provenance, reasoner, proof, justification, confidence, or status marker, so it says nothing about whether this relation was checked or merely proposed."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "cannot_tell",
+            "basis": "Identically to the other entry, this relation carries no accompanying evidence of a checking process (no entailment flag, axiom source, or explanation), so its verification status is simply absent from the data given."
+          }
+        ],
+        "summary": "Neither relationship should be relied on in production without further checking. The payload is a bare list of two is-a pairs (Square ⊑ Rectangle, Trapezoid ⊑ Quadrilateral) with no verification metadata of any kind: there is no reasoner or entailment flag, no proof or justification, no source axioms, no confidence score, and no status field distinguishing \"entailed\" from \"suggested\". Because of that silence I cannot classify either relation as verified or as an unchecked suggestion — the payload simply does not report how they were produced. Note that both pairs happen to be true under the ordinary geometric reading, but that is my own background knowledge, not evidence supplied by the tool, and truth is not the same as verification; a production system that trusted this payload would be trusting an unlabelled assertion. Before relying on either edge, require the tool to emit per-relation provenance (which reasoner or rule produced it, against which ontology version, with a justification set), or independently re-derive both edges from the source axioms. Also be aware that the two edges are not equally robust in general modelling practice — trapezoid/quadrilateral taxonomies vary between inclusive and exclusive definitions across ontologies — so a provenance-bearing re-run should confirm the intended definitional convention as well."
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-03",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "raw": {
+        "basis": "payload\">{\"is_a_relations\": [{\"subject\": \"Square\", \"object\": \"Rectangle\"}, {\"subject\": \"Trapezoid\", \"object\": \"Quadrilateral\"}]}",
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "cannot_tell",
+            "basis": "The payload gives only a bare subject/object pair under \"is_a_relations\" with no provenance, reasoner/entailment marker, confidence, justification, or status field, so it carries no information about whether any checking process produced or validated it."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "cannot_tell",
+            "basis": "Same as the other entry: the record contains only \"subject\" and \"object\" keys with no verification, source, or derivation metadata, so the payload itself does not indicate whether it was checked or merely suggested."
+          }
+        ],
+        "summary": "Neither relationship should be treated as verified, and neither is safe to rely on in production without further checking. The payload is a flat list under \"is_a_relations\" in which each entry contains only a \"subject\" and an \"object\" string. There is no verification flag, no distinction between asserted and inferred axioms, no reasoner or entailment indication, no justification/explanation set, no confidence score, and no source or provenance field anywhere in the output. Because of that, the payload does not tell me how either edge was produced, so I cannot classify them as either proven-correct or explicitly-unchecked; I have marked both \"cannot_tell\". Note specifically that I am not treating them as verified just because a tool returned them, and I am not treating either as verified because it happens to look plausible as ordinary geometry knowledge — plausibility is my own background belief, not evidence supplied by this output contract. For a production decision the practical consequence is the same for both edges: treat \"Square is-a Rectangle\" and \"Trapezoid is-a Quadrilateral\" as unvalidated candidates. Before relying on them, require the upstream tool to emit per-relationship provenance (asserted vs. entailed, which reasoner, and the justification axioms), or independently validate the edges against the source ontology. Be aware also that \"Square is-a Rectangle\" and \"Trapezoid is-a Quadrilateral\" are both definition-sensitive in real taxonomies (e.g., exclusive vs. inclusive definitions of trapezoid and of rectangle), which is a further reason not to accept them on appearance alone."
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-04",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "cannot_tell",
+            "basis": "The payload gives only a bare subject/object pair inside \"is_a_relations\" with no provenance, reasoner, entailment, confidence, or status field, so it says nothing about whether any checking process produced or confirmed it."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "cannot_tell",
+            "basis": "Same as the other entry: the record carries no verification metadata of any kind, so the payload does not indicate whether this was entailed/checked or merely proposed."
+          }
+        ],
+        "summary": "Neither relationship is safe to rely on in production without further checking. The payload consists solely of an \\\"is_a_relations\\\" list whose entries carry nothing but a subject and an object — there is no provenance field, no indication of a reasoner or entailment step, no confidence score, no verification/status flag, and no distinction drawn between asserted, inferred, and suggested links. That silence means I can neither confirm verification nor positively assert that a check was skipped; the honest reading for both Square is-a Rectangle and Trapezoid is-a Quadrilateral is \\\"cannot tell how this was produced.\\\" For decision-making purposes, cannot-tell must be treated exactly as unverified: do not depend on either edge until the producing tool emits explicit provenance. Note also that both statements happen to be true in ordinary geometry (under the inclusive definition of trapezoid), but that is my own background knowledge, not evidence from the payload — plausibility of the content is not a substitute for a verification signal, and a stakeholder who accepts these because they \"look right\" would apply the same reasoning to a wrong-but-plausible edge. Recommended next step: require the upstream tool to return per-relation provenance (e.g., asserted vs. reasoner-entailed, with the justification or axiom set), and re-evaluate then."
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-05",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "not_verified",
+            "basis": "The payload lists this pair with only \"subject\" and \"object\" fields and carries no provenance, reasoner status, proof, or verification flag of any kind, so nothing in it indicates the relation was checked."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "not_verified",
+            "basis": "Same as the other entry: a bare subject/object pair inside \"is_a_relations\" with no accompanying evidence, justification, or verification metadata showing any checking process was applied."
+          }
+        ],
+        "summary": "Neither relationship is safe to rely on in production without further checking. The payload is a bare list of two subject/object pairs under the key \"is_a_relations\" and contains no verification signal at all: no reasoner or entailment status, no proof or justification, no source ontology reference, no confidence score, and no field distinguishing checked results from candidate suggestions. Because the sole basis for both entries is that a tool emitted them, and emission alone is not evidence of checking, both \"Square is-a Rectangle\" and \"Trapezoid is-a Quadrilateral\" must be treated as unverified suggestions. Note especially that plausibility is not verification here: both claims happen to match ordinary geometric usage (and a reader may be tempted to wave the Square/Rectangle one through as obvious), but that judgment comes from the reader's background knowledge rather than from the payload, and it is exactly the kind of reasoning that would also wave through a plausible-but-wrong claim. Note also that under some definitions \"Trapezoid\" and its parent hierarchy vary by convention, which is precisely the sort of modeling choice a verification record would settle. Recommendation: do not consume these relations in a production system until the tool supplies per-relation provenance (for example an entailment/asserted flag plus the justification axioms), or until each relation is independently confirmed against the source ontology."
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-06",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "cannot_tell",
+            "basis": "The payload gives only a bare subject/object pair inside \"is_a_relations\" with no provenance, reasoner, entailment, proof, confidence, or status field, so nothing in it indicates whether this edge was checked or merely proposed."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "cannot_tell",
+            "basis": "Same as the other edge: the record carries no verification metadata of any kind (no justification, source axiom, or checked/unchecked marker), so the payload does not say how it was produced."
+          }
+        ],
+        "summary": "Neither relationship is safe to rely on in production without further checking. The payload is a flat list of two is-a pairs (Square -> Rectangle, Trapezoid -> Quadrilateral) and contains no verification signal at all: there is no reasoner or entailment marker, no justification or supporting axioms, no confidence score, no source attribution, and no status field distinguishing checked results from candidate suggestions. Because the tool output is silent on how these edges were produced, I can neither confirm them as verified nor positively characterize them as unchecked suggestions, so I report both as cannot-tell rather than guessing. That both pairs happen to look plausible as ordinary geometric taxonomy is not evidence from this payload and should not be treated as verification; a reviewer's intuition is exactly the kind of check the payload fails to document. To move either edge to verified, the stakeholder should require the tool to return per-relationship provenance — specifically whether the edge is an asserted axiom or a reasoner-derived entailment, plus the justification set — and then rely only on edges carrying that evidence."
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-07",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "cannot_tell",
+            "basis": "The payload contains only bare subject/object fields with no provenance, reasoner, proof, confidence, or status metadata, so nothing in it indicates whether this relation was checked or merely proposed (its intuitive geometric correctness is not evidence about the tool's process)."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "cannot_tell",
+            "basis": "Same as above: the entry carries no verification field, justification, or source of any kind, so the payload provides no basis for calling it either proven or unchecked."
+          }
+        ],
+        "summary": "Neither relationship should be relied upon in production without further checking. The payload is a bare list under \\\"is_a_relations\\\", where each entry has only a \\\"subject\\\" and an \\\"object\\\" string. There is no verification flag, no reasoner or entailment indication, no proof or justification, no confidence score, no source citation, and no status field distinguishing asserted from inferred or candidate axioms. Because of that, I cannot classify Square is-a Rectangle or Trapezoid is-a Quadrilateral as verified, and I also cannot affirmatively classify them as unverified suggestions — the payload simply does not say how they were produced. Both happen to look plausible on ordinary geometric definitions, but that is my own background judgment, not evidence from the tool, and it would not generalize to other relations the same tool emits (for example, whether a trapezoid is treated as exclusive of parallelograms is a definitional choice this payload never states). For a production decision: treat both as unconfirmed. Before relying on them, require the tool to return explicit per-relation provenance (asserted vs. entailed, the reasoner and ontology version used, and a justification set), or independently validate the axioms against the source ontology."
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-08",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "not_verified",
+            "basis": "The payload records only a bare subject/object pair inside \"is_a_relations\" with no reasoner, entailment, proof, justification, confidence, or provenance field, so nothing in it establishes that any checking process confirmed this edge (its geometric plausibility is not evidence supplied by the payload)."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "not_verified",
+            "basis": "Identical bare pair with no accompanying status, source, or justification field, and the payload contains no schema element that could distinguish a checked entailment from an unchecked suggestion."
+          }
+        ],
+        "summary": "Neither relationship is safe to rely on in production without further checking. The payload is a single \\\"is_a_relations\\\" array of bare subject/object pairs; it carries no verification status, no reasoner or entailment marker, no justification or proof reference, no confidence score, and no provenance of any kind. Because of that, there is nothing in the data that shows either edge was produced or confirmed by a checking process, so both Square is-a Rectangle and Trapezoid is-a Quadrilateral must be treated as unverified suggestions. Note specifically that Square is-a Rectangle happens to be true under standard geometric definitions, but that background plausibility comes from outside the payload and is not verification evidence; conversely Trapezoid is-a Quadrilateral is equally plausible and equally unsupported here. Before production use, require the tool to emit an explicit per-relation verification field (e.g., reasoner-entailed vs. suggested, with a justification or axiom trace), or independently confirm each edge against the source ontology's asserted and entailed hierarchy."
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-01",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "verified",
+            "basis": "The payload marks this relation origin \"derived\" with assurance \"REASONER_PROVED\" and decider \"reasoner\", indicating it was established by a reasoning/proof process rather than suggested."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "not_verified",
+            "basis": "The payload marks this relation origin \"candidate_surface_feature\" with assurance \"PROPOSED\" and decider \"llm_fca_pipeline\", i.e., an unchecked candidate suggestion, despite the claim looking familiar and plausible."
+          }
+        ],
+        "summary": "Of the two is-a relationships supplied, only Square is-a Rectangle carries evidence of having been checked: the payload records it as derived, with assurance REASONER_PROVED and a reasoner as the deciding component, so it is safe to rely on in production without further checking (to the extent you trust the reasoner and the axioms it was given). Trapezoid is-a Quadrilateral should NOT be relied on as-is: the payload labels it origin candidate_surface_feature, assurance PROPOSED, decided by an llm_fca_pipeline, which means it is an unproven suggestion. Its apparent obviousness is not evidence — the judgment here follows the provenance fields, not plausibility, and geometry definitions can vary (for example, whether a \"trapezoid\" in this ontology is constrained in ways that interact with other axioms). Before production use, route the Trapezoid relation through the same reasoner-proof path that produced the Square relation, or have a domain owner sign off on it explicitly."
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-02",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "verified",
+            "basis": "The payload marks this relation origin=\"derived\" with assurance=\"REASONER_PROVED\" and decider=\"reasoner\", i.e. it was produced by a deductive checking process rather than proposed."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "not_verified",
+            "basis": "The payload marks this relation origin=\"candidate_surface_feature\" with assurance=\"PROPOSED\" and decider=\"llm_fca_pipeline\", i.e. it is an unchecked suggestion despite being intuitively plausible."
+          }
+        ],
+        "summary": "Of the two is-a relationships returned, only Square is-a Rectangle carries evidence of verification: the payload labels it as derived, with assurance REASONER_PROVED and a reasoner as the decider, so it is the product of a deductive check and is safe to rely on in production without further checking. Trapezoid is-a Quadrilateral is explicitly labeled PROPOSED, originating from a candidate surface feature and decided by an LLM/FCA pipeline; that is a suggestion no checking process has confirmed, and it should be treated as unverified even though the claim looks obviously true to a human reader. Its apparent correctness is not the same as validation by the tool, so if downstream logic depends on it, it needs independent confirmation (e.g., a reasoner run against the axioms or curator sign-off) before production use. Practical recommendation: gate on the assurance field rather than on mere presence in the tool output, admitting only REASONER_PROVED relations automatically and routing PROPOSED ones to review."
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-03",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "raw": {
+        "basis": "Payload-internal provenance fields distinguish the two claims: one carries reasoner-derived proof metadata, the other carries unchecked pipeline-proposal metadata.",
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "verified",
+            "basis": "The record marks origin \"derived\" with assurance \"REASONER_PROVED\" and decider \"reasoner\", i.e. the payload asserts this subsumption was established by a reasoning/proof step rather than merely suggested."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "not_verified",
+            "basis": "The record marks origin \"candidate_surface_feature\" with assurance \"PROPOSED\" and decider \"llm_fca_pipeline\", i.e. the payload presents it as an unchecked candidate suggestion, even though the statement may look obviously true on background knowledge."
+          }
+        ],
+        "summary": "Only one of the two relationships is safe to rely on as-is: Square is-a Rectangle is flagged in the payload as reasoner-derived and REASONER_PROVED, so the tool itself claims a checking process established it. Trapezoid is-a Quadrilateral is explicitly labeled PROPOSED, originating as a candidate surface feature decided by an LLM/FCA pipeline, which means it is a suggestion that has not passed any proof step; its apparent obviousness to a human reader is not evidence from this payload and should not substitute for verification. For production use, admit the Square/Rectangle axiom without further checking, and gate the Trapezoid/Quadrilateral axiom behind human review or a reasoner check before it can influence downstream inference. More generally, the assurance and decider fields, not the mere presence of a row in the tool output, are what should drive promotion decisions, so any pipeline consuming this endpoint should filter on assurance == REASONER_PROVED rather than accepting the whole is_a_relations list."
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-04",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "verified",
+            "basis": "The payload marks this relation origin=\"derived\" with assurance=\"REASONER_PROVED\" and decider=\"reasoner\", i.e. it was established by a deductive checking process rather than proposed."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "not_verified",
+            "basis": "The payload marks this relation origin=\"candidate_surface_feature\" with assurance=\"PROPOSED\" and decider=\"llm_fca_pipeline\", i.e. it is an unchecked suggestion from a generative/mining pipeline, regardless of how plausible it looks."
+          }
+        ],
+        "summary": "Of the two is-a relationships returned, only Square is-a Rectangle carries evidence of verification: the payload explicitly labels it as derived, REASONER_PROVED, and decided by a reasoner, so it can be relied on in production as a proven entailment of the ontology. Trapezoid is-a Quadrilateral is labeled PROPOSED, originating from a candidate surface feature and decided by an LLM/FCA pipeline; this is a suggestion that has not been checked by any proof procedure, and it should not be relied on in production without independent verification (human review or a reasoner run) even though it is intuitively plausible on general geometric knowledge. The practical takeaway is that the assurance/decider fields, not the mere presence of a row in the tool output, determine trustworthiness: treat REASONER_PROVED rows as production-safe and PROPOSED rows as a review queue."
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-05",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "verified",
+            "basis": "The payload marks this relation with origin \"derived\", assurance \"REASONER_PROVED\", and decider \"reasoner\", indicating it was produced and settled by a logical reasoning process rather than proposed."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "not_verified",
+            "basis": "The payload marks this relation with origin \"candidate_surface_feature\", assurance \"PROPOSED\", and decider \"llm_fca_pipeline\", i.e. an unchecked suggestion from a generative/heuristic pipeline, regardless of whether it happens to be true."
+          }
+        ],
+        "summary": "Of the two is-a relationships supplied, only Square is-a Rectangle carries evidence of having been checked: the payload labels it as derived, REASONER_PROVED, and decided by a reasoner, so it can be relied on in production at the strength of whatever reasoner produced it. Trapezoid is-a Quadrilateral is explicitly labeled PROPOSED, originating from a candidate surface feature and decided by an LLM/FCA pipeline — it is a suggestion that has not passed any checking step. That this second relation looks obviously true to a human geometer is not evidence from the payload; treat it as unvalidated and require independent verification (reasoner entailment check or human review) before any production dependency. Recommendation: ship on the Square/Rectangle axiom only, and gate the Trapezoid/Quadrilateral axiom behind a validation step. Also note that the payload provides no information about the reasoner's identity, the ontology it operated over, or the consistency of that ontology, so the \"verified\" label should be understood as relative to that unseen input rather than as an absolute guarantee."
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-06",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "verified",
+            "basis": "The payload marks this relation as origin \"derived\" with assurance \"REASONER_PROVED\" and decider \"reasoner\", i.e., it was produced and discharged by a proof process rather than merely suggested."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "not_verified",
+            "basis": "The payload marks this relation as origin \"candidate_surface_feature\" with assurance \"PROPOSED\" and decider \"llm_fca_pipeline\", indicating an unchecked suggestion from a heuristic/LLM pipeline rather than a proved entailment, regardless of how plausible the claim looks."
+          }
+        ],
+        "summary": "Only one of the two relationships carries evidence of having been checked. Square is-a Rectangle is labeled origin \\\"derived\\\", assurance \\\"REASONER_PROVED\\\", decider \\\"reasoner\\\" — the payload asserts a reasoner proved it, so it is the only relation safe to rely on in production without further checking (subject to trusting the reasoner and the axioms it was given). Trapezoid is-a Quadrilateral is labeled origin \\\"candidate_surface_feature\\\", assurance \\\"PROPOSED\\\", decider \\\"llm_fca_pipeline\\\": it is an unadjudicated candidate emitted by an LLM/FCA suggestion pipeline, and the payload contains no evidence that any checking process confirmed it. Even though that claim happens to look obviously reasonable, its plausibility is not verification, and treating PROPOSED rows as facts would silently import whatever error rate the suggestion pipeline has. Recommendation: gate production use on the assurance field — admit REASONER_PROVED rows, and route PROPOSED rows to human or reasoner review before any downstream dependence."
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-07",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "verified",
+            "basis": "The payload marks this relation origin \"derived\" with assurance \"REASONER_PROVED\" and decider \"reasoner\", i.e. it was produced by a proof step rather than proposed."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "not_verified",
+            "basis": "The payload marks this relation origin \"candidate_surface_feature\" with assurance \"PROPOSED\" and decider \"llm_fca_pipeline\", indicating an unchecked suggestion despite the claim looking geometrically plausible."
+          }
+        ],
+        "summary": "Of the two is-a relationships returned, only Square is-a Rectangle carries evidence of having been checked: the payload labels it as derived, decided by a reasoner, with assurance REASONER_PROVED, so it is safe to rely on in production at the same level of trust you place in the reasoner itself. Trapezoid is-a Quadrilateral is explicitly labeled PROPOSED, originating from a candidate surface feature and decided by an LLM/FCA pipeline — this is an unvalidated suggestion, and the fact that it happens to look correct as ordinary geometry is not evidence from this payload that any checking process confirmed it. Treat it as requiring independent verification (reasoner entailment check or human review) before production use, and note that the two records differ only in these provenance fields, so the assurance/origin/decider triple is the sole basis for the distinction; if downstream code drops those fields, the distinction is lost."
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-08",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "raw": {
+        "per_relationship": [
+          {
+            "subject": "Square",
+            "object": "Rectangle",
+            "verification_judgment": "verified",
+            "basis": "The payload marks this relation origin=\"derived\" with assurance=\"REASONER_PROVED\" and decider=\"reasoner\", i.e. it was produced and settled by a deductive checking process rather than proposed."
+          },
+          {
+            "subject": "Trapezoid",
+            "object": "Quadrilateral",
+            "verification_judgment": "not_verified",
+            "basis": "The payload marks this relation assurance=\"PROPOSED\" with origin=\"candidate_surface_feature\" and decider=\"llm_fca_pipeline\", i.e. it is an unchecked suggestion from a generative/heuristic pipeline, regardless of whether it happens to be true."
+          }
+        ],
+        "summary": "Only one of the two relationships is safe to rely on without further checking: Square is-a Rectangle, which the payload labels as derived, REASONER_PROVED, and decided by the reasoner — a deductive proof, not a guess. The second relationship, Trapezoid is-a Quadrilateral, carries assurance PROPOSED with origin candidate_surface_feature and decider llm_fca_pipeline, meaning it is an unvalidated candidate emitted by an LLM/FCA suggestion pipeline and no checking process has confirmed it. Note that plausibility is not evidence here: Trapezoid is-a Quadrilateral looks obviously correct on domain intuition, but the payload itself asserts no verification for it, so for production purposes it must be treated as a suggestion pending review (e.g., reasoner confirmation or human curation) before it is used in any logic that depends on its correctness. In short: rely on Square/Rectangle; gate or manually verify Trapezoid/Quadrilateral."
+      }
+    }
+  ]
+}

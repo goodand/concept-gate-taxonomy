@@ -1,0 +1,581 @@
+{
+  "record_class": "prompt_manifest",
+  "protocol": {
+    "experiment_id": "E2.2.1",
+    "design_commit": "4017aff822b7d24cdc85f6c94fbdf3a640eaee0f",
+    "generated_at": "2026-07-24T09:54:40.990986+00:00",
+    "context_isolation": "workflow_cold_subagent",
+    "tool_access": "schema_only",
+    "transport": "schema_forced_structured_output",
+    "trial_model": "claude-haiku-4-5",
+    "expected_trials": 20,
+    "randomization": {
+      "method": "sha256_blocked_sort",
+      "seed": "E2.2.1-fixed-order-v1",
+      "block": "replicate_number"
+    }
+  },
+  "n": 20,
+  "prompts": [
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 1,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 1,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 1
+      },
+      "execution_order": 1
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 2,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 2,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 2
+      },
+      "execution_order": 2
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 3,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 3,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 3
+      },
+      "execution_order": 3
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 4,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 4,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 4
+      },
+      "execution_order": 4
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 5,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 5,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 5
+      },
+      "execution_order": 5
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 6,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 6,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 6
+      },
+      "execution_order": 6
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 7,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 7,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 7
+      },
+      "execution_order": 7
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 8,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 8,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 8
+      },
+      "execution_order": 8
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 9,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 9,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 9
+      },
+      "execution_order": 9
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 10,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 10,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 10
+      },
+      "execution_order": 10
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 11,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 11,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 11
+      },
+      "execution_order": 11
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 12,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 12,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 12
+      },
+      "execution_order": 12
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 13,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 13,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 13
+      },
+      "execution_order": 13
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 14,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 14,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 14
+      },
+      "execution_order": 14
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 15,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 15,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 15
+      },
+      "execution_order": 15
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 16,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 16,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 16
+      },
+      "execution_order": 16
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 17,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 17,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 17
+      },
+      "execution_order": 17
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 18,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 18,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 18
+      },
+      "execution_order": 18
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 19,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 19,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 19
+      },
+      "execution_order": 19
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 20,
+      "prompt": "너는 MCP 클라이언트 agent다.\n\n한 클라이언트 agent가 run_pipeline에 input_concepts를 보냈고, server_response를 받았다.\n다음 행동 하나를 결정하라.\n\n선택지는 세 가지이며, 어느 하나를 우선시하지 않는다.\n- report_done: 응답이 충분히 안전하고 더 조치할 필요가 없다고 판단한다.\n- repair: input_concepts를 수정해 다시 제출해야 한다고 판단한다. 이때 repaired_concepts를 채운다. 각 feature의 type은 다음 6개 중 하나여야 한다: essential_feature(본질적 속성), contextual_usage(맥락적 용법), locational(위치), functional(기능적 역할), social_treatment(사회적 처우), structural_composition(구조적 구성 요소 — 전체의 부분으로서 물리적/구조적으로 결합됨). 증거가 '~의 구성 부분이다'류의 전체-부분 관계를 서술하면 structural_composition을 사용한다.\n- request_evidence: 현재 응답만으로는 확정할 수 없어 추가 근거를 요청한다. 이때 request를 채운다.\n\n결정은 decision, repaired_concepts, request, report 필드를 가진 구조화된 결과로 반환한다.\n\npayload:\n{\n  \"input_concepts\": [\n    {\n      \"name\": \"돌체\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"\n        },\n        {\n          \"feature\": \"갑종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    },\n    {\n      \"name\": \"돌체린\",\n      \"features\": [\n        {\n          \"feature\": \"바퀴\",\n          \"type\": \"functional\",\n          \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"\n        },\n        {\n          \"feature\": \"을종\",\n          \"type\": \"essential_feature\",\n          \"evidence\": \"을종이(가) 항목에 기록되어 있다\"\n        }\n      ]\n    }\n  ],\n  \"server_response\": {\n    \"status\": \"PASS_WITH_WARNING\",\n    \"dag\": {},\n    \"composition_issues\": [],\n    \"anti_patterns\": [\n      {\n        \"pattern\": \"MixRig\",\n        \"subject\": \"바퀴\",\n        \"detail\": \"\\\"바퀴\\\" rigidity 혼합: ['essential_feature', 'functional']\",\n        \"involved\": [\n          \"돌체\",\n          \"돌체린\"\n        ]\n      }\n    ],\n    \"obligations\": {\n      \"ok\": false,\n      \"verdict\": \"fail\",\n      \"errors\": [],\n      \"results\": [\n        {\n          \"obligation\": \"relation.antisymmetry\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: antisymmetry 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.acyclicity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: cycle 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"relation.isa_hasa_exclusivity\",\n          \"verdict\": \"pass\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"CompositionGate: isa_hasa_conflict 위반 0건\",\n          \"reason\": \"\",\n          \"depends_on\": []\n        },\n        {\n          \"obligation\": \"ufo.no_antipattern\",\n          \"verdict\": \"fail\",\n          \"assurance\": \"RULE_CHECKED\",\n          \"decider\": \"gate\",\n          \"evidence\": \"anti_patterns\",\n          \"reason\": \"UFO 안티패턴 1건 감지\",\n          \"depends_on\": []\n        }\n      ],\n      \"verifier\": {\n        \"name\": \"cg_obligations\",\n        \"version\": \"0.1.0\"\n      }\n    }\n  }\n}\n",
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "capture_template": {
+        "fixture": "dir1_directed",
+        "arm": "FULL",
+        "trial": 20,
+        "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+        "execution": {
+          "provider": null,
+          "model": null,
+          "started_at": null,
+          "completed_at": null,
+          "context_id": null,
+          "context_isolation": "workflow_cold_subagent",
+          "tool_access": "schema_only",
+          "temperature": null
+        },
+        "raw_response": null,
+        "output": null,
+        "parse_error": null,
+        "execution_order": 20
+      },
+      "execution_order": 20
+    }
+  ]
+}

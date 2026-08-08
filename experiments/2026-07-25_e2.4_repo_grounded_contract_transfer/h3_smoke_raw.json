@@ -1,0 +1,90 @@
+{
+  "E24-H3-03-CONTROL_REPO_H3-01": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "JSON추출유틸",
+        "features": [
+          {
+            "feature": "코드블록처리방식: 입력 문자열에서 ```/```json 펜스를 제거한 뒤 첫 '{'와 마지막 '}' 사이 구간을 잘라 반환하고, 중괄호가 없으면 ValueError를 발생시킨다",
+            "type": "functional",
+            "evidence": "ev4: def extract_json_block(raw): re.sub(r'```(?:json)?\\s*','',raw.strip()).replace('```','').strip() 후 clean.find('{'), clean.rfind('}')로 구간을 추출하고 s<0 or e<0이면 raise ValueError(\"JSON 블록 없음\"), 아니면 clean[s:e+1] 반환"
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": ["ev4"],
+    "report": "판단 근거\n\n1) 서버 응답은 PASS이고 composition_issues/anti_patterns가 비어 있으나, 유일한 evidence(ev4)와 candidate feature의 type 배정을 대조하면 근거 불일치가 하나 있어 repair로 결정했다.\n\n2) ev4는 extract_json_block(raw)의 구현 전체다. 내용은 (a) ```/```json 펜스 제거, (b) 첫 '{'와 마지막 '}' 위치 탐색, (c) 둘 중 하나라도 없으면 ValueError 발생, (d) 그렇지 않으면 해당 구간 문자열 반환이다. 이는 모두 '이 유틸이 입력에 대해 무엇을 수행하는가'라는 동작·역할 서술이지, 개념의 정체성을 규정하는 본질적 속성 서술이 아니다. 따라서 '코드블록처리방식'을 essential_feature로 둔 것은 근거 대비 과대 배정이며 functional이 정확하다.\n\n3) structural_composition 여부도 점검했다. ev4 어디에도 '이 유틸이 더 큰 전체의 부분이다' 또는 '이 유틸이 하위 부품들로 물리적/구조적으로 결합되어 있다'는 전체-부분 관계 서술이 없다. re, str 메서드 사용은 호출 관계일 뿐 구성 부분 관계로 볼 근거가 부족하므로 structural_composition은 부여하지 않았다.\n\n4) locational, contextual_usage, social_treatment 역시 ev4에 대응 근거가 없다(호출 위치·사용 맥락·팀 규약 등의 서술 부재). 따라서 feature를 새로 추가하지 않고, 입력에 있던 concept 1개와 feature 1개를 그대로 유지한 채 type만 essential_feature -> functional로 교정하고, feature 문구를 ev4가 실제로 보여주는 동작(펜스 제거 / 중괄호 구간 추출 / 실패 시 ValueError)까지만 구체화했다. 근거 범위를 넘는 일반화(예: '모든 LLM 출력에 대해 견고함')는 추가하지 않았다.\n\n5) defer를 택하지 않은 이유: evidence가 1건뿐이지만, 문제된 지점(feature type 배정)을 판정하는 데 필요한 정보는 ev4 안에 모두 있어 packet만으로 결론이 확정 가능하다."
+  },
+  "E24-H3-03-A_REPO_H3-01": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": ["ev4"],
+    "report": "패킷에는 concept이 하나(JSON추출유틸), feature가 하나(코드블록처리방식, essential_feature, ev4 근거)만 존재한다. 동일 feature 이름이 둘 이상의 concept에 서로 다른 type으로 나타나는 rigidity 혼합 상황이 성립하지 않으므로, type 통일 규칙이 발동할 조건 자체가 없다. server_response는 status=PASS이고 composition_issues와 anti_patterns가 모두 비어 있어, 수정 대상으로 지목된 feature도 없다.\n\nev4의 코드(extract_json_block)는 raw 문자열에서 ``` 펜스를 제거하고 첫 '{'와 마지막 '}' 사이를 잘라내며, 블록이 없으면 ValueError를 던진다. 이 동작은 '코드블록처리방식'이라는 feature가 이 유틸리티의 정체를 규정하는 속성임을 뒷받침한다. 즉 이 함수에서 코드블록 처리를 제거하면 남는 것이 없으므로 essential_feature 표기는 증거와 모순되지 않는다. functional로 볼 여지도 있으나, 이는 anti-pattern으로 지목되지 않은 사안이고 단일 concept 내부의 해석 차이에 불과해 근거 있는 수정 사유가 되지 못한다. 지목되지 않은 feature를 임의로 재분류하는 것은 오히려 불필요한 변경이다.\n\n또한 evidence는 부분-전체 관계('~의 구성 부분이다')를 서술하지 않으므로 structural_composition으로 바꿀 근거도 없다. 판단을 보류할 만한 정보 공백(누락된 evidence 참조, 해석 불가능한 항목, 상충하는 증거)도 없어 defer는 부적절하다. 따라서 현재 상태를 안전한 것으로 보고 accept_report한다."
+  },
+  "E24-H3-03-CONTRACT_REPO_H3-01": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": ["ev4"],
+    "report": "패킷에는 concept 1개(JSON추출유틸)와 feature 1개(코드블록처리방식, essential_feature로 배정됨), evidence 1건(ev4)만 있다. ev4는 extract_json_block 함수의 구현 코드로, 백틱 펜스를 정규식으로 제거하고 첫 '{'와 마지막 '}' 사이를 잘라내며 실패 시 ValueError를 던진다는 '무엇을 어떻게 하는지'만 서술한다. 이는 순수한 implementation 서술이며, '코드블록처리방식'이라는 feature가 이 concept의 is-a를 형성하는 분류적 속성인지(essential), 맥락 의존적인지(contextual), 장소-영역 관계인지(locational), UFO 의미의 역할인지(functional), 사회적 처우인지(social), 부분-전체 관계인지(structural)를 명시적으로 말하는 문장이 전혀 없다. 규칙 2에 따라 코드가 무엇을 검증/처리/구현하는지에 대한 서술은 그 자체로 6개 type 중 어느 것에 대해서도 direct_support가 아니므로 ev4를 out_of_scope로 분류했다. 따라서 sufficiency 절차 5)에 의해 direct_support 후보가 0건이므로 insufficient이며, '그나마 essential이 그럴듯하다'는 식으로 기존 배정을 확정하거나 다른 type으로 repair하는 것은 금지된다. server_response.status가 PASS이지만 규칙 7의 accept_report는 evidence가 현재 feature type 배정을 확정하기에 충분할 것을 요구하는데 그 조건이 충족되지 않으므로 accept_report도 불가하다. 결론은 defer이며, 이 feature의 온톨로지적 성격을 명시하는 문서/주석/스펙 텍스트가 추가로 필요하다.",
+    "contract_assessment": {
+      "contract_verdict": "insufficient_evidence",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": ["ev4"],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev4",
+          "source_kind": "code",
+          "admissibility": "out_of_scope",
+          "supported_type": null,
+          "claim_strength": "none",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "extract_json_block의 구현부만 담고 있다. 백틱 펜스 제거, 중괄호 경계 탐색, 실패 시 예외 발생이라는 동작(implementation) 서술뿐이며, '코드블록처리방식'이 분류적/맥락적/장소적/역할적/사회적/부분전체적 성격 중 무엇인지에 대한 명시 텍스트가 없다. 심볼명 extract_json_block이나 변수명만으로는 direct_support가 성립하지 않는다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "JSON추출유틸",
+          "feature": "코드블록처리방식",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": ["ev4"],
+          "rationale": "유일한 근거 ev4가 out_of_scope로 분류되어 direct_support 후보가 0건이다. 따라서 essential_feature 배정을 확정할 수도, 다른 type으로 반박·수리할 수도 없다. 온톨로지적 성격을 명시하는 텍스트가 없으므로 insufficient."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "코드블록처리방식",
+          "involved_concepts": ["JSON추출유틸"],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [],
+          "rationale": "이 feature 이름은 패킷 내 단 하나의 concept에만 등장하므로 concept 간 feature-type 통일 invariant가 적용될 대상이 아니다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "direct_support evidence가 존재하지 않아 sufficient_repairable 조건을 충족하지 못한다. 근거 없는 type 변경은 금지된다."
+      },
+      "abstain": {
+        "required": true,
+        "reason": "insufficient_evidence",
+        "missing_evidence": [
+          {
+            "target": "JSON추출유틸 / 코드블록처리방식",
+            "request": "이 feature가 JSON추출유틸의 정체성을 규정하는 분류적(is-a 형성) 속성인지, 아니면 호출 맥락에 따라 달라지는 속성인지, 혹은 상위 파이프라인의 부분-전체 구성요소인지를 명시적으로 서술한 문서·스펙·docstring·설계 주석 텍스트."
+          },
+          {
+            "target": "JSON추출유틸 (concept 자체)",
+            "request": "이 concept이 taxonomy 상에서 어떤 상위 개념 아래 놓이며 무엇이 그 differentia인지를 명시하는 텍스트. 현재는 함수 구현 스니펫만 있어 concept의 온톨로지적 위치를 판정할 수 없다."
+          }
+        ]
+      }
+    }
+  }
+}

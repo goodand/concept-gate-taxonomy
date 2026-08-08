@@ -1,0 +1,51 @@
+{
+  "contract_version": "handoff-dyn-phase-c-config-v1",
+  "frozen_at": "2026-08-07T22:00:00+09:00",
+  "provider": "claude-cli",
+  "cli_version": "2.1.223",
+  "model": "claude-opus-5",
+  "reasoning_effort": "n/a-provider-has-no-equivalent-flag",
+  "subject_mode": "ephemeral-public-bundle",
+  "tool_policy": "host-owned-search-read-finish-v1",
+  "sandbox_policy": "macos-seatbelt-v2-deny-project-root-control-and-home-transcript-channels",
+  "timeout_seconds": 600,
+  "retry_count": 0,
+  "invalid_run_policy": "record-V1-and-do-not-replace",
+  "max_actions": 24,
+  "max_terminal_attempts": 3,
+  "result_names": {
+    "pilot": "live_pilot_claude_mcp_surface_v2",
+    "primary": "live_primary_claude_mcp_surface_v2"
+  },
+  "pilot": {
+    "case_ids": ["HD01"],
+    "arms": ["S_STATIC", "R_STATIC", "S_DYNAMIC", "R_DYNAMIC"],
+    "interpretation": "qualification-only; no arm effect is estimable; v2 re-qualifies after pre-primary ledger and matrix gates changed the frozen surface"
+  },
+  "primary": {
+    "case_ids": ["HD01", "HD02", "HD03", "HD04", "DS05", "DS06", "DS07", "HD08"],
+    "arms": ["S_STATIC", "R_STATIC", "S_DYNAMIC", "R_DYNAMIC"],
+    "replicates_per_cell": 1,
+    "required_qualification_artifacts": [
+      {
+        "file": "live_pilot_claude_mcp_surface_v2.json",
+        "config_file": "phase_c_claude_mcp_surface_v2_config.json",
+        "provider": "claude-cli",
+        "sandbox_policy": "macos-seatbelt-v2-deny-project-root-control-and-home-transcript-channels",
+        "case_ids": ["HD01"],
+        "arms": ["S_STATIC", "R_STATIC", "S_DYNAMIC", "R_DYNAMIC"]
+      },
+      {
+        "file": "live_pilot_codex_mcp_v7.json",
+        "config_file": "phase_c_codex_mcp_v7_config.json",
+        "provider": "codex-mcp-cli",
+        "sandbox_policy": "codex-parent-oauth-plus-mcp-only-capability-v7-preprimary-ledgers",
+        "case_ids": ["HD01"],
+        "arms": ["S_STATIC", "R_STATIC", "S_DYNAMIC", "R_DYNAMIC"]
+      }
+    ]
+  },
+  "schema_enforcement": "claude-cli --json-schema plus adapter-side revalidation",
+  "max_turns": 40,
+  "auth_mode": "shared-config-dir; CLAUDE_CONFIG_DIR isolation is NOT usable with OAuth on this host (measured)"
+}

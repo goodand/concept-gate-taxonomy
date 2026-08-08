@@ -1,0 +1,21 @@
+flowchart TD
+    A[Natural Language / LLM Proposal]
+    B[cg_normalizer<br/>L1 boundary adapter]
+    C[evidence-carrying concepts JSON]
+    D[cg_owl.build_ontology<br/>primitive vs defined]
+    E[OWL Ontology]
+    F[HermiT classify]
+    G[cg_owl.classify]
+
+    H[hierarchy<br/>SubClassOf only]
+    I[stereotypes<br/>gUFO punning]
+    J[unsatisfiable<br/>Nothing equivalent]
+    K[equivalent_to named classes<br/>mostly discarded]
+    L[model collapse / accidental equivalence<br/>not surfaced explicitly]
+
+    A --> B --> C --> D --> E --> F --> G
+    G --> H
+    G --> I
+    G --> J
+    F --> K
+    K -. not reported as first-class output .-> L

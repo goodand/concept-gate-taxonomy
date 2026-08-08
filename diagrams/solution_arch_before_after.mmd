@@ -1,0 +1,54 @@
+%%  ConceptGate 해결 아키텍처 — 가장 거시적인 변환
+%%  "서버가 모든 것을 소유" → "검증 규칙만 실행하고 상태·추론을 외부화"
+
+flowchart LR
+
+  subgraph BEFORE["BEFORE  단일 프로세스 소유"]
+    direction TB
+    BC["🤖 LLM / Client"]
+    BM["Python MCP\n• 상태 소유\n• 추론 직접 실행\n• verdict 이진 판정"]
+    BJ["⏱ HermiT JVM\nper-call subprocess\n611 ~ 1638 ms / 호출"]
+    BS["💾 서버 메모리\nephemeral\n재시작 시 소실"]
+    BE["❌ cold start chain\n재시작 → 전체 상태 손실\npeer 후보 격리 불가"]
+
+    BC --> BM
+    BM -->|"새 JVM 생성"| BJ
+    BJ -->|"결과 반환 후 종료"| BM
+    BM --> BS
+    BS -.->|"Render 재시작"| BE
+  end
+
+  subgraph AFTER["AFTER  책임 분리 + 상태 외부화"]
+    direction TB
+    AC["🤖 LLM / Client\nstate_ref 운반"]
+
+    subgraph AM["Stateless Python MCP\nconcept-gate-taxonomy.onrender.com"]
+      AM1["obligation registry\nverdict / assurance 집계\ndependency DAG\nevent 생성"]
+    end
+
+    subgraph AJ["Warm Java Reasoner Gateway\nconcept-gate-taxonomy-docker.onrender.com"]
+      AJ2["L2 Base Cache\ngufo.owl 상주\nhash 검증 후 재사용"]
+      AJ1["L1 Structural Cache\ncanonical hash → result"]
+      AEL["ELK\nOWL 2 EL fast path\nincremental"]
+      AHM["HermiT / Openllet\nfull DL slow path\ncertification"]
+      AJ2 --> AJ1
+      AEL --> AJ1
+      AHM --> AJ1
+    end
+
+    AR["☁️ R2 / S3\ncontent-addressed\nimmutable event blob\nstate_ref = sha256"]
+
+    AC -->|"state_ref + axioms"| AM
+    AM -->|"artifact_id + axioms\n+ cache_token"| AJ
+    AJ -->|"reasoning result\n+ new cache_token"| AM
+    AM -->|"event blob 저장"| AR
+    AR -->|"다음 요청에서\nstate 복원"| AM
+    AM -->|"새 state_ref"| AC
+  end
+
+  BEFORE -.->|"핵심 변환\n'서버가 소유' → '서버는 규칙만 실행\n상태·추론은 외부화'"| AFTER
+
+  style BEFORE fill:#fef3c7,stroke:#d97706,color:#000
+  style AFTER fill:#d1fae5,stroke:#059669,color:#000
+  style AM fill:#dbeafe,stroke:#2563eb,color:#000
+  style AJ fill:#ede9fe,stroke:#7c3aed,color:#000

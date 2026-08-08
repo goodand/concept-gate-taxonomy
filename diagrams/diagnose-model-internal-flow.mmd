@@ -1,0 +1,35 @@
+flowchart TD
+    A[facts]
+    A1[equivalence_groups]
+    A2[hierarchy]
+    A3[stereotypes]
+    A4[definition metadata]
+    A5[restriction metadata]
+
+    B[diagnose_model]
+
+    C1[POSSIBLE_ACCIDENTAL_EQUIVALENCE]
+    C2[EQUIVALENCE_STEREOTYPE_CONFLICT]
+    C3[DEFINED_BY_PARTHOOD_ONLY]
+    C4[WEAK_GENUS]
+    C5[COLLAPSE_TO_EXISTING_CLASS]
+
+    D[diagnostic warnings]
+
+    A --> B
+    A1 --> B
+    A2 --> B
+    A3 --> B
+    A4 --> B
+    A5 --> B
+
+    B --> C1
+    B --> C2
+    B --> C3
+    B --> C4
+    B --> C5
+    C1 --> D
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    C5 --> D

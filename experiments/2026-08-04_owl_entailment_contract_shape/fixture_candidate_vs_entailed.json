@@ -1,0 +1,31 @@
+{
+  "provenance": {
+    "grounded_in": [
+      "conceptgate/concept_gate_v7.py (run_pipeline candidate DAG, essential_attrs subset inclusion)",
+      "conceptgate/cg_owl.py::classify (HermiT-derived entailment)",
+      "conceptgate/cg_obligations.py (real MAX_ASSURANCE ladder: DeciderKind.LLM -> SOURCE_ANCHORED, DeciderKind.REASONER -> REASONER_PROVED)"
+    ],
+    "note": "Edge A is a real HermiT entailment (same fact as the E-A fixture's Square/Rectangle edge). Edge B is a candidate surface relation the FCA-based run_pipeline would propose for a Trapezoid/Quadrilateral pair from essential-attribute subset inclusion alone -- it has never been passed through classify_owl or HermiT. Both could reach a client via MCP tool calls in the same session; the question is whether the client's report distinguishes their assurance."
+  },
+  "edges": [
+    {
+      "subject": "Square",
+      "predicate": "is_a",
+      "object": "Rectangle",
+      "origin": "derived",
+      "assurance": "REASONER_PROVED",
+      "decider": "reasoner",
+      "source_tool": "classify_owl",
+      "reasoner": "HermiT"
+    },
+    {
+      "subject": "Trapezoid",
+      "predicate": "is_a",
+      "object": "Quadrilateral",
+      "origin": "candidate_surface_feature",
+      "assurance": "PROPOSED",
+      "decider": "llm_fca_pipeline",
+      "source_tool": "run_pipeline"
+    }
+  ]
+}

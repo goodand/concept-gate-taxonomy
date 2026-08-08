@@ -1,0 +1,21 @@
+flowchart TD
+    subgraph BEFORE["현재 (약점 A·B)"]
+        B1["hierarchy<br/>RichEncoder → [Decoder]"]
+        B2["Encoder ≡ Decoder<br/>어디에도 안 나옴 ✗"]
+    end
+
+    subgraph REJECTED["원안 (리뷰어가 반려)"]
+        R1["hierarchy<br/>RichEncoder → [Decoder, Encoder]<br/>⚠ 직계 부모 의미 파괴"]
+    end
+
+    subgraph AFTER["수정안 (채택)"]
+        A1["hierarchy — 불변<br/>RichEncoder → [Decoder]"]
+        A2["equivalence_groups — 신규<br/>[[Decoder, Encoder]]"]
+        A3["representatives — 신규<br/>Encoder→Decoder, Decoder→Decoder"]
+    end
+
+    BEFORE -->|"약점 A: 동치 은닉<br/>약점 B: 부모 손실"| REJECTED
+    REJECTED -->|"hierarchy가 quotient 의미를<br/>잃는다는 반론 수용"| AFTER
+
+    A2 -.->|"클라이언트가 필요 시<br/>스스로 부모를 펼침"| A1
+    A3 -.->|"대표는 결정적 선택<br/>(사전순 최소)"| A2

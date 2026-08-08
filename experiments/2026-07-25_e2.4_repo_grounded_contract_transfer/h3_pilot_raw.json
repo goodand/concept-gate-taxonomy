@@ -1,0 +1,1811 @@
+{
+  "E24-H3-01-CONTROL_REPO_H3-01": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "패킷 내 유일한 feature인 '손잡이'의 typing은 근거가 충분하다: ev10('카페린의 손잡이는 카페린 몸체의 구성 부분이다')은 전형적인 전체-부분 서술이고, ev9는 structural_composition이 has-a composition edge를 만들며 composition 필드로 분리 반환됨을 확인해 준다. 따라서 이 feature를 다른 type으로 바꿀 근거는 없고, 근거 있는 repair 대상이 존재하지 않는다.\n\n그러나 현재 상태를 안전하다고 확정할 수도 없다. server_response는 status=NEEDS_CORRECTION이면서 composition_issues와 anti_patterns가 모두 비어 있어 무엇을 고쳐야 하는지 지시하지 않는다. 동시에 dag가 비어 있는데, 이는 카페린에 essential_feature(is-a 간선의 근거)가 하나도 없기 때문으로 보이며 ev9의 'essential_feature participates in the is-a DAG'와 정합적이다. 즉 NEEDS_CORRECTION의 유력한 원인은 '누락된 essential_feature'지만, 이 패킷에는 카페린이 어떤 종류의 사물인지(상위 범주)에 대한 evidence가 전혀 없다. 근거 없이 essential_feature를 지어내는 것은 fabrication이므로 repair를 수행할 수 없고, 반대로 서버의 NEEDS_CORRECTION을 무시하고 accept_report 하는 것도 정당화되지 않는다. 추가 evidence(카페린의 범주/상위 개념 관련 fixture 또는 서버의 구체적 issue 목록) 없이는 확정 불가하므로 defer한다."
+  },
+  "E24-H3-01-A_REPO_H3-01": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "Packet contains a single concept (카페린) with a single feature (손잡이) typed structural_composition. ev10 ('카페린의 손잡이는 카페린 몸체의 구성 부분이다') states an explicit part-whole relation, and ev9 confirms that structural_composition is exactly the type that generates has-a composition edges. So the existing typing is already correct and evidence-grounded — there is no justified edit to make, which rules out repair. The rigidity-unification constraint is not triggered: 손잡이 appears in only one concept, so there is no cross-concept type conflict to reconcile. However, accept_report is not warranted either: server_response.status is NEEDS_CORRECTION while anti_patterns and composition_issues are both empty and dag is empty, with no composition field returned despite ev9 stating that structural_composition should yield a separately returned composition edge. The packet therefore gives a correction signal with no identifiable defect and no diagnostic content to locate one, and it omits the composition output that would let me verify whether the edge was actually emitted. Declaring the state safe would mean overriding an unexplained NEEDS_CORRECTION on no evidence; editing would mean degrading a correct type to manufacture a change. Deferring pending the server's anti-pattern/composition detail (or the missing composition field) is the only defensible action from this packet alone."
+  },
+  "E24-H3-01-CONTRACT_REPO_H3-01": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "ev10 (fixture)은 '카페린의 손잡이는 카페린 몸체의 구성 부분이다'라고 명시하여 손잡이와 카페린 몸체 사이의 부분-전체(part-whole) 관계라는 온톨로지적 성격을 직접 서술한다. 이는 구현 서술이 아니라 관계의 성격에 대한 명시적 진술이므로 direct_support이며 claim_strength=explicit이다. ev9 (code)은 taxonomy 내에서 structural_composition이 has-a composition edge(part-whole graph)를 만든다는 type 의미를 정의하는 문장으로, 특정 concept/feature에 대해 말하지 않으므로 indirect_context로 분류했다. 다만 ev10이 서술한 part-whole 성격을 packet 내 어휘로 structural_composition에 대응시키는 근거가 된다. direct_support 후보는 ev10 하나뿐이고 최고 강도(explicit)에 도달한 supported_type도 structural_composition 하나뿐이므로 sufficiency=sufficient, selected_type=structural_composition이며 이는 server_response가 반영한 현재 배정과 일치한다. 손잡이 feature는 packet 내 단일 concept에만 존재하므로 전역 feature-type invariant 위반은 없다. server_response.status는 NEEDS_CORRECTION이지만 composition_issues와 anti_patterns가 모두 비어 있고 dag가 비어 있는데, 이는 essential_feature가 없어 is-a DAG에 참여하지 못한다는 구조적/완결성 사유로 보이며 feature type 배정의 정오와는 무관하다. packet 안의 feature type 배정은 evidence만으로 그대로 확정 가능하고 수리할 대상이 없으므로 accept_report를 선택한다. packet 밖 지식은 사용하지 않았다.",
+    "contract_assessment": {
+      "contract_verdict": "sufficient_consistent",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev9",
+          "ev10"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev9",
+          "source_kind": "code",
+          "admissibility": "indirect_context",
+          "supported_type": null,
+          "claim_strength": "none",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "taxonomy 내 type 의미(structural_composition = has-a composition edge, part-whole graph; essential_feature = is-a DAG 참여)를 정의하는 일반 서술로, 카페린이나 손잡이에 대해 아무 것도 주장하지 않는다. 따라서 sufficiency를 만들 수 없고, ev10의 part-whole 진술을 packet 어휘에 대응시키는 맥락으로만 쓴다."
+        },
+        {
+          "evidence_id": "ev10",
+          "source_kind": "fixture",
+          "admissibility": "direct_support",
+          "supported_type": "structural_composition",
+          "claim_strength": "explicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "'손잡이는 카페린 몸체의 구성 부분이다'는 해당 feature의 온톨로지적 성격을 부분-전체 관계로 명시적으로 서술한다. 구현 서술이 아니라 관계 성격에 대한 진술이므로 direct_support이며 explicit이다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "카페린",
+          "feature": "손잡이",
+          "original_type": "structural_composition",
+          "sufficiency": "sufficient",
+          "selected_type": "structural_composition",
+          "evidence_ids": [
+            "ev10",
+            "ev9"
+          ],
+          "rationale": "direct_support 후보는 ev10 하나이고, 최고 강도 explicit에 도달한 supported_type이 structural_composition 단독이다. ev9은 그 type이 part-whole 관계를 표현한다는 packet 내부 정의를 제공한다. 원래 배정과 동일하므로 변경 불필요."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "손잡이",
+          "involved_concepts": [
+            "카페린"
+          ],
+          "status": "consistent",
+          "target_type": "structural_composition",
+          "evidence_ids": [
+            "ev10"
+          ],
+          "rationale": "packet 내에서 '손잡이' feature 이름을 가진 concept은 카페린 하나뿐이므로 다중 concept 간 type 통일 문제가 발생하지 않는다. 배정된 type도 evidence가 지지하는 type과 일치한다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "현재 feature type 배정이 evidence로 이미 확정되며 바꿔야 할 항목이 없다. server_response의 NEEDS_CORRECTION은 feature-type 판정과 무관한 구조적/완결성 사유(is-a DAG 참여용 essential_feature 부재)로 보인다."
+      },
+      "abstain": {
+        "required": false,
+        "reason": "none",
+        "missing_evidence": []
+      }
+    }
+  },
+  "E24-H3-01-CONTROL_REPO_H3-02": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "ev10('카페린의 손잡이는 카페린 몸체의 구성 부분이다')은 명시적 전체-부분 관계이고, ev9는 structural_composition이 has-a(part-whole) 엣지를 만든다고 규정한다. 따라서 후보 concept의 '손잡이' → structural_composition 타이핑은 증거상 정확하며, packet 안에 이를 뒤집을 근거가 없다. 즉 근거 있는 repair 대상이 존재하지 않는다(임의 재타이핑은 증거 없는 조작이 된다). 그러나 server_response는 status=NEEDS_CORRECTION을 반환하면서 composition_issues=[], anti_patterns=[], dag={}로 어떤 구체적 결함도 제시하지 않는다. 상태 플래그와 실제 진단 내용이 상충하고, dag가 비어 있어 composition 엣지가 실제로 등록되었는지도 확인할 수 없다. 이 불일치의 원인(서버 측 누락/파이프라인 미반영/미제공 검증 규칙)을 packet 만으로는 판별할 수 없으므로, '안전하니 조치 불필요(accept_report)'라고 단정하지 않고 보류한다."
+  },
+  "E24-H3-01-A_REPO_H3-02": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "packet 내 유일한 concept '카페린'의 feature '손잡이'는 이미 structural_composition으로 기록되어 있고, ev10('카페린의 손잡이는 카페린 몸체의 구성 부분이다')이 명시적 전체-부분 관계를 서술하므로 이 타입은 정확하다. ev9도 structural_composition이 has-a composition edge를 만든다는 코드 설명으로 이 분류를 뒷받침한다. 따라서 evidence에 근거한 수정 대상이 없다(repair 불가). 동시에 server_response는 status=NEEDS_CORRECTION을 반환하면서 anti_patterns, composition_issues가 모두 비어 있고 dag도 비어 있어, 어떤 지점이 교정 대상인지 packet만으로 특정할 수 없다. rigidity 혼합 규칙은 동일 feature 이름이 복수 concept에 서로 다른 type으로 나타날 때 모든 concept을 하나의 값으로 통일하도록 요구하는데, 이 packet에는 concept이 하나뿐이라 '손잡이'를 공유하는 다른 concept이 packet 밖에 존재하는지 확인할 수 없다. 즉 NEEDS_CORRECTION의 원인이 packet에 포함되지 않은 다른 concept의 불일치일 가능성이 남아 있고, 그 경우 이 concept만 손대는 것은 금지된 부분 수정이 된다. 상태가 안전하다고 단정(accept_report)하는 것은 서버의 NEEDS_CORRECTION과 모순되고, 근거 없는 추측 수정(repair)은 evidence 범위를 벗어나므로 defer한다."
+  },
+  "E24-H3-01-CONTRACT_REPO_H3-02": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "ev10(fixture)은 '카페린의 손잡이는 카페린 몸체의 구성 부분이다'라고 손잡이와 몸체 사이의 부분-전체(part-whole) 관계를 명시적으로 서술한다. 이는 구현 서술이 아니라 해당 feature의 온톨로지적 성격을 직접 진술한 것이므로 structural_composition에 대한 direct_support(explicit)다. ev9(code)은 structural_composition이 has-a composition edge(part-whole graph)를 만든다는 taxonomy 내부 정의로, 손잡이에 대해 직접 말하지 않으므로 indirect_context로만 인정했고 sufficiency 근거로는 사용하지 않았다(부분-전체→structural_composition 매핑의 맥락 확인용). direct_support 후보는 ev10 단 하나이며 최고 강도(explicit)에 도달한 supported_type도 structural_composition 하나뿐이므로 단독 최고 강도가 성립, sufficiency=sufficient, selected_type=structural_composition으로 server_response의 현재 배정과 일치한다. 상충하는 evidence는 없다. concept이 하나뿐이고 '손잡이' feature가 다른 concept에 중복 등장하지 않으므로 전역 feature-type invariant 위반도 없다. server_response.status는 NEEDS_CORRECTION이지만 composition_issues와 anti_patterns가 모두 비어 있고 dag도 비어 있어, 이 status는 feature type 배정의 오류가 아니라 is-a DAG 참여를 위한 essential_feature/differentia 부재 같은 구조적 완결성 사유로 보인다. 규칙 7에 따라 feature-type 판정과 무관한 status이고 현재 feature type이 evidence로 충분히 확정되므로 수리 없이 accept_report한다. packet 밖 지식은 사용하지 않았다.",
+    "contract_assessment": {
+      "contract_verdict": "sufficient_consistent",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev9",
+          "ev10"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev9",
+          "source_kind": "code",
+          "admissibility": "indirect_context",
+          "supported_type": "structural_composition",
+          "claim_strength": "weak",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "structural_composition이 has-a part-whole edge를 만든다는 taxonomy 내부 정의만 서술하며 카페린/손잡이를 전혀 언급하지 않는다. 타입 의미의 맥락은 제공하지만 이 feature에 대한 direct_support는 아니다."
+        },
+        {
+          "evidence_id": "ev10",
+          "source_kind": "fixture",
+          "text": null,
+          "admissibility": "direct_support",
+          "supported_type": "structural_composition",
+          "claim_strength": "explicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "'손잡이는 카페린 몸체의 구성 부분이다'는 해당 feature가 부분-전체 관계임을 명시적으로 진술한다. 구현 서술이 아니라 온톨로지적 성격 진술이다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "카페린",
+          "feature": "손잡이",
+          "original_type": "structural_composition",
+          "sufficiency": "sufficient",
+          "selected_type": "structural_composition",
+          "evidence_ids": [
+            "ev10",
+            "ev9"
+          ],
+          "rationale": "ev10이 유일한 direct_support이며 explicit 강도로 part-whole 관계를 진술한다. 최고 강도에 도달한 type이 structural_composition 하나뿐이므로 단독 확정. ev9의 정의는 이 매핑을 맥락적으로 뒷받침하나 sufficiency 근거로 계산하지 않았다."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "손잡이",
+          "involved_concepts": [
+            "카페린"
+          ],
+          "status": "consistent",
+          "target_type": "structural_composition",
+          "evidence_ids": [
+            "ev10"
+          ],
+          "rationale": "packet 내에서 '손잡이' feature를 가진 concept은 카페린 하나뿐이므로 다중 concept 간 타입 통일 문제는 발생하지 않는다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "현재 feature type 배정이 evidence로 충분히 확정되며 변경할 항목이 없다. NEEDS_CORRECTION status는 feature-type과 무관한 구조적 완결성 사유로 판단된다."
+      },
+      "abstain": {
+        "required": false,
+        "reason": "none",
+        "missing_evidence": []
+      }
+    }
+  },
+  "E24-H3-01-CONTROL_REPO_H3-03": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "카페린의 유일한 feature인 '손잡이'는 ev10('카페린의 손잡이는 카페린 몸체의 구성 부분이다')이 명시적 전체-부분 관계를 서술하므로 structural_composition 타입 부여가 증거상 정확하다. ev9도 structural_composition이 has-a composition edge를 생성하는 별도 필드로 처리됨을 확인해 주며, essential_feature(is-a DAG)와의 혼동 징후는 없다. 따라서 근거 있는 수정 대상(repair)은 존재하지 않는다.\n\n다만 server_response.status가 NEEDS_CORRECTION인 반면 composition_issues=[], anti_patterns=[], dag={}로 모두 비어 있어, 서버가 무엇을 문제 삼는지 packet 내에서 특정할 수 없다. 증거 기반 검토로는 현 상태가 정합적이지만, 서버 플래그를 무근거로 무시하고 '안전(accept_report)'을 단언하기에는 정보가 부족하다. 서버의 correction 사유(비어 있는 issue 배열이 버그인지, 이 packet에 포함되지 않은 다른 concept/feature 때문인지, dag가 비어 있는 것이 구축 실패인지)를 확인해야 판단을 확정할 수 있으므로 defer한다."
+  },
+  "E24-H3-01-A_REPO_H3-03": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "packet에는 concept이 카페린 하나뿐이고, feature '손잡이'는 이미 structural_composition으로 기록되어 있다. ev10('카페린의 손잡이는 카페린 몸체의 구성 부분이다')은 전형적인 전체-부분 관계 서술이고, ev9는 structural_composition이 has-a composition edge를 만든다고 규정하므로 현재 type은 증거와 정합적이다. 즉 packet 내에서 동일 feature 이름이 서로 다른 type으로 나타나는 rigidity 혼합은 관측되지 않으며, 근거 있는 수정 대상이 없다. 그럼에도 server_response.status는 NEEDS_CORRECTION인데 anti_patterns=[], composition_issues=[], dag={}로 모두 비어 있어 어떤 부분이 왜 부적합한지 특정할 단서가 전혀 없다. 문제 지점이 이 packet 밖(다른 concept의 '손잡이' 항목, 또는 DAG 생성 실패)에 있을 가능성이 있으나 payload에 그 evidence가 없으므로 확인 불가하다. 증거 없이 임의로 type을 바꾸면 오히려 정합적인 항목을 훼손하고, accept_report는 서버의 NEEDS_CORRECTION 신호를 무시하게 되므로 둘 다 부적절하다. 따라서 판단 보류(defer)하며, 재판정에는 서버의 구체적 anti_pattern/composition_issue 항목과 '손잡이'를 참조하는 다른 concept의 evidence가 필요하다."
+  },
+  "E24-H3-01-CONTRACT_REPO_H3-03": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "ev10(fixture)은 '카페린의 손잡이는 카페린 몸체의 구성 부분이다'라고 부분-전체 관계를 명시적으로 서술하므로 손잡이 feature의 온톨로지적 성격이 part-whole임을 직접 지지한다(direct_support, explicit). ev9(code)는 structural_composition이 has-a composition edge(part-whole graph)를 만든다는 taxonomy 용어 정의를 제공하여 ev10의 서술을 structural_composition에 매핑하는 맥락을 준다(indirect_context). direct_support 후보에서 최고 강도에 도달한 type은 structural_composition 하나뿐이므로 sufficiency 판정은 sufficient이고 selected_type=structural_composition으로, 현재 server_response의 배정과 일치한다. 충돌하는 evidence는 없다. 손잡이 feature 이름은 packet 내 다른 concept에 등장하지 않으므로 전역 invariant 위반도 없다. server_response.status는 NEEDS_CORRECTION이지만 composition_issues와 anti_patterns가 비어 있고 dag가 비어 있어, 이 status는 is-a DAG 참여를 위한 essential_feature/differentia 부재 같은 구조적 완결성 사유로 보이며 feature-type 배정의 오류를 지시하지 않는다. 따라서 feature type 배정은 evidence만으로 확정 가능하고 수리가 필요 없으므로 accept_report를 선택한다.",
+    "contract_assessment": {
+      "contract_verdict": "sufficient_consistent",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev9",
+          "ev10"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev9",
+          "source_kind": "code",
+          "admissibility": "indirect_context",
+          "supported_type": "structural_composition",
+          "claim_strength": "implicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "taxonomy 용어 정의: structural_composition은 has-a composition edge(part-whole graph)를 생성한다고 명시. 특정 concept/feature에 대한 서술은 아니므로 단독 sufficiency 근거는 아니고, ev10의 part-whole 서술을 해당 type으로 매핑하는 맥락으로만 사용."
+        },
+        {
+          "evidence_id": "ev10",
+          "source_kind": "fixture",
+          "admissibility": "direct_support",
+          "supported_type": "structural_composition",
+          "claim_strength": "explicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "'손잡이는 카페린 몸체의 구성 부분이다'는 구현 서술이 아니라 손잡이와 전체(몸체) 사이의 부분-전체 관계를 명시적으로 진술하므로 structural_composition의 온톨로지적 성격을 직접 지지한다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "카페린",
+          "feature": "손잡이",
+          "original_type": "structural_composition",
+          "sufficiency": "sufficient",
+          "selected_type": "structural_composition",
+          "evidence_ids": [
+            "ev9",
+            "ev10"
+          ],
+          "rationale": "direct_support 후보는 ev10 하나이며 explicit 강도로 part-whole 관계를 서술한다. 최고 강도에 도달한 type이 structural_composition 단독이므로 sufficient이며 원래 배정과 동일하다."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "손잡이",
+          "involved_concepts": [
+            "카페린"
+          ],
+          "status": "consistent",
+          "target_type": "structural_composition",
+          "evidence_ids": [
+            "ev10"
+          ],
+          "rationale": "packet 내에서 '손잡이' feature는 카페린 concept에만 존재하므로 다중 concept 간 type 통일 문제는 발생하지 않으며, 배정된 type도 evidence와 일치한다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "현재 feature type 배정이 evidence로 충분히 확정되며 변경할 항목이 없다."
+      },
+      "abstain": {
+        "required": false,
+        "reason": "none",
+        "missing_evidence": []
+      }
+    }
+  },
+  "E24-H3-01-CONTROL_REPO_H3-04": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "ev10은 '카페린의 손잡이는 카페린 몸체의 구성 부분이다'라며 명시적 전체-부분(has-a) 관계를 진술하므로, 손잡이를 structural_composition으로 타이핑한 현재 candidate_concept은 증거와 정확히 일치한다. ev9는 structural_composition이 is-a DAG가 아니라 별도 composition 필드의 has-a 엣지를 생성한다는 구현 규칙을 확인해 주며, 이는 ev10의 부분-전체 서술과 부합한다. essential_feature로 재분류할 근거는 packet 어디에도 없다. server_response.status는 NEEDS_CORRECTION이지만 composition_issues와 anti_patterns가 모두 비어 있고 dag도 비어 있어, 어떤 concept/feature의 무엇을 고쳐야 하는지에 대한 실질적 근거가 전혀 제시되지 않았다. 근거 없는 상태 플래그만으로 증거가 뒷받침하는 올바른 타이핑을 변경하는 것은 정당화되지 않으므로 repair를 하지 않는다. 또한 판단에 필요한 증거(부분-전체 진술 + 타입 의미론)가 packet 내에 모두 존재하므로 defer도 필요하지 않다. 따라서 현재 상태를 수용하되, 서버의 NEEDS_CORRECTION은 근거 미제시 상태로 남아 있음을 기록한다."
+  },
+  "E24-H3-01-A_REPO_H3-04": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "Packet에는 concept가 '카페린' 하나뿐이고 feature도 '손잡이' 하나뿐이다. ev10('카페린의 손잡이는 카페린 몸체의 구성 부분이다')은 전형적인 전체-부분 서술이고, ev9는 structural_composition이 has-a part-whole 엣지를 만든다고 정의한다. 따라서 현재 기록된 type=structural_composition은 증거와 정확히 일치하며 수정할 근거가 없다 → repair 불가(고칠 대상 없음). 동시에 동일 feature 이름이 다른 concept에서 다른 type으로 나타나는 rigidity 혼합 사례도 payload에 존재하지 않으므로 교차-concept 통일 규칙도 적용 대상이 없다. 그러나 server_response는 status=NEEDS_CORRECTION인데 anti_patterns=[], composition_issues=[], dag={}로 어떤 문제도 지목하지 않는다. 즉 서버가 요구하는 '교정'의 대상과 이유가 packet 내부에서 식별 불가능하며, dag가 비어 있어 is-a/has-a 그래프 상태도 검증할 수 없다. 증거상 문제없음(accept)과 서버의 교정 요구가 정면으로 충돌하는 상태에서 '안전하며 추가 조치 불필요'라고 단정하는 것은 근거가 없고, 임의로 type을 바꾸는 것은 ev9/ev10에 반한다. 따라서 이 packet만으로는 확정 불가로 보류한다."
+  },
+  "E24-H3-01-CONTRACT_REPO_H3-04": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "ev10(fixture)은 '카페린의 손잡이는 카페린 몸체의 구성 부분이다'라고 부분-전체 관계를 명시적으로 서술한다. 이는 구현 서술이 아니라 손잡이라는 feature의 온톨로지적 성격(part-of)을 직접 진술한 것이므로 structural_composition에 대한 direct_support(explicit)다. ev9는 taxonomy 자체의 정의 텍스트로, structural_composition이 has-a part-whole edge를 만든다는 type 의미론을 제공하지만 카페린/손잡이에 관한 진술은 아니므로 indirect_context로 분류했다. direct_support 후보는 ev10 하나이고 최고 강도 explicit에 도달한 supported_type도 structural_composition 단독이므로 sufficiency=sufficient, selected_type=structural_composition이며 이는 server_response가 담고 있는 현재 배정과 일치한다. 충돌하는 evidence는 없다. 손잡이 feature는 packet 내 단일 concept에만 존재하므로 전역 feature-type invariant 위반도 없다. server_response.status는 NEEDS_CORRECTION이지만 composition_issues와 anti_patterns가 모두 비어 있고, ev9가 밝히듯 is-a DAG 참여는 essential_feature가 담당하는데 카페린에는 essential_feature가 하나도 없다 — 즉 이 status는 is-a DAG 참여를 위한 differentia 부족이라는 구조적/완결성 사유이지 feature type 오배정 사유가 아니다. 따라서 feature type 배정 자체는 evidence만으로 확정 가능하고 수리가 필요 없어 accept_report를 선택한다. packet 밖 지식은 사용하지 않았다.",
+    "contract_assessment": {
+      "contract_verdict": "sufficient_consistent",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev9",
+          "ev10"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev9",
+          "source_kind": "code",
+          "admissibility": "indirect_context",
+          "supported_type": null,
+          "claim_strength": "none",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "taxonomy type 의미론(essential_feature는 is-a DAG, structural_composition은 has-a part-whole edge)을 정의하는 일반 텍스트. 카페린이나 손잡이를 언급하지 않으므로 특정 feature에 대한 direct_support가 될 수 없고, ev10의 해석 맥락으로만 쓰인다."
+        },
+        {
+          "evidence_id": "ev10",
+          "source_kind": "fixture",
+          "admissibility": "direct_support",
+          "supported_type": "structural_composition",
+          "claim_strength": "explicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "'손잡이는 카페린 몸체의 구성 부분이다'는 손잡이의 온톨로지적 성격을 부분-전체(part-of) 관계로 명시적으로 서술한다. 구현 서술이 아니라 관계 유형 진술이므로 structural_composition의 explicit direct_support다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "카페린",
+          "feature": "손잡이",
+          "original_type": "structural_composition",
+          "sufficiency": "sufficient",
+          "selected_type": "structural_composition",
+          "evidence_ids": [
+            "ev10",
+            "ev9"
+          ],
+          "rationale": "direct_support는 ev10 단독이며 supported_type=structural_composition에서 최고 강도 explicit에 단독 도달. ev9의 정의 텍스트와도 정합적(part-whole → composition edge). 원 배정과 동일하므로 변경 불필요."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "손잡이",
+          "involved_concepts": [
+            "카페린"
+          ],
+          "status": "consistent",
+          "target_type": "structural_composition",
+          "evidence_ids": [
+            "ev10"
+          ],
+          "rationale": "packet 내에서 손잡이는 카페린 한 concept에만 등장하므로 다중 concept 간 type 불일치가 발생할 여지가 없고, 배정된 type이 ev10의 explicit 근거와 일치한다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "현재 feature type 배정이 evidence로 확정되며 변경이 필요한 항목이 없다. server_response의 NEEDS_CORRECTION은 essential_feature 부재로 인한 is-a DAG 참여 관련 구조적 권고 사유이지 feature type 오배정이 아니며, evidence packet은 concept/feature 추가를 명시적으로 요구하지 않는다."
+      },
+      "abstain": {
+        "required": false,
+        "reason": "none",
+        "missing_evidence": []
+      }
+    }
+  },
+  "E24-H3-01-CONTROL_REPO_H3-05": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "단일 concept '카페린'의 단일 feature '손잡이'가 structural_composition으로 타입 지정되어 있다. ev10('카페린의 손잡이는 카페린 몸체의 구성 부분이다')은 명시적인 전체-부분(part-whole) 관계 서술이며, ev9는 structural_composition이 has-a composition edge(part-whole graph)를 생성한다고 정의한다. 따라서 현재 타입 지정은 증거와 정확히 일치하고, essential_feature(is-a DAG)나 다른 5개 타입으로 재분류할 근거가 없다. server_response.status는 NEEDS_CORRECTION이지만 composition_issues, anti_patterns가 모두 비어 있고 dag도 비어 있어 어떤 구체적 결함도 지목하지 않는다. 근거 없는 상태 플래그만으로 증거가 뒷받침하는 올바른 타입을 변경하면 오히려 잘못된 수정이 되므로 repair하지 않았다. 또한 packet 내 evidence(ev9, ev10)만으로 이 feature의 판단은 충분히 확정 가능하므로 defer도 적절하지 않다. 남은 NEEDS_CORRECTION은 payload 범위 밖(빈 dag 등 서버측 산출물 결손)의 문제로 보이며, 이 packet의 concept/feature 수준에서는 조치가 불필요하다."
+  },
+  "E24-H3-01-A_REPO_H3-05": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "Packet has a single concept (카페린) with a single feature (손잡이) already typed structural_composition. ev10 ('카페린의 손잡이는 카페린 몸체의 구성 부분이다') is an explicit part-whole statement, and ev9 confirms that structural_composition is the type that produces has-a composition edges. So the current typing is evidentially correct and there is no rigidity mixture to unify — only one concept carries the feature 손잡이, so the cross-concept unification constraint has no other site to apply to. However, server_response.status is NEEDS_CORRECTION while anti_patterns and composition_issues are both empty and dag is {}. Nothing in the packet identifies what the required correction is, and the only substantive signal available (ev9+ev10) contradicts the idea that this feature needs changing. Accepting would ignore an explicit NEEDS_CORRECTION verdict; repairing would mean inventing a change with no anti-pattern or issue to ground it. The packet is therefore under-determined and I hold the decision.",
+    "report_note": null
+  },
+  "E24-H3-01-CONTRACT_REPO_H3-05": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev9",
+      "ev10"
+    ],
+    "report": "packet에는 concept '카페린'의 feature '손잡이' 하나만 있고 type은 structural_composition이다. ev10(fixture)은 '카페린의 손잡이는 카페린 몸체의 구성 부분이다'라고 부분-전체 관계를 명시적으로 서술하므로, 단순 구현 서술이 아니라 해당 feature의 온톨로지적 성격(part-whole)을 직접 지지하는 direct_support/explicit이다. ev9(code)는 structural_composition이 has-a composition edge(part-whole graph)를 만든다는 taxonomy 정의를 제공하여 ev10의 서술을 structural_composition에 사상하는 근거가 되지만, 특정 feature에 대한 서술이 아니므로 indirect_context로 분류했다. 최고 강도(explicit)에 도달한 supported_type은 structural_composition 단독이며 반대 방향(essential_feature 등)을 지지하는 evidence는 없어 충돌이 없다. 같은 feature 이름이 다른 concept에 나타나지 않으므로 전역 feature-type invariant 위반도 없다. server_response.status는 NEEDS_CORRECTION이지만 composition_issues와 anti_patterns가 비어 있고 dag가 비어 있어, 이는 is-a DAG 참여용 essential_feature 부재 같은 구조적/완결성 권고로 보이며 현재 feature type 배정의 오류를 지적하지 않는다. 따라서 feature type은 evidence만으로 확정 가능하고 수리가 불필요하여 accept_report를 선택한다.",
+    "contract_assessment": {
+      "contract_verdict": "sufficient_consistent",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev9",
+          "ev10"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev9",
+          "source_kind": "code",
+          "admissibility": "indirect_context",
+          "supported_type": "structural_composition",
+          "claim_strength": "implicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "structural_composition이 has-a composition edge(part-whole graph)를 만든다는 taxonomy 정의만 서술한다. 특정 concept/feature에 대한 서술이 아니므로 단독으로 sufficiency를 만들 수 없고, ev10의 부분-전체 서술을 type에 사상하는 해석 맥락으로만 쓴다."
+        },
+        {
+          "evidence_id": "ev10",
+          "source_kind": "fixture",
+          "text": null,
+          "admissibility": "direct_support",
+          "supported_type": "structural_composition",
+          "claim_strength": "explicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "'카페린의 손잡이는 카페린 몸체의 구성 부분이다'는 구현 서술이 아니라 손잡이가 전체(몸체)의 부분이라는 부분-전체 관계, 즉 온톨로지적 성격을 명시적으로 서술한다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "카페린",
+          "feature": "손잡이",
+          "original_type": "structural_composition",
+          "sufficiency": "sufficient",
+          "selected_type": "structural_composition",
+          "evidence_ids": [
+            "ev10",
+            "ev9"
+          ],
+          "rationale": "direct_support 후보는 ev10 하나이며 강도는 explicit이다. 최고 강도에 도달한 supported_type이 structural_composition 단독이므로 sufficient이고, 원래 type과 일치하여 변경이 필요 없다."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "손잡이",
+          "involved_concepts": [
+            "카페린"
+          ],
+          "status": "consistent",
+          "target_type": "structural_composition",
+          "evidence_ids": [
+            "ev10"
+          ],
+          "rationale": "이 feature 이름은 packet 내 단일 concept에만 등장하므로 다중 concept 간 type 통일 문제가 발생하지 않는다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "현재 feature type 배정이 evidence로 충분히 확정되며 변경할 항목이 없다."
+      },
+      "abstain": {
+        "required": false,
+        "reason": "none",
+        "missing_evidence": []
+      }
+    }
+  },
+  "E24-H3-02-CONTROL_REPO_H3-01": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: '돌체의 바퀴는 돌체 몸체의 구성 부분이다' — 전체-부분 관계를 명시하므로 essential_feature가 아니라 structural_composition"
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "packet 내 근거 없음 (evidence_refs 비어 있음). 원 입력 보존을 위해 type은 유지하되 미검증 항목으로 표시함"
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "server_response는 PASS이고 composition_issues/anti_patterns가 비어 있으나, ev1의 문언이 명시적 전체-부분 관계('돌체 몸체의 구성 부분이다')이므로 '바퀴'는 essential_feature가 아니라 structural_composition으로 분류해야 한다. 서버가 이 mistyping을 잡지 못했으므로 accept_report는 부적절하다. 또한 '갑종'은 evidence_refs가 비어 있어 packet 내 근거가 전무한 미검증 feature이며, 지시에 따라 모든 입력 feature를 보존하되 근거 없음을 명시했다. 근거가 있는 수정 대상(ev1)이 특정되므로 defer가 아닌 repair를 선택했다."
+  },
+  "E24-H3-02-A_REPO_H3-01": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 전체(몸체)-부분(바퀴) 관계를 명시하므로 essential_feature가 아니라 structural_composition."
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "packet 내 evidence_refs 없음. 반증 근거도 없어 입력 type(essential_feature)을 그대로 보존."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "server_response는 PASS이고 anti_patterns가 비어 있으나, ev1의 문장은 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'로 전형적인 전체-부분(part-of) 관계를 서술한다. 따라서 '바퀴'는 essential_feature가 아니라 structural_composition으로 기록되어야 하며, 서버의 PASS는 이 오분류를 놓친 것으로 판단해 repair를 선택했다. packet에는 concept이 '돌체' 하나뿐이라 동일 feature 이름이 다른 concept에서 다른 type으로 나타나는 rigidity 혼합은 발생하지 않는다(통일할 대상이 '바퀴' 하나뿐이며 structural_composition으로 통일). '갑종'은 evidence_refs가 비어 있어 재분류 근거가 없으므로 입력 그대로 essential_feature로 보존했다. repaired_concepts에는 입력의 모든 concept과 feature를 포함했다."
+  },
+  "E24-H3-02-CONTRACT_REPO_H3-01": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 부분-전체(구성 부분) 관계를 명시적으로 서술."
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "evidence 없음(evidence_refs 비어 있음). 이번 repair 대상이 아니며 입력 type을 그대로 보존함. 자체 sufficiency는 insufficient."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "ev1은 fixture 텍스트로 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'라고 명시한다. 이는 구현 서술이 아니라 바퀴와 돌체 몸체 사이의 부분-전체(구성 부분) 관계, 즉 온톨로지적 성격을 직접 서술하므로 structural_composition에 대한 direct_support(explicit)이다. 최고 강도에 도달한 supported_type이 structural_composition 하나뿐이므로 sufficiency는 sufficient이고 selected_type은 structural_composition이다. 현재 server_response는 PASS이지만 candidate_concepts에서 '바퀴'가 essential_feature로 배정되어 있어 evidence와 불일치하므로 accept_report는 부적절하고, 근거 있는 단일 type 변경이 가능하므로 repair를 선택했다. '갑종'은 인용 evidence가 전혀 없어 자체적으로는 insufficient로 표시했으나, 이번에 변경되지 않는 별도 feature이므로 repair 판정을 막지 않으며 입력 type을 그대로 보존했다. '바퀴'는 단일 concept에만 존재하여 전역 feature-type invariant 위반은 없다. packet 밖 지식은 사용하지 않았다.",
+    "contract_assessment": {
+      "contract_verdict": "sufficient_repairable",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev1"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev1",
+          "source_kind": "fixture",
+          "admissibility": "direct_support",
+          "supported_type": "structural_composition",
+          "claim_strength": "explicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "'~의 구성 부분이다'는 바퀴와 돌체 몸체의 부분-전체 관계를 명시적으로 진술한 문장으로, 구현 서술이 아니라 온톨로지적 성격 서술이다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "돌체",
+          "feature": "바퀴",
+          "original_type": "essential_feature",
+          "sufficiency": "sufficient",
+          "selected_type": "structural_composition",
+          "evidence_ids": [
+            "ev1"
+          ],
+          "rationale": "direct_support 후보가 ev1 하나이며 explicit 강도로 structural_composition만 지지한다. 단독 최고 강도 type이 존재하므로 sufficient."
+        },
+        {
+          "concept": "돌체",
+          "feature": "갑종",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": [],
+          "rationale": "인용된 evidence가 없어 어떤 type도 확정하거나 반박할 수 없다. 변경 대상이 아니므로 입력 값을 보존하며, 이번 repair 판정의 장애물은 아니다."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "바퀴",
+          "involved_concepts": [
+            "돌체"
+          ],
+          "status": "consistent",
+          "target_type": "structural_composition",
+          "evidence_ids": [
+            "ev1"
+          ],
+          "rationale": "'바퀴'는 packet 내 단일 concept에만 등장하므로 다중 concept 간 type 불일치가 발생하지 않는다."
+        },
+        {
+          "feature": "갑종",
+          "involved_concepts": [
+            "돌체"
+          ],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [],
+          "rationale": "단일 concept에만 등장하고 evidence가 없어 전역 invariant 판정 대상이 아니다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": true,
+        "steps": [
+          {
+            "concept": "돌체",
+            "feature": "바퀴",
+            "from_type": "essential_feature",
+            "to_type": "structural_composition",
+            "evidence_ids": [
+              "ev1"
+            ],
+            "reason": "ev1이 바퀴를 돌체 몸체의 '구성 부분'으로 명시하여 부분-전체 관계를 explicit하게 진술하므로, 분류적 본질 속성(essential_feature)이 아니라 structural_composition으로 교정한다."
+          }
+        ],
+        "reject_reason": null
+      },
+      "abstain": {
+        "required": false,
+        "reason": "none",
+        "missing_evidence": []
+      }
+    }
+  },
+  "E24-H3-02-CONTROL_REPO_H3-02": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 전체(돌체 몸체)-부분(바퀴) 관계를 명시하므로 essential_feature가 아니라 structural_composition이다."
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "packet 내 지지 증거 없음(evidence_refs 비어 있음). 입력 보존을 위해 유지하되 미검증 항목으로 표시; 근거 확보 전까지 type 확정 불가."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "server_response는 PASS이고 composition_issues가 비어 있으나, ev1의 텍스트가 명시적으로 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'라는 전체-부분 관계를 서술한다. 지침상 이런 서술은 structural_composition으로 분류해야 하므로 '바퀴'의 essential_feature 라벨은 오분류이며 서버가 이를 잡아내지 못했다. 따라서 accept_report는 부적절하고, 근거가 명확하므로 defer도 아니다. 수정 내용: 바퀴 -> structural_composition(ev1 근거). 두 번째 feature '갑종'은 evidence_refs가 비어 있어 packet 내 어떤 증거로도 지지되지 않는다. 지침에 따라 입력의 모든 feature를 보존해야 하므로 원 type을 유지하되 미지지/미검증임을 evidence 필드에 명시했다. 이 항목에 대해서는 어떤 evidence_id도 인용하지 않았다."
+  },
+  "E24-H3-02-A_REPO_H3-02": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 전체(몸체)-부분(바퀴) 관계를 명시하므로 essential_feature가 아니라 structural_composition."
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "packet 내 evidence_refs 없음. 반증 근거가 없어 입력 type(essential_feature)을 그대로 보존함."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "server_response는 PASS이고 anti_patterns가 비어 있으나, ev1의 문장이 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'로 전체-부분(part-whole) 관계를 직접 서술한다. 이는 essential_feature가 아니라 structural_composition에 해당하므로 서버 판정을 그대로 수용할 수 없다고 판단해 repair를 선택했다. 동일 feature 이름 '바퀴'가 등장하는 concept은 이 packet 내에 '돌체' 하나뿐이므로 rigidity 혼합(같은 feature가 concept마다 다른 type) 사례는 없고, 통일 대상 값은 structural_composition 하나다. '갑종'은 참조된 evidence가 전혀 없어 재분류 근거가 없으므로 입력 type을 보존했고, repaired_concepts에는 입력의 모든 concept과 feature를 그대로 포함시켰다. packet에 존재하는 evidence_id는 ev1뿐이며 실제 판단 근거로 사용한 것도 ev1이다."
+  },
+  "E24-H3-02-CONTRACT_REPO_H3-02": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 부분-전체(구성 부분) 관계를 명시적으로 서술"
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "evidence 없음 — 이번 repair에서 변경하지 않고 입력 상태를 그대로 보존 (sufficiency는 insufficient로 표시)"
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "ev1은 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'라고 부분-전체 관계를 명시적으로 서술하므로 structural_composition에 대한 explicit direct_support다. 구현 서술이 아니라 온톨로지적 성격(구성 부분)을 직접 말하고 있다. 최고 강도(explicit)에 도달한 supported_type이 structural_composition 하나뿐이므로 sufficient이며, 현재 배정된 essential_feature와 불일치한다. 따라서 '바퀴'를 essential_feature -> structural_composition으로 수리한다. '갑종' feature는 evidence_refs가 비어 있고 packet 내 어떤 evidence도 이를 다루지 않으므로 sufficiency는 insufficient이나, 이번 수리 대상이 아니므로 입력 상태를 그대로 보존했고 repair 판단을 막지 않는다. '바퀴'는 단일 concept에만 등장하므로 전역 feature-type invariant 위반은 없다. packet 외부 지식은 사용하지 않았다.",
+    "contract_assessment": {
+      "contract_verdict": "sufficient_repairable",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev1"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev1",
+          "source_kind": "fixture",
+          "admissibility": "direct_support",
+          "supported_type": "structural_composition",
+          "claim_strength": "explicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "'바퀴는 몸체의 구성 부분이다'는 구현 서술이 아니라 부분-전체 관계를 명시적으로 진술하는 문장이므로 structural_composition에 대한 explicit direct_support다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "돌체",
+          "feature": "바퀴",
+          "original_type": "essential_feature",
+          "sufficiency": "sufficient",
+          "selected_type": "structural_composition",
+          "evidence_ids": [
+            "ev1"
+          ],
+          "rationale": "direct_support 후보는 ev1 하나이고 최고 강도 explicit에 도달한 type이 structural_composition 단독이므로 sufficient. 원래 type essential_feature와 불일치."
+        },
+        {
+          "concept": "돌체",
+          "feature": "갑종",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": [],
+          "rationale": "이 feature를 다루는 evidence가 packet에 전혀 없다. 확정도 반박도 하지 않고 입력 상태를 보존하며, 이번 repair 판단의 장애물은 아니다."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "바퀴",
+          "involved_concepts": [
+            "돌체"
+          ],
+          "status": "consistent",
+          "target_type": "structural_composition",
+          "evidence_ids": [
+            "ev1"
+          ],
+          "rationale": "'바퀴'는 packet 내 단일 concept에만 등장하므로 다중 concept 간 type 통일 문제가 발생하지 않는다."
+        },
+        {
+          "feature": "갑종",
+          "involved_concepts": [
+            "돌체"
+          ],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [],
+          "rationale": "단일 concept에만 등장하고 evidence도 없어 invariant 검사 대상이 아니다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": true,
+        "steps": [
+          {
+            "concept": "돌체",
+            "feature": "바퀴",
+            "from_type": "essential_feature",
+            "to_type": "structural_composition",
+            "evidence_ids": [
+              "ev1"
+            ],
+            "reason": "ev1이 바퀴를 몸체의 구성 부분으로 명시하여 부분-전체 관계를 explicit하게 서술하므로 structural_composition으로 정정."
+          }
+        ],
+        "reject_reason": null
+      },
+      "abstain": {
+        "required": false,
+        "reason": "none",
+        "missing_evidence": []
+      }
+    }
+  },
+  "E24-H3-02-CONTROL_REPO_H3-03": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 전체-부분(whole-part) 관계를 명시하므로 essential_feature가 아니라 structural_composition."
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "packet 내 근거 없음(evidence_refs 비어 있음). 타입 변경의 근거도 없어 입력값을 보존하되 미검증 feature로 표시."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "server_response는 PASS이고 composition_issues/anti_patterns가 비어 있으나, 유일한 증거 ev1은 '바퀴가 돌체 몸체의 구성 부분이다'라는 전형적인 전체-부분 서술이다. 지침상 이런 서술은 structural_composition으로 분류해야 하므로 '바퀴'의 essential_feature 지정은 오분류이며 서버의 PASS는 이 미탐지를 반영한다. 따라서 repair를 선택하고 '바퀴'를 structural_composition으로 교정했다. 두 번째 feature '갑종'은 evidence_refs가 비어 있어 packet 내 어떤 evidence로도 뒷받침되지 않는다. 다만 재분류할 근거 역시 없으므로 입력 타입을 보존한 채 미검증 항목으로 명시했다(추가 증거 확보 전까지는 신뢰 불가). packet만으로 판단 불가한 상황은 아니어서 defer는 부적절하고, 명백한 타입 오류가 있어 accept_report도 부적절하다."
+  },
+  "E24-H3-02-A_REPO_H3-03": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 전체(몸체)-부분(바퀴) 관계를 명시하므로 structural_composition"
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "packet 내 evidence_refs 없음 — 근거 부재로 입력값 유지"
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "server_response는 PASS이고 anti_patterns가 비어 있으나, ev1 문장이 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'로 명시적 전체-부분 관계를 서술한다. 따라서 '바퀴'는 essential_feature가 아니라 structural_composition이 정확한 type이며, 이를 수정한다. '바퀴' feature는 이 packet 내 단일 concept(돌체)에만 등장하므로 concept 간 rigidity 혼합은 없고, 통일 대상도 돌체 하나뿐이다. '갑종'은 evidence_refs가 비어 있어 재분류할 근거가 없으므로 입력값(essential_feature)을 그대로 보존했다. repaired_concepts에는 입력의 모든 concept과 feature를 포함했다."
+  },
+  "E24-H3-02-CONTRACT_REPO_H3-03": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 바퀴를 돌체 몸체의 구성 부분(부분-전체 관계)으로 명시"
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "(evidence 없음 — 원본 type 유지, sufficiency는 insufficient로 표시)"
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "ev1은 fixture 텍스트로서 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'라고 명시한다. 이는 구현 서술이 아니라 바퀴와 돌체 몸체 사이의 부분-전체(part-whole) 관계, 즉 온톨로지적 성격을 직접 서술하므로 structural_composition에 대한 direct_support(explicit)다. 최고 강도에 도달한 supported_type이 structural_composition 단독이므로 sufficient이며, 현재 배정인 essential_feature는 근거와 불일치한다. 따라서 바퀴 feature를 essential_feature -> structural_composition으로 수리한다. '갑종' feature는 evidence_refs가 비어 있고 packet 내 어떤 evidence도 이를 언급하지 않으므로 sufficiency는 insufficient이며, 확정도 반박도 하지 않고 원본 type을 그대로 보존했다(이 feature는 이번 repair 대상이 아니므로 repair 판정을 막지 않는다). 동일 feature 이름이 여러 concept에 걸치는 경우가 없어 전역 invariant 위반은 없다. server_response.status는 PASS이나 바퀴의 type 배정이 evidence와 어긋나므로 accept_report는 선택하지 않았다.",
+    "contract_assessment": {
+      "contract_verdict": "sufficient_repairable",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev1"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev1",
+          "source_kind": "fixture",
+          "admissibility": "direct_support",
+          "supported_type": "structural_composition",
+          "claim_strength": "explicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "'구성 부분이다'라는 표현이 바퀴와 돌체 몸체 간 부분-전체 관계를 명시적으로 서술한다. 구현 서술이 아니라 온톨로지적 관계 진술이므로 structural_composition의 direct_support."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "돌체",
+          "feature": "바퀴",
+          "original_type": "essential_feature",
+          "sufficiency": "sufficient",
+          "selected_type": "structural_composition",
+          "evidence_ids": [
+            "ev1"
+          ],
+          "rationale": "direct_support 후보는 ev1 하나이고 supported_type은 structural_composition, 최고 강도 explicit에 도달한 type이 정확히 하나이므로 sufficient. 원본 essential_feature는 evidence가 지지하지 않는다."
+        },
+        {
+          "concept": "돌체",
+          "feature": "갑종",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": [],
+          "rationale": "packet 내 direct_support 후보가 전무하다. 이 feature는 변경 대상이 아니므로 원본 type을 보존하되 sufficiency는 정직하게 insufficient로 표기한다."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "바퀴",
+          "involved_concepts": [
+            "돌체"
+          ],
+          "status": "consistent",
+          "target_type": "structural_composition",
+          "evidence_ids": [
+            "ev1"
+          ],
+          "rationale": "단일 concept에만 존재하므로 교차-concept type 통일 문제가 발생하지 않는다."
+        },
+        {
+          "feature": "갑종",
+          "involved_concepts": [
+            "돌체"
+          ],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [],
+          "rationale": "단일 concept에만 존재하며 evidence도 없어 invariant 판정 대상이 아니다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": true,
+        "steps": [
+          {
+            "concept": "돌체",
+            "feature": "바퀴",
+            "from_type": "essential_feature",
+            "to_type": "structural_composition",
+            "evidence_ids": [
+              "ev1"
+            ],
+            "reason": "ev1이 바퀴를 돌체 몸체의 '구성 부분'으로 명시하여 부분-전체 관계를 직접 서술하므로 structural_composition이 정확한 type이다."
+          }
+        ],
+        "reject_reason": null
+      },
+      "abstain": {
+        "required": false,
+        "reason": "none",
+        "missing_evidence": []
+      }
+    }
+  },
+  "E24-H3-02-CONTROL_REPO_H3-04": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: '돌체의 바퀴는 돌체 몸체의 구성 부분이다' — 전체-부분 관계를 명시하므로 essential_feature가 아니라 structural_composition이다."
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "packet 내 근거 없음(evidence_refs 비어 있음). 입력 보존을 위해 type은 유지했으나 미검증 항목으로 표시함."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "server_response는 PASS이고 composition_issues가 비어 있으나, ev1의 문언이 '돌체 몸체의 구성 부분이다'라는 전형적 전체-부분(mereological) 서술이므로 '바퀴'는 essential_feature가 아니라 structural_composition으로 분류해야 한다. 서버가 이 오분류를 잡지 못했으므로 accept_report는 부적절하다. 두 번째 feature '갑종'은 evidence_refs가 비어 있어 packet 내 근거가 전무하다. 다만 packet 전체를 보류할 만큼 모호하지는 않고 ev1에 대한 명확한 수정 근거가 존재하므로 defer가 아닌 repair를 선택했다. repaired_concepts에는 입력의 모든 concept/feature를 보존하되, 근거 없는 '갑종'은 type을 임의로 바꾸지 않고 미검증 상태임을 evidence 필드에 명시했다."
+  },
+  "E24-H3-02-A_REPO_H3-04": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 전체(몸체)-부분(바퀴) 관계를 명시하므로 essential_feature가 아니라 structural_composition."
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "관련 evidence 없음(evidence_refs 비어 있음). 반증 근거가 없어 입력 type을 그대로 보존함."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "server_response는 PASS/anti_patterns 공백이지만 evidence와 feature type이 불일치한다. ev1은 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'로 전형적인 전체-부분(part-of) 서술이므로 바퀴는 essential_feature가 아니라 structural_composition이어야 한다. 따라서 서버의 PASS를 그대로 수용하지 않고 repair한다. 이 packet에는 concept이 '돌체' 하나뿐이라 동일 feature명이 여러 concept에 다른 type으로 나타나는 rigidity 혼합 사례는 없으나, 통일 규칙의 취지에 따라 바퀴의 실제 성격(구조적 부분-전체)을 기준값으로 확정했다. 갑종은 evidence_refs가 비어 있어 판단 근거가 없으므로 입력 type(essential_feature)을 변경 없이 보존했고, repaired_concepts에는 입력의 모든 concept/feature를 포함시켰다."
+  },
+  "E24-H3-02-CONTRACT_REPO_H3-04": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 바퀴를 돌체 몸체의 부분-전체(구성 부분) 관계로 명시적으로 서술한다."
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "packet 내 지지 evidence 없음(evidence_refs 비어 있음). 이번 repair 대상이 아니며 원래 배정을 변경 없이 유지함."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "ev1은 fixture 텍스트로 \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"라고 진술한다. 이는 구현 서술이 아니라 바퀴와 돌체 몸체 사이의 부분-전체(구성) 관계, 즉 온톨로지적 성격을 명시적으로 서술한 문장이므로 structural_composition에 대한 direct_support(explicit)다. 최고 강도에 도달한 supported_type이 structural_composition 하나뿐이므로 sufficiency 판정은 sufficient이고 selected_type은 structural_composition이다. 현재 server_response는 PASS이고 composition_issues/anti_patterns가 비어 있으나, candidate_concepts의 '바퀴'는 essential_feature로 배정되어 있어 evidence가 명시적으로 지지하는 type과 불일치한다. 따라서 accept_report가 아니라 근거 있는 단일 type 변경(essential_feature → structural_composition)이 필요하다. '갑종'은 지지 evidence가 전혀 없어 sufficiency는 insufficient로 정직하게 표기했으나, 이번 repair에서 변경되지 않는 feature이므로 repair 판정을 막지 않으며 원래 type을 그대로 유지했다. '바퀴'는 단일 concept에만 등장하므로 shared-feature invariant 위반은 없다. packet 밖 지식은 사용하지 않았다.",
+    "contract_assessment": {
+      "contract_verdict": "sufficient_repairable",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev1"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev1",
+          "source_kind": "fixture",
+          "admissibility": "direct_support",
+          "supported_type": "structural_composition",
+          "claim_strength": "explicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "\"...몸체의 구성 부분이다\"는 부분-전체 관계를 직접적으로 서술하는 온톨로지적 진술이며, 구현/동작 서술이 아니다. 단일 type만 지지하고 반대 진술이 packet에 없다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "돌체",
+          "feature": "바퀴",
+          "original_type": "essential_feature",
+          "sufficiency": "sufficient",
+          "selected_type": "structural_composition",
+          "evidence_ids": [
+            "ev1"
+          ],
+          "rationale": "direct_support 후보는 ev1 하나이며 supported_type은 structural_composition, claim_strength는 explicit. 최고 강도 단독 type이므로 sufficient."
+        },
+        {
+          "concept": "돌체",
+          "feature": "갑종",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": [],
+          "rationale": "evidence_refs가 비어 있고 packet 내 어떤 item도 '갑종'의 온톨로지적 성격을 언급하지 않는다. 확정도 반박도 불가하므로 변경 없이 유지하고 insufficient로 표기한다."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "바퀴",
+          "involved_concepts": [
+            "돌체"
+          ],
+          "status": "consistent",
+          "target_type": "structural_composition",
+          "evidence_ids": [
+            "ev1"
+          ],
+          "rationale": "'바퀴'는 packet 내 단일 concept에만 존재하므로 교차-concept type 통일 문제가 발생하지 않는다."
+        },
+        {
+          "feature": "갑종",
+          "involved_concepts": [
+            "돌체"
+          ],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [],
+          "rationale": "단일 concept에만 존재하고 지지 evidence도 없어 invariant 적용 대상이 아니다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": true,
+        "steps": [
+          {
+            "concept": "돌체",
+            "feature": "바퀴",
+            "from_type": "essential_feature",
+            "to_type": "structural_composition",
+            "evidence_ids": [
+              "ev1"
+            ],
+            "reason": "ev1이 바퀴를 돌체 몸체의 '구성 부분'으로 명시하여 부분-전체 관계를 직접 서술하므로 structural_composition이 evidence가 지지하는 유일한 type이다."
+          }
+        ],
+        "reject_reason": null
+      },
+      "abstain": {
+        "required": false,
+        "reason": "none",
+        "missing_evidence": []
+      }
+    }
+  },
+  "E24-H3-02-CONTROL_REPO_H3-05": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 전체(돌체 몸체)-부분(바퀴)의 결합 관계를 명시하므로 essential_feature가 아니라 structural_composition이 정확하다."
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "근거 없음 — evidence_refs가 비어 있고 packet 내 어떤 evidence_item도 '갑종'을 언급하지 않는다. 입력 보존을 위해 원래 type을 유지하되 미검증 항목으로 표시한다."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "server_response는 PASS이고 composition_issues/anti_patterns가 비어 있으나, 실제 evidence와 대조하면 두 가지 문제가 있어 accept_report는 부적절하다. (1) ev1은 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'라고 전체-부분 관계를 명시적으로 서술한다. 이는 지침상 structural_composition에 해당하므로 '바퀴'의 type을 essential_feature에서 structural_composition으로 수정했다. (2) '갑종' feature는 evidence_refs가 비어 있고 packet 내 유일한 evidence(ev1)도 이를 뒷받침하지 않는다. 근거 없이 삭제하거나 재분류할 수 없고 지침상 모든 입력 feature를 보존해야 하므로 원 type을 유지한 채 미검증(근거 없음)으로 명시했다. packet 자체는 판단에 충분하므로 defer는 불필요하며, 근거 있는 수정이 가능하므로 repair를 선택했다."
+  },
+  "E24-H3-02-A_REPO_H3-05": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 명시적 전체-부분(part-whole) 관계 서술이므로 essential_feature가 아니라 structural_composition."
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "packet 내 대응 evidence 없음(evidence_refs 비어 있음). 근거 부재로 입력 type을 변경 없이 보존."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "server_response는 status=PASS이고 anti_patterns/composition_issues가 비어 있으나, evidence 자체가 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'라는 명시적 전체-부분 관계를 서술한다. 분류 규칙상 이런 서술은 structural_composition이므로 바퀴를 essential_feature로 둔 것은 오분류다. 서버 PASS는 오분류를 정당화하지 않으므로 repair를 선택했다. 동일 feature명이 여러 concept에 다른 type으로 나타나는 rigidity 혼합 사례는 이 packet에 없다(concept이 돌체 하나뿐). 갑종은 evidence_refs가 비어 있어 재분류 근거가 없으므로 입력 상태(essential_feature)를 그대로 보존했고, repaired_concepts에는 입력의 모든 concept/feature를 포함했다. defer는 선택하지 않았다 — 수정 대상 feature에 대한 판단은 ev1만으로 확정 가능하기 때문이다."
+  },
+  "E24-H3-02-CONTRACT_REPO_H3-05": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "돌체",
+        "features": [
+          {
+            "feature": "바퀴",
+            "type": "structural_composition",
+            "evidence": "ev1: \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" — 부분-전체(구성 부분) 관계를 명시적으로 서술"
+          },
+          {
+            "feature": "갑종",
+            "type": "essential_feature",
+            "evidence": "(evidence 없음 — 원래 type 유지, 이번 repair 대상 아님)"
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev1"
+    ],
+    "report": "ev1은 fixture 텍스트로 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'라고 명시한다. 이는 구현 서술이 아니라 바퀴와 돌체 몸체 사이의 부분-전체(구성 부분) 관계를 온톨로지적으로 직접 진술하므로 structural_composition에 대한 direct_support(explicit)이다. direct_support 후보는 이 하나뿐이고 최고 강도(explicit)에 도달한 type도 structural_composition 단독이므로 sufficiency 판정은 sufficient, selected_type=structural_composition이다. 현재 server_response는 PASS이나 candidate_concepts에서 '바퀴'가 essential_feature로 배정되어 있어 evidence와 불일치하므로 repair가 필요하다(sufficient_repairable). 두 번째 feature '갑종'은 evidence_refs가 비어 있고 packet 내 어떤 evidence도 이를 언급하지 않으므로 sufficiency는 정직하게 insufficient로 표시하되, 이번 repair 대상이 아니므로 원래 type을 그대로 보존했다(규칙 5). '바퀴'라는 feature 이름은 다른 concept에 등장하지 않아 전역 invariant 충돌은 없다. packet 밖 지식은 사용하지 않았다.",
+    "contract_assessment": {
+      "contract_verdict": "sufficient_repairable",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev1"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev1",
+          "source_kind": "fixture",
+          "admissibility": "direct_support",
+          "supported_type": "structural_composition",
+          "claim_strength": "explicit",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "'돌체 몸체의 구성 부분이다'는 바퀴가 돌체 몸체의 부분이라는 부분-전체 관계를 명시적으로 진술한다. 구현 서술이 아니라 관계의 온톨로지적 성격에 대한 직접 진술이다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "돌체",
+          "feature": "바퀴",
+          "original_type": "essential_feature",
+          "sufficiency": "sufficient",
+          "selected_type": "structural_composition",
+          "evidence_ids": [
+            "ev1"
+          ],
+          "rationale": "direct_support 후보 중 explicit 강도에 도달한 type이 structural_composition 하나뿐이므로 단독 최고 강도로 확정된다. essential_feature를 지지하는 분류적(is-a 형성) 진술은 packet에 없다."
+        },
+        {
+          "concept": "돌체",
+          "feature": "갑종",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": [],
+          "rationale": "evidence_refs가 비어 있고 ev1도 이 feature를 언급하지 않는다. 확정도 반박도 불가하므로 원래 type을 변경하지 않고 보존하며, 이번 repair 판단의 장애물로 취급하지 않는다."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "바퀴",
+          "involved_concepts": [
+            "돌체"
+          ],
+          "status": "consistent",
+          "target_type": "structural_composition",
+          "evidence_ids": [
+            "ev1"
+          ],
+          "rationale": "packet 내에서 '바퀴'는 단일 concept에만 등장하므로 shared-feature 통일 제약 위반이 없다."
+        },
+        {
+          "feature": "갑종",
+          "involved_concepts": [
+            "돌체"
+          ],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [],
+          "rationale": "단일 concept에만 등장하며 evidence도 없어 전역 invariant 판정 대상이 아니다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": true,
+        "steps": [
+          {
+            "concept": "돌체",
+            "feature": "바퀴",
+            "from_type": "essential_feature",
+            "to_type": "structural_composition",
+            "evidence_ids": [
+              "ev1"
+            ],
+            "reason": "ev1이 바퀴를 '돌체 몸체의 구성 부분'으로 명시하여 부분-전체 관계를 직접 진술하므로 structural_composition으로 재배정한다."
+          }
+        ],
+        "reject_reason": null
+      },
+      "abstain": {
+        "required": false,
+        "reason": "none",
+        "missing_evidence": [
+          {
+            "target": "돌체.갑종",
+            "request": "'갑종'이 돌체의 분류적(is-a 형성) 속성인지, 맥락 의존적 분류인지, 사회적·법적 처우인지를 명시적으로 서술하는 텍스트 evidence"
+          }
+        ]
+      }
+    }
+  },
+  "E24-H3-03-CONTROL_REPO_H3-01": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "JSON추출유틸",
+        "features": [
+          {
+            "feature": "입력 문자열에서 마크다운 코드펜스(```/```json)를 제거한 뒤 첫 '{'와 마지막 '}' 사이 구간만 잘라 JSON 블록 문자열로 반환한다",
+            "type": "functional",
+            "evidence": "ev4: re.sub(r'```(?:json)?\\s*','',raw.strip()).replace('```','').strip() 후 clean.find('{'), clean.rfind('}')로 슬라이스하여 clean[s:e+1] 반환"
+          },
+          {
+            "feature": "중괄호 경계를 찾지 못하면 ValueError('JSON 블록 없음')를 던져 실패를 호출자에게 전파한다",
+            "type": "functional",
+            "evidence": "ev4: if s < 0 or e < 0: raise ValueError(\"JSON 블록 없음\")"
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "server_response는 PASS(구성 이슈/안티패턴 없음)이지만 feature type 배정에 근거 불일치가 있어 repair를 선택했다. ev4의 extract_json_block은 '코드블록 처리'를 대상 객체가 본질적으로 보유한 속성으로 서술하지 않고, 원문 문자열을 받아 코드펜스를 제거하고 중괄호 경계를 슬라이스해 돌려주는 동작(역할)을 서술한다. 즉 '무엇인가'가 아니라 '무엇을 하는가'이므로 essential_feature가 아니라 functional이 맞다. 또한 원래 feature명 '코드블록처리방식'은 ev4의 실제 동작(펜스 제거 + find('{')/rfind('}') 슬라이스)을 특정하지 못하는 라벨 수준이어서, 증거 문장에 직접 대응하도록 구체화했다. ev4에 명시된 실패 경로(s<0 or e<0 시 ValueError)는 입력 feature가 누락한 관찰 가능한 동작이므로 별도 functional feature로 추가했다. 전체-부분 관계를 서술하는 증거는 없어 structural_composition은 사용하지 않았고, 위치/맥락/사회적 처우에 해당하는 증거도 packet에 없다. 증거가 ev4 단일 코드 조각뿐이라 함수 외부의 호출 맥락(어떤 파이프라인에서 쓰이는지)은 추론하지 않고 판단 범위를 코드에 드러난 동작으로 제한했다."
+  },
+  "E24-H3-03-A_REPO_H3-01": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "packet에는 concept이 1개(JSON추출유틸), feature가 1개(코드블록처리방식, essential_feature, ev4)뿐이다. 동일 feature 이름이 여러 concept에 서로 다른 type으로 나타나는 rigidity 혼합 상황이 성립하지 않으므로 통일 대상 자체가 없다. server_response는 status=PASS이고 composition_issues와 anti_patterns가 모두 비어 있어 수정을 지시하는 지목도 없다. ev4의 extract_json_block는 ``` 펜스를 제거하고 첫 '{'~마지막 '}' 구간을 잘라내는 동작으로, 이 유틸이 코드블록을 어떻게 다루는지를 규정하는 속성이며 부분-전체 관계(structural_composition)를 서술하지 않는다. essential_feature와 functional 사이에 해석 여지가 있으나, 안티패턴 지목이 없고 근거가 재분류를 요구할 만큼 명확하지 않아 임의 변경은 정당화되지 않는다. 추가 evidence 없이도 현재 상태가 안전하다고 판단되어 accept_report."
+  },
+  "E24-H3-03-CONTRACT_REPO_H3-01": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "Packet has a single evidence item (ev4), a Python function body implementing fenced-code-block stripping and brace-slicing to extract a JSON substring. This text describes only what the code does (implementation: regex removal of ``` markers, index search, ValueError on failure). It contains no statement about the ontological character of the feature '코드블록처리방식' — nothing saying it is a classificatory/is-a-forming property (essential), context-dependent (contextual), a place-region relation (locational), a UFO-sense role (functional), a social/legal treatment (social), or a part-whole relation (structural). Per the contract, implementation description alone is not direct_support for any of the six types; a symbol name like extract_json_block also cannot carry it alone. Sufficiency step: zero direct_support candidates -> insufficient. Therefore no repair target can be justified and choosing 'the closest-sounding type' (e.g. functional because it is a function, or structural because it parses structure) is forbidden. server_response.status is PASS, but accept_report requires that the evidence be sufficient to confirm the current feature-type assignment; here the essential_feature assignment on '코드블록처리방식' rests on evidence that supports no type at all, so the current state cannot be confirmed as safe either. Action = defer. Needed: explicit text characterizing whether code-block handling is definitional/classificatory for the JSON extraction utility or merely a context-dependent processing aspect. No single feature name is shared across concepts, so no global invariant is engaged.",
+    "contract_assessment": {
+      "contract_verdict": "insufficient_evidence",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev4"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev4",
+          "source_kind": "code",
+          "admissibility": "out_of_scope",
+          "supported_type": null,
+          "claim_strength": "none",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "Raw implementation of extract_json_block: strips ``` fences, slices between first '{' and last '}', raises on absence. Purely procedural/implementation description; makes no claim about the ontological nature (essential/contextual/locational/functional/social/structural) of '코드블록처리방식'. Symbol name alone is not direct_support."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "JSON추출유틸",
+          "feature": "코드블록처리방식",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": [
+            "ev4"
+          ],
+          "rationale": "Only ev4 is offered and it is out_of_scope for type determination (implementation-only). Step 5 of the sufficiency procedure applies: no direct_support candidates, hence insufficient. The original essential_feature label is neither confirmed nor refuted by the packet."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "코드블록처리방식",
+          "involved_concepts": [
+            "JSON추출유틸"
+          ],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [],
+          "rationale": "The feature name occurs in only one concept in the packet, so no cross-concept type-unification invariant is engaged."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "No direct_support evidence exists for any feature type; repair would require selecting a type on plausibility alone, which the contract forbids."
+      },
+      "abstain": {
+        "required": true,
+        "reason": "insufficient_evidence",
+        "missing_evidence": [
+          {
+            "target": "JSON추출유틸.코드블록처리방식",
+            "request": "Explicit text (spec, doc, taxonomy note, or code comment) stating the ontological character of code-block handling: e.g. whether it is a defining/classificatory property that makes something a JSON extraction utility (essential_feature), a usage-context-dependent behavior (contextual_usage), or a part-of composition relation (structural_composition)."
+          },
+          {
+            "target": "JSON추출유틸",
+            "request": "A definition or documentation passage characterizing what kind of entity the concept is and which of its properties are rigid/definitional versus contingent, so a feature type can be grounded rather than inferred from implementation."
+          }
+        ]
+      }
+    }
+  },
+  "E24-H3-03-CONTROL_REPO_H3-02": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "JSON추출유틸",
+        "features": [
+          {
+            "feature": "코드블록처리방식 — 마크다운 코드펜스(```/```json)를 제거한 뒤 첫 '{'와 마지막 '}' 사이를 잘라내어 JSON 문자열을 반환하고, 경계를 찾지 못하면 ValueError를 발생시킨다",
+            "type": "functional",
+            "evidence": "ev4: extract_json_block(raw)가 re.sub로 ```/```json 펜스를 제거하고 clean.find('{')/clean.rfind('}')로 구간을 슬라이스하며, s<0 or e<0이면 ValueError(\"JSON 블록 없음\")를 raise한다"
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "server_response는 PASS이고 composition_issues/anti_patterns가 비어 있으나, 후보 concept의 feature type이 증거와 맞지 않아 repair가 필요하다. ev4는 extract_json_block이 '무엇인지'가 아니라 '무엇을 하는지'를 보여준다: 코드펜스 제거 -> 중괄호 경계 탐색 -> 부분 문자열 반환, 실패 시 예외. 즉 '코드블록처리방식'은 유틸의 정체성을 규정하는 본질적 속성이 아니라 수행하는 처리 동작이므로 essential_feature가 아니라 functional이 적절하다. 또한 feature 서술이 이름만 있고 동작이 명시되지 않아, 증거에 나타난 펜스 제거/경계 슬라이스/ValueError 동작을 포함하도록 구체화했다. 전체-부분 관계를 서술하는 증거는 없으므로 structural_composition은 해당되지 않으며, 위치·맥락·사회적 처우 관련 증거도 없다. 단일 evidence(ev4)만으로 concept 자체의 존재와 동작은 충분히 확인되므로 defer는 불필요하다."
+  },
+  "E24-H3-03-A_REPO_H3-02": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "패킷에는 concept 1개(JSON추출유틸)와 feature 1개(코드블록처리방식, essential_feature, ev4)만 존재한다. 동일 feature 이름이 둘 이상의 concept에 서로 다른 type으로 나타나는 rigidity 혼합 상황이 성립하지 않으므로 type 통일 대상이 없다. server_response는 status=PASS이고 composition_issues와 anti_patterns가 모두 비어 있어, 통일해야 할 실제 성격을 지목하는 안티패턴 근거도 없다. ev4 코드는 fenced code block 제거 후 첫 '{'와 마지막 '}' 사이를 잘라내는 처리 방식 자체를 보여주며, 이는 해당 유틸을 규정하는 속성으로 essential_feature 기록과 모순되지 않는다(부분-전체 관계 서술은 없어 structural_composition 근거도 없음). 단일 evidence만으로 기존 type을 뒤집을 반증이 없으므로 추가 조치 없이 현재 상태를 수용한다."
+  },
+  "E24-H3-03-CONTRACT_REPO_H3-02": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "packet에는 evidence item이 ev4 하나뿐이며, 그 내용은 extract_json_block 함수의 구현 코드(백틱 코드펜스 제거 → 첫 '{'와 마지막 '}' 사이 슬라이스 → 실패 시 ValueError)일 뿐이다. 이 텍스트는 '이 코드가 무엇을 하는지'라는 구현 서술에 해당하며, 'JSON추출유틸'의 '코드블록처리방식'이라는 feature가 taxonomy상 어떤 온톨로지적 성격을 갖는지(is-a를 형성하는 분류적 속성인지, 맥락 의존적인지, 장소-영역 관계인지, UFO 의미의 역할인지, 사회적 처우인지, 부분-전체 관계인지)를 명시하는 문장이 전혀 없다. 함수명/정규식/에러 메시지 같은 심볼 수준 단서는 단독으로 direct_support가 되지 못한다. 따라서 ev4는 out_of_scope(기껏해야 indirect_context)로 분류되고, direct_support 후보가 0건이므로 sufficiency 판정 5단계 중 5)에 따라 insufficient이다. 현재 배정된 essential_feature를 확정할 근거도, 다른 type으로 repair할 근거도 없다(그럴듯함을 이유로 임의 type을 고르는 것은 금지). server_response.status가 PASS이지만 accept_report는 'evidence로 feature type 배정이 충분히 확정됨'을 요구하므로 채택할 수 없고, repair 역시 sufficient_repairable이 아니므로 불가하다. 결론은 defer이며, 해당 feature의 온톨로지적 성격을 명시하는 설계 문서/타입 정의 텍스트가 추가로 필요하다.",
+    "contract_assessment": {
+      "contract_verdict": "insufficient_evidence",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev4"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev4",
+          "source_kind": "code",
+          "admissibility": "out_of_scope",
+          "supported_type": null,
+          "claim_strength": "none",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "코드펜스 제거 및 중괄호 범위 추출이라는 구현 동작만 서술한다. feature '코드블록처리방식'의 온톨로지적 성격(분류적/맥락적/장소적/역할적/사회적/부분-전체)을 명시하는 텍스트가 없으므로 6개 type 중 어느 것에도 direct_support가 되지 않는다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "JSON추출유틸",
+          "feature": "코드블록처리방식",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": [
+            "ev4"
+          ],
+          "rationale": "direct_support 후보가 0건이다. ev4는 구현 서술이라 essential_feature를 확정하지도, 반박하지도 못한다. 임의 type 선택은 금지되므로 판정 보류."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "코드블록처리방식",
+          "involved_concepts": [
+            "JSON추출유틸"
+          ],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [
+            "ev4"
+          ],
+          "rationale": "이 feature 이름을 공유하는 다른 concept이 packet에 없어 전역 feature-type invariant 충돌이 발생하지 않는다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "direct_support evidence가 없어 contract_verdict가 insufficient_evidence이며, sufficient_repairable 조건을 충족하지 못한다."
+      },
+      "abstain": {
+        "required": true,
+        "reason": "insufficient_evidence",
+        "missing_evidence": [
+          {
+            "target": "JSON추출유틸.코드블록처리방식",
+            "request": "이 feature가 JSON추출유틸의 정체성을 결정하는 분류적(essential) 속성인지, 아니면 호출 맥락에 따라 달라지는 설정/역할/부분 구성인지 명시적으로 서술한 설계 문서, 타입/온톨로지 정의, 또는 주석 텍스트."
+          },
+          {
+            "target": "JSON추출유틸",
+            "request": "이 concept이 상위 타입 대비 어떤 differentia로 구분되는지, 그리고 '코드블록처리방식'이 그 differentia에 해당하는지 명시하는 evidence."
+          }
+        ]
+      }
+    }
+  },
+  "E24-H3-03-CONTROL_REPO_H3-03": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "JSON추출유틸",
+        "features": [
+          {
+            "feature": "코드블록처리방식: 마크다운 펜스(```/```json)를 제거한 뒤 첫 '{'와 마지막 '}' 사이를 잘라 JSON 본문을 반환하고, 없으면 ValueError를 발생시킴",
+            "type": "functional",
+            "evidence": "ev4: extract_json_block(raw)이 re.sub로 ```(?:json)?를 제거하고 replace('```','') 후 find('{')/rfind('}')로 구간을 슬라이스하며, 인덱스가 음수면 ValueError(\"JSON 블록 없음\")를 raise"
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "ev4는 유틸이 '무엇인가'(본질적 정의)가 아니라 '무엇을 하는가'(입력 문자열에서 코드펜스 제거 → 중괄호 구간 슬라이스 → 실패 시 예외)를 보여주는 동작 명세다. 따라서 '코드블록처리방식'은 essential_feature가 아니라 functional로 재분류하는 것이 타당하다. 전체-부분 관계 서술이 아니므로 structural_composition은 해당 없음. server_response는 PASS이나 타입 오분류는 DAG/anti-pattern 검사 대상이 아니어서 PASS만으로 안전을 확정할 수 없으므로 accept_report 대신 repair를 선택했다. 증거가 ev4 하나뿐이지만 해당 feature의 타입 판정에는 충분하므로 defer는 불필요하다. 원래 이름/개수는 유지하고 evidence 기반으로 feature 서술만 구체화했다."
+  },
+  "E24-H3-03-A_REPO_H3-03": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "단일 concept(JSON추출유틸) / 단일 feature(코드블록처리방식) 구성이라 동일 feature 이름이 복수 concept에 서로 다른 type으로 나타나는 rigidity 혼합 상황이 발생할 수 없다. server_response는 status=PASS이며 anti_patterns와 composition_issues가 모두 비어 있어, 통일해야 할 type을 지목하는 안티패턴 근거도 없다. ev4 코드는 ```/```json 펜스를 제거하고 첫 '{'와 마지막 '}' 사이를 잘라내는 파싱 규약 자체를 정의하므로, '코드블록처리방식'을 이 유틸을 규정하는 essential_feature로 본 현재 라벨은 증거와 배치되지 않는다(전체-부분 관계 서술이 아니므로 structural_composition 대상도 아니다). packet 범위 내에서 추가 조치가 필요한 근거가 없어 accept_report로 판단한다."
+  },
+  "E24-H3-03-CONTRACT_REPO_H3-03": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "packet에는 evidence item이 ev4 하나뿐이고, 그 내용은 extract_json_block 함수의 구현 코드다. 이 텍스트는 raw 문자열에서 ``` 펜스를 제거하고 첫 '{'와 마지막 '}' 사이를 잘라내며 없으면 ValueError를 던진다는 '무엇을 어떻게 처리하는가'만 서술한다. 규칙 2에 따라 구현 서술은 그 자체로 6개 type 중 어느 것에 대해서도 direct_support가 아니다. 'JSON추출유틸'의 '코드블록처리방식'이 분류적 본질(essential)인지, 맥락 의존적 사용(contextual)인지, 부분-전체(structural)인지, UFO 의미의 역할(functional)인지를 명시적으로 말하는 문장이 packet 어디에도 없다. 함수명·정규식·에러 메시지는 심볼명 수준의 단서일 뿐 명시 텍스트가 아니다. 따라서 ev4는 indirect_context로 분류되며 direct_support 후보가 0개다(sufficiency 5단계 중 5단계 적용 → insufficient). server_response.status가 PASS이지만, accept_report는 evidence가 현재 feature type 배정을 확정하기에 충분할 것을 요구하는데 여기서는 essential_feature 배정을 지지하는 명시 근거가 없으므로 accept_report도 불가하다. '그나마 essential이 그럴듯하다'는 식의 repair는 금지되므로 defer한다.",
+    "contract_assessment": {
+      "contract_verdict": "insufficient_evidence",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev4"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev4",
+          "source_kind": "code",
+          "admissibility": "indirect_context",
+          "supported_type": null,
+          "claim_strength": "none",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "코드블록 펜스 제거와 중괄호 범위 추출이라는 구현 동작만 서술한다. 해당 처리 방식이 개념의 분류적 본질인지, 맥락 의존적인지, 부분-전체 관계인지 등 온톨로지적 성격을 명시하는 문장이 전혀 없다. 함수명/예외 메시지는 단독으로 direct_support가 되지 못한다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "JSON추출유틸",
+          "feature": "코드블록처리방식",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": [
+            "ev4"
+          ],
+          "rationale": "direct_support로 분류된 evidence가 하나도 없다. ev4는 구현 서술에 그쳐 essential_feature를 확정하지도 반박하지도 못한다. 최고 강도 type을 산출할 후보 집합이 비어 있으므로 insufficient."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "코드블록처리방식",
+          "involved_concepts": [
+            "JSON추출유틸"
+          ],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [
+            "ev4"
+          ],
+          "rationale": "이 feature 이름은 packet 내 단일 concept에만 등장하므로 concept 간 type 통일 invariant가 발동하지 않는다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "direct_support evidence가 없어 target type을 evidence만으로 확정할 수 없다. 근사치 type을 골라 repair하는 것은 금지된다."
+      },
+      "abstain": {
+        "required": true,
+        "reason": "insufficient_evidence",
+        "missing_evidence": [
+          {
+            "target": "JSON추출유틸 / 코드블록처리방식",
+            "request": "이 처리 방식이 JSON추출유틸의 정체성을 규정하는 분류적(is-a 형성) 속성인지, 아니면 호출 맥락에 따라 달라지는 사용 방식인지를 명시적으로 서술하는 문서·주석·명세 텍스트"
+          },
+          {
+            "target": "JSON추출유틸 (concept)",
+            "request": "이 개념이 taxonomy 내에서 어떤 상위 종류에 속하며 어떤 differentia로 구분되는지를 진술하는 텍스트 (feature type 판정의 기준선 확보용)"
+          },
+          {
+            "target": "코드블록처리방식 (대안 type 배제용)",
+            "request": "해당 처리 방식이 부분-전체 구성요소(structural_composition)인지, 특정 파이프라인 위치·영역에 귀속되는지(locational), 또는 UFO 의미의 역할(functional)인지 여부를 명시하는 근거"
+          }
+        ]
+      }
+    }
+  },
+  "E24-H3-03-CONTROL_REPO_H3-04": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "JSON추출유틸",
+        "features": [
+          {
+            "feature": "코드블록처리방식",
+            "type": "functional",
+            "evidence": "ev4: extract_json_block이 re.sub로 ```/```json 펜스를 제거한 뒤 첫 '{'와 마지막 '}' 구간을 잘라 반환하고, 없으면 ValueError를 던진다 — 유틸이 수행하는 동작(역할)이지 대상의 본질적 속성이 아니다."
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "ev4는 마크다운 코드펜스를 제거하고 최외곽 중괄호 구간을 슬라이스해 반환하는 함수 정의다. 이는 '코드블록을 어떻게 처리하는가'라는 유틸의 수행 동작, 즉 기능적 역할에 해당하므로 essential_feature(대상 자체를 정의하는 불변 속성)로 분류한 것은 부정확하다. functional로 교정했다. 전체-부분 관계 서술은 없어 structural_composition은 해당 없음. 그 외 concept 이름과 feature 목록은 evidence로 뒷받침되며 server_response(PASS, 이슈 없음)와 충돌하는 anti-pattern은 발견되지 않아 타입 교정만 수행했다."
+  },
+  "E24-H3-03-A_REPO_H3-04": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "packet에는 concept 1개(JSON추출유틸)와 feature 1개(코드블록처리방식, essential_feature, ev4 근거)만 존재한다. server_response는 status=PASS이고 composition_issues와 anti_patterns가 모두 비어 있어 지목된 문제가 없다. rigidity 혼합 제약은 동일 feature 이름이 복수 concept에 서로 다른 type으로 나타날 때 적용되는데, 이 payload에는 concept이 하나뿐이라 교차 concept 불일치가 성립하지 않는다. ev4는 코드펜스(```/```json)를 제거하고 첫 '{'와 마지막 '}' 사이를 잘라내는 추출 로직으로, 해당 유틸이 무엇인지를 규정하는 속성으로 읽을 수 있어 essential_feature 표기가 증거와 명백히 모순되지 않는다(전체-부분 관계 서술이 아니므로 structural_composition 사유도 없다). 안티패턴 지목이 없고 단일 evidence만으로 type을 functional로 바꿀 강한 근거가 없으므로 추가 조치 없이 현 상태를 수용한다.",
+    "_": ""
+  },
+  "E24-H3-03-CONTRACT_REPO_H3-04": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "packet에는 evidence item이 ev4 하나뿐이며, 내용은 extract_json_block 함수의 구현 코드다. 이 코드는 raw 문자열에서 ``` 펜스를 정규식으로 제거하고 첫 '{'와 마지막 '}' 사이를 잘라내며 실패 시 ValueError를 던진다는 '무엇을 어떻게 하는지'만 서술한다. 즉 순수한 implementation 서술이다. 'JSON추출유틸'의 '코드블록처리방식'이라는 feature가 이 concept의 is-a를 형성하는 분류적 속성인지(essential_feature), 맥락 의존적인지(contextual_usage), 부분-전체 관계인지(structural_composition), UFO 의미의 역할인지(functional) 등 온톨로지적 성격을 명시적으로 서술하는 텍스트는 어디에도 없다. 함수명·심볼명(extract_json_block)이나 feature 이름 자체는 단독으로 direct_support가 될 수 없다. 따라서 ev4는 indirect_context로 분류되고 direct_support 후보가 0개이므로 sufficiency 판정 5단계 중 5)에 해당해 insufficient다. 최고 강도 type을 단독으로 정할 수 없으므로 essential_feature를 확정할 수도, 다른 type으로 repair할 수도 없다('그나마 그럴듯한 type' 선택은 금지). server_response.status가 PASS이지만 accept_report는 'evidence로 feature type 배정이 충분히 확정된다'는 뜻이므로, 근거가 없는 현 상태에서는 채택할 수 없다. shared feature invariant는 concept이 하나뿐이라 적용 대상이 없다. 결론은 defer이며, 필요한 추가 근거는 '코드블록처리방식'이 JSON추출유틸의 분류적 본질인지 아니면 맥락/역할/부분 관계인지를 명시하는 설계 문서, 주석, 온톨로지 정의 텍스트다.",
+    "contract_assessment": {
+      "contract_verdict": "insufficient_evidence",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev4"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev4",
+          "source_kind": "code",
+          "admissibility": "indirect_context",
+          "supported_type": null,
+          "claim_strength": "none",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "펜스 제거와 중괄호 경계 추출이라는 구현 동작만 서술한다. 이 처리 방식이 JSON추출유틸의 분류적 본질인지, 맥락 의존적 사용인지, 부분-전체 구성인지 등 온톨로지적 성격을 명시하는 문장이 전혀 없다. 함수명과 feature명의 어휘적 유사성은 direct_support 근거가 되지 못한다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "JSON추출유틸",
+          "feature": "코드블록처리방식",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": [
+            "ev4"
+          ],
+          "rationale": "direct_support로 분류된 evidence가 하나도 없다(ev4는 indirect_context). 5단계 절차의 5)에 따라 insufficient이며, essential_feature를 확정하지도 반박하지도 못한다."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "코드블록처리방식",
+          "involved_concepts": [
+            "JSON추출유틸"
+          ],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [
+            "ev4"
+          ],
+          "rationale": "이 feature 이름을 가진 concept이 packet 내에 하나뿐이므로 concept 간 type 통일 invariant가 발동하지 않는다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "direct_support evidence가 없어 sufficiency가 성립하지 않는다. contract_verdict가 sufficient_repairable이 아니므로 repair가 금지된다."
+      },
+      "abstain": {
+        "required": true,
+        "reason": "insufficient_evidence",
+        "missing_evidence": [
+          {
+            "target": "JSON추출유틸 / 코드블록처리방식",
+            "request": "코드블록 처리 방식이 JSON추출유틸의 is-a를 형성하는 분류적 본질 속성인지, 아니면 호출 맥락에 따라 달라지는 contextual_usage인지를 명시적으로 서술하는 설계 문서·docstring·온톨로지 정의 텍스트"
+          },
+          {
+            "target": "JSON추출유틸 / 코드블록처리방식",
+            "request": "이 처리 방식이 유틸의 부분(structural_composition)으로 취급되는지, 또는 UFO 의미의 role(functional)로 취급되는지를 배제/확정할 수 있는 명시 텍스트"
+          },
+          {
+            "target": "JSON추출유틸",
+            "features 전반": "",
+            "request": "이 concept 자체의 온톨로지적 범주(kind/role/relator 등)를 서술하는 근거 텍스트"
+          }
+        ]
+      }
+    }
+  },
+  "E24-H3-03-CONTROL_REPO_H3-05": {
+    "action": "repair",
+    "repaired_concepts": [
+      {
+        "name": "JSON추출유틸",
+        "features": [
+          {
+            "feature": "마크다운 코드블록 펜스(```/```json)를 제거하고 첫 '{'~마지막 '}' 구간을 잘라 JSON 본문을 추출한다 (없으면 ValueError)",
+            "type": "functional",
+            "evidence": "ev4"
+          }
+        ]
+      }
+    ],
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "ev4는 extract_json_block(raw)이 수행하는 동작(코드블록 펜스 제거 -> 중괄호 경계 탐색 -> 부분문자열 반환, 실패 시 ValueError)만을 보여준다. 이는 대상 객체가 무엇인지를 규정하는 본질적 속성이 아니라 유틸이 수행하는 기능적 역할이므로 essential_feature 타입 부여는 근거 부족이다. 또한 feature 명칭 '코드블록처리방식'은 evidence보다 모호해 실제 동작(펜스 제거 + 중괄호 구간 슬라이싱 + 예외)으로 구체화했다. 전체-부분 관계나 위치/사회적 처우 서술은 evidence에 없으므로 structural_composition 등은 해당 없음. server_response는 PASS이나 taxonomy type mislabel은 composition_issues/anti_patterns로 검출되지 않는 범주여서 PASS만으로 accept할 근거가 되지 않는다. packet 내 단일 evidence로 타입 판정에는 충분하므로 defer가 아닌 repair를 선택했다."
+  },
+  "E24-H3-03-A_REPO_H3-05": {
+    "action": "accept_report",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "packet에는 concept 1개(JSON추출유틸)와 feature 1개(코드블록처리방식, essential_feature, ev4)만 존재한다. server_response는 status=PASS이고 composition_issues와 anti_patterns가 모두 비어 있어 지목된 문제가 없다. rigidity 혼합 제약은 동일 feature 이름이 둘 이상의 concept에서 서로 다른 type으로 나타날 때 적용되는데, 여기에는 concept이 하나뿐이라 비교 대상 자체가 없다. ev4는 ```json 펜스를 제거하고 첫 '{'와 마지막 '}' 사이를 잘라내는 코드로, 이 유틸의 정의적 동작(코드블록을 어떻게 처리하는지)을 그대로 기술하며 전체-부분 관계나 위치/사회적 처우를 시사하지 않는다. 따라서 structural_composition 등으로 바꿀 근거가 없고, essential_feature 유지가 증거와 모순되지 않는다. 안티패턴이 없는 상태에서 type을 임의로 재분류하는 것은 근거 없는 수정이므로 accept_report로 결정한다."
+  },
+  "E24-H3-03-CONTRACT_REPO_H3-05": {
+    "action": "defer",
+    "repaired_concepts": null,
+    "cited_evidence_ids": [
+      "ev4"
+    ],
+    "report": "packet의 유일한 evidence(ev4)는 extract_json_block 함수의 구현 코드다. 이 텍스트는 raw 문자열에서 ``` 펜스를 제거하고 첫 '{'와 마지막 '}' 사이를 잘라내 반환하며 실패 시 ValueError를 던진다는 '무엇을 어떻게 하는지'만 서술한다. 'JSON추출유틸'의 '코드블록처리방식'이 이 개념의 is-a를 형성하는 분류적 속성인지(essential_feature), 맥락 의존적 속성인지(contextual_usage), 부분-전체 관계인지(structural_composition), UFO 의미의 역할인지(functional)를 명시적으로 서술하는 문장은 어디에도 없다. 규칙 2에 따라 구현 서술만으로는 6개 taxonomy type 중 어느 것에 대해서도 direct_support가 될 수 없으므로 ev4는 out_of_scope로 분류했다. direct_support 후보가 0건이므로 규칙 3-5)에 따라 sufficiency는 insufficient다. 동일 feature 이름이 다른 concept에 나타나지 않아 전역 invariant 검사는 not_applicable이다. server_response.status가 PASS이지만, 규칙 7의 accept_report는 evidence가 현재 feature type 배정을 확정하기에 충분할 것을 요구하는데 여기서는 그 조건이 성립하지 않는다. 또한 'essential_feature가 아니다'라고 반박할 근거도 없으므로 repair도 금지된다. 따라서 defer한다. 필요한 것은 '코드블록처리방식'의 온톨로지적 성격을 명시하는 설계 문서/주석/taxonomy 정의 텍스트다.",
+    "contract_assessment": {
+      "contract_verdict": "insufficient_evidence",
+      "evidence_scope": {
+        "source_policy": "packet_only",
+        "used_evidence_ids": [
+          "ev4"
+        ],
+        "outside_knowledge_used": false
+      },
+      "evidence_audit": [
+        {
+          "evidence_id": "ev4",
+          "source_kind": "code",
+          "admissibility": "out_of_scope",
+          "supported_type": null,
+          "claim_strength": "none",
+          "conflicts_with_evidence_ids": [],
+          "rationale": "함수 구현 코드만 제시한다. 펜스 제거/중괄호 슬라이싱/예외 발생이라는 동작 서술은 있으나, '코드블록처리방식'이 JSON추출유틸의 분류적 본질인지, 맥락 의존적인지, 부분-전체인지, 역할인지 등 온톨로지적 성격을 명시하는 텍스트가 전혀 없다. 심볼명 extract_json_block 역시 단독으로는 direct_support가 아니다."
+        }
+      ],
+      "feature_judgments": [
+        {
+          "concept": "JSON추출유틸",
+          "feature": "코드블록처리방식",
+          "original_type": "essential_feature",
+          "sufficiency": "insufficient",
+          "selected_type": null,
+          "evidence_ids": [
+            "ev4"
+          ],
+          "rationale": "direct_support로 분류된 evidence가 하나도 없다. ev4는 구현 서술에 그쳐 essential_feature를 확정하지도, 반박하지도 못한다. 규칙 3-5)에 따라 insufficient이며 '그나마 가까운 type' 선택은 금지된다."
+        }
+      ],
+      "invariant_checks": [
+        {
+          "feature": "코드블록처리방식",
+          "involved_concepts": [
+            "JSON추출유틸"
+          ],
+          "status": "not_applicable",
+          "target_type": null,
+          "evidence_ids": [],
+          "rationale": "이 feature 이름이 등장하는 concept이 packet 내에 하나뿐이므로 여러 concept 간 type 통일 invariant가 적용되지 않는다."
+        }
+      ],
+      "repair_plan": {
+        "allowed": false,
+        "steps": [],
+        "reject_reason": "contract_verdict가 insufficient_evidence이므로 repair 불가. 현재 type을 확정할 근거도, 다른 type으로 바꿀 근거도 packet에 없다."
+      },
+      "abstain": {
+        "required": true,
+        "reason": "insufficient_evidence",
+        "missing_evidence": [
+          {
+            "target": "JSON추출유틸.코드블록처리방식",
+            "request": "이 feature가 JSON추출유틸의 is-a를 형성하는 분류적 본질 속성인지, 아니면 맥락에 따라 달라지는 사용상 속성인지를 명시적으로 서술하는 설계 문서, taxonomy 정의, 또는 docstring 텍스트"
+          },
+          {
+            "target": "JSON추출유틸 (concept)",
+            "request": "이 concept의 온톨로지적 범주(kind/role/relator 등)와 그 feature들이 어떤 관계(부분-전체, 장소-영역, 사회적 처우 등)로 귀속되는지를 명시하는 텍스트"
+          }
+        ]
+      }
+    }
+  }
+}

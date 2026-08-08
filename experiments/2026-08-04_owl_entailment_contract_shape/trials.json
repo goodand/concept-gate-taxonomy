@@ -1,0 +1,566 @@
+{
+  "records": [
+    {
+      "trial_id": "EA-CONTRACT_FLAT-01",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "cannot_tell",
+          "Rhombus->Parallelogram": "cannot_tell",
+          "Square->Parallelogram": "cannot_tell",
+          "Square->Rectangle": "cannot_tell",
+          "Square->Rhombus": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-02",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "cannot_tell",
+          "Rhombus->Parallelogram": "cannot_tell",
+          "Square->Parallelogram": "cannot_tell",
+          "Square->Rectangle": "cannot_tell",
+          "Square->Rhombus": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-03",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "cannot_tell",
+          "Rhombus->Parallelogram": "cannot_tell",
+          "Square->Parallelogram": "cannot_tell",
+          "Square->Rectangle": "cannot_tell",
+          "Square->Rhombus": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-04",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "cannot_tell",
+          "Rhombus->Parallelogram": "cannot_tell",
+          "Square->Parallelogram": "cannot_tell",
+          "Square->Rectangle": "cannot_tell",
+          "Square->Rhombus": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-05",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "cannot_tell",
+          "Rhombus->Parallelogram": "cannot_tell",
+          "Square->Parallelogram": "cannot_tell",
+          "Square->Rectangle": "cannot_tell",
+          "Square->Rhombus": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-06",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "cannot_tell",
+          "Rhombus->Parallelogram": "cannot_tell",
+          "Square->Parallelogram": "cannot_tell",
+          "Square->Rectangle": "cannot_tell",
+          "Square->Rhombus": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-07",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "cannot_tell",
+          "Rhombus->Parallelogram": "cannot_tell",
+          "Square->Parallelogram": "cannot_tell",
+          "Square->Rectangle": "cannot_tell",
+          "Square->Rhombus": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_FLAT-08",
+      "experiment": "E-A",
+      "arm": "CONTRACT_FLAT",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "cannot_tell",
+          "Rhombus->Parallelogram": "cannot_tell",
+          "Square->Parallelogram": "cannot_tell",
+          "Square->Rectangle": "cannot_tell",
+          "Square->Rhombus": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-01",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "correct",
+          "Rhombus->Parallelogram": "correct",
+          "Square->Parallelogram": "correct",
+          "Square->Rectangle": "correct",
+          "Square->Rhombus": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-02",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "correct",
+          "Rhombus->Parallelogram": "correct",
+          "Square->Parallelogram": "correct",
+          "Square->Rectangle": "correct",
+          "Square->Rhombus": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-03",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "correct",
+          "Rhombus->Parallelogram": "correct",
+          "Square->Parallelogram": "correct",
+          "Square->Rectangle": "correct",
+          "Square->Rhombus": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-04",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "correct",
+          "Rhombus->Parallelogram": "correct",
+          "Square->Parallelogram": "correct",
+          "Square->Rectangle": "correct",
+          "Square->Rhombus": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-05",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "correct",
+          "Rhombus->Parallelogram": "correct",
+          "Square->Parallelogram": "correct",
+          "Square->Rectangle": "correct",
+          "Square->Rhombus": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-06",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "correct",
+          "Rhombus->Parallelogram": "correct",
+          "Square->Parallelogram": "correct",
+          "Square->Rectangle": "correct",
+          "Square->Rhombus": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-07",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "correct",
+          "Rhombus->Parallelogram": "correct",
+          "Square->Parallelogram": "correct",
+          "Square->Rectangle": "correct",
+          "Square->Rhombus": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EA-CONTRACT_RECORD-08",
+      "experiment": "E-A",
+      "arm": "CONTRACT_RECORD",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 5
+        },
+        "per_edge": {
+          "Rectangle->Parallelogram": "correct",
+          "Rhombus->Parallelogram": "correct",
+          "Square->Parallelogram": "correct",
+          "Square->Rectangle": "correct",
+          "Square->Rhombus": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-01",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "cannot_tell",
+          "Trapezoid->Quadrilateral": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-02",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "cannot_tell",
+          "Trapezoid->Quadrilateral": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-03",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "cannot_tell",
+          "Trapezoid->Quadrilateral": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-04",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "cannot_tell",
+          "Trapezoid->Quadrilateral": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-05",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "excess_caution_proven_as_unverified": 1,
+          "correct": 1
+        },
+        "per_edge": {
+          "Square->Rectangle": "excess_caution_proven_as_unverified",
+          "Trapezoid->Quadrilateral": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-06",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "cannot_tell",
+          "Trapezoid->Quadrilateral": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-07",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "cannot_tell": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "cannot_tell",
+          "Trapezoid->Quadrilateral": "cannot_tell"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-MCP_ONLY-08",
+      "experiment": "E-B",
+      "arm": "MCP_ONLY",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "excess_caution_proven_as_unverified": 1,
+          "correct": 1
+        },
+        "per_edge": {
+          "Square->Rectangle": "excess_caution_proven_as_unverified",
+          "Trapezoid->Quadrilateral": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-01",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "correct",
+          "Trapezoid->Quadrilateral": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-02",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "correct",
+          "Trapezoid->Quadrilateral": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-03",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "correct",
+          "Trapezoid->Quadrilateral": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-04",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "correct",
+          "Trapezoid->Quadrilateral": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-05",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "correct",
+          "Trapezoid->Quadrilateral": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-06",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "correct",
+          "Trapezoid->Quadrilateral": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-07",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "correct",
+          "Trapezoid->Quadrilateral": "correct"
+        }
+      }
+    },
+    {
+      "trial_id": "EB-PROVENANCE-08",
+      "experiment": "E-B",
+      "arm": "PROVENANCE",
+      "coded": {
+        "invalid": false,
+        "reason": null,
+        "counts": {
+          "correct": 2
+        },
+        "per_edge": {
+          "Square->Rectangle": "correct",
+          "Trapezoid->Quadrilateral": "correct"
+        }
+      }
+    }
+  ]
+}

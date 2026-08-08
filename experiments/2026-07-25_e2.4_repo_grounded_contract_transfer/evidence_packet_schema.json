@@ -1,0 +1,223 @@
+{
+  "name": "repo_evidence_packet_v1",
+  "description": "SUPERSEDED 2026-07-28 by repo_evidence_fixture_v2. Retained as the record of the v1 shape the four fixtures were migrated from (_migrate_v1_to_v2.py). Do not validate against this file. Its own description once asserted that hidden oracle fields must not reach model prompts -- nothing executed that sentence, and all four fixtures leaked through extraction_note for weeks, which is why the v2 schema lives in code as _surface.py where the checks actually run. Input packet shape for E2.4 repo-derived evidence fixtures. The model may use only evidence_items in this packet; hidden oracle fields must not be included in model prompts.",
+  "schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "record_class",
+      "experiment_id",
+      "repo",
+      "commit",
+      "extraction_policy",
+      "run_pipeline_input",
+      "candidate_concepts",
+      "evidence_items",
+      "server_response"
+    ],
+    "properties": {
+      "record_class": {
+        "type": "string",
+        "enum": [
+          "repo_evidence_packet"
+        ]
+      },
+      "experiment_id": {
+        "type": "string",
+        "enum": [
+          "E2.4"
+        ]
+      },
+      "repo": {
+        "type": "string",
+        "enum": [
+          "goodand/concept-gate-taxonomy"
+        ]
+      },
+      "commit": {
+        "type": "string",
+        "description": "Commit SHA from which the evidence items were extracted."
+      },
+      "extraction_policy": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "allowed_sources",
+          "disallowed_sources",
+          "outside_knowledge_policy"
+        ],
+        "properties": {
+          "allowed_sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "disallowed_sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outside_knowledge_policy": {
+            "type": "string",
+            "enum": [
+              "forbidden"
+            ]
+          }
+        }
+      },
+      "run_pipeline_input": {
+        "type": "array",
+        "description": "Exact concept JSON submitted to run_pipeline to produce server_response. Kept separate from candidate_concepts because model-facing candidates cite evidence_refs instead of inline evidence text.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "features"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "feature",
+                  "type",
+                  "evidence"
+                ],
+                "properties": {
+                  "feature": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "essential_feature",
+                      "contextual_usage",
+                      "locational",
+                      "functional",
+                      "social_treatment",
+                      "structural_composition"
+                    ]
+                  },
+                  "evidence": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "candidate_concepts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "features"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "features": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "feature",
+                  "type",
+                  "evidence_refs"
+                ],
+                "properties": {
+                  "feature": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "essential_feature",
+                      "contextual_usage",
+                      "locational",
+                      "functional",
+                      "social_treatment",
+                      "structural_composition"
+                    ]
+                  },
+                  "evidence_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "evidence_items": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "evidence_id",
+            "source_path",
+            "source_kind",
+            "locator",
+            "text",
+            "text_sha256",
+            "extraction_note"
+          ],
+          "properties": {
+            "evidence_id": {
+              "type": "string"
+            },
+            "source_path": {
+              "type": "string"
+            },
+            "source_kind": {
+              "type": "string",
+              "enum": [
+                "code",
+                "doc",
+                "test",
+                "fixture",
+                "commit_message"
+              ]
+            },
+            "locator": {
+              "type": "string",
+              "description": "Line range, symbol path, test id, or commit id used only for provenance."
+            },
+            "text": {
+              "type": "string",
+              "description": "Exact evidence excerpt supplied to the model."
+            },
+            "text_sha256": {
+              "type": "string"
+            },
+            "extraction_note": {
+              "type": "string",
+              "description": "Why this item is in the packet. This note is provenance, not independent evidence."
+            }
+          }
+        }
+      },
+      "server_response": {
+        "type": "object",
+        "description": "The run_pipeline/server response observed for candidate_concepts."
+      }
+    }
+  }
+}

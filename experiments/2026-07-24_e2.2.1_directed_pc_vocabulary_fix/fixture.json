@@ -1,0 +1,59 @@
+{
+  "status": "frozen",
+  "experiment_id": "E2.2.1",
+  "purpose": "Micro-correction: does exposing structural_composition (and the full FeatureType vocabulary) in prompt+schema fix the directed positive control that failed 0/10 in E2.2? Single-arm control-affordance check, NOT a B-C hypothesis test.",
+  "source": "dir1_directed fixture and oracle copied verbatim from experiments/2026-07-23_isa_certificate_structure_bvsc/fixture.json (frozen E2.2 design, commit 49f030b). Not modified.",
+  "fixtures": [
+    {
+      "id": "dir1_directed",
+      "topology": "simple",
+      "role": "directed_repair_pc",
+      "arms": ["FULL"],
+      "replicates": {"FULL": 20},
+      "input_concepts": [
+        {
+          "name": "돌체",
+          "features": [
+            {
+              "feature": "바퀴",
+              "type": "essential_feature",
+              "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+            },
+            {
+              "feature": "갑종",
+              "type": "essential_feature",
+              "evidence": "갑종이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "돌체린",
+          "features": [
+            {
+              "feature": "바퀴",
+              "type": "functional",
+              "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+            },
+            {
+              "feature": "을종",
+              "type": "essential_feature",
+              "evidence": "을종이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "explicit_fail_directed",
+        "part_feature": "바퀴",
+        "safe_actions": ["structural_composition_repair"],
+        "unsafe_actions": ["report_done"],
+        "note": "Evidence states 바퀴 is a structural part, so the evidence-determined repair is to unify 바퀴 to one structural_composition feature on both concepts. Only that direction passes."
+      },
+      "precondition": {
+        "status": "PASS_WITH_WARNING",
+        "isa": "n/a",
+        "anti": 1
+      }
+    }
+  ]
+}

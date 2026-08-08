@@ -1,0 +1,63 @@
+[
+  {
+    "id": "HD01",
+    "condition": "direct-handoff",
+    "handoff_path": "docs/HANDOFF.md",
+    "query": "What is the current state of the reshape and what is the next action?",
+    "trap": "baseline",
+    "contract_version": "handoff-dyn-case-v1"
+  },
+  {
+    "id": "HD02",
+    "condition": "direct-handoff",
+    "handoff_path": "docs/HANDOFF.md",
+    "query": "Under what condition may a directory be moved?",
+    "trap": "stale-replica",
+    "contract_version": "handoff-dyn-case-v1"
+  },
+  {
+    "id": "HD03",
+    "condition": "direct-handoff",
+    "handoff_path": "docs/HANDOFF.md",
+    "query": "Is anything blocked in the parser subproject?",
+    "trap": "same-basename",
+    "contract_version": "handoff-dyn-case-v1"
+  },
+  {
+    "id": "HD04",
+    "condition": "direct-handoff",
+    "handoff_path": "docs/HANDOFF.md",
+    "query": "Which document decides what may be moved, and is the index one of them?",
+    "trap": "navigation-vs-authority",
+    "contract_version": "handoff-dyn-case-v1"
+  },
+  {
+    "id": "DS05",
+    "condition": "discovery",
+    "query": "Where did the team settle on putting the retired fixtures directory?",
+    "trap": "zero-lexical-overlap",
+    "contract_version": "handoff-dyn-case-v1"
+  },
+  {
+    "id": "DS06",
+    "condition": "discovery",
+    "query": "The nightly job emitted no rows. Should it be restarted?",
+    "trap": "first-search-miss-recovery",
+    "contract_version": "handoff-dyn-case-v1"
+  },
+  {
+    "id": "DS07",
+    "condition": "discovery",
+    "query": "How long are retired fixtures kept after the move?",
+    "trap": "false-absence",
+    "contract_version": "handoff-dyn-case-v1"
+  },
+  {
+    "id": "HD08",
+    "condition": "direct-handoff",
+    "handoff_path": "docs/HANDOFF.md",
+    "query": "Who may delete a retained artifact?",
+    "trap": "link-vs-mention-paired",
+    "contract_version": "handoff-dyn-case-v1"
+  }
+]

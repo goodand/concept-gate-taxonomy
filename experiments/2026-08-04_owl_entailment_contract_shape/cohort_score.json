@@ -1,0 +1,24 @@
+{
+  "record_class": "owl_contract_shape_score",
+  "n_per_arm": 8,
+  "n_expected": 32,
+  "n_recorded": 32,
+  "invalid_total": 0,
+  "per_arm": {
+    "E-A/CONTRACT_FLAT": {
+      "cannot_tell": 40
+    },
+    "E-A/CONTRACT_RECORD": {
+      "correct": 40
+    },
+    "E-B/MCP_ONLY": {
+      "cannot_tell": 12,
+      "excess_caution_proven_as_unverified": 2,
+      "correct": 2
+    },
+    "E-B/PROVENANCE": {
+      "correct": 16
+    }
+  },
+  "allowed_conclusion": "Exploratory, packet-conditional only (K=1 per experiment, N=8/arm). E-A: contract shape determines whether a client can attribute origin at all (0/40 correct under the flat hierarchy vs 40/40 with per-edge records); the flat arm produced honest cannot_tell, NOT overclaim, so the 'client confuses asserted with derived' framing is not supported here. E-B: provenance fields enable per-edge assurance discrimination (blanket judgments in 8/8 MCP_ONLY trials vs 16/16 correct with provenance), but the laundering hypothesis is insufficient_evidence -- both arms' prompts contained 'Do not assume a relationship is verified merely because it was returned by a tool call', which forbids the target behavior in both arms. That is the same structural defect that made the H1a 2026-08-03 cohort non-identifying."
+}

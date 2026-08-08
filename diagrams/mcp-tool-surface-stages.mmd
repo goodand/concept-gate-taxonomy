@@ -1,0 +1,10 @@
+flowchart LR
+    A[normalize_input]
+    B[lint_before_reasoning]
+    C[build_ontology]
+    D[classify_facts]
+    E[diagnose_model]
+    F[explain_result]
+    G[repair_request]
+
+    A --> B --> C --> D --> E --> F --> G

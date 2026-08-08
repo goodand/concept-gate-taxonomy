@@ -1,0 +1,20 @@
+flowchart TD
+    A["equivalent_to item"] --> B{"익명 제약식인가?"}
+    B -->|Yes| X1["버림"]
+    B -->|No| C{"named class 인가?"}
+    C -->|No| X1
+    C -->|Yes| D{"Thing / Nothing 인가?"}
+    D -->|Yes| X2["버림"]
+    D -->|No| E{"gUFO imported class 인가?"}
+    E -->|Yes| X3["버림"]
+    E -->|No| F["union-find merge"]
+
+    F --> G{"group size > 1 ?"}
+    G -->|No| X4["단일 원소 그룹 버림"]
+    G -->|Yes| H["equivalence_groups에 추가"]
+
+    H --> I{"representatives 필요?"}
+    I -->|No| J["skip"]
+    I -->|Yes| K["결정적 대표 선택<br/>예: 사전순 최소"]
+
+    K --> L["주의: convenience field이지<br/>논리적 사실 그 자체는 아님"]

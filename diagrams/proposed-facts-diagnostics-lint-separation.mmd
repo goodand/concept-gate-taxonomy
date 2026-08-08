@@ -1,0 +1,39 @@
+flowchart TD
+    A[Natural Language / LLM Proposal]
+    B[cg_normalizer]
+    C[concept JSON]
+    D[lint_before_reasoning]
+    E[cg_owl.build_ontology]
+    F[HermiT]
+    G[classify_facts]
+    H[diagnose_model]
+
+    I[facts]
+    I1[direct_hierarchy]
+    I2[equivalence_groups]
+    I3[representatives / quotient mapping]
+    I4[unsatisfiable]
+    I5[stereotypes]
+    I6[asserted vs inferred provenance]
+
+    J[diagnostics]
+    J1[accidental equivalence candidate]
+    J2[defined-by-parthood-only]
+    J3[stereotype conflict in equivalence group]
+    J4[collapse-to-existing-class]
+    J5[weak genus / suspicious modeling]
+
+    K[client / MCP]
+    K1[show logical facts]
+    K2[warn about modeling collapse]
+    K3[request repair or re-proposal]
+
+    A --> B --> C --> D --> E --> F --> G --> I
+    F --> H
+    G --> H
+    H --> J
+    I --> K
+    J --> K
+    K --> K1
+    K --> K2
+    K --> K3

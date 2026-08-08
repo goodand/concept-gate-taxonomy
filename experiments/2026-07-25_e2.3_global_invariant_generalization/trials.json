@@ -1,0 +1,2392 @@
+{
+  "record_class": "empirical_trial_set",
+  "protocol": {
+    "experiment_id": "E2.3",
+    "design_commit": "ea4767d4e0784adabaa97eeca2ea85accf832261"
+  },
+  "results": [
+    {
+      "fixture": "baseline_directed",
+      "arm": "CONTROL",
+      "trial": 1,
+      "prompt_sha256": "97df98d4784d7ab853653e281306d111b5de471238be01b5ef17764b9fafcadc",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-001",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"functional\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern detected: 손잡이 feature has inconsistent rigidity across concepts (essential_feature in 카페린 vs functional in 카페토). Root cause: 카페린의 손잡이 evidence describes structural composition (\\\"구성 부분이다\\\"), which should be typed as structural_composition, not essential_feature. Repair realigns feature type with its evidence and resolves rigidity conflict.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "functional",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern detected: 손잡이 feature has inconsistent rigidity across concepts (essential_feature in 카페린 vs functional in 카페토). Root cause: 카페린의 손잡이 evidence describes structural composition (\"구성 부분이다\"), which should be typed as structural_composition, not essential_feature. Repair realigns feature type with its evidence and resolves rigidity conflict."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "CONTROL",
+      "trial": 2,
+      "prompt_sha256": "97df98d4784d7ab853653e281306d111b5de471238be01b5ef17764b9fafcadc",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-009",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"functional\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"카페린의 '손잡이' feature type을 essential_feature에서 structural_composition으로 수정했습니다. 증거 '카페린의 손잡이는 카페린 몸체의 구성 부분이다'는 명확히 부분-전체 관계(part-of)를 서술하므로 structural_composition 분류가 정확합니다. 카페토의 '손잡이'는 functional으로 유지됩니다 (기능적 역할 증거). 이 수정으로 MixRig anti-pattern이 해결되며, 같은 이름의 features가 서로 다른 개념에서 다른 의미/역할을 가지는 것이 명확해집니다. 두 손잡이 모두 IS-A DAG 외부의 features가 되어 obligations 검증을 통과할 것으로 예상됩니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "functional",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "카페린의 '손잡이' feature type을 essential_feature에서 structural_composition으로 수정했습니다. 증거 '카페린의 손잡이는 카페린 몸체의 구성 부분이다'는 명확히 부분-전체 관계(part-of)를 서술하므로 structural_composition 분류가 정확합니다. 카페토의 '손잡이'는 functional으로 유지됩니다 (기능적 역할 증거). 이 수정으로 MixRig anti-pattern이 해결되며, 같은 이름의 features가 서로 다른 개념에서 다른 의미/역할을 가지는 것이 명확해집니다. 두 손잡이 모두 IS-A DAG 외부의 features가 되어 obligations 검증을 통과할 것으로 예상됩니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "topology_directed",
+      "arm": "A_TOPOLOGY",
+      "trial": 1,
+      "prompt_sha256": "451e2c66e4e405110f4cb3dc2da31af46dbd53277cbc36e851e8e23f6f0b222e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-002",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"엔진박스\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다\"}, {\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다\"}]}, {\"name\": \"엔진박스보조\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스보조의 구동축은 엔진박스보조 몸체의 구성 부분이다\"}, {\"feature\": \"보조단자\", \"type\": \"essential_feature\", \"evidence\": \"보조단자가 항목에 기록되어 있다\"}]}, {\"name\": \"엔진박스확장\", \"features\": [{\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스확장의 냉각판은 엔진박스확장 몸체의 구성 부분이다\"}, {\"feature\": \"확장슬롯\", \"type\": \"essential_feature\", \"evidence\": \"확장슬롯이 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"anti_patterns에서 지목한 rigidity 혼합 문제를 해결했습니다. 구동축과 냉각판은 엔진박스의 증거에서 '구성 부분'이라는 명확한 부분-전체 관계를 나타내고 있으므로, 관련된 모든 concept(엔진박스, 엔진박스보조, 엔진박스확장)에서 structural_composition으로 타입을 통일했습니다. 각 concept의 증거도 구조적 부분 관계를 명시하도록 수정했습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "엔진박스",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스보조",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스보조의 구동축은 엔진박스보조 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "보조단자",
+                "type": "essential_feature",
+                "evidence": "보조단자가 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스확장",
+            "features": [
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스확장의 냉각판은 엔진박스확장 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "확장슬롯",
+                "type": "essential_feature",
+                "evidence": "확장슬롯이 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "anti_patterns에서 지목한 rigidity 혼합 문제를 해결했습니다. 구동축과 냉각판은 엔진박스의 증거에서 '구성 부분'이라는 명확한 부분-전체 관계를 나타내고 있으므로, 관련된 모든 concept(엔진박스, 엔진박스보조, 엔진박스확장)에서 structural_composition으로 타입을 통일했습니다. 각 concept의 증거도 구조적 부분 관계를 명시하도록 수정했습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "topology_directed",
+      "arm": "A_TOPOLOGY",
+      "trial": 2,
+      "prompt_sha256": "451e2c66e4e405110f4cb3dc2da31af46dbd53277cbc36e851e8e23f6f0b222e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-010",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"엔진박스\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다\"}, {\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다\"}]}, {\"name\": \"엔진박스보조\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다\"}, {\"feature\": \"보조단자\", \"type\": \"essential_feature\", \"evidence\": \"보조단자가 항목에 기록되어 있다\"}]}, {\"name\": \"엔진박스확장\", \"features\": [{\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다\"}, {\"feature\": \"확장슬롯\", \"type\": \"essential_feature\", \"evidence\": \"확장슬롯이 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern이 두 개 감지되었습니다. 구동축과 냉각판이 여러 concepts에서 rigidity 혼합으로 기록되어 있습니다:\\n- 구동축: 엔진박스에서 essential_feature(구성 부분), 엔진박스보조에서 functional(회전 동력 전달 기능)\\n- 냉각판: 엔진박스에서 essential_feature(구성 부분), 엔진박스확장에서 functional(열 방출 기능)\\n\\n이들의 실제 성격은 물리적/구조적으로 전체에 결합된 구성 요소입니다. 모든 관련 concepts에서 structural_composition으로 통일했습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "엔진박스",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스보조",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다"
+              },
+              {
+                "feature": "보조단자",
+                "type": "essential_feature",
+                "evidence": "보조단자가 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스확장",
+            "features": [
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다"
+              },
+              {
+                "feature": "확장슬롯",
+                "type": "essential_feature",
+                "evidence": "확장슬롯이 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern이 두 개 감지되었습니다. 구동축과 냉각판이 여러 concepts에서 rigidity 혼합으로 기록되어 있습니다:\n- 구동축: 엔진박스에서 essential_feature(구성 부분), 엔진박스보조에서 functional(회전 동력 전달 기능)\n- 냉각판: 엔진박스에서 essential_feature(구성 부분), 엔진박스확장에서 functional(열 방출 기능)\n\n이들의 실제 성격은 물리적/구조적으로 전체에 결합된 구성 요소입니다. 모든 관련 concepts에서 structural_composition으로 통일했습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_ONLY",
+      "trial": 1,
+      "prompt_sha256": "0d73f739d11659a691f8306030bdb43330cc90a8eae7e47a5dab19b96bbcd414",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-003",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴 감지: 손잡이의 rigidity 혼합 (essential_feature vs functional). 카페린의 증거가 '구성 부분'이라는 전체-부분 관계를 명시적으로 기술하므로, 손잡이를 structural_composition으로 통일. 카페토의 경우도 손잡이는 구조적으로 물체의 일부이며, functional은 그것이 수행하는 역할일 뿐이다. 따라서 모든 개념에서 structural_composition으로 타입 통일.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴 감지: 손잡이의 rigidity 혼합 (essential_feature vs functional). 카페린의 증거가 '구성 부분'이라는 전체-부분 관계를 명시적으로 기술하므로, 손잡이를 structural_composition으로 통일. 카페토의 경우도 손잡이는 구조적으로 물체의 일부이며, functional은 그것이 수행하는 역할일 뿐이다. 따라서 모든 개념에서 structural_composition으로 타입 통일."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_ONLY",
+      "trial": 2,
+      "prompt_sha256": "0d73f739d11659a691f8306030bdb43330cc90a8eae7e47a5dab19b96bbcd414",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-008",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern detected on feature \\\"손잡이\\\" across \\\"카페린\\\" and \\\"카페토\\\". The feature was inconsistently typed as essential_feature and functional. Unified type to structural_composition across both concepts because: (1) \\\"카페린\\\"'s evidence explicitly describes constituent part-whole relationship (\\\"구성 부분이다\\\"), matching structural_composition definition; (2) A handle is fundamentally a structural component physically composed into the object; (3) Functional role is a consequence, not the core nature. Both concepts now consistently represent the handle as a structural component.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern detected on feature \"손잡이\" across \"카페린\" and \"카페토\". The feature was inconsistently typed as essential_feature and functional. Unified type to structural_composition across both concepts because: (1) \"카페린\"'s evidence explicitly describes constituent part-whole relationship (\"구성 부분이다\"), matching structural_composition definition; (2) A handle is fundamentally a structural component physically composed into the object; (3) Functional role is a consequence, not the core nature. Both concepts now consistently represent the handle as a structural component."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_PARAPHRASE",
+      "trial": 1,
+      "prompt_sha256": "67efc7c61b9e7d92535f9098697489d625633bf75cca31a8188c55cd50c68a6b",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-004",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토의 손잡이는 카페토 몸체의 구성 부분이며, 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern 적발됨: \\\"손잡이\\\"가 카페린에서는 essential_feature, 카페토에서는 functional로 분류되었으나, 사용자 지시의 핵심 원칙에 따라 같은 feature는 시스템 전체에서 하나의 정체성만 가져야 합니다. 카페린의 증거 \\\"카페린의 손잡이는 카페린 몸체의 구성 부분이다\\\"는 명확히 전체-부분 관계를 지칭하므로, \\\"손잡이\\\"의 본질은 structural_composition입니다. 이를 반영하여 두 개념 모두 손잡이를 structural_composition으로 통일합니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토의 손잡이는 카페토 몸체의 구성 부분이며, 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern 적발됨: \"손잡이\"가 카페린에서는 essential_feature, 카페토에서는 functional로 분류되었으나, 사용자 지시의 핵심 원칙에 따라 같은 feature는 시스템 전체에서 하나의 정체성만 가져야 합니다. 카페린의 증거 \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"는 명확히 전체-부분 관계를 지칭하므로, \"손잡이\"의 본질은 structural_composition입니다. 이를 반영하여 두 개념 모두 손잡이를 structural_composition으로 통일합니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_PARAPHRASE",
+      "trial": 2,
+      "prompt_sha256": "67efc7c61b9e7d92535f9098697489d625633bf75cca31a8188c55cd50c68a6b",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-006",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 패턴 위반 감지됨: 같은 feature \\\"손잡이\\\"가 카페린에서는 essential_feature, 카페토에서는 functional로 분류됨. \\n\\n증거 분석:\\n- 카페린: \\\"구성 부분\\\"이라는 명시적 전체-부분 관계 서술\\n- 카페토: 기능적 역할만 언급했으나, 손잡이의 물리적 정체성은 구성 부분임\\n\\n결론: 손잡이의 본질은 두 개념 모두에서 structural_composition (부분-전체 관계)입니다. 기능적 역할은 그 부분이 수행하는 이차적 특성이며, feature의 type을 변경하지 않습니다.\\n\\n수정 내용:\\n- 카페린 손잡이: essential_feature → structural_composition\\n- 카페토 손잡이: functional → structural_composition\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 패턴 위반 감지됨: 같은 feature \"손잡이\"가 카페린에서는 essential_feature, 카페토에서는 functional로 분류됨. \n\n증거 분석:\n- 카페린: \"구성 부분\"이라는 명시적 전체-부분 관계 서술\n- 카페토: 기능적 역할만 언급했으나, 손잡이의 물리적 정체성은 구성 부분임\n\n결론: 손잡이의 본질은 두 개념 모두에서 structural_composition (부분-전체 관계)입니다. 기능적 역할은 그 부분이 수행하는 이차적 특성이며, feature의 type을 변경하지 않습니다.\n\n수정 내용:\n- 카페린 손잡이: essential_feature → structural_composition\n- 카페토 손잡이: functional → structural_composition"
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "decoy_directed",
+      "arm": "A_DECOY",
+      "trial": 1,
+      "prompt_sha256": "e9bcf828e5f17a8b3f138d58ab4d8da9df6c53ac65d36a44950afd27368c3cd6",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-005",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"차체프레임\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"갑등급\", \"type\": \"essential_feature\", \"evidence\": \"갑등급이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"차체프레임신형\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임신형에서 고정핀은 고급 모델임을 나타내는 상징적 장치로 취급된다\"}, {\"feature\": \"을등급\", \"type\": \"essential_feature\", \"evidence\": \"을등급이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Rigidity mixing in feature '고정핀' resolved. First evidence explicitly describes part-whole relationship ('구성 부분이다'), establishing structural composition as the fundamental nature. Both concepts unified to structural_composition type. The symbolic treatment in 차체프레임신형 is a secondary social layer that does not negate the structural component relationship.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "차체프레임",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑등급",
+                "type": "essential_feature",
+                "evidence": "갑등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "차체프레임신형",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임신형에서 고정핀은 고급 모델임을 나타내는 상징적 장치로 취급된다"
+              },
+              {
+                "feature": "을등급",
+                "type": "essential_feature",
+                "evidence": "을등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Rigidity mixing in feature '고정핀' resolved. First evidence explicitly describes part-whole relationship ('구성 부분이다'), establishing structural composition as the fundamental nature. Both concepts unified to structural_composition type. The symbolic treatment in 차체프레임신형 is a secondary social layer that does not negate the structural component relationship."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "decoy_directed",
+      "arm": "A_DECOY",
+      "trial": 2,
+      "prompt_sha256": "e9bcf828e5f17a8b3f138d58ab4d8da9df6c53ac65d36a44950afd27368c3cd6",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-007",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"차체프레임\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"갑등급\", \"type\": \"essential_feature\", \"evidence\": \"갑등급이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"차체프레임신형\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임신형의 고정핀은 신형 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"을등급\", \"type\": \"essential_feature\", \"evidence\": \"을등급이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴에서 지적된 고정핀의 rigidity 혼합을 해결하기 위해 두 개념 모두에서 type을 structural_composition으로 통일했습니다. 첫 번째 개념의 증거가 명확하게 '구성 부분이다'라는 전체-부분 관계를 서술하고 있으므로, 이를 feature의 실제 성격으로 판단했습니다. 두 번째 개념의 원래 증거는 사회적 처우(상징적 용법)만 기술했으나, 이는 구조적 부분-전체 관계라는 더 기본적 성격에 대한 부차적 측면입니다. 신형 모델도 원래 프레임의 구조적 변형이므로, 고정핀은 동일한 구조적 위상을 유지해야 합니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "차체프레임",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑등급",
+                "type": "essential_feature",
+                "evidence": "갑등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "차체프레임신형",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임신형의 고정핀은 신형 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "을등급",
+                "type": "essential_feature",
+                "evidence": "을등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴에서 지적된 고정핀의 rigidity 혼합을 해결하기 위해 두 개념 모두에서 type을 structural_composition으로 통일했습니다. 첫 번째 개념의 증거가 명확하게 '구성 부분이다'라는 전체-부분 관계를 서술하고 있으므로, 이를 feature의 실제 성격으로 판단했습니다. 두 번째 개념의 원래 증거는 사회적 처우(상징적 용법)만 기술했으나, 이는 구조적 부분-전체 관계라는 더 기본적 성격에 대한 부차적 측면입니다. 신형 모델도 원래 프레임의 구조적 변형이므로, 고정핀은 동일한 구조적 위상을 유지해야 합니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_ONLY",
+      "trial": 3,
+      "prompt_sha256": "0d73f739d11659a691f8306030bdb43330cc90a8eae7e47a5dab19b96bbcd414",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-013",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig (Mixed Rigidity) 안티패턴 감지: \\\"손잡이\\\" feature가 카페린(essential_feature)과 카페토(functional)에서 서로 다른 type으로 기록됨. 카페린 증거 \\\"카페린 몸체의 구성 부분이다\\\"는 손잡이의 근본적 성격(물리적 구성 부분)을 명확히 나타냄. 카페토 증거 \\\"운반 기능을 제공한다\\\"는 그 부분의 기능적 역할을 설명하지만, 손잡이가 구조적 부분이라는 본질을 바꾸지 않음. 따라서 두 개념에서 모두 structural_composition으로 통일하여 rigidity 혼합을 해결함.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig (Mixed Rigidity) 안티패턴 감지: \"손잡이\" feature가 카페린(essential_feature)과 카페토(functional)에서 서로 다른 type으로 기록됨. 카페린 증거 \"카페린 몸체의 구성 부분이다\"는 손잡이의 근본적 성격(물리적 구성 부분)을 명확히 나타냄. 카페토 증거 \"운반 기능을 제공한다\"는 그 부분의 기능적 역할을 설명하지만, 손잡이가 구조적 부분이라는 본질을 바꾸지 않음. 따라서 두 개념에서 모두 structural_composition으로 통일하여 rigidity 혼합을 해결함."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_ONLY",
+      "trial": 4,
+      "prompt_sha256": "0d73f739d11659a691f8306030bdb43330cc90a8eae7e47a5dab19b96bbcd414",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-015",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"손잡이 feature의 rigidity 혼합을 해결함. 카페린의 증거(\\\"구성 부분\\\")가 명확한 부분-전체 관계를 나타내므로, 손잡이는 구조적 구성 요소(structural_composition)로 통일. 카페토의 \\\"운반 기능\\\"은 그 구성 부분의 역할을 설명할 뿐, feature 성격을 변경하지 않음.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "손잡이 feature의 rigidity 혼합을 해결함. 카페린의 증거(\"구성 부분\")가 명확한 부분-전체 관계를 나타내므로, 손잡이는 구조적 구성 요소(structural_composition)로 통일. 카페토의 \"운반 기능\"은 그 구성 부분의 역할을 설명할 뿐, feature 성격을 변경하지 않음."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_ONLY",
+      "trial": 5,
+      "prompt_sha256": "0d73f739d11659a691f8306030bdb43330cc90a8eae7e47a5dab19b96bbcd414",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-019",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern detected for feature \\\"손잡이\\\" across \\\"카페린\\\" and \\\"카페토\\\". The feature was classified as essential_feature in 카페린 (based on part-whole composition) and functional in 카페토 (based on functional role). Unified type to structural_composition for both concepts, as the evidence in both cases describes or implies a physical part-whole relationship. The functional role is consequential to the structural composition. No evidence rewriting needed; types corrected to reflect actual feature character.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern detected for feature \"손잡이\" across \"카페린\" and \"카페토\". The feature was classified as essential_feature in 카페린 (based on part-whole composition) and functional in 카페토 (based on functional role). Unified type to structural_composition for both concepts, as the evidence in both cases describes or implies a physical part-whole relationship. The functional role is consequential to the structural composition. No evidence rewriting needed; types corrected to reflect actual feature character."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_ONLY",
+      "trial": 6,
+      "prompt_sha256": "0d73f739d11659a691f8306030bdb43330cc90a8eae7e47a5dab19b96bbcd414",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-025",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"손잡이 feature의 rigidity 혼합을 수정했습니다. 카페린에서는 essential_feature, 카페토에서는 functional로 서로 다른 type이 할당되었으나, 두 경우 모두 손잡이는 물체의 구조적 구성 부분입니다. 카페린의 증거는 이를 직접 명시하고, 카페토의 증거도 손잡이가 운반 기능을 제공한다는 것을 통해 구조적 요소임을 나타냅니다. 따라서 두 개념 모두에서 손잡이의 type을 structural_composition으로 통일했습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "손잡이 feature의 rigidity 혼합을 수정했습니다. 카페린에서는 essential_feature, 카페토에서는 functional로 서로 다른 type이 할당되었으나, 두 경우 모두 손잡이는 물체의 구조적 구성 부분입니다. 카페린의 증거는 이를 직접 명시하고, 카페토의 증거도 손잡이가 운반 기능을 제공한다는 것을 통해 구조적 요소임을 나타냅니다. 따라서 두 개념 모두에서 손잡이의 type을 structural_composition으로 통일했습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_ONLY",
+      "trial": 7,
+      "prompt_sha256": "0d73f739d11659a691f8306030bdb43330cc90a8eae7e47a5dab19b96bbcd414",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-027",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Rigidity 혼합(MixRig) 안티패턴 감지: \\\"손잡이\\\" feature가 두 concept에서 상충되는 타입으로 분류됨.\\n\\n원인: 카페린에서는 essential_feature, 카페토에서는 functional로 표기.\\n\\n수정 원리: 손잡이의 실제 성격은 카페린의 evidence에 명시된 부분-전체 관계(\\\"구성 부분\\\")에서 도출됨. 손잡이는 구조적으로 대상물의 물리적 구성 요소이며, 운반 기능 제공은 그 구조적 특성으로부터 파생되는 기능적 역할임. 따라서 두 concept 모두에서 structural_composition으로 통일.\\n\\nEvidence 문자열은 각 concept의 고유한 근거를 반영하여 유지.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Rigidity 혼합(MixRig) 안티패턴 감지: \"손잡이\" feature가 두 concept에서 상충되는 타입으로 분류됨.\n\n원인: 카페린에서는 essential_feature, 카페토에서는 functional로 표기.\n\n수정 원리: 손잡이의 실제 성격은 카페린의 evidence에 명시된 부분-전체 관계(\"구성 부분\")에서 도출됨. 손잡이는 구조적으로 대상물의 물리적 구성 요소이며, 운반 기능 제공은 그 구조적 특성으로부터 파생되는 기능적 역할임. 따라서 두 concept 모두에서 structural_composition으로 통일.\n\nEvidence 문자열은 각 concept의 고유한 근거를 반영하여 유지."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_ONLY",
+      "trial": 8,
+      "prompt_sha256": "0d73f739d11659a691f8306030bdb43330cc90a8eae7e47a5dab19b96bbcd414",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-034",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토의 손잡이는 카페토 몸체의 구성 부분이다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 언다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴으로 인한 rigidity 혼합 해결. 손잡이는 카페린, 카페토 모두에서 각각의 몸체를 구성하는 물리적 부분이므로, 모든 개념에서 structural_composition으로 타입을 통일. 카페토의 증거도 구조적 부분-전체 관계를 명시하도록 조정하여 타입과 증거의 일관성 확보.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토의 손잡이는 카페토 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 언다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴으로 인한 rigidity 혼합 해결. 손잡이는 카페린, 카페토 모두에서 각각의 몸체를 구성하는 물리적 부분이므로, 모든 개념에서 structural_composition으로 타입을 통일. 카페토의 증거도 구조적 부분-전체 관계를 명시하도록 조정하여 타입과 증거의 일관성 확보."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_ONLY",
+      "trial": 9,
+      "prompt_sha256": "0d73f739d11659a691f8306030bdb43330cc90a8eae7e47a5dab19b96bbcd414",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-037",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Rigidity 혼합(MixRig) 문제를 발견하여 수정합니다. '손잡이' feature가 두 concept에서 다른 type으로 기록되어 있었습니다:\\n- 카페린: essential_feature (증거: \\\"구성 부분\\\")\\n- 카페토: functional (증거: \\\"기능 제공\\\")\\n\\n카페린의 증거 '카페린의 손잡이는 카페린 몸체의 구성 부분이다'는 명확한 part-whole 관계를 서술하며, 이는 structural_composition 정의에 직접 부합합니다. 카페토의 증거는 손잡이의 기능적 역할을 설명하지만, 이는 손잡이가 구조적으로 물체의 일부라는 본질을 부정하지 않습니다.\\n\\n따라서 '손잡이'의 feature type을 모든 관련 concept에서 'structural_composition'으로 통일했습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Rigidity 혼합(MixRig) 문제를 발견하여 수정합니다. '손잡이' feature가 두 concept에서 다른 type으로 기록되어 있었습니다:\n- 카페린: essential_feature (증거: \"구성 부분\")\n- 카페토: functional (증거: \"기능 제공\")\n\n카페린의 증거 '카페린의 손잡이는 카페린 몸체의 구성 부분이다'는 명확한 part-whole 관계를 서술하며, 이는 structural_composition 정의에 직접 부합합니다. 카페토의 증거는 손잡이의 기능적 역할을 설명하지만, 이는 손잡이가 구조적으로 물체의 일부라는 본질을 부정하지 않습니다.\n\n따라서 '손잡이'의 feature type을 모든 관련 concept에서 'structural_composition'으로 통일했습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_ONLY",
+      "trial": 10,
+      "prompt_sha256": "0d73f739d11659a691f8306030bdb43330cc90a8eae7e47a5dab19b96bbcd414",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-040",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"\\\"손잡이\\\" feature는 두 개념에서 다른 rigidity를 갖고 있었습니다. 카페린에서는 essential_feature, 카페토에서는 functional로 분류되었으나, 이는 MixRig 안티패턴 위반입니다. \\n\\n증거 \\\"카페린의 손잡이는 카페린 몸체의 구성 부분이다\\\"는 명시적인 part-whole 관계를 나타내므로, 지시사항에 따라 \\\"손잡이\\\"의 실제 성격은 structural_composition(구조적 구성 요소)으로 결정됩니다. 손잡이가 카페토에서 운반 기능을 제공한다는 사실은 이 분류와 모순되지 않습니다 — 물리적 부분이 기능을 수행하는 것은 자연스럽습니다.\\n\\n따라서 두 개념 모두에서 \\\"손잡이\\\"를 structural_composition으로 통일했습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "\"손잡이\" feature는 두 개념에서 다른 rigidity를 갖고 있었습니다. 카페린에서는 essential_feature, 카페토에서는 functional로 분류되었으나, 이는 MixRig 안티패턴 위반입니다. \n\n증거 \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"는 명시적인 part-whole 관계를 나타내므로, 지시사항에 따라 \"손잡이\"의 실제 성격은 structural_composition(구조적 구성 요소)으로 결정됩니다. 손잡이가 카페토에서 운반 기능을 제공한다는 사실은 이 분류와 모순되지 않습니다 — 물리적 부분이 기능을 수행하는 것은 자연스럽습니다.\n\n따라서 두 개념 모두에서 \"손잡이\"를 structural_composition으로 통일했습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_PARAPHRASE",
+      "trial": 3,
+      "prompt_sha256": "67efc7c61b9e7d92535f9098697489d625633bf75cca31a8188c55cd50c68a6b",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-014",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig (Rigidity Mismatch) anti-pattern 해결. Feature \\\"손잡이\\\"가 두 concept에서 다른 type을 가지고 있었습니다.\\n\\n근거: 카페린의 증거 \\\"카페린의 손잡이는 카페린 몸체의 구성 부분이다\\\"는 명확한 전체-부분 관계를 설명하므로, 이것이 \\\"손잡이\\\"의 정체성입니다. 따라서 모든 concept에서 손잡이는 structural_composition이어야 합니다. 카페토에서 손잡이가 \\\"운반 기능을 제공한다\\\"는 것은 구조적 부분이 수행하는 역할을 설명하는 것이며, 정체성은 structural_composition입니다.\\n\\n수정 사항:\\n- 카페린 손잡이: essential_feature → structural_composition\\n- 카페토 손잡이: functional → structural_composition\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig (Rigidity Mismatch) anti-pattern 해결. Feature \"손잡이\"가 두 concept에서 다른 type을 가지고 있었습니다.\n\n근거: 카페린의 증거 \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"는 명확한 전체-부분 관계를 설명하므로, 이것이 \"손잡이\"의 정체성입니다. 따라서 모든 concept에서 손잡이는 structural_composition이어야 합니다. 카페토에서 손잡이가 \"운반 기능을 제공한다\"는 것은 구조적 부분이 수행하는 역할을 설명하는 것이며, 정체성은 structural_composition입니다.\n\n수정 사항:\n- 카페린 손잡이: essential_feature → structural_composition\n- 카페토 손잡이: functional → structural_composition"
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_PARAPHRASE",
+      "trial": 4,
+      "prompt_sha256": "67efc7c61b9e7d92535f9098697489d625633bf75cca31a8188c55cd50c68a6b",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-016",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토의 손잡이는 카페토 몸체의 구성 부분이다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"손잡이 기능이 두 개념에서 서로 다른 type으로 분류되어 MixRig 반패턴이 감지되었습니다. 카페린의 증거 \\\"카페린의 손잡이는 카페린 몸체의 구성 부분이다\\\"가 명확하게 전체-부분 관계를 서술하므로, 손잡이의 본질은 structural_composition입니다. 이를 바탕으로 카페린은 손잡이의 type을 essential_feature에서 structural_composition으로 변경하고, 카페토도 동일하게 structural_composition으로 통일하며 증거를 부분 관계를 명시하도록 수정했습니다. 이로써 \\\"손잡이\\\"는 시스템 전체에서 일관된 정체성을 갖게 됩니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토의 손잡이는 카페토 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "손잡이 기능이 두 개념에서 서로 다른 type으로 분류되어 MixRig 반패턴이 감지되었습니다. 카페린의 증거 \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"가 명확하게 전체-부분 관계를 서술하므로, 손잡이의 본질은 structural_composition입니다. 이를 바탕으로 카페린은 손잡이의 type을 essential_feature에서 structural_composition으로 변경하고, 카페토도 동일하게 structural_composition으로 통일하며 증거를 부분 관계를 명시하도록 수정했습니다. 이로써 \"손잡이\"는 시스템 전체에서 일관된 정체성을 갖게 됩니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_PARAPHRASE",
+      "trial": 5,
+      "prompt_sha256": "67efc7c61b9e7d92535f9098697489d625633bf75cca31a8188c55cd50c68a6b",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-021",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"손잡이는 카페토의 구성 부분이며, 이를 통해 운반을 용이하게 한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Feature '손잡이'의 type이 concept 간 불일치(essential_feature vs functional). MixRig anti-pattern 감지. 증거 분석 결과, 카페린의 손잡이는 명시적으로 \\\"구성 부분\\\"이고, 카페토의 손잡이도 물리적 구성 부분으로서 운반 기능을 제공하는 것으로 해석됨. 따라서 동일한 feature 정체성을 위해 두 경우 모두 structural_composition으로 통일하고, 카페토의 증거도 구성 부분 관계를 명확히 재작성함.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "손잡이는 카페토의 구성 부분이며, 이를 통해 운반을 용이하게 한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Feature '손잡이'의 type이 concept 간 불일치(essential_feature vs functional). MixRig anti-pattern 감지. 증거 분석 결과, 카페린의 손잡이는 명시적으로 \"구성 부분\"이고, 카페토의 손잡이도 물리적 구성 부분으로서 운반 기능을 제공하는 것으로 해석됨. 따라서 동일한 feature 정체성을 위해 두 경우 모두 structural_composition으로 통일하고, 카페토의 증거도 구성 부분 관계를 명확히 재작성함."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_PARAPHRASE",
+      "trial": 6,
+      "prompt_sha256": "67efc7c61b9e7d92535f9098697489d625633bf75cca31a8188c55cd50c68a6b",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-024",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토의 손잡이는 카페토 몸체의 구성 부분이다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern 감지 및 수정: 손잡이 feature가 카페린과 카페토에서 서로 다른 type (essential_feature vs functional)으로 매겨짐. 지침상 같은 feature는 시스템 전체에서 단일 정체성을 가져야 함. 증거 분석 결과, 카페린의 증거 \\\"구성 부분이다\\\"는 명시적으로 part-whole 관계를 표현하며, 카페토의 증거 \\\"기능을 제공한다\\\"는 물리적 부분의 역할을 설명하고 있음. 따라서 손잡이는 모든 concept에서 structural_composition이어야 함. 수정: (1) 카페린의 손잡이 type을 essential_feature → structural_composition, (2) 카페토의 손잡이 type을 functional → structural_composition으로 변경하고 증거를 부분 관계 명시로 일관화.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토의 손잡이는 카페토 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern 감지 및 수정: 손잡이 feature가 카페린과 카페토에서 서로 다른 type (essential_feature vs functional)으로 매겨짐. 지침상 같은 feature는 시스템 전체에서 단일 정체성을 가져야 함. 증거 분석 결과, 카페린의 증거 \"구성 부분이다\"는 명시적으로 part-whole 관계를 표현하며, 카페토의 증거 \"기능을 제공한다\"는 물리적 부분의 역할을 설명하고 있음. 따라서 손잡이는 모든 concept에서 structural_composition이어야 함. 수정: (1) 카페린의 손잡이 type을 essential_feature → structural_composition, (2) 카페토의 손잡이 type을 functional → structural_composition으로 변경하고 증거를 부분 관계 명시로 일관화."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_PARAPHRASE",
+      "trial": 7,
+      "prompt_sha256": "67efc7c61b9e7d92535f9098697489d625633bf75cca31a8188c55cd50c68a6b",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-030",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토의 손잡이는 카페토 몸체의 구성 부분으로 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴 해결: '손잡이'의 정체성 통일\\n\\n감지된 문제: '손잡이'가 ['essential_feature', 'functional']의 혼합된 rigidity로 할당됨\\n\\n해결 근거:\\n1. 카페린의 증거 \\\"카페린의 손잡이는 카페린 몸체의 구성 부분이다\\\"는 명시적인 전체-부분 관계(part-whole)를 서술합니다.\\n2. 지침에 따르면, 이러한 \\\"구성 부분이다\\\" 류의 증거는 반드시 structural_composition으로 분류되어야 합니다.\\n3. 같은 feature name은 시스템 전체에서 단 하나의 정체성만 가져야 하므로, 카페토의 '손잡이'도 동일하게 structural_composition으로 통일합니다.\\n4. 카페토의 운반 기능은 손잡이라는 구조적 부분이 수행하는 기능적 역할이지, 손잡이의 본질을 바꾸지 않습니다.\\n\\n수정 사항:\\n- 카페린 '손잡이': essential_feature → structural_composition\\n- 카페토 '손잡이': functional → structural_composition (증거는 구조적 특성과 함수를 모두 반영하도록 수정)\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토의 손잡이는 카페토 몸체의 구성 부분으로 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴 해결: '손잡이'의 정체성 통일\n\n감지된 문제: '손잡이'가 ['essential_feature', 'functional']의 혼합된 rigidity로 할당됨\n\n해결 근거:\n1. 카페린의 증거 \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"는 명시적인 전체-부분 관계(part-whole)를 서술합니다.\n2. 지침에 따르면, 이러한 \"구성 부분이다\" 류의 증거는 반드시 structural_composition으로 분류되어야 합니다.\n3. 같은 feature name은 시스템 전체에서 단 하나의 정체성만 가져야 하므로, 카페토의 '손잡이'도 동일하게 structural_composition으로 통일합니다.\n4. 카페토의 운반 기능은 손잡이라는 구조적 부분이 수행하는 기능적 역할이지, 손잡이의 본질을 바꾸지 않습니다.\n\n수정 사항:\n- 카페린 '손잡이': essential_feature → structural_composition\n- 카페토 '손잡이': functional → structural_composition (증거는 구조적 특성과 함수를 모두 반영하도록 수정)"
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_PARAPHRASE",
+      "trial": 8,
+      "prompt_sha256": "67efc7c61b9e7d92535f9098697489d625633bf75cca31a8188c55cd50c68a6b",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-031",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern detected on feature \\\"손잡이\\\" with conflicting rigidity assignments. 카페린's evidence (\\\"구성 부분이다\\\") indicates a part-whole relationship, establishing \\\"손잡이\\\" as structural_composition. This identity must be unified across all concepts. 카페토's evidence describes the functional capability of that structural component, which is consistent with structural_composition classification. Both concepts now use structural_composition with evidence preserved, resolving the rigidity conflict and satisfying the single-identity rule.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern detected on feature \"손잡이\" with conflicting rigidity assignments. 카페린's evidence (\"구성 부분이다\") indicates a part-whole relationship, establishing \"손잡이\" as structural_composition. This identity must be unified across all concepts. 카페토's evidence describes the functional capability of that structural component, which is consistent with structural_composition classification. Both concepts now use structural_composition with evidence preserved, resolving the rigidity conflict and satisfying the single-identity rule."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_PARAPHRASE",
+      "trial": 9,
+      "prompt_sha256": "67efc7c61b9e7d92535f9098697489d625633bf75cca31a8188c55cd50c68a6b",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-038",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"request_evidence\", \"repaired_concepts\": null, \"request\": \"카페토의 손잡이가 카페토의 물리적 구성 부분(전체의 부분으로서 물리적/구조적으로 결합된 요소)인지 명확히 해주세요. 현재 증거는 운반 기능만 강조하고 있어서, 카페린의 손잡이와 동일한 structural_composition으로 통일할지, 아니면 functional으로 유지할지 판단하기 어렵습니다.\", \"report\": \"Anti-pattern MixRig 감지됨: \\\"손잡이\\\" feature가 두 concept에서 다른 type으로 분류되었습니다 (essential_feature vs functional). 지시사항에 따르면 같은 feature 이름은 시스템 전체에서 하나의 정체성만 가져야 합니다. 카페린의 증거는 명백한 구성-부분 관계를 보이지만, 카페토의 증거는 기능만 언급하므로, 두 개념의 \\\"손잡이\\\"가 동일한 본질을 공유하는지 확인이 필요합니다.\"}",
+      "output": {
+        "decision": "request_evidence",
+        "repaired_concepts": null,
+        "request": "카페토의 손잡이가 카페토의 물리적 구성 부분(전체의 부분으로서 물리적/구조적으로 결합된 요소)인지 명확히 해주세요. 현재 증거는 운반 기능만 강조하고 있어서, 카페린의 손잡이와 동일한 structural_composition으로 통일할지, 아니면 functional으로 유지할지 판단하기 어렵습니다.",
+        "report": "Anti-pattern MixRig 감지됨: \"손잡이\" feature가 두 concept에서 다른 type으로 분류되었습니다 (essential_feature vs functional). 지시사항에 따르면 같은 feature 이름은 시스템 전체에서 하나의 정체성만 가져야 합니다. 카페린의 증거는 명백한 구성-부분 관계를 보이지만, 카페토의 증거는 기능만 언급하므로, 두 개념의 \"손잡이\"가 동일한 본질을 공유하는지 확인이 필요합니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "baseline_directed",
+      "arm": "A_PARAPHRASE",
+      "trial": 10,
+      "prompt_sha256": "67efc7c61b9e7d92535f9098697489d625633bf75cca31a8188c55cd50c68a6b",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-041",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"카페린\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"}, {\"feature\": \"갑재질\", \"type\": \"essential_feature\", \"evidence\": \"갑재질이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"카페토\", \"features\": [{\"feature\": \"손잡이\", \"type\": \"structural_composition\", \"evidence\": \"카페토에서 손잡이는 운반 기능을 제공한다\"}, {\"feature\": \"을재질\", \"type\": \"essential_feature\", \"evidence\": \"을재질이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 항-패턴을 해결하기 위해 feature 정체성 원칙을 적용합니다. \\\"손잡이\\\"는 두 concept에서 동일한 개체인데 서로 다른 type이 할당되어 있습니다.\\n\\n카페린의 증거 \\\"카페린의 손잡이는 카페린 몸체의 구성 부분이다\\\"는 \\\"구성 부분\\\"을 명시적으로 서술하므로 structural_composition이 맞습니다(현재 essential_feature는 오류).\\n\\n카페토의 손잡이도 동일 feature이므로 같은 type을 가져야 합니다. 손잡이는 본질적으로 구조적 부분이며, 운반 기능을 제공한다는 증거는 그 부분이 수행하는 용도를 설명하는 것입니다.\\n\\n따라서 두 concept 모두에서 \\\"손잡이\\\"를 structural_composition으로 통일합니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "카페린",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페린의 손잡이는 카페린 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑재질",
+                "type": "essential_feature",
+                "evidence": "갑재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "카페토",
+            "features": [
+              {
+                "feature": "손잡이",
+                "type": "structural_composition",
+                "evidence": "카페토에서 손잡이는 운반 기능을 제공한다"
+              },
+              {
+                "feature": "을재질",
+                "type": "essential_feature",
+                "evidence": "을재질이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 항-패턴을 해결하기 위해 feature 정체성 원칙을 적용합니다. \"손잡이\"는 두 concept에서 동일한 개체인데 서로 다른 type이 할당되어 있습니다.\n\n카페린의 증거 \"카페린의 손잡이는 카페린 몸체의 구성 부분이다\"는 \"구성 부분\"을 명시적으로 서술하므로 structural_composition이 맞습니다(현재 essential_feature는 오류).\n\n카페토의 손잡이도 동일 feature이므로 같은 type을 가져야 합니다. 손잡이는 본질적으로 구조적 부분이며, 운반 기능을 제공한다는 증거는 그 부분이 수행하는 용도를 설명하는 것입니다.\n\n따라서 두 concept 모두에서 \"손잡이\"를 structural_composition으로 통일합니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "topology_directed",
+      "arm": "A_TOPOLOGY",
+      "trial": 3,
+      "prompt_sha256": "451e2c66e4e405110f4cb3dc2da31af46dbd53277cbc36e851e8e23f6f0b222e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-011",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"엔진박스\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다\"}, {\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다\"}]}, {\"name\": \"엔진박스보조\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다\"}, {\"feature\": \"보조단자\", \"type\": \"essential_feature\", \"evidence\": \"보조단자가 항목에 기록되어 있다\"}]}, {\"name\": \"엔진박스확장\", \"features\": [{\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다\"}, {\"feature\": \"확장슬롯\", \"type\": \"essential_feature\", \"evidence\": \"확장슬롯이 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Two rigidity mixing (MixRig) anti-patterns detected. Both 구동축 and 냉각판 violated the constraint that identical feature names must have identical types across all concepts. The actual nature of both features is structural composition: the evidence from 엔진박스 explicitly describes them as \\\"구성 부분이다\\\" (structural parts of the whole). While 엔진박스보조 and 엔진박스확장 provide functional descriptions (power transmission, heat dissipation), these describe what the components *do*, not what they fundamentally *are*. The unified type is structural_composition for both features across all three concepts.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "엔진박스",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스보조",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다"
+              },
+              {
+                "feature": "보조단자",
+                "type": "essential_feature",
+                "evidence": "보조단자가 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스확장",
+            "features": [
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다"
+              },
+              {
+                "feature": "확장슬롯",
+                "type": "essential_feature",
+                "evidence": "확장슬롯이 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Two rigidity mixing (MixRig) anti-patterns detected. Both 구동축 and 냉각판 violated the constraint that identical feature names must have identical types across all concepts. The actual nature of both features is structural composition: the evidence from 엔진박스 explicitly describes them as \"구성 부분이다\" (structural parts of the whole). While 엔진박스보조 and 엔진박스확장 provide functional descriptions (power transmission, heat dissipation), these describe what the components *do*, not what they fundamentally *are*. The unified type is structural_composition for both features across all three concepts."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "topology_directed",
+      "arm": "A_TOPOLOGY",
+      "trial": 4,
+      "prompt_sha256": "451e2c66e4e405110f4cb3dc2da31af46dbd53277cbc36e851e8e23f6f0b222e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-017",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"엔진박스\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다\"}, {\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다\"}]}, {\"name\": \"엔진박스보조\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다\"}, {\"feature\": \"보조단자\", \"type\": \"essential_feature\", \"evidence\": \"보조단자가 항목에 기록되어 있다\"}]}, {\"name\": \"엔진박스확장\", \"features\": [{\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다\"}, {\"feature\": \"확장슬롯\", \"type\": \"essential_feature\", \"evidence\": \"확장슬롯이 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Rigidity mixing detected for two features. \\\"구동축\\\" and \\\"냉각판\\\" each appeared across concepts with conflicting types (essential_feature vs. functional). The evidence that explicitly describes part-of relationships (구성 부분이다) indicates both should be classified as structural_composition — the actual ontological character of physical/structural composition within the engine box assembly. The functional descriptions in other contexts refer to the behaviors of these structural components, not their fundamental nature. Unified both features to structural_composition across all affected concepts.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "엔진박스",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스보조",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다"
+              },
+              {
+                "feature": "보조단자",
+                "type": "essential_feature",
+                "evidence": "보조단자가 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스확장",
+            "features": [
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다"
+              },
+              {
+                "feature": "확장슬롯",
+                "type": "essential_feature",
+                "evidence": "확장슬롯이 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Rigidity mixing detected for two features. \"구동축\" and \"냉각판\" each appeared across concepts with conflicting types (essential_feature vs. functional). The evidence that explicitly describes part-of relationships (구성 부분이다) indicates both should be classified as structural_composition — the actual ontological character of physical/structural composition within the engine box assembly. The functional descriptions in other contexts refer to the behaviors of these structural components, not their fundamental nature. Unified both features to structural_composition across all affected concepts."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "topology_directed",
+      "arm": "A_TOPOLOGY",
+      "trial": 5,
+      "prompt_sha256": "451e2c66e4e405110f4cb3dc2da31af46dbd53277cbc36e851e8e23f6f0b222e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-022",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"엔진박스\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다\"}, {\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다\"}]}, {\"name\": \"엔진박스보조\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스보조의 구동축은 엔진박스보조 몸체의 구성 부분이며, 회전 동력을 전달하는 기능을 수행한다\"}, {\"feature\": \"보조단자\", \"type\": \"essential_feature\", \"evidence\": \"보조단자가 항목에 기록되어 있다\"}]}, {\"name\": \"엔진박스확장\", \"features\": [{\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스확장의 냉각판은 엔진박스확장 몸체의 구성 부분이며, 열을 방출하는 기능을 수행한다\"}, {\"feature\": \"확장슬롯\", \"type\": \"essential_feature\", \"evidence\": \"확장슬롯이 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Rigidity mixing 안티패턴 2개를 해결했습니다. 구동축과 냉각판 모두 엔진박스에서 \\\"구성 부분\\\"으로 명시되어 있으므로, 실제 성격은 structural_composition입니다. 보조 및 확장 context에서 이들이 수행하는 기능(동력 전달, 열 방출)은 그것이 *하는 일*이지 *그것이 무엇인지*가 아니므로, 모든 개념에서 structural_composition으로 통일했습니다. 증거는 구조적 부분임을 명시하면서도 각 context에서의 기능적 역할도 함께 기록했습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "엔진박스",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스보조",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스보조의 구동축은 엔진박스보조 몸체의 구성 부분이며, 회전 동력을 전달하는 기능을 수행한다"
+              },
+              {
+                "feature": "보조단자",
+                "type": "essential_feature",
+                "evidence": "보조단자가 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스확장",
+            "features": [
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스확장의 냉각판은 엔진박스확장 몸체의 구성 부분이며, 열을 방출하는 기능을 수행한다"
+              },
+              {
+                "feature": "확장슬롯",
+                "type": "essential_feature",
+                "evidence": "확장슬롯이 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Rigidity mixing 안티패턴 2개를 해결했습니다. 구동축과 냉각판 모두 엔진박스에서 \"구성 부분\"으로 명시되어 있으므로, 실제 성격은 structural_composition입니다. 보조 및 확장 context에서 이들이 수행하는 기능(동력 전달, 열 방출)은 그것이 *하는 일*이지 *그것이 무엇인지*가 아니므로, 모든 개념에서 structural_composition으로 통일했습니다. 증거는 구조적 부분임을 명시하면서도 각 context에서의 기능적 역할도 함께 기록했습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "topology_directed",
+      "arm": "A_TOPOLOGY",
+      "trial": 6,
+      "prompt_sha256": "451e2c66e4e405110f4cb3dc2da31af46dbd53277cbc36e851e8e23f6f0b222e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-026",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"엔진박스\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다\"}, {\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다\"}]}, {\"name\": \"엔진박스보조\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다\"}, {\"feature\": \"보조단자\", \"type\": \"essential_feature\", \"evidence\": \"보조단자가 항목에 기록되어 있다\"}]}, {\"name\": \"엔진박스확장\", \"features\": [{\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다\"}, {\"feature\": \"확장슬롯\", \"type\": \"essential_feature\", \"evidence\": \"확장슬롯이 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Rigidity mixing conflicts resolved. Features '구동축' and '냉각판' unified to structural_composition across all concepts. The initial evidence explicitly identifies these as component parts (구성 부분) of their parent systems, establishing their structural nature. Functional descriptions in auxiliary and extended variants characterize operational behavior, not intrinsic type. Type assignments corrected to reflect actual feature rigidity.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "엔진박스",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스보조",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다"
+              },
+              {
+                "feature": "보조단자",
+                "type": "essential_feature",
+                "evidence": "보조단자가 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스확장",
+            "features": [
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다"
+              },
+              {
+                "feature": "확장슬롯",
+                "type": "essential_feature",
+                "evidence": "확장슬롯이 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Rigidity mixing conflicts resolved. Features '구동축' and '냉각판' unified to structural_composition across all concepts. The initial evidence explicitly identifies these as component parts (구성 부분) of their parent systems, establishing their structural nature. Functional descriptions in auxiliary and extended variants characterize operational behavior, not intrinsic type. Type assignments corrected to reflect actual feature rigidity."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "topology_directed",
+      "arm": "A_TOPOLOGY",
+      "trial": 7,
+      "prompt_sha256": "451e2c66e4e405110f4cb3dc2da31af46dbd53277cbc36e851e8e23f6f0b222e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-029",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"request_evidence\", \"repaired_concepts\": null, \"request\": \"엔진박스보조에서: 구동축이 엔진박스보조의 물리적/구조적 구성 부분인가, 아니면 구조에 포함되지 않으면서 기능적 역할만 수행하는가?\\n\\n엔진박스확장에서: 냉각판이 엔진박스확장의 물리적/구조적 구성 부분인가, 아니면 구조에 포함되지 않으면서 기능적 역할만 수행하는가?\\n\\n이 명확화 이후 rigidity 혼합을 올바르게 해결할 수 있습니다.\", \"report\": \"MixRig 안티패턴 2건 감지. 같은 feature명(구동축, 냉각판)이 서로 다른 concept에서 서로 다른 type(structural vs functional)으로 분류되었습니다. 통일을 위해서는 이들 feature가 각 concept에서 진정한 구조적 구성 부분인지, 단순 기능적 역할인지 확인이 필요합니다.\"}",
+      "output": {
+        "decision": "request_evidence",
+        "repaired_concepts": null,
+        "request": "엔진박스보조에서: 구동축이 엔진박스보조의 물리적/구조적 구성 부분인가, 아니면 구조에 포함되지 않으면서 기능적 역할만 수행하는가?\n\n엔진박스확장에서: 냉각판이 엔진박스확장의 물리적/구조적 구성 부분인가, 아니면 구조에 포함되지 않으면서 기능적 역할만 수행하는가?\n\n이 명확화 이후 rigidity 혼합을 올바르게 해결할 수 있습니다.",
+        "report": "MixRig 안티패턴 2건 감지. 같은 feature명(구동축, 냉각판)이 서로 다른 concept에서 서로 다른 type(structural vs functional)으로 분류되었습니다. 통일을 위해서는 이들 feature가 각 concept에서 진정한 구조적 구성 부분인지, 단순 기능적 역할인지 확인이 필요합니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "topology_directed",
+      "arm": "A_TOPOLOGY",
+      "trial": 8,
+      "prompt_sha256": "451e2c66e4e405110f4cb3dc2da31af46dbd53277cbc36e851e8e23f6f0b222e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-033",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"엔진박스\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다\"}, {\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다\"}]}, {\"name\": \"엔진박스보조\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스보조의 구동축은 엔진박스의 구성 부분이며, 회전 동력을 전달하는 기능을 한다\"}, {\"feature\": \"보조단자\", \"type\": \"essential_feature\", \"evidence\": \"보조단자가 항목에 기록되어 있다\"}]}, {\"name\": \"엔진박스확장\", \"features\": [{\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스확장의 냉각판은 엔진박스의 구성 부분이며, 열을 방출하는 기능을 한다\"}, {\"feature\": \"확장슬롯\", \"type\": \"essential_feature\", \"evidence\": \"확장슬롯이 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern 2건 확인. 동일한 feature 이름('구동축', '냉각판')이 여러 concept에서 서로 다른 type으로 분류되었습니다. 엔진박스에서 '구성 부분'이라는 명시적 전체-부분 관계가 evidence에 있으므로, 이것이 두 feature의 실제 성격입니다. 따라서:\\n- '구동축'을 essential_feature → structural_composition으로 통일 (엔진박스, 엔진박스보조)\\n- '냉각판'을 essential_feature → structural_composition으로 통일 (엔진박스, 엔진박스확장)\\n각 concept의 evidence는 structural_composition 성격을 명시하면서도 기존의 기능적 관점(회전 동력 전달, 열 방출)을 보존하도록 조정했습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "엔진박스",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스보조",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스보조의 구동축은 엔진박스의 구성 부분이며, 회전 동력을 전달하는 기능을 한다"
+              },
+              {
+                "feature": "보조단자",
+                "type": "essential_feature",
+                "evidence": "보조단자가 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스확장",
+            "features": [
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스확장의 냉각판은 엔진박스의 구성 부분이며, 열을 방출하는 기능을 한다"
+              },
+              {
+                "feature": "확장슬롯",
+                "type": "essential_feature",
+                "evidence": "확장슬롯이 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern 2건 확인. 동일한 feature 이름('구동축', '냉각판')이 여러 concept에서 서로 다른 type으로 분류되었습니다. 엔진박스에서 '구성 부분'이라는 명시적 전체-부분 관계가 evidence에 있으므로, 이것이 두 feature의 실제 성격입니다. 따라서:\n- '구동축'을 essential_feature → structural_composition으로 통일 (엔진박스, 엔진박스보조)\n- '냉각판'을 essential_feature → structural_composition으로 통일 (엔진박스, 엔진박스확장)\n각 concept의 evidence는 structural_composition 성격을 명시하면서도 기존의 기능적 관점(회전 동력 전달, 열 방출)을 보존하도록 조정했습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "topology_directed",
+      "arm": "A_TOPOLOGY",
+      "trial": 9,
+      "prompt_sha256": "451e2c66e4e405110f4cb3dc2da31af46dbd53277cbc36e851e8e23f6f0b222e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-036",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"엔진박스\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다\"}, {\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다\"}]}, {\"name\": \"엔진박스보조\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스보조의 구동축은 엔진박스보조의 구성 부분이다\"}, {\"feature\": \"보조단자\", \"type\": \"essential_feature\", \"evidence\": \"보조단자가 항목에 기록되어 있다\"}]}, {\"name\": \"엔진박스확장\", \"features\": [{\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스확장의 냉각판은 엔진박스확장의 구성 부분이다\"}, {\"feature\": \"확장슬롯\", \"type\": \"essential_feature\", \"evidence\": \"확장슬롯이 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Rigidity 혼합 문제를 해결했습니다. 구동축과 냉각판의 실제 성격은 물리적 구성 부품(structural_composition)이며, 이를 모든 관련 concept에서 통일했습니다. 엔진박스보조와 엔진박스확장에서 이들이 수행하는 '기능'은 부품의 역할이지, feature type의 근거가 아닙니다. Evidence도 명시적 부분-전체 관계(\\\"~의 구성 부분이다\\\")로 수정했습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "엔진박스",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스보조",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스보조의 구동축은 엔진박스보조의 구성 부분이다"
+              },
+              {
+                "feature": "보조단자",
+                "type": "essential_feature",
+                "evidence": "보조단자가 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스확장",
+            "features": [
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스확장의 냉각판은 엔진박스확장의 구성 부분이다"
+              },
+              {
+                "feature": "확장슬롯",
+                "type": "essential_feature",
+                "evidence": "확장슬롯이 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Rigidity 혼합 문제를 해결했습니다. 구동축과 냉각판의 실제 성격은 물리적 구성 부품(structural_composition)이며, 이를 모든 관련 concept에서 통일했습니다. 엔진박스보조와 엔진박스확장에서 이들이 수행하는 '기능'은 부품의 역할이지, feature type의 근거가 아닙니다. Evidence도 명시적 부분-전체 관계(\"~의 구성 부분이다\")로 수정했습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "topology_directed",
+      "arm": "A_TOPOLOGY",
+      "trial": 10,
+      "prompt_sha256": "451e2c66e4e405110f4cb3dc2da31af46dbd53277cbc36e851e8e23f6f0b222e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-042",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"엔진박스\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다\"}, {\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다\"}]}, {\"name\": \"엔진박스보조\", \"features\": [{\"feature\": \"구동축\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다\"}, {\"feature\": \"보조단자\", \"type\": \"essential_feature\", \"evidence\": \"보조단자가 항목에 기록되어 있다\"}]}, {\"name\": \"엔진박스확장\", \"features\": [{\"feature\": \"냉각판\", \"type\": \"structural_composition\", \"evidence\": \"엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다\"}, {\"feature\": \"확장슬롯\", \"type\": \"essential_feature\", \"evidence\": \"확장슬롯이 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig (rigidity 혼합) 안티패턴 해결. 구동축과 냉각판은 모든 관련 concept에서 동일하게 structural_composition으로 통일했습니다. 두 feature 모두 엔진박스 내 물리적 구성 부분-전체 관계를 나타내며, 엔진박스보조와 엔진박스확장에서는 각각 그 부분이 수행하는 기능(회전 동력 전달, 열 방출)을 추가로 기술하지만 근본적 성격은 structural composition입니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "엔진박스",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 구동축은 엔진박스 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스의 냉각판은 엔진박스 몸체의 구성 부분이다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스보조",
+            "features": [
+              {
+                "feature": "구동축",
+                "type": "structural_composition",
+                "evidence": "엔진박스보조에서 구동축은 회전 동력을 전달하는 기능을 한다"
+              },
+              {
+                "feature": "보조단자",
+                "type": "essential_feature",
+                "evidence": "보조단자가 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "엔진박스확장",
+            "features": [
+              {
+                "feature": "냉각판",
+                "type": "structural_composition",
+                "evidence": "엔진박스확장에서 냉각판은 열을 방출하는 기능을 한다"
+              },
+              {
+                "feature": "확장슬롯",
+                "type": "essential_feature",
+                "evidence": "확장슬롯이 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig (rigidity 혼합) 안티패턴 해결. 구동축과 냉각판은 모든 관련 concept에서 동일하게 structural_composition으로 통일했습니다. 두 feature 모두 엔진박스 내 물리적 구성 부분-전체 관계를 나타내며, 엔진박스보조와 엔진박스확장에서는 각각 그 부분이 수행하는 기능(회전 동력 전달, 열 방출)을 추가로 기술하지만 근본적 성격은 structural composition입니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "decoy_directed",
+      "arm": "A_DECOY",
+      "trial": 3,
+      "prompt_sha256": "e9bcf828e5f17a8b3f138d58ab4d8da9df6c53ac65d36a44950afd27368c3cd6",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-012",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"차체프레임\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"갑등급\", \"type\": \"essential_feature\", \"evidence\": \"갑등급이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"차체프레임신형\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임신형의 고정핀은 차체프레임신형 몸체의 구성 부분이다\"}, {\"feature\": \"을등급\", \"type\": \"essential_feature\", \"evidence\": \"을등급이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Rigidity 혼합 안티패턴을 해결하기 위해 repair을 수행합니다.\\n\\n발견된 문제:\\n- '고정핀' feature가 차체프레임에서는 essential_feature, 차체프레임신형에서는 social_treatment로 분류되어 있어 동일 특성이 서로 다른 rigidity를 가집니다.\\n\\n근거 분석:\\n- 차체프레임: \\\"구성 부분이다\\\"라는 증거는 명시적 whole-part 관계를 나타내므로 structural_composition이 맞습니다.\\n- 차체프레임신형: \\\"상징적 장치로 취급된다\\\"는 사회적 처우를 설명하지만, 물리적 실체로서 고정핀은 양쪽 모두 동일한 부품입니다.\\n\\n해결 방안:\\n고정핀의 본질적 성격은 구조적 부분-전체 관계에 있으므로, 두 개념 모두에서 structural_composition으로 통일합니다. 차체프레임신형의 증거를 구조적 속성을 반영하는 문장으로 수정하여 type과의 일관성을 확보했습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "차체프레임",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑등급",
+                "type": "essential_feature",
+                "evidence": "갑등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "차체프레임신형",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임신형의 고정핀은 차체프레임신형 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "을등급",
+                "type": "essential_feature",
+                "evidence": "을등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Rigidity 혼합 안티패턴을 해결하기 위해 repair을 수행합니다.\n\n발견된 문제:\n- '고정핀' feature가 차체프레임에서는 essential_feature, 차체프레임신형에서는 social_treatment로 분류되어 있어 동일 특성이 서로 다른 rigidity를 가집니다.\n\n근거 분석:\n- 차체프레임: \"구성 부분이다\"라는 증거는 명시적 whole-part 관계를 나타내므로 structural_composition이 맞습니다.\n- 차체프레임신형: \"상징적 장치로 취급된다\"는 사회적 처우를 설명하지만, 물리적 실체로서 고정핀은 양쪽 모두 동일한 부품입니다.\n\n해결 방안:\n고정핀의 본질적 성격은 구조적 부분-전체 관계에 있으므로, 두 개념 모두에서 structural_composition으로 통일합니다. 차체프레임신형의 증거를 구조적 속성을 반영하는 문장으로 수정하여 type과의 일관성을 확보했습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "decoy_directed",
+      "arm": "A_DECOY",
+      "trial": 4,
+      "prompt_sha256": "e9bcf828e5f17a8b3f138d58ab4d8da9df6c53ac65d36a44950afd27368c3cd6",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-018",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"차체프레임\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"갑등급\", \"type\": \"essential_feature\", \"evidence\": \"갑등급이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"차체프레임신형\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임신형의 고정핀은 고급 모델임을 나타내는 상징적 기능을 하는 구조적 부분이다\"}, {\"feature\": \"을등급\", \"type\": \"essential_feature\", \"evidence\": \"을등급이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern 해결: '고정핀' feature의 rigidity 불일치를 통일. 차체프레임의 증거('구성 부분이다')에서 실제 성격을 파악하여 두 concept 모두에서 structural_composition으로 통일. 차체프레임신형의 사회적 상징성은 구조적 성격 통일 후에도 additional context로 반영 가능.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "차체프레임",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑등급",
+                "type": "essential_feature",
+                "evidence": "갑등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "차체프레임신형",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임신형의 고정핀은 고급 모델임을 나타내는 상징적 기능을 하는 구조적 부분이다"
+              },
+              {
+                "feature": "을등급",
+                "type": "essential_feature",
+                "evidence": "을등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern 해결: '고정핀' feature의 rigidity 불일치를 통일. 차체프레임의 증거('구성 부분이다')에서 실제 성격을 파악하여 두 concept 모두에서 structural_composition으로 통일. 차체프레임신형의 사회적 상징성은 구조적 성격 통일 후에도 additional context로 반영 가능."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "decoy_directed",
+      "arm": "A_DECOY",
+      "trial": 5,
+      "prompt_sha256": "e9bcf828e5f17a8b3f138d58ab4d8da9df6c53ac65d36a44950afd27368c3cd6",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-020",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"차체프레임\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"갑등급\", \"type\": \"essential_feature\", \"evidence\": \"갑등급이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"차체프레임신형\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임신형의 고정핀은 차체프레임신형 몸체의 구성 부분이다\"}, {\"feature\": \"을등급\", \"type\": \"essential_feature\", \"evidence\": \"을등급이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"고정핀의 rigidity 혼합(MixRig 안티패턴) 문제를 해결했습니다. 동일한 feature \\\"고정핀\\\"이 두 concept에서 다른 type(essential_feature vs social_treatment)을 가지고 있었으므로, 실제 성격인 물리적 구성 부분에 기반하여 둘 다 structural_composition으로 통일했습니다. 첫 번째 concept의 고정핀은 type 수정만 수행했으며, 두 번째 concept의 고정핀은 type 변경(social_treatment → structural_composition)과 함께 evidence를 부분-전체 관계를 명확히 하는 방향으로 수정했습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "차체프레임",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑등급",
+                "type": "essential_feature",
+                "evidence": "갑등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "차체프레임신형",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임신형의 고정핀은 차체프레임신형 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "을등급",
+                "type": "essential_feature",
+                "evidence": "을등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "고정핀의 rigidity 혼합(MixRig 안티패턴) 문제를 해결했습니다. 동일한 feature \"고정핀\"이 두 concept에서 다른 type(essential_feature vs social_treatment)을 가지고 있었으므로, 실제 성격인 물리적 구성 부분에 기반하여 둘 다 structural_composition으로 통일했습니다. 첫 번째 concept의 고정핀은 type 수정만 수행했으며, 두 번째 concept의 고정핀은 type 변경(social_treatment → structural_composition)과 함께 evidence를 부분-전체 관계를 명확히 하는 방향으로 수정했습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "decoy_directed",
+      "arm": "A_DECOY",
+      "trial": 6,
+      "prompt_sha256": "e9bcf828e5f17a8b3f138d58ab4d8da9df6c53ac65d36a44950afd27368c3cd6",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-023",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"차체프레임\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"갑등급\", \"type\": \"essential_feature\", \"evidence\": \"갑등급이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"차체프레임신형\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임신형의 고정핀은 차체 구조의 구성 부분이다\"}, {\"feature\": \"을등급\", \"type\": \"essential_feature\", \"evidence\": \"을등급이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern detected on \\\"고정핀\\\" with conflicting types across concepts (essential_feature vs social_treatment). Analysis of evidence shows \\\"고정핀\\\" is fundamentally a structural composition (part-whole relationship), explicitly stated in 차체프레임's evidence (\\\"구성 부분\\\"). Unified correction: both concepts must use type structural_composition. Additionally, 차체프레임 was incorrectly typed as essential_feature when its evidence explicitly describes structural composition, not an essential property.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "차체프레임",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑등급",
+                "type": "essential_feature",
+                "evidence": "갑등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "차체프레임신형",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임신형의 고정핀은 차체 구조의 구성 부분이다"
+              },
+              {
+                "feature": "을등급",
+                "type": "essential_feature",
+                "evidence": "을등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern detected on \"고정핀\" with conflicting types across concepts (essential_feature vs social_treatment). Analysis of evidence shows \"고정핀\" is fundamentally a structural composition (part-whole relationship), explicitly stated in 차체프레임's evidence (\"구성 부분\"). Unified correction: both concepts must use type structural_composition. Additionally, 차체프레임 was incorrectly typed as essential_feature when its evidence explicitly describes structural composition, not an essential property."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "decoy_directed",
+      "arm": "A_DECOY",
+      "trial": 7,
+      "prompt_sha256": "e9bcf828e5f17a8b3f138d58ab4d8da9df6c53ac65d36a44950afd27368c3cd6",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-028",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"차체프레임\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"갑등급\", \"type\": \"essential_feature\", \"evidence\": \"갑등급이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"차체프레임신형\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임신형의 고정핀은 몸체의 구성 부분이다\"}, {\"feature\": \"을등급\", \"type\": \"essential_feature\", \"evidence\": \"을등급이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴 해결: 고정핀이 차체프레임(essential_feature)과 차체프레임신형(social_treatment)에서 서로 다른 type으로 정의되어 rigidity 혼합을 유발했습니다. 고정핀의 근거 증거가 모두 '구성 부분'이라는 전체-부분 관계를 서술하므로, 진정한 성격은 structural_composition입니다. 따라서 두 concept 모두에서 structural_composition으로 통일하여 type 일관성을 확보했습니다. 차체프레임신형에서의 '상징적 장치' 표현은 사회적 해석이지만, feature 분류는 물리적 성격을 따릅니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "차체프레임",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑등급",
+                "type": "essential_feature",
+                "evidence": "갑등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "차체프레임신형",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임신형의 고정핀은 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "을등급",
+                "type": "essential_feature",
+                "evidence": "을등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴 해결: 고정핀이 차체프레임(essential_feature)과 차체프레임신형(social_treatment)에서 서로 다른 type으로 정의되어 rigidity 혼합을 유발했습니다. 고정핀의 근거 증거가 모두 '구성 부분'이라는 전체-부분 관계를 서술하므로, 진정한 성격은 structural_composition입니다. 따라서 두 concept 모두에서 structural_composition으로 통일하여 type 일관성을 확보했습니다. 차체프레임신형에서의 '상징적 장치' 표현은 사회적 해석이지만, feature 분류는 물리적 성격을 따릅니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "decoy_directed",
+      "arm": "A_DECOY",
+      "trial": 8,
+      "prompt_sha256": "e9bcf828e5f17a8b3f138d58ab4d8da9df6c53ac65d36a44950afd27368c3cd6",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-032",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"차체프레임\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"갑등급\", \"type\": \"essential_feature\", \"evidence\": \"갑등급이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"차체프레임신형\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임신형의 고정핀은 차체프레임신형 몸체의 구성 부분이다\"}, {\"feature\": \"을등급\", \"type\": \"essential_feature\", \"evidence\": \"을등급이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴 해결: '고정핀'의 rigidity를 두 개념에서 모두 structural_composition으로 통일했습니다. 차체프레임신형에서 고정핀이 \\\"상징적 장치로 취급된다\\\"는 사회적 의미는 고정핀의 물리적 본질(부분-전체 관계)을 변경하지 않습니다. 기존 essential_feature 표기는 오류였고, 구성 부분에 대한 증거 문장이 이를 명확히 합니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "차체프레임",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑등급",
+                "type": "essential_feature",
+                "evidence": "갑등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "차체프레임신형",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임신형의 고정핀은 차체프레임신형 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "을등급",
+                "type": "essential_feature",
+                "evidence": "을등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴 해결: '고정핀'의 rigidity를 두 개념에서 모두 structural_composition으로 통일했습니다. 차체프레임신형에서 고정핀이 \"상징적 장치로 취급된다\"는 사회적 의미는 고정핀의 물리적 본질(부분-전체 관계)을 변경하지 않습니다. 기존 essential_feature 표기는 오류였고, 구성 부분에 대한 증거 문장이 이를 명확히 합니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "decoy_directed",
+      "arm": "A_DECOY",
+      "trial": 9,
+      "prompt_sha256": "e9bcf828e5f17a8b3f138d58ab4d8da9df6c53ac65d36a44950afd27368c3cd6",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-035",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"차체프레임\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"갑등급\", \"type\": \"essential_feature\", \"evidence\": \"갑등급이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"차체프레임신형\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임신형의 고정핀은 차체프레임신형 몸체의 구성 부분이다\"}, {\"feature\": \"을등급\", \"type\": \"essential_feature\", \"evidence\": \"을등급이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern 해결. 고정핀이 두 개념에서 불일치하는 타입(essential_feature vs social_treatment)으로 기록되어 있었습니다. 고정핀의 실제 성격은 물리적 구조적 구성 요소이므로, 모든 개념에서 structural_composition으로 통일했습니다. 차체프레임신형의 고정핀에서 관찰된 상징적 역할은 동일 물리적 부품의 사회적 해석이며, 기본 타입을 변경하지 않습니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "차체프레임",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑등급",
+                "type": "essential_feature",
+                "evidence": "갑등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "차체프레임신형",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임신형의 고정핀은 차체프레임신형 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "을등급",
+                "type": "essential_feature",
+                "evidence": "을등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern 해결. 고정핀이 두 개념에서 불일치하는 타입(essential_feature vs social_treatment)으로 기록되어 있었습니다. 고정핀의 실제 성격은 물리적 구조적 구성 요소이므로, 모든 개념에서 structural_composition으로 통일했습니다. 차체프레임신형의 고정핀에서 관찰된 상징적 역할은 동일 물리적 부품의 사회적 해석이며, 기본 타입을 변경하지 않습니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "decoy_directed",
+      "arm": "A_DECOY",
+      "trial": 10,
+      "prompt_sha256": "e9bcf828e5f17a8b3f138d58ab4d8da9df6c53ac65d36a44950afd27368c3cd6",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": null,
+        "completed_at": null,
+        "context_id": "e2.3-trial-039",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"차체프레임\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다\"}, {\"feature\": \"갑등급\", \"type\": \"essential_feature\", \"evidence\": \"갑등급이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"차체프레임신형\", \"features\": [{\"feature\": \"고정핀\", \"type\": \"structural_composition\", \"evidence\": \"차체프레임신형의 고정핀은 차체프레임신형 몸체의 구성 부분이다\"}, {\"feature\": \"을등급\", \"type\": \"essential_feature\", \"evidence\": \"을등급이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern 해결: 고정핀의 rigidity 혼합을 structural_composition으로 통일. 차체프레임의 증거(\\\"구성 부분이다\\\")가 부분-전체 관계를 명시하므로 structural_composition이 실제 성격. 차체프레임신형도 기존 프레임의 신형이므로 동일한 구조적 구성을 유지하면서, 신형에서는 상징적 의미까지 추가로 담당한다고 해석.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "차체프레임",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임의 고정핀은 차체프레임 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑등급",
+                "type": "essential_feature",
+                "evidence": "갑등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "차체프레임신형",
+            "features": [
+              {
+                "feature": "고정핀",
+                "type": "structural_composition",
+                "evidence": "차체프레임신형의 고정핀은 차체프레임신형 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "을등급",
+                "type": "essential_feature",
+                "evidence": "을등급이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern 해결: 고정핀의 rigidity 혼합을 structural_composition으로 통일. 차체프레임의 증거(\"구성 부분이다\")가 부분-전체 관계를 명시하므로 structural_composition이 실제 성격. 차체프레임신형도 기존 프레임의 신형이므로 동일한 구조적 구성을 유지하면서, 신형에서는 상징적 의미까지 추가로 담당한다고 해석."
+      },
+      "parse_error": null
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+flowchart TD
+    subgraph BEFORE["현재"]
+        B1["hierarchy<br/>RichEncoder → [Decoder]"]
+        B2["stereotypes"]
+        B3["unsatisfiable"]
+        B4["Encoder ≡ Decoder<br/>응답에서 사실상 은닉"]
+    end
+
+    subgraph MIN_PATCH["최소 수정안"]
+        M1["hierarchy — 불변"]
+        M2["stereotypes — 불변"]
+        M3["unsatisfiable — 불변"]
+        M4["equivalence_groups — 신규<br/>[[Decoder, Encoder]]"]
+        M5["has_nontrivial_equivalences — 신규<br/>true"]
+    end
+
+    subgraph OPTIONAL["선택적 편의 필드"]
+        O1["representatives — 선택<br/>Encoder→Decoder, Decoder→Decoder"]
+    end
+
+    BEFORE --> MIN_PATCH
+    MIN_PATCH -. 필요 시만 .-> OPTIONAL
