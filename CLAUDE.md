@@ -16,12 +16,61 @@ Before writing any code, traverse this decision ladder top-down. Stop at the fir
 
 The ladder runs AFTER you understand the problem, not instead of it. Read the code fully and trace the real flow before picking a rung.
 
-### Safety (never cut)
+### Safety (never cut) — hard constraints
 - Input validation at trust boundaries
 - Error handling that prevents data loss
 - Security
 - Accessibility
-- Explicit user requests
+
+### 규칙이 충돌할 때의 우선순위 (5단)
+
+위 사다리와 아래 Principles, 그리고 저장소 고유 규칙이 서로 다른 답을 낼 때
+이 순서로 판정한다. **이 절이 생기기 전에는 순서가 추론이었고, 추론은
+사람마다 달랐다.**
+
+1. **Hard safety constraints** — 바로 위 목록(security, data-loss 방지,
+   trust-boundary 검증, accessibility)
+2. **Explicit user request** — 단 1과 충돌하지 않는 범위에서만
+3. **저장소 고유 불변식** — worktree 손복사 금지, 단일 정본, 동결 규율 등
+   아래에 명시된 것들
+4. **Ponytail decision ladder** — 위 7단
+5. **General principles** — fewest files, shortest diff, no abstraction 등
+
+**`Explicit user request`가 왜 Safety 목록에서 빠졌는가**: 예전에는 그
+목록 안에 있었다. 그러면 "worktree에 그냥 복사해"라는 요청이 3번(손복사
+금지 불변식)을 이긴다 — 이 저장소가 없애려고 만든 실패 모드가 요청 한 줄로
+되살아난다. 사용자 요청은 여전히 강력하지만 **hard safety 아래, 불변식
+위**다.
+
+**"안전을 위해 불변식을 깨야 한다"는 주장의 처리**: hard safety가 최상위인
+것은 맞지만, `safety`라는 말이 불변식 우회 면허가 되어서는 안 된다.
+
+> 안전 목적을 만족하는 **불변식과 양립하는 방법이 있으면 그것을 먼저
+> 쓴다.** 그런 방법이 없을 때만 최소 범위의 명시적 예외를 허용하고, 그
+> 예외를 기록한다.
+
+예: 데이터 보존이 목적이면 다른 worktree에 정본 사본을 만들 것이 아니라
+`git commit`/`stash`/patch/외부 backup으로 해결된다 — 이 경우 안전과 손복사
+금지는 **실제로 충돌하지 않는다.**
+
+**충돌을 없애는 것이 목표가 아니다 — 먼저 상위 목적을 확인하라.** 두 규칙이
+논리적으로 부딪혀 보여도 **같은 상위 목적을 서로 다른 각도에서 지키고 있다면
+둘 다 남긴다.** 위 사다리는 그런 경우에 어느 쪽을 먼저 시도할지를 정할 뿐,
+진 쪽을 삭제하라는 뜻이 아니다.
+
+실제 사례가 이 문서 안에 있다:
+
+- `Fewest files` / `Shortest diff`(5번) vs `Subtree Assembly`(3번) — subtree는
+  파일과 diff를 크게 늘린다. 그러나 둘의 상위 목적은 같다: **검증되지 않은
+  새 코드를 최소화한다.** 하나는 "적게 써서", 하나는 "이미 검증된 것을
+  가져와서". 그래서 둘 다 유효하고, 사다리는 순서만 준다.
+- `No abstraction`(5번) vs subtree를 wrapper로 감싸라(3번) — 상위 목적은
+  **subtree 경계를 오염시키지 않는 것**이고, 그 wrapper는 장식이 아니라
+  경계 자체다.
+
+규칙을 지우는 것은 **상위 목적까지 같지 않다고 확인됐을 때**만 한다. 확인 없이
+"모순이니 하나 빼자"로 가면, 이 저장소가 비싸게 배운 규율이 정리라는 이름으로
+사라진다.
 
 ### Intentional simplifications
 Mark with `ponytail:` comments that name the ceiling and upgrade path:
@@ -80,8 +129,13 @@ worktree 사이로 파일을 손으로 복사하지 말 것.** worktree들은 **
 ### 머지 게이트 — 단일 진입점
 
 ```bash
-venv/bin/python scripts/run_gates.py     # 전부 그린이어야 머지
+venv/bin/python scripts/run_gates.py  # exit 0 = FAIL 없음; 머지는 BLOCKED 없이 모든 gate가 PASS일 때만
 ```
+
+**`exit 0`을 머지 조건으로 배선하지 마라.** exit code는 "FAIL이 있었는가"만
+답한다 — BLOCKED는 exit code에 반영되지 않으므로(아래 PASS/FAIL/BLOCKED),
+`exit 0`은 "머지해도 된다"가 아니라 "실패한 게이트는 없다"이다. 머지 판정은
+출력의 BLOCKED 목록까지 읽어야 완성된다.
 
 러너가 실행하는 것:
 
@@ -107,6 +161,18 @@ venv/bin/python scripts/run_gates.py     # 전부 그린이어야 머지
 않는다. 테스트가 실행된 뒤 실패한 것은 실패 메시지가 모듈 누락을 언급해도
 FAIL이다 — 그러지 않으면 환경 의존 테스트 하나가 같은 suite의 실제 회귀를
 가린다.
+
+세 값의 정확한 계약(`scripts/run_gates.py` 헤더가 정본):
+
+| 상태 | 뜻 | exit code 기여 | 머지 |
+|---|---|---|---|
+| PASS | 게이트가 돌았고 통과 | 0 | 허용 조건 |
+| FAIL | 게이트가 돌았고 실패. 결과를 못 낸 것도 FAIL(침묵을 성공으로 읽지 않기 위해) | **1** | 차단 |
+| BLOCKED | 게이트가 **시작조차 못 함**(optional dep 부재) | **없음** | **판정 보류 — 자동 허용 아님** |
+
+`BLOCKED`는 "검증하지 못함"이지 "실패함"도 "성공함"도 아니다. 이 3값 구분은
+이 저장소가 게이트 신뢰를 유지하는 방식이며, **검색 계층에도 같은 어휘를
+쓴다**(아래 "무언가를 찾을 때" 절의 `rg-only`).
 
 ### 가드를 쓰면 음성 테스트가 함께 온다 — 이건 규율이 아니라 게이트다
 
@@ -188,6 +254,24 @@ obsidian links     path="…"
 
 `file=<basename>`는 worktree 간 동명 파일(`HANDOFF.md` 등)을 조용히 잘못
 해석한다. CLI를 못 쓰면 backlink를 **추정하지 말고** "rg-only"라고 명시하라.
+
+**`rg-only`의 종단 상태는 `BLOCKED`다** — 머지 게이트와 같은 어휘를 쓴다
+(위 PASS/FAIL/BLOCKED 표). backlink traversal이 필요한 판정에서 CLI가
+unavailable이면 그 검증은 실패한 것도 성공한 것도 아니라 **얻지 못한** 것이다.
+
+```
+CLI 가능   → graph traversal → PASS
+           → "이미 결정됐다/안 됐다" 완결 판정 허용
+
+CLI 불가   → rg-only → BLOCKED
+           → 잠정 분석은 계속해도 된다
+           → **"미해결", "기존 결정 없음", "새 설계가 필요함" 같은
+             완결적 부재 판정은 내리지 않는다**
+```
+
+부재 판정만 막고 작업 자체는 막지 않는 이유는 위 §"규칙이 충돌할 때의
+우선순위"와 같다 — 도구 하나가 없다고 전부 멈추는 것이 목적이 아니라,
+**확인하지 못한 것을 확인한 것처럼 말하지 않는 것**이 목적이다.
 
 절차 전문은 이미 있고 검증됐다. 다시 만들지 마라 —
 `../.vault-harness/vault-md-retrieval/AGENT_PROMPT.md`(Required Procedure),
