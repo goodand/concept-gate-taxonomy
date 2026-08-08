@@ -93,8 +93,9 @@ GUARD_PREFIXES = ("assert_", "_assert_")
 # Owner / closing condition: fold into the planned v8/surface-v3
 # re-qualification (pending item 4, R1/R2/attempt-ledger). At that point add
 # `pending_guard_negative_tests.py` to FROZEN_SURFACE_FILES under its real
-# `test_` name, re-run calibration and both red-teams (all local, free) and
-# both provider pilots (paid), then delete these three entries.
+# `test_` name, re-run calibration and both red-teams (all local, deterministic)
+# and both provider pilots (live model runs, not reproducible), then delete
+# these three entries.
 _PENDING = (
     "negative tests exist and pass, parked at experiments/"
     "2026-08-07_handoff_dynamic_controller/pending_guard_negative_tests.py; "
