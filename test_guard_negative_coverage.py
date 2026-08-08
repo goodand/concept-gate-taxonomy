@@ -53,20 +53,33 @@ GUARD_PREFIXES = ("assert_", "_assert_")
 # rot into a silent cap.
 #
 # A SECOND, DISTINCT REASON (2026-08-08): a negative test can be honestly
-# written and even verified, yet not be landable, because landing it costs a
-# paid re-qualification. That is not the mocking case above and must not be
-# filed as if it were. Measured: `experiments/2026-08-07_handoff_dynamic_controller`
-# requires every `test_*.py` in the experiment to appear in
-# `_evaluator.FROZEN_SURFACE_FILES` (`test_preprimary_gates.py::
-# test_all_test_modules_are_frozen`), and every entry in that tuple becomes a
-# key in `frozen_surface_hashes()`. Adding one key makes
-# `frozen_surface_drift()` non-empty against every pinned artifact -- including
-# `results/live_pilot_codex_mcp_v7.json` and
+# written and even verified, yet not be landable, because landing it forces a
+# re-qualification that cannot be reproduced. That is not the mocking case
+# above and must not be filed as if it were.
+#
+# Measured: `experiments/2026-08-07_handoff_dynamic_controller` requires every
+# `test_*.py` in the experiment to appear in `_evaluator.FROZEN_SURFACE_FILES`
+# (`test_preprimary_gates.py::test_all_test_modules_are_frozen`), and every
+# entry in that tuple becomes a key in `frozen_surface_hashes()`. Adding one
+# key makes `frozen_surface_drift()` non-empty against every pinned artifact --
+# including `results/live_pilot_codex_mcp_v7.json` and
 # `results/live_pilot_claude_mcp_surface_v2.json`, the two ledger-recorded
 # provider qualifications produced by 8 live model runs (gpt-5.6-sol and
 # claude-opus-5, 4 arms each). `_assert_provider_preflight` then refuses every
-# further live run until both are re-run. So a free test change forces a paid
-# re-qualification.
+# further live run until both are re-run.
+#
+# WHAT RE-RUNNING ACTUALLY COSTS -- not money. `_providers.py` shells out to
+# the locally logged-in `claude` and `codex` CLI binaries with the inherited
+# environment; there is no API key, no HTTP client, and no billing path in this
+# repo, so nothing is invoiced separately. (The docstring on
+# `_providers.claude_command` says "without paying for a model call"; read that
+# as subscription usage, not a charge.) The real cost is that a live pilot is
+# NOT reproducible. `run_calibration.py` is deterministic local computation --
+# re-run it and the artifact is identical. A live pilot is a model run: re-run
+# it and the traces differ, and the verdict can differ too. The pins currently
+# record `qualification_passed: true`; a re-run is a fresh experiment that may
+# not. That, plus subscription usage and supervised wall-clock (up to 40 turns
+# per cell), is why this is deferred rather than done casually.
 #
 # The three entries below are that case, and they are unusual in one way worth
 # stating plainly: the tests already exist and were verified. They are parked,
@@ -86,8 +99,9 @@ _PENDING = (
     "negative tests exist and pass, parked at experiments/"
     "2026-08-07_handoff_dynamic_controller/pending_guard_negative_tests.py; "
     "landing them adds a FROZEN_SURFACE_FILES key, which staleness-fails both "
-    "paid provider qualifications. Close with the v8/surface-v3 "
-    "re-qualification. Mutation-verified 2026-08-08 (12/12 kill)."
+    "ledger-recorded provider qualifications -- and those are live model runs, "
+    "so re-running them is a fresh experiment, not a rebuild. Close with the "
+    "v8/surface-v3 re-qualification. Mutation-verified 2026-08-08 (12/12 kill)."
 )
 
 KNOWN_UNPROVEN: dict[str, str] = {

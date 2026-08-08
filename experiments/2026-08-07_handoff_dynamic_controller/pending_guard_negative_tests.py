@@ -15,16 +15,24 @@ thirteen times.
 
 Why this is parked instead of landed
 ------------------------------------
-Landing it is not free. `test_preprimary_gates.py::test_all_test_modules_are_frozen`
-requires every `test_*.py` here to appear in `_evaluator.FROZEN_SURFACE_FILES`,
-and every name in that tuple becomes a key in `frozen_surface_hashes()`. One
-extra key makes `frozen_surface_drift()` non-empty against every pinned
-artifact -- including `results/live_pilot_codex_mcp_v7.json` and
+`test_preprimary_gates.py::test_all_test_modules_are_frozen` requires every
+`test_*.py` here to appear in `_evaluator.FROZEN_SURFACE_FILES`, and every name
+in that tuple becomes a key in `frozen_surface_hashes()`. One extra key makes
+`frozen_surface_drift()` non-empty against every pinned artifact -- including
+`results/live_pilot_codex_mcp_v7.json` and
 `results/live_pilot_claude_mcp_surface_v2.json`, the two ledger-recorded
 provider qualifications produced by 8 live model runs (gpt-5.6-sol and
 claude-opus-5, 4 arms each). `_assert_provider_preflight` then refuses every
-further live run until both are re-run. A free test change would force a paid
-re-qualification, so the file waits for one that is already planned.
+further live run until both are re-run.
+
+The cost is not money. `_providers.py` shells out to the locally logged-in
+`claude` and `codex` CLI binaries with the inherited environment -- no API key,
+no HTTP client, no billing path anywhere in this repo. The cost is that a live
+pilot is *not reproducible*: `run_calibration.py` is deterministic local
+computation and re-running it yields an identical artifact, but re-running a
+live pilot is a fresh experiment whose traces and verdict may differ from the
+recorded `qualification_passed: true`. So the file waits for a re-qualification
+that is already planned, rather than triggering an unplanned one.
 
 An earlier draft of this file claimed that staying outside the pin table was
 legitimate because it changed no pinned byte. `test_all_test_modules_are_frozen`

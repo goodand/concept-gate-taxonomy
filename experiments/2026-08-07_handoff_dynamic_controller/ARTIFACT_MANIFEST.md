@@ -389,18 +389,31 @@ raise시키지 않았다** — repo 루트 `test_guard_negative_coverage.py`가 
 항목이 하나 늘면 `frozen_surface_hashes()`에 키가 하나 는다. 실측 결과 그
 키 하나가 아래 전부를 stale로 만든다:
 
-| 고정 아티팩트 | 재실행 비용 |
+| 고정 아티팩트 | 재실행 성격 |
 |---|---|
-| `results/calibration.json` | 로컬 (무료) |
-| `results/redteam_codex_mcp_isolation.json` | 로컬 (무료) |
-| `results/redteam_provider_isolation.json` | 로컬 (무료) |
-| `results/live_pilot_codex_mcp_v7.json` | **유료** — `gpt-5.6-sol`, 4 arms |
-| `results/live_pilot_claude_mcp_surface_v2.json` | **유료** — `claude-opus-5`, 4 arms |
+| `results/calibration.json` | 로컬 결정론적 — 다시 돌리면 **같은 산출물** |
+| `results/redteam_codex_mcp_isolation.json` | 로컬 결정론적 |
+| `results/redteam_provider_isolation.json` | 로컬 결정론적 |
+| `results/live_pilot_codex_mcp_v7.json` | **live model run** — `gpt-5.6-sol`, 4 arms |
+| `results/live_pilot_claude_mcp_surface_v2.json` | **live model run** — `claude-opus-5`, 4 arms |
 
 뒤 둘은 `results/qualification_ledger.jsonl`에 `qualification_passed: true`로
 등재된 자격이고, 합쳐서 live model run 8회다. 그리고 stale이 되는 순간
-`_assert_provider_preflight`가 이후의 모든 live run을 거부한다. 즉 **테스트
-파일 한 개 추가가 유료 재-qualification 2건을 강제한다.**
+`_assert_provider_preflight`가 이후의 모든 live run을 거부한다.
+
+**비용은 돈이 아니다 — 이 문서의 이전 판(2026-08-08 최초 작성)이 이를
+"유료"라고 잘못 적었다.** `_providers.py`는 로컬에 로그인된 `claude`·`codex`
+CLI 바이너리를 환경 상속으로 `subprocess.run` 할 뿐이고, 이 저장소 어디에도
+API 키·HTTP 클라이언트·과금 경로가 없다. 별도 청구가 나갈 구조가 아니다.
+(`_providers.claude_command`의 docstring이 "without paying for a model call"
+이라고 쓰지만, 그건 구독 사용량을 뜻하지 청구를 뜻하지 않는다.)
+
+**진짜 비용은 재현 불가능성이다.** `run_calibration.py`는 결정론적 로컬
+계산이라 다시 돌리면 같은 파일이 나온다. live pilot은 모델 실행이라 다시
+돌리면 trace가 달라지고 **판정도 달라질 수 있다** — 지금 고정된 값은
+`qualification_passed: true`인데, 재실행은 그 값을 다시 얻는 작업이 아니라
+**새 실험**이다. 여기에 구독 사용량과 감독이 필요한 wall-clock(셀당 최대
+40턴)이 더해진다. 이것이 "가볍게 다시 돌리지 않는" 이유이지, 금액이 아니다.
 
 **그럼 지금 가드는 안전한가 — 측정됐다.** 단정이 아니라 변이로 확인했다:
 throwaway 사본에서 세 가드의 본문을 전부 비우자 12개 중 12개가
