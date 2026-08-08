@@ -51,7 +51,50 @@ GUARD_PREFIXES = ("assert_", "_assert_")
 # These are NOT exempt from scrutiny -- `test_known_unproven_entries_are_not_stale`
 # fails if an entry disappears or stops being able to raise, so the list cannot
 # rot into a silent cap.
-KNOWN_UNPROVEN: dict[str, str] = {}
+#
+# A SECOND, DISTINCT REASON (2026-08-08): a negative test can be honestly
+# written and even verified, yet not be landable, because landing it costs a
+# paid re-qualification. That is not the mocking case above and must not be
+# filed as if it were. Measured: `experiments/2026-08-07_handoff_dynamic_controller`
+# requires every `test_*.py` in the experiment to appear in
+# `_evaluator.FROZEN_SURFACE_FILES` (`test_preprimary_gates.py::
+# test_all_test_modules_are_frozen`), and every entry in that tuple becomes a
+# key in `frozen_surface_hashes()`. Adding one key makes
+# `frozen_surface_drift()` non-empty against every pinned artifact -- including
+# `results/live_pilot_codex_mcp_v7.json` and
+# `results/live_pilot_claude_mcp_surface_v2.json`, the two ledger-recorded
+# provider qualifications produced by 8 live model runs (gpt-5.6-sol and
+# claude-opus-5, 4 arms each). `_assert_provider_preflight` then refuses every
+# further live run until both are re-run. So a free test change forces a paid
+# re-qualification.
+#
+# The three entries below are that case, and they are unusual in one way worth
+# stating plainly: the tests already exist and were verified. They are parked,
+# uncollected, at
+# `experiments/2026-08-07_handoff_dynamic_controller/pending_guard_negative_tests.py`
+# and were checked by mutation rather than by assertion -- emptying all three
+# guard bodies in a throwaway copy made 12 of 12 fail with DID NOT RAISE. So
+# "these guards are not vacuous" is measured, as of 2026-08-08. What is missing
+# is standing regression protection, not present-tense evidence.
+#
+# Owner / closing condition: fold into the planned v8/surface-v3
+# re-qualification (pending item 4, R1/R2/attempt-ledger). At that point add
+# `pending_guard_negative_tests.py` to FROZEN_SURFACE_FILES under its real
+# `test_` name, re-run calibration and both red-teams (all local, free) and
+# both provider pilots (paid), then delete these three entries.
+_PENDING = (
+    "negative tests exist and pass, parked at experiments/"
+    "2026-08-07_handoff_dynamic_controller/pending_guard_negative_tests.py; "
+    "landing them adds a FROZEN_SURFACE_FILES key, which staleness-fails both "
+    "paid provider qualifications. Close with the v8/surface-v3 "
+    "re-qualification. Mutation-verified 2026-08-08 (12/12 kill)."
+)
+
+KNOWN_UNPROVEN: dict[str, str] = {
+    "_assert_provider_preflight": _PENDING,
+    "_assert_ready": _PENDING,
+    "_assert_safe_destination": _PENDING,
+}
 
 
 def _python_files(root: Path):

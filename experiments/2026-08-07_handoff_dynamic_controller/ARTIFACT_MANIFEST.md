@@ -373,6 +373,52 @@ attempt다. 이 manifest는 그 오류를 **고치지 않고**(불변 결과물 
 
 \* 요청서의 "38건" 재확인 결과 실제로는 39건(config 12 + results 27, `redteam_provider_isolation.json` 포함)이었다 — 요청서 집계 당시 이 파일을 별도로 세지 않았을 가능성이 있다. 이 차이는 D2(vault 전체 재산출)의 관측이 아니라 이번 개별 확인으로 밝혀진 것이며, 최종 개별 분류 39건에는 영향을 주지 않는다.
 
+## 미결 산출물 — `pending_guard_negative_tests.py` (2026-08-08)
+
+수집되지 않는 테스트 파일 하나가 이 폴더에 있다. 실수가 아니라 기록된 부채다.
+
+**무엇**: `_assert_provider_preflight` · `_assert_ready` ·
+`_assert_safe_destination`의 음성 테스트 12개. 이 셋은 유료 live run이
+시작해도 되는지를 판정하는 가드인데, 2026-08-08까지 **어떤 테스트도 이들을
+raise시키지 않았다** — repo 루트 `test_guard_negative_coverage.py`가 정확히
+이 셋에서 실패했다.
+
+**왜 파킹했나**: 반입이 유료다. 이 실험은 모든 `test_*.py`가
+`_evaluator.FROZEN_SURFACE_FILES`에 있기를 요구하고
+(`test_preprimary_gates.py::test_all_test_modules_are_frozen`), 그 튜플에
+항목이 하나 늘면 `frozen_surface_hashes()`에 키가 하나 는다. 실측 결과 그
+키 하나가 아래 전부를 stale로 만든다:
+
+| 고정 아티팩트 | 재실행 비용 |
+|---|---|
+| `results/calibration.json` | 로컬 (무료) |
+| `results/redteam_codex_mcp_isolation.json` | 로컬 (무료) |
+| `results/redteam_provider_isolation.json` | 로컬 (무료) |
+| `results/live_pilot_codex_mcp_v7.json` | **유료** — `gpt-5.6-sol`, 4 arms |
+| `results/live_pilot_claude_mcp_surface_v2.json` | **유료** — `claude-opus-5`, 4 arms |
+
+뒤 둘은 `results/qualification_ledger.jsonl`에 `qualification_passed: true`로
+등재된 자격이고, 합쳐서 live model run 8회다. 그리고 stale이 되는 순간
+`_assert_provider_preflight`가 이후의 모든 live run을 거부한다. 즉 **테스트
+파일 한 개 추가가 유료 재-qualification 2건을 강제한다.**
+
+**그럼 지금 가드는 안전한가 — 측정됐다.** 단정이 아니라 변이로 확인했다:
+throwaway 사본에서 세 가드의 본문을 전부 비우자 12개 중 12개가
+`DID NOT RAISE`로 실패했다. 긍정 테스트는 동작하는 가드와 공허한 가드를
+구별하지 못하지만 이 변이 검사는 구별한다. 그래서 **"이 가드들은 지금
+공허하지 않다"는 실측된 사실**이고, 없는 것은 앞으로의 회귀 보호다.
+
+**닫는 조건**: v8/surface-v3 재-qualification(보류 과제 4 — R1/R2/
+attempt-ledger)에 합류시킨다. 그때 이 파일을 `test_` 이름으로 되돌려
+`FROZEN_SURFACE_FILES`에 넣고, calibration·red-team 2건(무료)과 provider
+pilot 2건(유료)을 재실행한 뒤 루트 `test_guard_negative_coverage.py`의
+`KNOWN_UNPROVEN` 항목 3개를 삭제한다.
+
+이 부채는 루트 `test_guard_negative_coverage.py`의 `KNOWN_UNPROVEN`에도
+같은 내용으로 등재돼 있으며, 그 항목들은
+`test_known_unproven_entries_are_not_stale`이 감시한다 — 가드가 사라지거나
+raise할 수 없게 되면 게이트가 실패하므로 조용한 상한으로 썩지 않는다.
+
 ## Obsidian Backlink
 
 - [[docs/feedback/codex_mcp_handoff_moc_20260807|Handoff MOC — direct_link 대상만 여기서 진입]]
