@@ -1,3 +1,20 @@
+> # ⚠️ LEGACY — 구속력 없음 (2026-08-08 격리)
+>
+> 파일명이 `CLAUDE.md`가 아니므로 자동 로드되지 않는다. 내용은 이력
+> 증거로 보존한다.
+>
+> 이 파일은 `concept-gate-taxonomy/CLAUDE.legacy.md`와 **byte-identical**
+> 하다. 격리 근거·빠진 규율 목록·활성본 위치는 **그 문서의 배너에만
+> 적었다** — 같은 설명을 두 곳에 손으로 복제하면 이 저장소가 없애려는
+> 실패 모드(사본 두 벌, 한쪽만 수정)를 규칙 문서에서 되살리기 때문이다.
+>
+> 요약만: 활성본은 `concept-gate-codex-mcp-wt/CLAUDE.md`이고, 이 문서는
+> 존재하지 않는 브랜치를 "current"라고 말한다.
+>
+> 이 worktree(`worktree-input-length-guard`)는 고유 커밋 0건의 유휴
+> 상태다. 판정 근거:
+> `notes/audits/vault/claude-md-divergence-audit-2026-08-08.md`
+
 # ConceptGate Taxonomy
 
 Developer: 탁재현 (goodand/concept-gate-taxonomy)
