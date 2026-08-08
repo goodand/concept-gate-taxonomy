@@ -1,5 +1,20 @@
 # HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
+- 갱신: **2026-08-08** — 이 문서의 아래 §10.4 10항목 목록은 **낡았다.**
+  2026-08-06 `concept-gate-h1a-scope-wt`(브랜치 `codex/h1a-typed-scope-split`)
+  세션이 §16의 12조건 중 **10개를 구현**했고(174 passed, 가드 게이트 10
+  passed), 그 브랜치가 이 브랜치로 병합됐다(cherry-pick/merge, 손복사 아님).
+  **`assert_9`는 이제 golden contract로 닫혔다** — 위 KNOWN_UNPROVEN 문장은
+  낡았다. 상세 근거는 `OPERATIONS_LOG.md` "2026-08-06 — D-H1a-12 §16 구현"
+  절이 정본이며, 아래 10항목 목록은 그 시점 이전 계획으로 이력 보존한다.
+  **단, 독립 리뷰 5차가 새 BLOCKER를 찾았다** — 판정문 §4가 처방한 문장
+  자체가 REMOVED arm에서 dangling reference였다(제작 세션이 직접 실측
+  확인). 이게 **Q13 상신 → D-H1a-13 판정**(2026-08-06 수령, 아래 표 참고)으로
+  이어졌다. D-H1a-13은 **기존 독립 리뷰 결과를 전부 무효화**했다
+  (`INDEPENDENT_SEMANTIC_REVIEW_PASSED = False`). §4·§6·§7 개정과 전체
+  리뷰 재실행이 **아직 미구현**(`repaired_cohort_trials: 0`,
+  `freeze_status: FREEZE_BLOCKED` 유지) — 이게 실제 "다음 세션이 할 일"이다.
+  전문: `DESIGN_DECISION_H1a_prescribed_sentence_defects.md`(D-H1a-13).
 - 갱신: **2026-08-05** — Q11·Q12 판정(D-H1a-11, D-H1a-12) 모두 도착·반입.
   Q12=F(typed-scope split)로 H1a는 계속되나 **§16의 freeze 해제 조건 12개는
   아직 미구현**. 가드 음성-테스트 커버리지 게이트(`test_guard_negative_coverage.py`,
@@ -202,7 +217,8 @@ E2.3(A_ONLY 일반화, screened PASS) → **E2.4(종료)** → **H1a(진행 중 
 | `experiments/2026-07-29_h1a_source_authority_unresolved/DESIGN_DECISION_H1a_evidence_symmetry.md` | Q9=A(fixture 무변경, L3 한계 선언) / Q9.2(Q8.1 유지) — **2026-08-03 반입·적용 완료**(`notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`에서 byte-identical 복사, 원본은 `notes/`에 보존). `PREREGISTRATION.md` §0.1에 L3 등록 완료 |
 | `DESIGN_DECISION_H1a_residual_prohibition.md` | D-H1a-10, Q10=E(코호트 비식별 보존) / Q10.1~Q10.3 — **2026-08-03 반입·적용 완료** |
 | `DESIGN_DECISION_H1a_allowed_rendering.md` | D-H1a-11, Q11=D(공통 기본허용 규칙, 축별 permission 없음) / Q11.1=A / Q11.2=A — **적용 완료.** 독립 리뷰 3명 전원 `FREEZE_BLOCKED`(공허한 `assert_5`, 코호트 파괴 경로, 정책 계층 미배선 — 전부 수정 완료) |
-| `DESIGN_DECISION_H1a_identification_validity.md` | D-H1a-12(2026-08-05), Q12=F(`outside_domain_knowledge`/`source_meta_reasoning` typed-scope split) / Q12.1~Q12.4 + M4·M7·M8 — **판정만 반입, §16의 freeze 해제 조건 12개는 미구현.** 요청서: `correspondence/DESIGN_REQUEST_H1a_identification_validity.md` |
+| [`DESIGN_DECISION_H1a_identification_validity.md`](../experiments/2026-07-29_h1a_source_authority_unresolved/DESIGN_DECISION_H1a_identification_validity.md) | D-H1a-12(2026-08-05), Q12=F(`outside_domain_knowledge`/`source_meta_reasoning` typed-scope split) / Q12.1~Q12.4 + M4·M7·M8 — **2026-08-06 §16 조건 10/12 구현**(`OPERATIONS_LOG.md`), 독립 리뷰가 새 BLOCKER 발견 → 아래 D-H1a-13으로 이어짐. 요청서: `correspondence/DESIGN_REQUEST_H1a_identification_validity.md` |
+| [`DESIGN_DECISION_H1a_prescribed_sentence_defects.md`](../experiments/2026-07-29_h1a_source_authority_unresolved/DESIGN_DECISION_H1a_prescribed_sentence_defects.md) | D-H1a-13(2026-08-06), Q13=C(dangling 문장 둘째 절 삭제) / Q13.1~Q13.6 — **판정만 반입, §4·§6·§7 개정 미구현.** 기존 독립 리뷰 결과 전부 무효화(`INDEPENDENT_SEMANTIC_REVIEW_PASSED = False`). `freeze_status: FREEZE_BLOCKED`, `repaired_cohort_trials: 0`. 요청서: `correspondence/DESIGN_REQUEST_H1a_prescribed_sentence_defects.md` |
 
 > **2026-08-02 갱신**: `DESIGN_DECISION_H1a_prompt_surface.md`는 더 이상
 > 코드가 로드하는 파일이 **아니다.** Q5·Q6.1·Q7이 template을 셋으로 나눠
@@ -403,6 +419,17 @@ ev5의 `structural_composition` 문자열은 "노출 안 된 enum 값 언급"이
 부분-전체가 아니라고 구분. 규칙 2의 전문용어 규율은 의도대로 작동한다.
 
 ## 5. 세션 로그 (최신순)
+
+### 2026-08-06 — §16 조건 10/12 구현, 독립 리뷰 5차 → D-H1a-13 상신
+
+worktree `concept-gate-h1a-scope-wt`(브랜치 `codex/h1a-typed-scope-split`)에
+격리해 진행, 2026-08-08 이 브랜치로 병합(손복사 아님). 전문은
+`OPERATIONS_LOG.md` "2026-08-06 — D-H1a-12 §16 구현(조건 1~10) + 독립 리뷰
+5차" 절 — typed-scope split·golden contract·음성 테스트 5종을 포함한 10항목
+구현 표, 뮤테이션 테스트가 잡은 결함 3건, 독립 리뷰 5차가 발견한 BLOCKER
+전문(§4 처방 문장이 REMOVED arm에서 dangling reference)이 그 안에 있다.
+여기는 중복하지 않는다. 결과: Q13 상신 → D-H1a-13 판정 도착, §4·§6·§7 개정
+미구현으로 `FREEZE_BLOCKED` 유지(위 표 참고).
 
 ### 2026-08-05 — D-H1a-11·12 반입, 가드 음성-테스트 게이트 이 브랜치로 전파
 
@@ -866,7 +893,25 @@ except ModuleNotFoundError as exc:
 > trial을 `UNKNOWN`으로 보고 `clean`에서 제외한다(지시문 §3). 사전등록은
 > `DESIGN_D4_constraint_11_review.md`, 실행 기록은 등록부 [DONE] #25.
 
-### 10.4 다음 세션이 반드시 할 일 (2026-08-05 추가)
+### 10.4 다음 세션이 반드시 할 일
+
+> **2026-08-08 갱신 — 진짜 다음 할 일은 아래 10항목이 아니다.** 그 목록은
+> 2026-08-06 `h1a-scope-wt`에서 10/12 구현 완료됐다(§5 "2026-08-06" 로그,
+> `OPERATIONS_LOG.md`). 실제로 남은 것:
+>
+> 1. **D-H1a-13(Q13) 판정 반영** — §4·§6·§7의 D-H1a-12 처방 문장에서 dangling
+>    reference("Source evaluation is governed by the arm-specific
+>    source-evaluation clause.")를 REMOVED arm에서 제거(Q13=C). 위 표의
+>    D-H1a-13 행, 전문은 `DESIGN_DECISION_H1a_prescribed_sentence_defects.md`.
+> 2. **독립 리뷰 전체 재실행** — D-H1a-13이 기존 5차 리뷰 결과를 전부
+>    무효화했다(`INDEPENDENT_SEMANTIC_REVIEW_PASSED = False`). 리뷰어 전원
+>    freeze 승인까지 필요.
+> 3. **`repaired_cohort_trials: 0` → 실행.** 그 전엔 `freeze_status:
+>    FREEZE_BLOCKED` 유지.
+>
+> 아래 2026-08-05 작성 10항목은 **완료된 계획으로 이력 보존**한다(무엇이
+> 이미 됐는지 근거로 남기기 위함 — 삭제하면 "왜 이 순서로 했는지"가
+> 사라진다). 새 작업은 위 세 항목 기준으로 한다.
 
 D-H1a-12 수령으로 H1a는 계속되지만 **§16의 freeze 해제 조건 12개가 전부
 미구현**이다 — 하나라도 빠지면 `FREEZE_BLOCKED` 유지. 전문은
@@ -909,6 +954,14 @@ D-H1a-12 수령으로 H1a는 계속되지만 **§16의 freeze 해제 조건 12�
 게이트 부재·`predecessor_cohort` 미해소·arm 간 키 순서 비대칭)은
 `concept-gate-owl-wt/experiments/2026-08-04_owl_entailment_contract_shape/OPERATIONS_LOG.md`
 참조 — 이 실험(H1a)과 무관하니 여기서 처분하지 않는다.
+
+> **인수인계 도달성 감사기** (2026-08-08 반입): 새 세션이 이 문서에서
+> 도달 가능한 파일만으로 작업을 재개할 수 있는지 기계적으로 잰다.
+> [`scripts/handoff_reachability.py`](../scripts/handoff_reachability.py)
+> `python3 scripts/handoff_reachability.py --ref <base>` — 링크 도달성만
+> 재며 handoff가 **이해 가능한지는 재지 않는다.** 양방향 테스트:
+> [`test_handoff_reachability.py`](../test_handoff_reachability.py) —
+> recall(깨진 링크는 보고)과 precision(깨진 *언급*은 보고 안 함)을 고정한다.
 
 ---
 

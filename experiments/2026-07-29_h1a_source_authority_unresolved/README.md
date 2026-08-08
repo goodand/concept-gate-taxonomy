@@ -25,7 +25,13 @@
   [`DESIGN_DECISION_H1a_manipulation_scope.md`](DESIGN_DECISION_H1a_manipulation_scope.md)(Q1·Q2),
   [`DESIGN_DECISION_H1a_prompt_surface.md`](DESIGN_DECISION_H1a_prompt_surface.md)(Q3·Q4),
   [`DESIGN_DECISION_H1a_review_blockers.md`](DESIGN_DECISION_H1a_review_blockers.md)(Q5~Q8),
-  Q9(`notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md` — **저장소 미반입**)
+  [`DESIGN_DECISION_H1a_evidence_symmetry.md`](DESIGN_DECISION_H1a_evidence_symmetry.md)(Q9,
+  2026-08-02 — **정정 2026-08-07: 이미 저장소에 반입돼 있다.** 이 줄이
+  이전엔 `notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md`를 "저장소
+  미반입"으로 가리켰으나, 그 판정은 실제로 이 실험 폴더에 이 파일명으로
+  이미 들어와 있었다 — 링크만 갱신되지 않았다),
+  [`DESIGN_DECISION_H1a_residual_prohibition.md`](DESIGN_DECISION_H1a_residual_prohibition.md)(D-H1a-10,
+  Q10 — 잔여 금지와 null 식별가능성)
   — 판정자: OpenAI Codex, 외부
 - **2026-08-07 orphan 감사로 추가 — 이 worktree에만 있고 어떤 README에서도
   링크된 적 없던 두 판정**(replica-collapse 감사기로 발견: 다른 worktree의
@@ -35,12 +41,33 @@
   [`DESIGN_DECISION_H1a_identification_validity.md`](DESIGN_DECISION_H1a_identification_validity.md)
   (D-H1a-12, 2026-08-05 — 표적 기제 식별 타당성. `outside knowledge`를
   `outside_domain_knowledge`/`source_meta_reasoning` 두 정책 범주로 분리하고
-  D-H1a-10 §5를 개정. **현재 상태: `FREEZE_BLOCKED` 유지**, 해제 조건 12개는
-  그 문서 §16). 요청서:
+  D-H1a-10 §5를 개정. **2026-08-06 §16 조건 10/12 구현 완료**, 독립 리뷰가
+  새 BLOCKER 발견 → 아래 D-H1a-13으로 이어짐). 요청서:
   [`correspondence/DESIGN_REQUEST_H1a_allowed_rendering.md`](correspondence/DESIGN_REQUEST_H1a_allowed_rendering.md) →
   D-H1a-11,
   [`correspondence/DESIGN_REQUEST_H1a_identification_validity.md`](correspondence/DESIGN_REQUEST_H1a_identification_validity.md) →
   D-H1a-12.
+- **2026-08-08 반입 — 가장 최근 판정**:
+  [`DESIGN_DECISION_H1a_prescribed_sentence_defects.md`](DESIGN_DECISION_H1a_prescribed_sentence_defects.md)
+  (D-H1a-13, 2026-08-06 — D-H1a-12 §4·§6·§7 처방 문구와 §14 ceiling, §16
+  freeze 조건을 개정하고 기존 독립 리뷰를 무효화함 —
+  `INDEPENDENT_SEMANTIC_REVIEW_PASSED = False` 유지 중, §4·§6·§7 개정
+  자체는 아직 미구현). 요청서:
+  [`correspondence/DESIGN_REQUEST_H1a_prescribed_sentence_defects.md`](correspondence/DESIGN_REQUEST_H1a_prescribed_sentence_defects.md).
+- 요청서 원문(각 판정이 응답한 질문의 정확한 문구·embed된 근거) —
+  2026-08-07 orphan 감사로 개별 연결:
+  [`correspondence/DESIGN_REQUEST.md`](correspondence/DESIGN_REQUEST.md) →
+  `DESIGN_DECISION.md`,
+  [`correspondence/DESIGN_REQUEST_H1a_manipulation_scope.md`](correspondence/DESIGN_REQUEST_H1a_manipulation_scope.md) →
+  `DESIGN_DECISION_H1a_manipulation_scope.md`,
+  [`correspondence/DESIGN_REQUEST_H1a_prompt_surface.md`](correspondence/DESIGN_REQUEST_H1a_prompt_surface.md) →
+  `DESIGN_DECISION_H1a_prompt_surface.md`,
+  [`correspondence/DESIGN_REQUEST_H1a_review_blockers.md`](correspondence/DESIGN_REQUEST_H1a_review_blockers.md) →
+  `DESIGN_DECISION_H1a_review_blockers.md`,
+  [`correspondence/DESIGN_REQUEST_H1a_evidence_symmetry.md`](correspondence/DESIGN_REQUEST_H1a_evidence_symmetry.md) →
+  `DESIGN_DECISION_H1a_evidence_symmetry.md`,
+  [`correspondence/DESIGN_REQUEST_H1a_residual_prohibition.md`](correspondence/DESIGN_REQUEST_H1a_residual_prohibition.md) →
+  `DESIGN_DECISION_H1a_residual_prohibition.md`.
 - 모델 대면 프롬프트 template: [`h1a_prompt_template.md`](h1a_prompt_template.md)
   **(판정문이 아니다 — 2026-08-02 분리)**
 - 적대 검증 보고: [`../../docs/feedback/h1a_source_authority_unresolved_review_20260729.md`](../../docs/feedback/h1a_source_authority_unresolved_review_20260729.md)(설계 초안 리뷰),
