@@ -27,6 +27,20 @@
   [`DESIGN_DECISION_H1a_review_blockers.md`](DESIGN_DECISION_H1a_review_blockers.md)(Q5~Q8),
   Q9(`notes/DESIGN_DECISION_H1A_EVIDENCE_SYMMETRY.md` — **저장소 미반입**)
   — 판정자: OpenAI Codex, 외부
+- **2026-08-07 orphan 감사로 추가 — 이 worktree에만 있고 어떤 README에서도
+  링크된 적 없던 두 판정**(replica-collapse 감사기로 발견: 다른 worktree의
+  동명 파일은 byte가 달라 replica가 아니라 이 worktree만의 최신 분기였다):
+  [`DESIGN_DECISION_H1a_allowed_rendering.md`](DESIGN_DECISION_H1a_allowed_rendering.md)
+  (D-H1a-11, Q11 — `removed: allowed` 렌더링 규칙, 공통 기본허용 규칙 채택),
+  [`DESIGN_DECISION_H1a_identification_validity.md`](DESIGN_DECISION_H1a_identification_validity.md)
+  (D-H1a-12, 2026-08-05 — 표적 기제 식별 타당성. `outside knowledge`를
+  `outside_domain_knowledge`/`source_meta_reasoning` 두 정책 범주로 분리하고
+  D-H1a-10 §5를 개정. **현재 상태: `FREEZE_BLOCKED` 유지**, 해제 조건 12개는
+  그 문서 §16). 요청서:
+  [`correspondence/DESIGN_REQUEST_H1a_allowed_rendering.md`](correspondence/DESIGN_REQUEST_H1a_allowed_rendering.md) →
+  D-H1a-11,
+  [`correspondence/DESIGN_REQUEST_H1a_identification_validity.md`](correspondence/DESIGN_REQUEST_H1a_identification_validity.md) →
+  D-H1a-12.
 - 모델 대면 프롬프트 template: [`h1a_prompt_template.md`](h1a_prompt_template.md)
   **(판정문이 아니다 — 2026-08-02 분리)**
 - 적대 검증 보고: [`../../docs/feedback/h1a_source_authority_unresolved_review_20260729.md`](../../docs/feedback/h1a_source_authority_unresolved_review_20260729.md)(설계 초안 리뷰),
