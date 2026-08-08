@@ -1,3 +1,39 @@
+> # ⚠️ LEGACY — 이 문서는 더 이상 구속력이 없다
+>
+> **2026-08-08 격리됨.** 파일명이 `CLAUDE.md`가 아니므로 자동 로드되지
+> 않는다. 이것이 격리의 전부이자 목적이다 — 내용은 이력 증거로 보존한다.
+>
+> **활성본**: `concept-gate-codex-mcp-wt/CLAUDE.md`
+> (11,750B, 활성 worktree 6곳에 byte-identical). 이 문서(4,849B)는 그
+> 활성본의 조상이다.
+>
+> **격리 근거 — 이 문서는 사실과 다른 것을 말한다:**
+>
+> - 아래 `## Git` 절이 `claude/enable-remote-control-Lh6Di`를
+>   "current working branch"라고 명시하지만 **그 브랜치는 존재하지 않는다**
+>   (`git branch -a`로 확인). 이 worktree의 실제 브랜치는
+>   `claude/ontoclean-gufo-handoff-7cmq0v`다.
+> - "Target repo ... (will be registered separately)"도 이미 등록이 끝난
+>   저장소를 미등록으로 서술한다.
+>
+> **이 문서에 없는 활성 규율 (활성본에만 있음):**
+>
+> 1. worktree 사이로 파일을 손으로 복사하지 말 것 (2026-08-05 실측 사례 포함)
+> 2. 무언가를 찾을 때 grep으로 끝내지 마라 (recall 0.688→1.000 실측)
+> 3. 설계 판정을 상신하기 전 "아직 안 풀렸다"고 단정하지 마라
+> 4. 머지 게이트 단일 진입점(`scripts/run_gates.py`) — 이 문서의 "테스트
+>    5종" 나열은 옛 방식이며, 실험 폴더 동명 모듈이 `sys.modules`를 선점해
+>    **다른 실험의 evaluator로 조용히 실행되던** 실제 결함을 반영하지 않는다
+>
+> **이 worktree의 규칙 공백**: 격리 후 이 디렉토리에는 ConceptGate 저장소
+> 규칙이 없다. 상위 `Project_in_progress/CLAUDE.md`(vault 안전 게이트·검색
+> 절차)는 계속 로드된다. 활성본을 이 브랜치로 들이는 것은 정상 경로
+> (commit → merge → rebase)로 처리한다 — **이 파일을 되살리거나 활성본을
+> 손으로 복사하지 말 것.**
+>
+> 판정 근거 전문:
+> `notes/audits/vault/claude-md-divergence-audit-2026-08-08.md`
+
 # ConceptGate Taxonomy
 
 Developer: 탁재현 (goodand/concept-gate-taxonomy)
