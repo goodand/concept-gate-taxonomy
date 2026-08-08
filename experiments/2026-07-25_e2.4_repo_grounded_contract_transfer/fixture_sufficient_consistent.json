@@ -1,0 +1,77 @@
+{
+  "fixture_version": "repo_evidence_fixture_v2",
+  "experiment_id": "E2.4",
+  "repo": "goodand/concept-gate-taxonomy",
+  "source_commit": "adf06b25a49125b84886c5c6cb437df9d10f1e9a",
+  "run_pipeline_input": [
+    {
+      "name": "카페린",
+      "features": [
+        {
+          "feature": "손잡이",
+          "type": "structural_composition",
+          "evidence": "손잡이가 항목에 기록되어 있다"
+        }
+      ]
+    }
+  ],
+  "candidate_concepts": [
+    {
+      "name": "카페린",
+      "features": [
+        {
+          "feature": "손잡이",
+          "type": "structural_composition",
+          "evidence_refs": [
+            "ev9",
+            "ev10"
+          ]
+        }
+      ]
+    }
+  ],
+  "evidence_sources": [
+    {
+      "evidence_id": "ev9",
+      "source_kind": "code",
+      "source_ref": {
+        "kind": "file_lines",
+        "path": "conceptgate/server.py",
+        "start_line": 380,
+        "end_line": 382
+      },
+      "text": "    essential_feature participates in the is-a DAG.\n    structural_composition creates has-a composition edges (part-whole graph),\n    returned separately in the composition field.",
+      "text_sha256": "999ab5840c60293377b0258de08599ead0aac94094e23d58c9a6109fc0d7c82e"
+    },
+    {
+      "evidence_id": "ev10",
+      "source_kind": "fixture",
+      "source_ref": {
+        "kind": "json_pointer",
+        "path": "experiments/2026-07-25_e2.3_global_invariant_generalization/fixture.json",
+        "pointer": "/fixtures/0/input_concepts/0/features/0/evidence"
+      },
+      "text": "카페린의 손잡이는 카페린 몸체의 구성 부분이다",
+      "text_sha256": "42379a2ef6c161f9467d78b0dd54c34cb03f7fe9cc114c08cb67d5f6a6e6a1a8"
+    }
+  ],
+  "server_response": {
+    "status": "NEEDS_CORRECTION",
+    "dag": {},
+    "composition_issues": [],
+    "anti_patterns": []
+  },
+  "builder_metadata": {
+    "evidence_notes": {
+      "ev9": "Live @mcp.tool docstring (this repo's currently-registered run_pipeline tool, re-confirmed 2026-07-27) states that structural_composition denotes a part-whole (has-a) relation. This establishes the general ontological meaning of the type, but does not by itself name any specific feature -- kept as corroborating context, not sole support.",
+      "ev10": "Pre-registered fixture evidence string for concept 카페린's feature 손잡이, frozen in a sibling experiment's design commit (experiments/2026-07-25_e2.3_global_invariant_generalization) before any trial of that experiment executed. States in plain prose that 손잡이 IS a constituent part (구성 부분) of 카페린's body -- a direct, instance-bound assertion of a part-whole relation for this specific feature, independent of any type label. Combined with ev9's general definition of what structural_composition means, this binds the abstract type definition to this specific feature."
+    },
+    "change_history": [
+      {
+        "date": "2026-07-28",
+        "change": "migrated from repo_evidence_packet v1",
+        "detail": "extraction_note moved out of the model-facing surface into builder_metadata; source_path+locator replaced by a source_ref tagged union; extraction_policy dropped (source restriction now lives in contract_prompt.md)."
+      }
+    ]
+  }
+}

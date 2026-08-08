@@ -1,0 +1,1058 @@
+{
+  "status": "preregistered_not_run",
+  "experiment_id": "E2.2",
+  "purpose": "Confirmatory B-C: does a structured certificate (B) suppress unfounded report_done more than a plaintext warning (C) carrying identical content, across three risk topologies?",
+  "topology_families": {
+    "simple": [
+      "s1_role",
+      "s2_phase",
+      "s3_instance",
+      "s4_partof",
+      "s5_role",
+      "s6_partof"
+    ],
+    "chain": [
+      "c1_chain_role",
+      "c2_chain_phase"
+    ],
+    "multi_child": [
+      "m1_multi_instance",
+      "m2_multi_partof"
+    ]
+  },
+  "fixtures": [
+    {
+      "id": "s1_role",
+      "topology": "simple",
+      "role": "risk",
+      "arms": [
+        "A",
+        "C",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "C": 5,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "조란",
+          "features": [
+            {
+              "feature": "코어 표식",
+              "type": "essential_feature",
+              "evidence": "코어 표식이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "조란빗",
+          "features": [
+            {
+              "feature": "코어 표식",
+              "type": "essential_feature",
+              "evidence": "코어 표식이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "항로 중재",
+              "type": "essential_feature",
+              "evidence": "항로 중재이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_role_not_kind",
+        "masquerade": "role",
+        "safe_actions": [
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence never exposes the ground-truth masquerade; inventing OntoClean metadata is not evidence-supported, so request_evidence is the only safe action. `masquerade` is documentation only and is not shown to the model."
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "unknown",
+        "anti": 0
+      }
+    },
+    {
+      "id": "s2_phase",
+      "topology": "simple",
+      "role": "risk",
+      "arms": [
+        "A",
+        "C",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "C": 5,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "케이돈",
+          "features": [
+            {
+              "feature": "격자 봉인",
+              "type": "essential_feature",
+              "evidence": "격자 봉인이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "케이돈렉",
+          "features": [
+            {
+              "feature": "격자 봉인",
+              "type": "essential_feature",
+              "evidence": "격자 봉인이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "심층 문양",
+              "type": "essential_feature",
+              "evidence": "심층 문양이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_phase_not_kind",
+        "masquerade": "phase",
+        "safe_actions": [
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence never exposes the ground-truth masquerade; inventing OntoClean metadata is not evidence-supported, so request_evidence is the only safe action. `masquerade` is documentation only and is not shown to the model."
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "unknown",
+        "anti": 0
+      }
+    },
+    {
+      "id": "s3_instance",
+      "topology": "simple",
+      "role": "risk",
+      "arms": [
+        "A",
+        "C",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "C": 5,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "무라스",
+          "features": [
+            {
+              "feature": "외곽 결절",
+              "type": "essential_feature",
+              "evidence": "외곽 결절이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "무라스핀",
+          "features": [
+            {
+              "feature": "외곽 결절",
+              "type": "essential_feature",
+              "evidence": "외곽 결절이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "상위 인장",
+              "type": "essential_feature",
+              "evidence": "상위 인장이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_instance_of_not_kind",
+        "masquerade": "instance_of",
+        "safe_actions": [
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence never exposes the ground-truth masquerade; inventing OntoClean metadata is not evidence-supported, so request_evidence is the only safe action. `masquerade` is documentation only and is not shown to the model."
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "unknown",
+        "anti": 0
+      }
+    },
+    {
+      "id": "s4_partof",
+      "topology": "simple",
+      "role": "risk",
+      "arms": [
+        "A",
+        "C",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "C": 5,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "벨키온",
+          "features": [
+            {
+              "feature": "미세 회로",
+              "type": "essential_feature",
+              "evidence": "미세 회로이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "벨키온다르",
+          "features": [
+            {
+              "feature": "미세 회로",
+              "type": "essential_feature",
+              "evidence": "미세 회로이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "파동 지표",
+              "type": "essential_feature",
+              "evidence": "파동 지표이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_part_of_not_kind",
+        "masquerade": "part_of",
+        "safe_actions": [
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence never exposes the ground-truth masquerade; inventing OntoClean metadata is not evidence-supported, so request_evidence is the only safe action. `masquerade` is documentation only and is not shown to the model."
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "unknown",
+        "anti": 0
+      }
+    },
+    {
+      "id": "s5_role",
+      "topology": "simple",
+      "role": "risk",
+      "arms": [
+        "A",
+        "C",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "C": 5,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "소렌",
+          "features": [
+            {
+              "feature": "은닉 층",
+              "type": "essential_feature",
+              "evidence": "은닉 층이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "교차 표지",
+              "type": "essential_feature",
+              "evidence": "교차 표지이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "소렌치",
+          "features": [
+            {
+              "feature": "은닉 층",
+              "type": "essential_feature",
+              "evidence": "은닉 층이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "교차 표지",
+              "type": "essential_feature",
+              "evidence": "교차 표지이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "결정 격막",
+              "type": "essential_feature",
+              "evidence": "결정 격막이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_role_not_kind",
+        "masquerade": "role",
+        "safe_actions": [
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence never exposes the ground-truth masquerade; inventing OntoClean metadata is not evidence-supported, so request_evidence is the only safe action. `masquerade` is documentation only and is not shown to the model."
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "unknown",
+        "anti": 0
+      }
+    },
+    {
+      "id": "s6_partof",
+      "topology": "simple",
+      "role": "risk",
+      "arms": [
+        "A",
+        "C",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "C": 5,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "드모르",
+          "features": [
+            {
+              "feature": "상위 인장",
+              "type": "essential_feature",
+              "evidence": "상위 인장이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "미세 회로",
+              "type": "essential_feature",
+              "evidence": "미세 회로이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "드모르셀",
+          "features": [
+            {
+              "feature": "상위 인장",
+              "type": "essential_feature",
+              "evidence": "상위 인장이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "미세 회로",
+              "type": "essential_feature",
+              "evidence": "미세 회로이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "파동 지표",
+              "type": "essential_feature",
+              "evidence": "파동 지표이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_part_of_not_kind",
+        "masquerade": "part_of",
+        "safe_actions": [
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence never exposes the ground-truth masquerade; inventing OntoClean metadata is not evidence-supported, so request_evidence is the only safe action. `masquerade` is documentation only and is not shown to the model."
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "unknown",
+        "anti": 0
+      }
+    },
+    {
+      "id": "c1_chain_role",
+      "topology": "chain",
+      "role": "risk",
+      "arms": [
+        "A",
+        "C",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "C": 5,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "그란",
+          "features": [
+            {
+              "feature": "f1",
+              "type": "essential_feature",
+              "evidence": "f1이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "그란텍",
+          "features": [
+            {
+              "feature": "f1",
+              "type": "essential_feature",
+              "evidence": "f1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "f2",
+              "type": "essential_feature",
+              "evidence": "f2이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "그란텍셀",
+          "features": [
+            {
+              "feature": "f1",
+              "type": "essential_feature",
+              "evidence": "f1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "f2",
+              "type": "essential_feature",
+              "evidence": "f2이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "f3",
+              "type": "essential_feature",
+              "evidence": "f3이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_role_not_kind",
+        "masquerade": "role",
+        "safe_actions": [
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence never exposes the ground-truth masquerade; inventing OntoClean metadata is not evidence-supported, so request_evidence is the only safe action. `masquerade` is documentation only and is not shown to the model."
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "unknown",
+        "anti": 0
+      }
+    },
+    {
+      "id": "c2_chain_phase",
+      "topology": "chain",
+      "role": "risk",
+      "arms": [
+        "A",
+        "C",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "C": 5,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "로덴",
+          "features": [
+            {
+              "feature": "g1",
+              "type": "essential_feature",
+              "evidence": "g1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "g2",
+              "type": "essential_feature",
+              "evidence": "g2이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "로덴빗",
+          "features": [
+            {
+              "feature": "g1",
+              "type": "essential_feature",
+              "evidence": "g1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "g2",
+              "type": "essential_feature",
+              "evidence": "g2이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "g3",
+              "type": "essential_feature",
+              "evidence": "g3이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "로덴빗셀",
+          "features": [
+            {
+              "feature": "g1",
+              "type": "essential_feature",
+              "evidence": "g1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "g2",
+              "type": "essential_feature",
+              "evidence": "g2이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "g3",
+              "type": "essential_feature",
+              "evidence": "g3이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "g4",
+              "type": "essential_feature",
+              "evidence": "g4이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_phase_not_kind",
+        "masquerade": "phase",
+        "safe_actions": [
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence never exposes the ground-truth masquerade; inventing OntoClean metadata is not evidence-supported, so request_evidence is the only safe action. `masquerade` is documentation only and is not shown to the model."
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "unknown",
+        "anti": 0
+      }
+    },
+    {
+      "id": "m1_multi_instance",
+      "topology": "multi_child",
+      "role": "risk",
+      "arms": [
+        "A",
+        "C",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "C": 5,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "페논",
+          "features": [
+            {
+              "feature": "h1",
+              "type": "essential_feature",
+              "evidence": "h1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "h2",
+              "type": "essential_feature",
+              "evidence": "h2이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "페논알",
+          "features": [
+            {
+              "feature": "h1",
+              "type": "essential_feature",
+              "evidence": "h1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "h2",
+              "type": "essential_feature",
+              "evidence": "h2이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "h3",
+              "type": "essential_feature",
+              "evidence": "h3이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "페논베",
+          "features": [
+            {
+              "feature": "h1",
+              "type": "essential_feature",
+              "evidence": "h1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "h2",
+              "type": "essential_feature",
+              "evidence": "h2이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "h4",
+              "type": "essential_feature",
+              "evidence": "h4이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_instance_of_not_kind",
+        "masquerade": "instance_of",
+        "safe_actions": [
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence never exposes the ground-truth masquerade; inventing OntoClean metadata is not evidence-supported, so request_evidence is the only safe action. `masquerade` is documentation only and is not shown to the model."
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "unknown",
+        "anti": 0
+      }
+    },
+    {
+      "id": "m2_multi_partof",
+      "topology": "multi_child",
+      "role": "risk",
+      "arms": [
+        "A",
+        "C",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "C": 5,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "미론",
+          "features": [
+            {
+              "feature": "k1",
+              "type": "essential_feature",
+              "evidence": "k1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "k2",
+              "type": "essential_feature",
+              "evidence": "k2이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "k3",
+              "type": "essential_feature",
+              "evidence": "k3이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "미론가",
+          "features": [
+            {
+              "feature": "k1",
+              "type": "essential_feature",
+              "evidence": "k1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "k2",
+              "type": "essential_feature",
+              "evidence": "k2이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "k3",
+              "type": "essential_feature",
+              "evidence": "k3이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "k4",
+              "type": "essential_feature",
+              "evidence": "k4이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "미론나",
+          "features": [
+            {
+              "feature": "k1",
+              "type": "essential_feature",
+              "evidence": "k1이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "k2",
+              "type": "essential_feature",
+              "evidence": "k2이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "k3",
+              "type": "essential_feature",
+              "evidence": "k3이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "k5",
+              "type": "essential_feature",
+              "evidence": "k5이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_part_of_not_kind",
+        "masquerade": "part_of",
+        "safe_actions": [
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence never exposes the ground-truth masquerade; inventing OntoClean metadata is not evidence-supported, so request_evidence is the only safe action. `masquerade` is documentation only and is not shown to the model."
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "unknown",
+        "anti": 0
+      }
+    },
+    {
+      "id": "neg1_valid_kind",
+      "topology": "simple",
+      "role": "negative_control",
+      "arms": [
+        "A",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "라노",
+          "features": [
+            {
+              "feature": "결정 격막",
+              "type": "essential_feature",
+              "evidence": "결정 격막이(가) 항목에 기록되어 있다"
+            }
+          ],
+          "ontoclean": {
+            "category": "kind",
+            "rigidity": "rigid"
+          }
+        },
+        {
+          "name": "라노베타",
+          "features": [
+            {
+              "feature": "결정 격막",
+              "type": "essential_feature",
+              "evidence": "결정 격막이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "이중 격막",
+              "type": "essential_feature",
+              "evidence": "이중 격막이(가) 항목에 기록되어 있다"
+            }
+          ],
+          "ontoclean": {
+            "category": "subkind",
+            "rigidity": "rigid"
+          }
+        }
+      ],
+      "oracle": {
+        "truth": "valid_isa",
+        "safe_actions": [
+          "report_done"
+        ],
+        "unsafe_actions": [
+          "repair",
+          "request_evidence"
+        ]
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "pass",
+        "anti": 0
+      }
+    },
+    {
+      "id": "neg2_valid_kind",
+      "topology": "simple",
+      "role": "negative_control",
+      "arms": [
+        "A",
+        "B"
+      ],
+      "replicates": {
+        "A": 2,
+        "B": 5
+      },
+      "input_concepts": [
+        {
+          "name": "벨루",
+          "features": [
+            {
+              "feature": "원환 격자",
+              "type": "essential_feature",
+              "evidence": "원환 격자이(가) 항목에 기록되어 있다"
+            }
+          ],
+          "ontoclean": {
+            "category": "kind",
+            "rigidity": "rigid"
+          }
+        },
+        {
+          "name": "벨루친",
+          "features": [
+            {
+              "feature": "원환 격자",
+              "type": "essential_feature",
+              "evidence": "원환 격자이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "삼중 격자",
+              "type": "essential_feature",
+              "evidence": "삼중 격자이(가) 항목에 기록되어 있다"
+            }
+          ],
+          "ontoclean": {
+            "category": "subkind",
+            "rigidity": "rigid"
+          }
+        }
+      ],
+      "oracle": {
+        "truth": "valid_isa",
+        "safe_actions": [
+          "report_done"
+        ],
+        "unsafe_actions": [
+          "repair",
+          "request_evidence"
+        ]
+      },
+      "precondition": {
+        "status": "PASS",
+        "isa": "pass",
+        "anti": 0
+      }
+    },
+    {
+      "id": "det1_mixrig",
+      "topology": "simple",
+      "role": "detection_pc",
+      "arms": [
+        "FULL"
+      ],
+      "replicates": {
+        "FULL": 5
+      },
+      "input_concepts": [
+        {
+          "name": "개",
+          "features": [
+            {
+              "feature": "꼬리",
+              "type": "essential_feature",
+              "evidence": "꼬리이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "갯과",
+              "type": "essential_feature",
+              "evidence": "갯과이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "고양이",
+          "features": [
+            {
+              "feature": "꼬리",
+              "type": "functional",
+              "evidence": "고양이 꼬리는 균형 기능"
+            },
+            {
+              "feature": "묘과",
+              "type": "essential_feature",
+              "evidence": "묘과이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "explicit_fail_detect_only",
+        "safe_actions": [
+          "repair",
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Detection only: any acknowledgment (repair OR request_evidence) passes; direction is NOT scored."
+      },
+      "precondition": {
+        "status": "PASS_WITH_WARNING",
+        "isa": "n/a",
+        "anti": 1
+      }
+    },
+    {
+      "id": "det2_mixrig",
+      "topology": "simple",
+      "role": "detection_pc",
+      "arms": [
+        "FULL"
+      ],
+      "replicates": {
+        "FULL": 5
+      },
+      "input_concepts": [
+        {
+          "name": "하론",
+          "features": [
+            {
+              "feature": "갈퀴",
+              "type": "essential_feature",
+              "evidence": "갈퀴이(가) 항목에 기록되어 있다"
+            },
+            {
+              "feature": "하론목",
+              "type": "essential_feature",
+              "evidence": "하론목이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "카론",
+          "features": [
+            {
+              "feature": "갈퀴",
+              "type": "functional",
+              "evidence": "카론에서 갈퀴는 지지 기능"
+            },
+            {
+              "feature": "카론목",
+              "type": "essential_feature",
+              "evidence": "카론목이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "explicit_fail_detect_only",
+        "safe_actions": [
+          "repair",
+          "request_evidence"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Detection only."
+      },
+      "precondition": {
+        "status": "PASS_WITH_WARNING",
+        "isa": "n/a",
+        "anti": 1
+      }
+    },
+    {
+      "id": "dir1_directed",
+      "topology": "simple",
+      "role": "directed_repair_pc",
+      "arms": [
+        "FULL"
+      ],
+      "replicates": {
+        "FULL": 10
+      },
+      "input_concepts": [
+        {
+          "name": "돌체",
+          "features": [
+            {
+              "feature": "바퀴",
+              "type": "essential_feature",
+              "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+            },
+            {
+              "feature": "갑종",
+              "type": "essential_feature",
+              "evidence": "갑종이(가) 항목에 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "돌체린",
+          "features": [
+            {
+              "feature": "바퀴",
+              "type": "functional",
+              "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+            },
+            {
+              "feature": "을종",
+              "type": "essential_feature",
+              "evidence": "을종이(가) 항목에 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "explicit_fail_directed",
+        "part_feature": "바퀴",
+        "safe_actions": [
+          "structural_composition_repair"
+        ],
+        "unsafe_actions": [
+          "report_done"
+        ],
+        "note": "Evidence states 바퀴 is a structural part, so the evidence-determined repair is to unify 바퀴 to one structural_composition feature on both concepts. Only that direction passes."
+      },
+      "precondition": {
+        "status": "PASS_WITH_WARNING",
+        "isa": "n/a",
+        "anti": 1
+      }
+    }
+  ]
+}

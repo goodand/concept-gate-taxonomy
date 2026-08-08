@@ -1,0 +1,1019 @@
+{
+  "record_class": "empirical_trial_set",
+  "protocol": {
+    "experiment_id": "E2.2.1",
+    "design_commit": "4017aff822b7d24cdc85f6c94fbdf3a640eaee0f"
+  },
+  "results": [
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 1,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-001",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"돌체의 바퀴 피처가 잘못 분류되었습니다. 제시된 증거('돌체의 바퀴는 돌체 몸체의 구성 부분이다')는 명확하게 구조적 부분-전체 관계를 설명하므로 structural_composition으로 수정했습니다. 이는 바퀴의 혼합 경직성(MixRig) 안티패턴을 해결합니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "돌체의 바퀴 피처가 잘못 분류되었습니다. 제시된 증거('돌체의 바퀴는 돌체 몸체의 구성 부분이다')는 명확하게 구조적 부분-전체 관계를 설명하므로 structural_composition으로 수정했습니다. 이는 바퀴의 혼합 경직성(MixRig) 안티패턴을 해결합니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 2,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-002",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴 해결: '바퀴'의 타입을 돌체에서 essential_feature → structural_composition으로 수정. 첫 번째 증거(\\\"구성 부분이다\\\")가 part-whole 관계를 명시적으로 서술하므로 structural_composition이 정확한 분류. 이를 통해 \\\"바퀴\\\"의 rigidity 혼합이 [essential_feature, functional]에서 [structural_composition, functional]로 변경되어 UFO 규칙 준수.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴 해결: '바퀴'의 타입을 돌체에서 essential_feature → structural_composition으로 수정. 첫 번째 증거(\"구성 부분이다\")가 part-whole 관계를 명시적으로 서술하므로 structural_composition이 정확한 분류. 이를 통해 \"바퀴\"의 rigidity 혼합이 [essential_feature, functional]에서 [structural_composition, functional]로 변경되어 UFO 규칙 준수."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 3,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-003",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Repaired MixRig anti-pattern by reclassifying 돌체's \\\"바퀴\\\" from essential_feature to structural_composition. The evidence \\\"구성 부분이다\\\" (component part of the body) describes a part-whole relationship, which correctly maps to structural_composition per the taxonomy rules. This allows the same feature (wheel) to consistently represent different aspects across concepts: a structural component in 돌체 and a functional role in 돌체린, resolving the rigidity conflict detected by the gate.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Repaired MixRig anti-pattern by reclassifying 돌체's \"바퀴\" from essential_feature to structural_composition. The evidence \"구성 부분이다\" (component part of the body) describes a part-whole relationship, which correctly maps to structural_composition per the taxonomy rules. This allows the same feature (wheel) to consistently represent different aspects across concepts: a structural component in 돌체 and a functional role in 돌체린, resolving the rigidity conflict detected by the gate."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 4,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-004",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern 해결: 돌체의 \\\"바퀴\\\" 증거가 \\\"구성 부분\\\"을 명시하므로 essential_feature에서 structural_composition으로 타입 수정. 이를 통해 ufo.no_antipattern obligation이 통과할 것으로 예상됨.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern 해결: 돌체의 \"바퀴\" 증거가 \"구성 부분\"을 명시하므로 essential_feature에서 structural_composition으로 타입 수정. 이를 통해 ufo.no_antipattern obligation이 통과할 것으로 예상됨."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 5,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-005",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"돌체의 \\\"바퀴\\\" feature 분류 오류를 수정했습니다. 증거가 \\\"구성 부분이다\\\"를 명시적으로 서술하므로 structural_composition으로 타입을 변경합니다. 이는 MixRig 안티패턴의 근본 원인을 제거합니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "돌체의 \"바퀴\" feature 분류 오류를 수정했습니다. 증거가 \"구성 부분이다\"를 명시적으로 서술하므로 structural_composition으로 타입을 변경합니다. 이는 MixRig 안티패턴의 근본 원인을 제거합니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 6,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-006",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern detected for \\\"바퀴\\\" with types ['essential_feature', 'functional'] across 돌체 and 돌체린. The evidence for 돌체's \\\"바퀴\\\" explicitly uses the \\\"~의 구성 부분이다\\\" pattern (\\\"돌체의 바퀴는 돌체 몸체의 구성 부분이다\\\"), which per instructions should be classified as structural_composition. This correction aligns the feature type classification with the evidence provided. 돌체린's \\\"바퀴\\\" remains functional as its evidence describes a functional role (movement capability).\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern detected for \"바퀴\" with types ['essential_feature', 'functional'] across 돌체 and 돌체린. The evidence for 돌체's \"바퀴\" explicitly uses the \"~의 구성 부분이다\" pattern (\"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"), which per instructions should be classified as structural_composition. This correction aligns the feature type classification with the evidence provided. 돌체린's \"바퀴\" remains functional as its evidence describes a functional role (movement capability)."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 7,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-007",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴 감지됨: '바퀴' feature가 혼합 분류되었습니다(essential_feature vs functional). 돌체의 '바퀴'는 증거 \\\"~의 구성 부분이다\\\"에 명시적으로 structural_composition을 지정해야 합니다. 돌체린의 '바퀴'도 동일 feature이므로 feature type을 structural_composition으로 통일했습니다. 기능적 역할(이동 기능)은 structural part가 제공하는 역할로서 증거에 캡처됩니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴 감지됨: '바퀴' feature가 혼합 분류되었습니다(essential_feature vs functional). 돌체의 '바퀴'는 증거 \"~의 구성 부분이다\"에 명시적으로 structural_composition을 지정해야 합니다. 돌체린의 '바퀴'도 동일 feature이므로 feature type을 structural_composition으로 통일했습니다. 기능적 역할(이동 기능)은 structural part가 제공하는 역할로서 증거에 캡처됩니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 8,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-008",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체린의 바퀴는 돌체린 몸체의 구성 부분이며 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern detected: 바퀴 has inconsistent rigidity across concepts. First evidence states explicit structural composition (\\\"돌체의 바퀴는 돌체 몸체의 구성 부분이다\\\"), indicating structural_composition type. Both occurrences of 바퀴 corrected to structural_composition to satisfy UFO rigidity consistency and resolve ufo.no_antipattern obligation failure.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체린의 바퀴는 돌체린 몸체의 구성 부분이며 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern detected: 바퀴 has inconsistent rigidity across concepts. First evidence states explicit structural composition (\"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"), indicating structural_composition type. Both occurrences of 바퀴 corrected to structural_composition to satisfy UFO rigidity consistency and resolve ufo.no_antipattern obligation failure."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 9,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-009",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴이 감지되었습니다. 같은 특성 '바퀴'가 '돌체'에서는 essential_feature, '돌체린'에서는 functional로 서로 다른 rigidity로 분류되어 있습니다. '돌체'의 '바퀴' 증거인 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'는 명확한 부분-전체 관계('구성 부분이다' 패턴)를 서술하고 있으므로, structural_composition으로 분류를 수정합니다. 이를 통해 특성의 rigidity가 일관되게 유지됩니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴이 감지되었습니다. 같은 특성 '바퀴'가 '돌체'에서는 essential_feature, '돌체린'에서는 functional로 서로 다른 rigidity로 분류되어 있습니다. '돌체'의 '바퀴' 증거인 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'는 명확한 부분-전체 관계('구성 부분이다' 패턴)를 서술하고 있으므로, structural_composition으로 분류를 수정합니다. 이를 통해 특성의 rigidity가 일관되게 유지됩니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 10,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-010",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴 해결: 돌체의 \\\"바퀴\\\" feature type을 essential_feature에서 structural_composition으로 수정. 증거 텍스트(\\\"구성 부분\\\")가 명시적으로 part-whole 관계를 서술하고 있으므로 structural_composition이 정확한 분류입니다. 이렇게 수정하면 \\\"바퀴\\\"는 돌체에서는 구조적 부분, 돌체린에서는 기능적 역할로 적절히 구분되어 UFO 안티패턴이 해소됩니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴 해결: 돌체의 \"바퀴\" feature type을 essential_feature에서 structural_composition으로 수정. 증거 텍스트(\"구성 부분\")가 명시적으로 part-whole 관계를 서술하고 있으므로 structural_composition이 정확한 분류입니다. 이렇게 수정하면 \"바퀴\"는 돌체에서는 구조적 부분, 돌체린에서는 기능적 역할로 적절히 구분되어 UFO 안티패턴이 해소됩니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 11,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-011",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern on '바퀴': evidence for '돌체' explicitly describes a part-whole relationship (\\\"구성 부분\\\" = constituent part), not an essential type feature. Reclassified to structural_composition per feature type semantics. This allows '바퀴' to be both a structural component in '돌체' and a functional provider in '돌체린' without rigidity conflict.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern on '바퀴': evidence for '돌체' explicitly describes a part-whole relationship (\"구성 부분\" = constituent part), not an essential type feature. Reclassified to structural_composition per feature type semantics. This allows '바퀴' to be both a structural component in '돌체' and a functional provider in '돌체린' without rigidity conflict."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 12,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-012",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체린의 바퀴는 돌체린 몸체의 구조적 구성 부분이며, 이동 기능을 수행한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig 안티패턴 해결. \\\"바퀴\\\"는 두 개념 모두에서 structural_composition으로 통일. 돌체의 경우 essential_feature에서 structural_composition으로 변경 (증거 이미 부분-전체 관계를 서술). 돌체린의 경우 functional에서 structural_composition으로 변경하고, 증거를 구조적 부분이면서 동시에 이동 기능을 수행한다는 점을 명시.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체린의 바퀴는 돌체린 몸체의 구조적 구성 부분이며, 이동 기능을 수행한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig 안티패턴 해결. \"바퀴\"는 두 개념 모두에서 structural_composition으로 통일. 돌체의 경우 essential_feature에서 structural_composition으로 변경 (증거 이미 부분-전체 관계를 서술). 돌체린의 경우 functional에서 structural_composition으로 변경하고, 증거를 구조적 부분이면서 동시에 이동 기능을 수행한다는 점을 명시."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 13,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-013",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"돌체의 '바퀴' feature를 essential_feature에서 structural_composition으로 재분류합니다. 증거 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'가 명시적인 전체-부분 관계(\\\"구성 부분\\\")를 서술하므로, structural_composition 타입이 증거와의 일관성을 높입니다. 이를 통해 MixRig anti-pattern을 해소하고 개념 모델의 의미 일관성을 개선합니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "돌체의 '바퀴' feature를 essential_feature에서 structural_composition으로 재분류합니다. 증거 '돌체의 바퀴는 돌체 몸체의 구성 부분이다'가 명시적인 전체-부분 관계(\"구성 부분\")를 서술하므로, structural_composition 타입이 증거와의 일관성을 높입니다. 이를 통해 MixRig anti-pattern을 해소하고 개념 모델의 의미 일관성을 개선합니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 14,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-014",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Repaired MixRig anti-pattern: \\\"바퀴\\\" in 돌체 reclassified from essential_feature to structural_composition based on evidence describing part-whole relationship (\\\"구성 부분이다\\\"). This aligns feature type with the explicit evidence while maintaining legitimate functional role in 돌체린.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Repaired MixRig anti-pattern: \"바퀴\" in 돌체 reclassified from essential_feature to structural_composition based on evidence describing part-whole relationship (\"구성 부분이다\"). This aligns feature type with the explicit evidence while maintaining legitimate functional role in 돌체린."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 15,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-015",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern 발생: \\\"바퀴\\\" 피처가 두 개념에서 다른 rigidity로 분류되었습니다. \\\"돌체\\\"의 경우 증거(\\\"돌체의 바퀴는 돌체 몸체의 구성 부분이다\\\")가 명시적으로 부분-전체 관계를 나타내므로 structural_composition으로 재분류해야 합니다. 이 수정 후 obligations가 통과될 것으로 예상됩니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern 발생: \"바퀴\" 피처가 두 개념에서 다른 rigidity로 분류되었습니다. \"돌체\"의 경우 증거(\"돌체의 바퀴는 돌체 몸체의 구성 부분이다\")가 명시적으로 부분-전체 관계를 나타내므로 structural_composition으로 재분류해야 합니다. 이 수정 후 obligations가 통과될 것으로 예상됩니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 16,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-016",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"돌체의 '바퀴' feature type을 essential_feature에서 structural_composition으로 수정했습니다. 증거 \\\"돌체의 바퀴는 돌체 몸체의 구성 부분이다\\\"는 명확한 part-whole 관계를 서술하고 있으므로, CLAUDE.md 지시에 따라 structural_composition이 올바른 분류입니다. 이로써 MixRig 안티패턴(같은 feature의 rigidity 혼합)이 해소됩니다.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "돌체의 '바퀴' feature type을 essential_feature에서 structural_composition으로 수정했습니다. 증거 \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"는 명확한 part-whole 관계를 서술하고 있으므로, CLAUDE.md 지시에 따라 structural_composition이 올바른 분류입니다. 이로써 MixRig 안티패턴(같은 feature의 rigidity 혼합)이 해소됩니다."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 17,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-017",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Corrected feature type for \\\"돌체\\\"'s \\\"바퀴\\\" from essential_feature to structural_composition. The evidence explicitly describes a part-whole relationship (\\\"돌체 몸체의 구성 부분이다\\\"), which aligns with the structural_composition type definition. This resolves the MixRig anti-pattern where \\\"바퀴\\\" had conflicting rigidity types across concepts.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Corrected feature type for \"돌체\"'s \"바퀴\" from essential_feature to structural_composition. The evidence explicitly describes a part-whole relationship (\"돌체 몸체의 구성 부분이다\"), which aligns with the structural_composition type definition. This resolves the MixRig anti-pattern where \"바퀴\" had conflicting rigidity types across concepts."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 18,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-018",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern resolved by correcting 돌체's wheel classification from essential_feature to structural_composition. The evidence \\\"돌체 몸체의 구성 부분이다\\\" (component part of body) describes a part-whole structural relationship, not an essential attribute. Separating structural edges from the essential-only DAG allows the wheel to serve different roles (structural in 돌체, functional in 돌체린) without rigidity violation.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern resolved by correcting 돌체's wheel classification from essential_feature to structural_composition. The evidence \"돌체 몸체의 구성 부분이다\" (component part of body) describes a part-whole structural relationship, not an essential attribute. Separating structural edges from the essential-only DAG allows the wheel to serve different roles (structural in 돌체, functional in 돌체린) without rigidity violation."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 19,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-019",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}, {\"name\": \"돌체린\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"functional\", \"evidence\": \"돌체린에서 바퀴는 이동 기능을 제공한다\"}, {\"feature\": \"을종\", \"type\": \"essential_feature\", \"evidence\": \"을종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"Fixed MixRig anti-pattern by correcting \\\"돌체\\\"의 \\\"바퀴\\\" feature type from essential_feature to structural_composition. The evidence explicitly states \\\"돌체의 바퀴는 돌체 몸체의 구성 부분이다\\\" (wheel is a constituent part of dolce body), which matches the structural_composition definition. \\\"돌체린\\\"의 \\\"바퀴\\\" remains functional as its evidence describes a functional role. This resolves the rigidity mixing that triggered the ufo.no_antipattern obligation failure.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          },
+          {
+            "name": "돌체린",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "functional",
+                "evidence": "돌체린에서 바퀴는 이동 기능을 제공한다"
+              },
+              {
+                "feature": "을종",
+                "type": "essential_feature",
+                "evidence": "을종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "Fixed MixRig anti-pattern by correcting \"돌체\"의 \"바퀴\" feature type from essential_feature to structural_composition. The evidence explicitly states \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\" (wheel is a constituent part of dolce body), which matches the structural_composition definition. \"돌체린\"의 \"바퀴\" remains functional as its evidence describes a functional role. This resolves the rigidity mixing that triggered the ufo.no_antipattern obligation failure."
+      },
+      "parse_error": null
+    },
+    {
+      "fixture": "dir1_directed",
+      "arm": "FULL",
+      "trial": 20,
+      "prompt_sha256": "bceaa58f23b2ea7605db048e902915458ccc061598175b7e2ffe9da8a6554a2e",
+      "execution": {
+        "provider": "anthropic",
+        "model": "claude-haiku-4-5",
+        "started_at": "2026-07-24T18:55:00Z",
+        "completed_at": "2026-07-24T18:55:00Z",
+        "context_id": "e2.2.1-trial-020",
+        "context_isolation": "workflow_cold_subagent",
+        "tool_access": "schema_only",
+        "temperature": null
+      },
+      "raw_response": "{\"decision\": \"repair\", \"repaired_concepts\": [{\"name\": \"돌체\", \"features\": [{\"feature\": \"바퀴\", \"type\": \"structural_composition\", \"evidence\": \"돌체의 바퀴는 돌체 몸체의 구성 부분이다\"}, {\"feature\": \"갑종\", \"type\": \"essential_feature\", \"evidence\": \"갑종이(가) 항목에 기록되어 있다\"}]}], \"request\": null, \"report\": \"MixRig anti-pattern detected: the feature \\\"바퀴\\\" exhibits rigidity mixing (essential_feature in 돌체 vs functional in 돌체린). The evidence for 돌체's \\\"바퀴\\\" explicitly states \\\"구성 부분\\\" (constituent part), which indicates a part-of relationship. This should be classified as structural_composition, not essential_feature. This correction aligns the feature type with its evidence and resolves the rigidity mix.\"}",
+      "output": {
+        "decision": "repair",
+        "repaired_concepts": [
+          {
+            "name": "돌체",
+            "features": [
+              {
+                "feature": "바퀴",
+                "type": "structural_composition",
+                "evidence": "돌체의 바퀴는 돌체 몸체의 구성 부분이다"
+              },
+              {
+                "feature": "갑종",
+                "type": "essential_feature",
+                "evidence": "갑종이(가) 항목에 기록되어 있다"
+              }
+            ]
+          }
+        ],
+        "request": null,
+        "report": "MixRig anti-pattern detected: the feature \"바퀴\" exhibits rigidity mixing (essential_feature in 돌체 vs functional in 돌체린). The evidence for 돌체's \"바퀴\" explicitly states \"구성 부분\" (constituent part), which indicates a part-of relationship. This should be classified as structural_composition, not essential_feature. This correction aligns the feature type with its evidence and resolves the rigidity mix."
+      },
+      "parse_error": null
+    }
+  ]
+}

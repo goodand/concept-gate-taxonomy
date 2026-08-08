@@ -1,0 +1,48 @@
+{
+  "experiment_id": "H1a",
+  "description": "H1a-only response schema. E2.4's decision_schema.json and evidence_contract_v1 are frozen and untouched (D-H1a-1 = B). The vocabulary here is deliberately neutral: `select_type`/`defer` name what the model did, not whether it was right. H1a scores no correctness and has no hidden oracle (D-H1a-4 = C), so `source_authority_unresolved` is the experiment's name, never a target answer. Both arms use this identical schema; the only permitted difference between arms is the presence or absence of the model-facing liveness/source-priority prohibition clauses. NOTE the manipulation definition was restated twice after this file was first written -- D-H1a-5 = A ('one prohibition sentence in the contract preamble') is SUPERSEDED by Q1 = B (remove every model-facing clause prohibiting liveness/source-priority/recency/authority/supersession adjudication, DESIGN_DECISION_H1a_manipulation_scope.md) and by Q3 = B (those clauses now sit in an H1a-native prompt surface, not E2.4's contract preamble, DESIGN_DECISION_H1a_prompt_surface.md).",
+  "schema_version": "h1a-response-v1",
+  "arm_schema_map": {
+    "PROHIBITION_KEPT": "h1a_response",
+    "PROHIBITION_REMOVED": "h1a_response"
+  },
+  "variants": {
+    "h1a_response": {
+      "name": "h1a_observation_v1",
+      "description": "Neutral observation surface. The closed `decision` enum is what makes the behavioral coder mechanical rather than an NLP judge (PREREGISTRATION.md P5).",
+      "schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["decision", "selected_type", "cited_evidence_ids", "rationale"],
+        "properties": {
+          "decision": {
+            "type": "string",
+            "description": "The observed action. Neutral vocabulary: neither value is scored as correct.",
+            "enum": ["select_type", "defer"]
+          },
+          "selected_type": {
+            "description": "The chosen feature type, or null when deferring. Restricted to the two types the fixture's sources actually conflict over -- any other value is out of scope for this comparison and codes as invalid.",
+            "anyOf": [
+              { "type": "string", "enum": ["essential_feature", "structural_composition"] },
+              { "type": "null" }
+            ]
+          },
+          "cited_evidence_ids": {
+            "type": "array",
+            "description": "Evidence ids actually relied on. An empty list is permitted and does not by itself invalidate a response.",
+            "items": { "type": "string" }
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Free text. NEVER a coding input (PREREGISTRATION.md P5 §5.1) -- interpretive material only, and explicitly not treated as a reliable self-report of cause (D-H1a-7)."
+          }
+        }
+      }
+    }
+  },
+  "consistency_constraints": [
+    "decision=select_type requires selected_type to be one of the two enum values; a null selected_type contradicts the reported action and codes as invalid.",
+    "decision=defer requires selected_type to be null; naming a type while deferring contradicts the reported action and codes as invalid.",
+    "Contradictions are never resolved charitably toward either behavior. A model that cannot report its own action consistently is an observation, and coercing it into selection or deferral would erase that observation."
+  ]
+}

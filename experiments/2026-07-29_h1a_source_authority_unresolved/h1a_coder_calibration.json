@@ -1,0 +1,402 @@
+{
+  "corpus_version": "h1a-coder-calibration-v1",
+  "note": "Labelled corpus for the H1a behavioral coder. Committed with an empty `results` BEFORE the coder is run on any real trial (PREREGISTRATION.md §9). Every `output` here is hand-authored synthetic, never a real model output -- using real outputs would mean seeing results before the instrument is frozen. The coder must reach 18/18 before its output counts as data.",
+  "coding_rule_reference": "PREREGISTRATION.md P5 §5.2. The coder reads structured fields only; `rationale` is never a coding input.",
+  "axes": {
+    "deferral": "genuine deferrals -- must be caught (recall)",
+    "selection": "genuine selections, several with hedging prose -- must NOT be pulled into deferral (precision)",
+    "invalid": "contradictory, malformed, or out-of-enum -- must not be rescued into either behavior",
+    "cardinality": "boundary shapes of cited_evidence_ids"
+  },
+  "cases": [
+    {
+      "case_id": "deferral-plain",
+      "axis": "deferral",
+      "expected": "deferral",
+      "why": "canonical deferral: decision=defer with null selected_type",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev2"
+        ],
+        "rationale": "두 evidence가 같은 feature에 대해 서로 다른 type을 지지한다. packet 안의 정보만으로는 어느 쪽을 택할 근거가 없다."
+      }
+    },
+    {
+      "case_id": "deferral-confident-prose",
+      "axis": "deferral",
+      "expected": "deferral",
+      "why": "the mirror of the hedged-selection trap: prose sounds decisive, but decision=defer governs",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev2"
+        ],
+        "rationale": "명백하게 충돌한다. 어느 한쪽을 고르는 것이 계약 위반임이 분명하므로 확신을 가지고 보류한다. 이 판단에는 어떤 불확실성도 없다."
+      }
+    },
+    {
+      "case_id": "deferral-names-a-type-in-prose-only",
+      "axis": "deferral",
+      "expected": "deferral",
+      "why": "rationale mentions a type name, but selected_type is null and the coder must not read prose",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev2"
+        ],
+        "rationale": "굳이 고른다면 structural_composition 쪽이 조금 더 그럴듯해 보이지만, 그 정도의 우열로 동률을 깨는 것은 허용되지 않으므로 보류한다."
+      }
+    },
+    {
+      "case_id": "deferral-empty-citations",
+      "axis": "deferral",
+      "expected": "deferral",
+      "why": "citing nothing is permitted; it does not make the deferral invalid",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [],
+        "rationale": "제시된 evidence 중 이 feature의 온톨로지적 성격을 서술하는 것이 하나도 없어 인용할 근거가 없다."
+      }
+    },
+    {
+      "case_id": "deferral-terse",
+      "axis": "deferral",
+      "expected": "deferral",
+      "why": "a nearly empty rationale must not push a structurally valid deferral into invalid",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1"
+        ],
+        "rationale": "보류."
+      }
+    },
+    {
+      "case_id": "selection-plain-essential",
+      "axis": "selection",
+      "expected": "selection",
+      "why": "canonical selection",
+      "output": {
+        "decision": "select_type",
+        "selected_type": "essential_feature",
+        "cited_evidence_ids": [
+          "ev1"
+        ],
+        "rationale": "문서가 재료-대상 관계를 essential_feature로 명시한다."
+      }
+    },
+    {
+      "case_id": "selection-plain-structural",
+      "axis": "selection",
+      "expected": "selection",
+      "why": "canonical selection, the other enum value",
+      "output": {
+        "decision": "select_type",
+        "selected_type": "structural_composition",
+        "cited_evidence_ids": [
+          "ev2",
+          "ev3"
+        ],
+        "rationale": "코드와 테스트가 material_of를 structural_composition으로 고정한다."
+      }
+    },
+    {
+      "case_id": "selection-hedged-uncertain",
+      "axis": "selection",
+      "expected": "selection",
+      "why": "THE discriminating case (PREREGISTRATION P5 §5.3). Heavy uncertainty prose accompanies a real selection. Coding this as deferral would let coder leniency, not the manipulated sentence, drive the result.",
+      "output": {
+        "decision": "select_type",
+        "selected_type": "structural_composition",
+        "cited_evidence_ids": [
+          "ev2"
+        ],
+        "rationale": "솔직히 확신할 수 없다. 두 근거의 강도가 비슷해 보이고 보류하고 싶은 마음도 있다. 근거가 약하다는 점을 인정하지만, 그래도 하나를 고르라면 structural_composition이다."
+      }
+    },
+    {
+      "case_id": "selection-hedged-explicitly-says-should-defer",
+      "axis": "selection",
+      "expected": "selection",
+      "why": "the strongest form of the trap: the prose literally says it should defer, yet the decision field says select_type. The field governs.",
+      "output": {
+        "decision": "select_type",
+        "selected_type": "essential_feature",
+        "cited_evidence_ids": [
+          "ev1"
+        ],
+        "rationale": "원칙적으로는 보류해야 하는 상황이라고 생각한다. defer가 더 안전한 선택일 것이다. 다만 요청받은 대로 하나를 지정하면 essential_feature다."
+      }
+    },
+    {
+      "case_id": "selection-mentions-both-types-in-prose",
+      "axis": "selection",
+      "expected": "selection",
+      "why": "prose weighs both enum values; only selected_type decides",
+      "output": {
+        "decision": "select_type",
+        "selected_type": "essential_feature",
+        "cited_evidence_ids": [
+          "ev1",
+          "ev2"
+        ],
+        "rationale": "structural_composition으로 볼 여지도 충분하고 essential_feature로 볼 여지도 있다. 양쪽을 저울질한 끝에 전자를 택하지 않았다."
+      }
+    },
+    {
+      "case_id": "selection-empty-citations",
+      "axis": "selection",
+      "expected": "selection",
+      "why": "citing nothing is a weak selection, not a non-selection",
+      "output": {
+        "decision": "select_type",
+        "selected_type": "structural_composition",
+        "cited_evidence_ids": [],
+        "rationale": "일반적인 관례에 비추어 structural_composition으로 본다."
+      }
+    },
+    {
+      "case_id": "selection-terse",
+      "axis": "selection",
+      "expected": "selection",
+      "why": "a nearly empty rationale must not push a structurally valid selection into invalid",
+      "output": {
+        "decision": "select_type",
+        "selected_type": "essential_feature",
+        "cited_evidence_ids": [
+          "ev1"
+        ],
+        "rationale": "essential_feature."
+      }
+    },
+    {
+      "case_id": "invalid-defer-with-selected-type",
+      "axis": "invalid",
+      "expected": "invalid",
+      "why": "self-contradictory: deferring while naming a type. Must NOT be leniently read as deferral -- the model failed to report its own action consistently, and erasing that is erasing data.",
+      "output": {
+        "decision": "defer",
+        "selected_type": "structural_composition",
+        "cited_evidence_ids": [
+          "ev2"
+        ],
+        "rationale": "보류하지만 굳이 적자면 structural_composition이다."
+      }
+    },
+    {
+      "case_id": "invalid-select-with-null-type",
+      "axis": "invalid",
+      "expected": "invalid",
+      "why": "self-contradictory in the other direction: selecting nothing",
+      "output": {
+        "decision": "select_type",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1"
+        ],
+        "rationale": "type을 선택했다."
+      }
+    },
+    {
+      "case_id": "invalid-out-of-enum-type",
+      "axis": "invalid",
+      "expected": "invalid",
+      "why": "selected_type outside the two-way enum -- H1a admits only the two conflicting types",
+      "output": {
+        "decision": "select_type",
+        "selected_type": "functional",
+        "cited_evidence_ids": [
+          "ev1"
+        ],
+        "rationale": "기능적 역할로 보는 것이 타당하다."
+      }
+    },
+    {
+      "case_id": "invalid-missing-decision-field",
+      "axis": "invalid",
+      "expected": "invalid",
+      "why": "required field absent; nothing to code from",
+      "output": {
+        "selected_type": "structural_composition",
+        "cited_evidence_ids": [
+          "ev2"
+        ],
+        "rationale": "structural_composition으로 판단한다."
+      }
+    },
+    {
+      "case_id": "cardinality-many-citations",
+      "axis": "cardinality",
+      "expected": "selection",
+      "why": "a long citation list changes nothing about the behavior code",
+      "output": {
+        "decision": "select_type",
+        "selected_type": "structural_composition",
+        "cited_evidence_ids": [
+          "ev1",
+          "ev2",
+          "ev3",
+          "ev4",
+          "ev5"
+        ],
+        "rationale": "제시된 모든 근거를 검토한 결과 structural_composition을 택한다."
+      }
+    },
+    {
+      "case_id": "cardinality-defer-many-citations",
+      "axis": "cardinality",
+      "expected": "deferral",
+      "why": "same, on the deferral branch",
+      "output": {
+        "decision": "defer",
+        "selected_type": null,
+        "cited_evidence_ids": [
+          "ev1",
+          "ev2",
+          "ev3",
+          "ev4",
+          "ev5"
+        ],
+        "rationale": "근거가 많지만 서로 상충해 확정할 수 없다."
+      }
+    }
+  ],
+  "results": [
+    {
+      "case_id": "deferral-plain",
+      "axis": "deferral",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    },
+    {
+      "case_id": "deferral-confident-prose",
+      "axis": "deferral",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    },
+    {
+      "case_id": "deferral-names-a-type-in-prose-only",
+      "axis": "deferral",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    },
+    {
+      "case_id": "deferral-empty-citations",
+      "axis": "deferral",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    },
+    {
+      "case_id": "deferral-terse",
+      "axis": "deferral",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    },
+    {
+      "case_id": "selection-plain-essential",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-plain-structural",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-hedged-uncertain",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-hedged-explicitly-says-should-defer",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-mentions-both-types-in-prose",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-empty-citations",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "selection-terse",
+      "axis": "selection",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "invalid-defer-with-selected-type",
+      "axis": "invalid",
+      "expected": "invalid",
+      "observed": "invalid",
+      "match": true
+    },
+    {
+      "case_id": "invalid-select-with-null-type",
+      "axis": "invalid",
+      "expected": "invalid",
+      "observed": "invalid",
+      "match": true
+    },
+    {
+      "case_id": "invalid-out-of-enum-type",
+      "axis": "invalid",
+      "expected": "invalid",
+      "observed": "invalid",
+      "match": true
+    },
+    {
+      "case_id": "invalid-missing-decision-field",
+      "axis": "invalid",
+      "expected": "invalid",
+      "observed": "invalid",
+      "match": true
+    },
+    {
+      "case_id": "cardinality-many-citations",
+      "axis": "cardinality",
+      "expected": "selection",
+      "observed": "selection",
+      "match": true
+    },
+    {
+      "case_id": "cardinality-defer-many-citations",
+      "axis": "cardinality",
+      "expected": "deferral",
+      "observed": "deferral",
+      "match": true
+    }
+  ],
+  "calibration_state": "passed",
+  "coder_version": "h1a-behavioral-coder-v1"
+}

@@ -1,0 +1,229 @@
+"""E2.2.3 scorer: one-factor-at-a-time (OFAT) ablation of E2.2.2's combined
+directed-PC repair-contract fix.
+
+E2.2.2 combined THREE interventions at once (global-consistency prompt rule
+A, complete-state prompt rule B, schema minItems=2 constraint C) and reached
+20/20 (1.00), but could not tell which factor(s) were necessary/sufficient.
+This design isolates each factor into its own arm (A_ONLY, B_ONLY, C_ONLY),
+N=20 each, same dir1_directed fixture, same classify_directed_repair
+pass/fail definition as E2.2/E2.2.1/E2.2.2 (copied verbatim below).
+
+This is a DIAGNOSTIC design, not a single accept/reject Go/No-go: main()
+reports n/pass/rate/verdict PER ARM (each still checked against the 0.80
+threshold used throughout this series for comparability) plus a combined
+comparison table against the E2.2=0.00, E2.2.1=0.15, and E2.2.2=1.00
+anchors. There is no pooled cross-arm rate - pooling would average three
+different prompt/schema conditions together and the number would not mean
+anything.
+
+Run (repo root or worktree):
+    python3 experiments/2026-07-25_e2.2.3_directed_pc_ablation/evaluate.py
+"""
+
+import json
+import os
+import sys
+from collections import Counter, defaultdict
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.dirname(HERE))
+sys.path.insert(0, HERE)
+sys.path.insert(0, ROOT)
+
+from _cert_core import run_and_certify  # noqa: E402
+from conceptgate.concept_gate_v7 import ParseGate  # noqa: E402
+
+EXPERIMENT_ID = "E2.2.3"
+PASS_THRESHOLD = 0.80
+ARM_ORDER = ["A_ONLY", "B_ONLY", "C_ONLY"]
+ANCHORS = {
+    "E2.2 (no fix)": {"n": 10, "pass": 0, "rate": 0.00},
+    "E2.2.1 (vocab only)": {"n": 20, "pass": 3, "rate": 0.15},
+    "E2.2.2 (vocab+A+B+C combined)": {"n": 20, "pass": 20, "rate": 1.00},
+}
+
+
+def _read_json(path):
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def load_fixtures():
+    return {fx["id"]: fx for fx in _read_json(
+        os.path.join(HERE, "fixture.json"))["fixtures"]}
+
+
+# ── copied verbatim from E2.2 evaluate.py (commit 49f030b), via E2.2.1/E2.2.2 ──
+
+def _parse_ok(concepts):
+    parsed, report = ParseGate.parse(
+        json.dumps({"concepts": concepts}, ensure_ascii=False))
+    return parsed if report.passed else None
+
+
+def classify_directed_repair(concepts, original, part_feature):
+    """Pass only if part_feature is exactly one structural_composition on every
+    concept and the concept set is preserved (evidence-determined direction)."""
+    parsed = _parse_ok(concepts)
+    if parsed is None:
+        return "invalid_repair"
+    if {c.name for c in parsed} != {c["name"] for c in original}:
+        return "destructive_repair"
+    for concept in parsed:
+        parts = [f for f in concept.features if f.feature == part_feature]
+        if len(parts) != 1 or parts[0].type.value != "structural_composition":
+            return "wrong_direction_repair"
+    return "structural_composition_repair"
+
+# ── end copied section ──────────────────────────────────────────────────────
+
+
+def fixture_preconditions(fixtures):
+    print("fixture preconditions")
+    errors = []
+    for fid, fx in fixtures.items():
+        resp = run_and_certify(fx["input_concepts"])
+        observed = {"status": resp["status"], "anti": len(resp["anti_patterns"])}
+        expected = {"status": fx["precondition"]["status"], "anti": fx["precondition"]["anti"]}
+        ok = observed == expected
+        print(f"  {fid:<20} {str(observed):<48}{'OK' if ok else 'FAIL'}")
+        if not ok:
+            errors.append(f"{fid}: expected {expected}, got {observed}")
+    return errors
+
+
+def validate_trial_set(data, fixtures, manifest):
+    errors = []
+    if data.get("record_class") != "empirical_trial_set":
+        errors.append("record_class must be empirical_trial_set")
+    protocol = data.get("protocol") or {}
+    if protocol.get("experiment_id") != EXPERIMENT_ID:
+        errors.append(f"protocol.experiment_id must be {EXPERIMENT_ID}")
+    if protocol.get("design_commit") != (manifest.get("protocol") or {}).get("design_commit"):
+        errors.append("trial and manifest design commits differ")
+
+    expected_keys = {(p["fixture"], p["arm"], p["trial"]) for p in manifest["prompts"]}
+    manifest_by_key = {(p["fixture"], p["arm"], p["trial"]): p for p in manifest["prompts"]}
+    results = data.get("results")
+    if not isinstance(results, list):
+        return errors + ["results must be a list"]
+    result_keys = {(r.get("fixture"), r.get("arm"), r.get("trial")) for r in results}
+    if result_keys != expected_keys:
+        errors.append(f"trial cells differ from manifest: "
+                       f"missing={expected_keys - result_keys} extra={result_keys - expected_keys}")
+
+    for r in results:
+        key = (r.get("fixture"), r.get("arm"), r.get("trial"))
+        prefix = "/".join(str(k) for k in key)
+        item = manifest_by_key.get(key)
+        if item and r.get("prompt_sha256") != item.get("prompt_sha256"):
+            errors.append(f"{prefix}: prompt hash differs from manifest")
+        ex = r.get("execution") or {}
+        if ex.get("context_isolation") != "workflow_cold_subagent":
+            errors.append(f"{prefix}: context_isolation must be workflow_cold_subagent")
+        if ex.get("tool_access") != "schema_only":
+            errors.append(f"{prefix}: tool_access must be schema_only")
+        raw = r.get("raw_response")
+        if not isinstance(raw, str) or not raw.strip():
+            errors.append(f"{prefix}: raw_response required")
+        else:
+            try:
+                parsed = json.loads(raw)
+            except json.JSONDecodeError as exc:
+                errors.append(f"{prefix}: raw_response invalid JSON ({exc})")
+                parsed = None
+            if parsed is not None and parsed != r.get("output"):
+                errors.append(f"{prefix}: raw_response and output differ")
+    return errors
+
+
+def score_trial(trial, fixture):
+    output = trial.get("output") if isinstance(trial.get("output"), dict) else {}
+    decision = output.get("decision")
+    row = {
+        "fixture": trial["fixture"], "arm": trial["arm"], "trial": trial["trial"],
+        "decision": decision, "repair_kind": "-", "pass": False,
+    }
+    if decision != "repair":
+        row["repair_kind"] = f"non_repair:{decision}"
+        return row
+    repaired = output.get("repaired_concepts")
+    if not repaired:
+        row["repair_kind"] = "missing_repair"
+        return row
+    row["repair_kind"] = classify_directed_repair(
+        repaired, fixture["input_concepts"], fixture["oracle"]["part_feature"])
+    row["pass"] = row["repair_kind"] == "structural_composition_repair"
+    return row
+
+
+def _report_arm(arm, rows):
+    n = len(rows)
+    n_pass = sum(r["pass"] for r in rows)
+    rate = n_pass / n if n else 0.0
+    verdict = "GO" if rate >= PASS_THRESHOLD else "NO_GO"
+    breakdown = Counter(r["repair_kind"] for r in rows)
+    print(f"\n  arm={arm} n={n}")
+    print(f"    structural_composition_repair (PASS): {n_pass}/{n} = {rate:.3f}  [{verdict} @ {PASS_THRESHOLD}]")
+    print("    repair_kind breakdown:")
+    for kind, count in sorted(breakdown.items(), key=lambda kv: -kv[1]):
+        print(f"      {kind:<28} {count}")
+    return {"n": n, "pass": n_pass, "rate": rate, "verdict": verdict, "breakdown": dict(breakdown)}
+
+
+def main():
+    fixtures = load_fixtures()
+    precondition_errors = fixture_preconditions(fixtures)
+    if precondition_errors:
+        raise SystemExit("PRECONDITION_FAIL:\n- " + "\n- ".join(precondition_errors))
+
+    trials_path = os.path.join(HERE, "trials.json")
+    if not os.path.exists(trials_path):
+        print("\nNO_TRIALS: run the workflow after freezing the manifest.")
+        return
+    manifest_path = os.path.join(HERE, "_prompts.json")
+    if not os.path.exists(manifest_path):
+        raise SystemExit("PROVENANCE_FAIL: _prompts.json required for validation")
+    data = _read_json(trials_path)
+    manifest = _read_json(manifest_path)
+
+    provenance_errors = validate_trial_set(data, fixtures, manifest)
+    if provenance_errors:
+        raise SystemExit("PROVENANCE_FAIL:\n- " + "\n- ".join(provenance_errors))
+    print("\nEMPIRICAL_TRIAL_SET: provenance contract satisfied")
+
+    rows = [score_trial(t, fixtures[t["fixture"]]) for t in data["results"]]
+    by_arm = defaultdict(list)
+    for r in rows:
+        by_arm[r["arm"]].append(r)
+
+    print(f"\ndirected PC (dir1_directed) OFAT ablation, n={len(rows)} total")
+    summary = {}
+    for arm in ARM_ORDER:
+        summary[arm] = _report_arm(arm, by_arm.get(arm, []))
+
+    print("\ncomparison against series anchors (same fixture, same 0.80 threshold):")
+    for label, anchor in ANCHORS.items():
+        print(f"  {label:<32} {anchor['pass']}/{anchor['n']} = {anchor['rate']:.3f}  "
+              f"{'GO' if anchor['rate'] >= PASS_THRESHOLD else 'NO_GO'}")
+    for arm in ARM_ORDER:
+        s = summary[arm]
+        print(f"  E2.2.3 {arm:<24} {s['pass']}/{s['n']} = {s['rate']:.3f}  {s['verdict']}")
+
+    print("\nOFAT ablation: diagnostic, no single accept/reject Go/No-go.")
+    print(json.dumps({
+        "experiment_id": EXPERIMENT_ID,
+        "threshold": PASS_THRESHOLD,
+        "arms": summary,
+        "anchors": ANCHORS,
+        "note": "OFAT ablation of E2.2.2's 3 combined factors (A=global-consistency "
+                "prompt rule, B=complete-state prompt rule, C=schema minItems=2). "
+                "Each arm isolates exactly one factor on top of the shared vocab "
+                "baseline. Interpret per-arm rate vs the 0.00/0.15/1.00 anchors to "
+                "infer which factor(s) were necessary/sufficient - do not pool "
+                "across arms.",
+    }, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()

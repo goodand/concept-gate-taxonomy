@@ -1,0 +1,39 @@
+{
+  "contract_version": "handoff-dyn-phase-c-config-v1",
+  "frozen_at": "2026-08-07T18:00:00+09:00",
+  "provider": "codex-mcp-cli",
+  "cli_version": "0.146.0",
+  "model": "gpt-5.6-sol",
+  "reasoning_effort": "medium",
+  "subject_mode": "ephemeral-public-bundle",
+  "tool_policy": "single-stdio-mcp-handoff_action-v1",
+  "sandbox_policy": "codex-parent-oauth-plus-mcp-only-capability-v4",
+  "approval_policy": "never",
+  "auto_approve_mcp": true,
+  "timeout_seconds": 600,
+  "retry_count": 0,
+  "invalid_run_policy": "record-V1-and-do-not-replace",
+  "max_actions": 24,
+  "max_terminal_attempts": 3,
+  "result_names": {
+    "pilot": "live_pilot_codex_mcp_v4",
+    "primary": "live_primary_codex_mcp_v4"
+  },
+  "pilot": {
+    "case_ids": ["HD01"],
+    "arms": ["S_STATIC", "R_STATIC", "S_DYNAMIC", "R_DYNAMIC"],
+    "interpretation": "qualification-only; v1-v3 did not complete an MCP action, so a one-cell vehicle probe precedes this full four-arm qualification"
+  },
+  "primary": {
+    "case_ids": ["HD01", "HD02", "HD03", "HD04", "DS05", "DS06", "DS07", "HD08"],
+    "arms": ["S_STATIC", "R_STATIC", "S_DYNAMIC", "R_DYNAMIC"],
+    "replicates_per_cell": 1,
+    "required_qualification_artifacts": [
+      {
+        "file": "live_pilot_codex_mcp_v4.json",
+        "provider": "codex-mcp-cli",
+        "sandbox_policy": "codex-parent-oauth-plus-mcp-only-capability-v4"
+      }
+    ]
+  }
+}

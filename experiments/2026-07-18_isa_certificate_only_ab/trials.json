@@ -1,6 +1,17 @@
 {
  "n": 13,
- "note": "콜드 Haiku(도구 0) 원시 출력 무수정. 개념명 nonce라 교과서 회상 불가. 세션 재시작으로 replicate 수가 cell마다 2~3으로 고르지 않음(한계 절 참조). arm은 make_arm 투영: A=무신호, C=평문 warning, B=최소 certificate, FULL=mixrig 전체 certificate.",
+ "record_class": "reconstructed_record",
+ "provenance": {
+  "status": "reconstructed",
+  "source": "Prior-session conversation context was copied into this repository in commit 0986bc3.",
+  "original_execution_verified": false,
+  "model": null,
+  "execution_timestamps": null,
+  "context_isolation_evidence": null,
+  "raw_response_evidence": null,
+  "field_level_observed_vs_reconstructed": "unavailable"
+ },
+ "note": "복원된 13개 응답 기록. 현재 저장소에는 원 실행의 모델·시각·격리 조건·원문 로그가 없으므로 empirical trial로 취급하지 않는다. arm은 make_arm 투영: A=무신호, C=평문 warning, B=최소 certificate, FULL=mixrig 전체 certificate.",
  "results": [
   {"fixture":"nonce_role","arm":"A","trial":1,"output":{"decision":"request_evidence","repaired_concepts":null,"request":"누멘/베스크의 rigidity·category. 항로 중재 evidence가 임무 기간 의존성을 보여 anti_rigid 여부 확인 필요.","report":"임무 종료시 속성 소멸 증거는 항로중재가 anti_rigid 또는 phase일 가능성 시사."}},
   {"fixture":"nonce_role","arm":"A","trial":2,"output":{"decision":"repair","repaired_concepts":[{"name":"누멘","features":[{"feature":"코어 표식","type":"essential_feature","evidence":"누멘은 코어 표식을 가진 존재다"}]},{"name":"베스크","features":[{"feature":"코어 표식","type":"essential_feature","evidence":"베스크 임무를 맡은 누멘은 코어 표식을 유지한다"},{"feature":"항로 중재","type":"contextual_usage","evidence":"베스크는 임무 기간에만 항로를 중재하며 임무가 끝나면 베스크가 아니게 된다"}]}],"request":null,"report":"항로 중재는 일시적 임무이므로 essential 아닌 contextual_usage."}},

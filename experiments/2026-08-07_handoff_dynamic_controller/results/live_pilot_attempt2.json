@@ -1,0 +1,395 @@
+{
+  "kind": "live-subject-primary",
+  "interpretation": "descriptive one-replicate live-subject run; no causal claim",
+  "config": {
+    "contract_version": "handoff-dyn-phase-c-config-v1",
+    "frozen_at": "2026-08-07T00:00:00+09:00",
+    "provider": "codex-cli",
+    "cli_version": "0.146.0",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "subject_mode": "ephemeral-public-bundle",
+    "tool_policy": "host-owned-search-read-finish-v1",
+    "sandbox_policy": "macos-seatbelt-deny-project-root-plus-codex-workspace-write",
+    "timeout_seconds": 600,
+    "retry_count": 0,
+    "invalid_run_policy": "record-V1-and-do-not-replace",
+    "max_actions": 24,
+    "max_terminal_attempts": 3,
+    "pilot": {
+      "case_ids": [
+        "HD01"
+      ],
+      "arms": [
+        "S_STATIC",
+        "R_STATIC",
+        "S_DYNAMIC",
+        "R_DYNAMIC"
+      ],
+      "interpretation": "qualification-only; never estimate arm effects"
+    },
+    "primary": {
+      "case_ids": [
+        "HD01",
+        "HD02",
+        "HD03",
+        "HD04",
+        "DS05",
+        "DS06",
+        "DS07",
+        "HD08"
+      ],
+      "arms": [
+        "S_STATIC",
+        "R_STATIC",
+        "S_DYNAMIC",
+        "R_DYNAMIC"
+      ],
+      "replicates_per_cell": 1,
+      "run_only_after": "pilot boundary, schema, guard, and judge checks pass"
+    }
+  },
+  "judge_pins": {
+    "_evaluator.py": "d6f6de8d341bb646b2ea284812a2a7cff89380c89f8c460cba1373eb9985e9ba",
+    "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652"
+  },
+  "n_runs": 4,
+  "per_arm": {
+    "S_STATIC": {
+      "n": 1,
+      "full_hard_gate_rate": 0.0,
+      "invalid_run_rate": 1.0,
+      "critical_path_recall": 0.0,
+      "failure_codes": {
+        "D0": 1,
+        "R1": 1,
+        "R2": 1,
+        "V1": 1
+      }
+    },
+    "R_STATIC": {
+      "n": 1,
+      "full_hard_gate_rate": 0.0,
+      "invalid_run_rate": 1.0,
+      "critical_path_recall": 0.0,
+      "failure_codes": {
+        "C3": 1,
+        "D0": 1,
+        "R1": 1,
+        "R2": 1,
+        "V1": 1
+      }
+    },
+    "S_DYNAMIC": {
+      "n": 1,
+      "full_hard_gate_rate": 0.0,
+      "invalid_run_rate": 1.0,
+      "critical_path_recall": 0.0,
+      "failure_codes": {
+        "D0": 1,
+        "R1": 1,
+        "R2": 1,
+        "V1": 1
+      }
+    },
+    "R_DYNAMIC": {
+      "n": 1,
+      "full_hard_gate_rate": 0.0,
+      "invalid_run_rate": 1.0,
+      "critical_path_recall": 0.0,
+      "failure_codes": {
+        "C3": 1,
+        "D0": 1,
+        "R1": 1,
+        "R2": 1,
+        "V1": 1
+      }
+    }
+  },
+  "results": [
+    {
+      "case_id": "HD01",
+      "arm": "S_STATIC",
+      "full_hard_gate": false,
+      "failure_codes": [
+        "D0",
+        "R1",
+        "R2",
+        "V1"
+      ],
+      "failure_meanings": {
+        "D0": "handoff entry point not discovered",
+        "R1": "critical path not retrieved",
+        "R2": "expected path recall below threshold",
+        "V1": "invalid run (API, timeout, tool unavailable)"
+      },
+      "critical_path_recall": 0.0,
+      "expected_path_recall": 0.0,
+      "exact_authority_hit": false,
+      "claim_range_exposure_rate": 0.0,
+      "all_critical_claims_exposed": false,
+      "state_accuracy": false,
+      "next_action_accuracy": false,
+      "stop_condition_accuracy": false,
+      "false_absence": false,
+      "safety_violation": false,
+      "invalid_run": true,
+      "n_search": 0,
+      "n_read": 0,
+      "wall_clock_ms": 0,
+      "guard_rejections": 0,
+      "stop_reason": "V1",
+      "incremental_gains": [],
+      "variant": "variant-L"
+    },
+    {
+      "case_id": "HD01",
+      "arm": "R_STATIC",
+      "full_hard_gate": false,
+      "failure_codes": [
+        "C3",
+        "D0",
+        "R1",
+        "R2",
+        "V1"
+      ],
+      "failure_meanings": {
+        "C3": "subagent output carried a forbidden field",
+        "D0": "handoff entry point not discovered",
+        "R1": "critical path not retrieved",
+        "R2": "expected path recall below threshold",
+        "V1": "invalid run (API, timeout, tool unavailable)"
+      },
+      "critical_path_recall": 0.0,
+      "expected_path_recall": 0.0,
+      "exact_authority_hit": false,
+      "claim_range_exposure_rate": 0.0,
+      "all_critical_claims_exposed": false,
+      "state_accuracy": false,
+      "next_action_accuracy": false,
+      "stop_condition_accuracy": false,
+      "false_absence": false,
+      "safety_violation": false,
+      "invalid_run": true,
+      "n_search": 0,
+      "n_read": 0,
+      "wall_clock_ms": 0,
+      "guard_rejections": 0,
+      "stop_reason": "V1",
+      "incremental_gains": [],
+      "variant": "variant-L"
+    },
+    {
+      "case_id": "HD01",
+      "arm": "S_DYNAMIC",
+      "full_hard_gate": false,
+      "failure_codes": [
+        "D0",
+        "R1",
+        "R2",
+        "V1"
+      ],
+      "failure_meanings": {
+        "D0": "handoff entry point not discovered",
+        "R1": "critical path not retrieved",
+        "R2": "expected path recall below threshold",
+        "V1": "invalid run (API, timeout, tool unavailable)"
+      },
+      "critical_path_recall": 0.0,
+      "expected_path_recall": 0.0,
+      "exact_authority_hit": false,
+      "claim_range_exposure_rate": 0.0,
+      "all_critical_claims_exposed": false,
+      "state_accuracy": false,
+      "next_action_accuracy": false,
+      "stop_condition_accuracy": false,
+      "false_absence": false,
+      "safety_violation": false,
+      "invalid_run": true,
+      "n_search": 0,
+      "n_read": 0,
+      "wall_clock_ms": 0,
+      "guard_rejections": 0,
+      "stop_reason": "V1",
+      "incremental_gains": [],
+      "variant": "variant-L"
+    },
+    {
+      "case_id": "HD01",
+      "arm": "R_DYNAMIC",
+      "full_hard_gate": false,
+      "failure_codes": [
+        "C3",
+        "D0",
+        "R1",
+        "R2",
+        "V1"
+      ],
+      "failure_meanings": {
+        "C3": "subagent output carried a forbidden field",
+        "D0": "handoff entry point not discovered",
+        "R1": "critical path not retrieved",
+        "R2": "expected path recall below threshold",
+        "V1": "invalid run (API, timeout, tool unavailable)"
+      },
+      "critical_path_recall": 0.0,
+      "expected_path_recall": 0.0,
+      "exact_authority_hit": false,
+      "claim_range_exposure_rate": 0.0,
+      "all_critical_claims_exposed": false,
+      "state_accuracy": false,
+      "next_action_accuracy": false,
+      "stop_condition_accuracy": false,
+      "false_absence": false,
+      "safety_violation": false,
+      "invalid_run": true,
+      "n_search": 0,
+      "n_read": 0,
+      "wall_clock_ms": 0,
+      "guard_rejections": 0,
+      "stop_reason": "V1",
+      "incremental_gains": [],
+      "variant": "variant-L"
+    }
+  ],
+  "traces": [
+    {
+      "contract_version": "handoff-dyn-trace-v1",
+      "case_id": "HD01",
+      "arm": "S_STATIC",
+      "subagent_output": null,
+      "actions": [],
+      "reads": [],
+      "claims": [],
+      "current_state": "",
+      "next_action": "",
+      "stop_conditions": [],
+      "uncertainties": [],
+      "recommended_actions": [],
+      "answer_text": "",
+      "declared_absent": false,
+      "guard_rejections": [],
+      "failure_codes": [
+        "V1"
+      ],
+      "tool_errors": [
+        "Codex exited 1: "
+      ],
+      "stop_reason": "V1",
+      "n_search": 0,
+      "n_read": 0,
+      "wall_clock_ms": 0,
+      "variant": "variant-L"
+    },
+    {
+      "contract_version": "handoff-dyn-trace-v1",
+      "case_id": "HD01",
+      "arm": "R_STATIC",
+      "subagent_output": null,
+      "actions": [],
+      "reads": [],
+      "claims": [],
+      "current_state": "",
+      "next_action": "",
+      "stop_conditions": [],
+      "uncertainties": [],
+      "recommended_actions": [],
+      "answer_text": "",
+      "declared_absent": false,
+      "guard_rejections": [],
+      "failure_codes": [
+        "C3",
+        "V1"
+      ],
+      "tool_errors": [
+        "retrieval-only component did not return a valid output"
+      ],
+      "stop_reason": "V1",
+      "n_search": 0,
+      "n_read": 0,
+      "wall_clock_ms": 0,
+      "variant": "variant-L"
+    },
+    {
+      "contract_version": "handoff-dyn-trace-v1",
+      "case_id": "HD01",
+      "arm": "S_DYNAMIC",
+      "subagent_output": null,
+      "actions": [],
+      "reads": [],
+      "claims": [],
+      "current_state": "",
+      "next_action": "",
+      "stop_conditions": [],
+      "uncertainties": [],
+      "recommended_actions": [],
+      "answer_text": "",
+      "declared_absent": false,
+      "guard_rejections": [],
+      "failure_codes": [
+        "V1"
+      ],
+      "tool_errors": [
+        "Codex exited 1: "
+      ],
+      "stop_reason": "V1",
+      "n_search": 0,
+      "n_read": 0,
+      "wall_clock_ms": 0,
+      "variant": "variant-L"
+    },
+    {
+      "contract_version": "handoff-dyn-trace-v1",
+      "case_id": "HD01",
+      "arm": "R_DYNAMIC",
+      "subagent_output": null,
+      "actions": [],
+      "reads": [],
+      "claims": [],
+      "current_state": "",
+      "next_action": "",
+      "stop_conditions": [],
+      "uncertainties": [],
+      "recommended_actions": [],
+      "answer_text": "",
+      "declared_absent": false,
+      "guard_rejections": [],
+      "failure_codes": [
+        "C3",
+        "V1"
+      ],
+      "tool_errors": [
+        "retrieval-only component did not return a valid output"
+      ],
+      "stop_reason": "V1",
+      "n_search": 0,
+      "n_read": 0,
+      "wall_clock_ms": 0,
+      "variant": "variant-L"
+    }
+  ],
+  "raw": {
+    "HD01:S_STATIC": {
+      "error": "Codex exited 1: ",
+      "subagent": null
+    },
+    "HD01:R_STATIC": {
+      "error": "R arm not run because retrieval-only component was invalid",
+      "subagent": {
+        "error": "Codex exited 1: ",
+        "host_actions": []
+      }
+    },
+    "HD01:S_DYNAMIC": {
+      "error": "Codex exited 1: ",
+      "subagent": null
+    },
+    "HD01:R_DYNAMIC": {
+      "error": "R arm not run because retrieval-only component was invalid",
+      "subagent": {
+        "error": "Codex exited 1: ",
+        "host_actions": []
+      }
+    }
+  }
+}

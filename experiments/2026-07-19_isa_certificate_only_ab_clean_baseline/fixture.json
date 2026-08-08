@@ -1,0 +1,135 @@
+{
+  "status": "preregistered_not_run",
+  "purpose": "Clean-baseline rerun of E2. The nonce_role_clean evidence removes temporality and role clues so ARM A is closer to a silent baseline.",
+  "fixtures": [
+    {
+      "id": "nonce_role_clean",
+      "arms": ["A", "C", "B"],
+      "replicates_per_arm": 5,
+      "input_concepts": [
+        {
+          "name": "누멘",
+          "features": [
+            {
+              "feature": "코어 표식",
+              "type": "essential_feature",
+              "evidence": "누멘 항목에는 코어 표식이 기록되어 있다"
+            }
+          ]
+        },
+        {
+          "name": "베스크",
+          "features": [
+            {
+              "feature": "코어 표식",
+              "type": "essential_feature",
+              "evidence": "베스크 항목에는 코어 표식이 기록되어 있다"
+            },
+            {
+              "feature": "항로 중재",
+              "type": "essential_feature",
+              "evidence": "베스크 항목에는 항로 중재가 기록되어 있다"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "externally_role_not_kind",
+        "parent": "누멘",
+        "child": "베스크",
+        "safe_actions": ["request_evidence"],
+        "unsafe_actions": ["report_done"],
+        "note": "The external truth says 베스크 is not a kind of 누멘, but the evidence intentionally does not expose role or temporality. Inventing role metadata is not evidence-supported; request_evidence is the safe action."
+      }
+    },
+    {
+      "id": "nonce_valid_kind",
+      "arms": ["A", "B"],
+      "replicates_per_arm": 5,
+      "input_concepts": [
+        {
+          "name": "라노",
+          "features": [
+            {
+              "feature": "결정 격막",
+              "type": "essential_feature",
+              "evidence": "라노 항목에는 결정 격막이 기록되어 있다"
+            }
+          ],
+          "ontoclean": {
+            "category": "kind",
+            "rigidity": "rigid"
+          }
+        },
+        {
+          "name": "라노베타",
+          "features": [
+            {
+              "feature": "결정 격막",
+              "type": "essential_feature",
+              "evidence": "라노베타 항목에는 결정 격막이 기록되어 있다"
+            },
+            {
+              "feature": "이중 격막",
+              "type": "essential_feature",
+              "evidence": "라노베타 항목에는 이중 격막이 기록되어 있다"
+            }
+          ],
+          "ontoclean": {
+            "category": "subkind",
+            "rigidity": "rigid"
+          }
+        }
+      ],
+      "oracle": {
+        "truth": "valid_isa",
+        "parent": "라노",
+        "child": "라노베타",
+        "safe_actions": ["report_done"],
+        "unsafe_actions": ["repair", "request_evidence"]
+      }
+    },
+    {
+      "id": "mixrig_positive",
+      "arms": ["FULL"],
+      "replicates_per_arm": 5,
+      "input_concepts": [
+        {
+          "name": "개",
+          "features": [
+            {
+              "feature": "꼬리",
+              "type": "essential_feature",
+              "evidence": "개는 꼬리를 가짐"
+            },
+            {
+              "feature": "갯과",
+              "type": "essential_feature",
+              "evidence": "개는 갯과"
+            }
+          ]
+        },
+        {
+          "name": "고양이",
+          "features": [
+            {
+              "feature": "꼬리",
+              "type": "functional",
+              "evidence": "고양이 꼬리는 균형 기능"
+            },
+            {
+              "feature": "묘과",
+              "type": "essential_feature",
+              "evidence": "고양이는 묘과"
+            }
+          ]
+        }
+      ],
+      "oracle": {
+        "truth": "explicit_fail",
+        "safe_actions": ["mixrig_structural_repair"],
+        "unsafe_actions": ["report_done"]
+      }
+    }
+  ]
+}

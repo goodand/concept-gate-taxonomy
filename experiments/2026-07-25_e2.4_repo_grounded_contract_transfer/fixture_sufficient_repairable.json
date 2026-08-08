@@ -1,0 +1,73 @@
+{
+  "fixture_version": "repo_evidence_fixture_v2",
+  "experiment_id": "E2.4",
+  "repo": "goodand/concept-gate-taxonomy",
+  "source_commit": "adf06b25a49125b84886c5c6cb437df9d10f1e9a",
+  "run_pipeline_input": [
+    {
+      "name": "돌체",
+      "features": [
+        {
+          "feature": "바퀴",
+          "type": "essential_feature",
+          "evidence": "바퀴가 항목에 기록되어 있다"
+        },
+        {
+          "feature": "갑종",
+          "type": "essential_feature",
+          "evidence": "갑종이(가) 항목에 기록되어 있다"
+        }
+      ]
+    }
+  ],
+  "candidate_concepts": [
+    {
+      "name": "돌체",
+      "features": [
+        {
+          "feature": "바퀴",
+          "type": "essential_feature",
+          "evidence_refs": [
+            "ev1"
+          ]
+        },
+        {
+          "feature": "갑종",
+          "type": "essential_feature",
+          "evidence_refs": []
+        }
+      ]
+    }
+  ],
+  "evidence_sources": [
+    {
+      "evidence_id": "ev1",
+      "source_kind": "fixture",
+      "source_ref": {
+        "kind": "json_pointer",
+        "path": "experiments/2026-07-24_e2.2.1_directed_pc_vocabulary_fix/fixture.json",
+        "pointer": "/fixtures/0/input_concepts/0/features/0/evidence"
+      },
+      "text": "돌체의 바퀴는 돌체 몸체의 구성 부분이다",
+      "text_sha256": "f885a79ca79e537ebf45714e5b8823af78737a74d99b52c79f12c638d07e570c"
+    }
+  ],
+  "server_response": {
+    "status": "PASS",
+    "dag": {},
+    "composition_issues": [],
+    "anti_patterns": []
+  },
+  "builder_metadata": {
+    "evidence_notes": {
+      "ev1": "Pre-existing, already-frozen evidence string (predates this E2.4 fixture by weeks, unrelated to it) for concept 돌체's feature 바퀴. States in plain domain prose, naming the concept and feature directly, that 바퀴 IS a constituent part (구성 부분) of 돌체's body -- an explicit part-whole/meronymic assertion, independent of any FeatureType vocabulary term. This directly contradicts 바퀴's currently-assigned type (essential_feature): the evidence supports structural_composition, not essential_feature. Scope note: this fixture's evaluation target is narrowly single-concept evidence-vs-type sufficiency (Rule 3) -- it does not rely on, and does not test, any cross-concept global feature-type invariant (Rule 4) or MixRig anti-pattern. A cross-concept invariant scenario, if still needed, belongs in a separate fixture."
+    },
+    "change_history": [
+      {
+        "date": "2026-07-28",
+        "change": "migrated from repo_evidence_packet v1",
+        "detail": "extraction_note moved out of the model-facing surface into builder_metadata; source_path+locator replaced by a source_ref tagged union; extraction_policy dropped (source restriction now lives in contract_prompt.md)."
+      }
+    ]
+  }
+}

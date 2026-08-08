@@ -1,0 +1,155 @@
+{
+  "record_class": "h3_pilot_descriptive",
+  "certifying": false,
+  "note": "Non-certifying pilot (D-H3-6). The three fixtures were selected using CONTRACT's own results, so this is not an independent test set and these numbers support no superiority claim.",
+  "allowed_conclusion": "Existence-level, descriptive, conditional on a fixed packet, a fixed model, and fixed parameters (D-H3C-1 = A, D-H3C-2 = existential). Permitted: 'the contract interface elicited different defer behavior from the comparison arms on this packet.' Not permitted: any class-general, insufficient-general, or repo-derived-general superiority claim -- those are not formally identified without a sampling frame and independent held-out fixtures.",
+  "repo_derived_provenance": {
+    "note": "'repo-derived' does not mean the same thing for every class (D-H3C new_constraints). Stating it per class is mandatory.",
+    "insufficient": "actual repository source code",
+    "sufficient_consistent": "a synthetic sentence reused from a prior experiment's frozen fixture (E2.3)",
+    "sufficient_repairable": "a synthetic sentence reused from a prior experiment's frozen fixture (E2.2.1)"
+  },
+  "sampling_units": {
+    "R": 5,
+    "R_meaning": "model-sampling repetitions of one fixed packet",
+    "K": 1,
+    "K_meaning": "independent fixtures per class",
+    "warning": "R is not K (D-H3C new_constraints). Raising R sharpens the within-packet estimate and generalizes to nothing."
+  },
+  "post_hoc_metrics": [
+    "secondary.defer_diagnostics -- the recall/precision pair was adopted after these results were seen (D-H3C-4). Descriptive here; it is a pre-registered primary metric only from the next cohort onward, and must not be used retroactively as a confirmatory score."
+  ],
+  "source": "h3_pilot_trials.json",
+  "n_trials": 45,
+  "action_distribution": {
+    "insufficient|A_REPO_H3": {
+      "n": 5,
+      "invalid": 1,
+      "accept_report": 4,
+      "repair": 0,
+      "defer": 0,
+      "target_action": "defer"
+    },
+    "insufficient|CONTRACT_REPO_H3": {
+      "n": 5,
+      "invalid": 1,
+      "accept_report": 0,
+      "repair": 0,
+      "defer": 4,
+      "target_action": "defer"
+    },
+    "insufficient|CONTROL_REPO_H3": {
+      "n": 5,
+      "invalid": 0,
+      "accept_report": 0,
+      "repair": 5,
+      "defer": 0,
+      "target_action": "defer"
+    },
+    "sufficient_consistent|A_REPO_H3": {
+      "n": 5,
+      "invalid": 1,
+      "accept_report": 0,
+      "repair": 0,
+      "defer": 4,
+      "target_action": "accept_report"
+    },
+    "sufficient_consistent|CONTRACT_REPO_H3": {
+      "n": 5,
+      "invalid": 2,
+      "accept_report": 3,
+      "repair": 0,
+      "defer": 0,
+      "target_action": "accept_report"
+    },
+    "sufficient_consistent|CONTROL_REPO_H3": {
+      "n": 5,
+      "invalid": 0,
+      "accept_report": 2,
+      "repair": 0,
+      "defer": 3,
+      "target_action": "accept_report"
+    },
+    "sufficient_repairable|A_REPO_H3": {
+      "n": 5,
+      "invalid": 0,
+      "accept_report": 0,
+      "repair": 5,
+      "defer": 0,
+      "target_action": "repair"
+    },
+    "sufficient_repairable|CONTRACT_REPO_H3": {
+      "n": 5,
+      "invalid": 0,
+      "accept_report": 0,
+      "repair": 5,
+      "defer": 0,
+      "target_action": "repair"
+    },
+    "sufficient_repairable|CONTROL_REPO_H3": {
+      "n": 5,
+      "invalid": 0,
+      "accept_report": 0,
+      "repair": 5,
+      "defer": 0,
+      "target_action": "repair"
+    }
+  },
+  "primary": {
+    "p_defer_insufficient": {
+      "CONTROL_REPO_H3": 0.0,
+      "A_REPO_H3": 0.0,
+      "CONTRACT_REPO_H3": 0.8
+    },
+    "delta": {
+      "vs_CONTROL_REPO_H3": 0.8,
+      "vs_A_REPO_H3": 0.8
+    }
+  },
+  "secondary": {
+    "defer_diagnostics": {
+      "CONTROL_REPO_H3": {
+        "recall_defer": 0.0,
+        "precision_defer": 0.0,
+        "defers_total": 3,
+        "defers_on_insufficient": 0
+      },
+      "A_REPO_H3": {
+        "recall_defer": 0.0,
+        "precision_defer": 0.0,
+        "defers_total": 4,
+        "defers_on_insufficient": 0
+      },
+      "CONTRACT_REPO_H3": {
+        "recall_defer": 0.8,
+        "precision_defer": 1.0,
+        "defers_total": 4,
+        "defers_on_insufficient": 4
+      }
+    },
+    "false_defer_rate": {
+      "sufficient_consistent|CONTROL_REPO_H3": 0.6,
+      "sufficient_consistent|A_REPO_H3": 0.8,
+      "sufficient_consistent|CONTRACT_REPO_H3": 0.0,
+      "sufficient_repairable|CONTROL_REPO_H3": 0.0,
+      "sufficient_repairable|A_REPO_H3": 0.0,
+      "sufficient_repairable|CONTRACT_REPO_H3": 0.0
+    },
+    "macro_action_accuracy": {
+      "CONTROL_REPO_H3": 0.4666666666666666,
+      "A_REPO_H3": 0.3333333333333333,
+      "CONTRACT_REPO_H3": 0.7999999999999999
+    },
+    "invalid_output_rate": {
+      "CONTROL_REPO_H3": 0.0,
+      "A_REPO_H3": 0.13333333333333333,
+      "CONTRACT_REPO_H3": 0.2
+    },
+    "contract_action_verdict_mismatch": {
+      "checked": 12,
+      "mismatched": 0,
+      "rate": 0.0,
+      "cases": []
+    }
+  }
+}

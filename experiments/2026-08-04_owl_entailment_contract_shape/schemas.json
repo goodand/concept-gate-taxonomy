@@ -1,0 +1,42 @@
+{
+  "ea_response": {
+    "type": "object",
+    "properties": {
+      "per_relationship": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "subject": {"type": "string"},
+            "object": {"type": "string"},
+            "origin_judgment": {"type": "string", "enum": ["asserted", "derived", "cannot_tell"]},
+            "basis": {"type": "string"}
+          },
+          "required": ["subject", "object", "origin_judgment", "basis"]
+        }
+      },
+      "summary": {"type": "string"}
+    },
+    "required": ["per_relationship", "summary"]
+  },
+  "eb_response": {
+    "type": "object",
+    "properties": {
+      "per_relationship": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "subject": {"type": "string"},
+            "object": {"type": "string"},
+            "verification_judgment": {"type": "string", "enum": ["verified", "not_verified", "cannot_tell"]},
+            "basis": {"type": "string"}
+          },
+          "required": ["subject", "object", "verification_judgment", "basis"]
+        }
+      },
+      "summary": {"type": "string"}
+    },
+    "required": ["per_relationship", "summary"]
+  }
+}

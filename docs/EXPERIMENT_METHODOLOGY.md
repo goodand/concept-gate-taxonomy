@@ -117,6 +117,34 @@ worktree에 무관한 실험을 얹지 않는다.
 것 — `docs/HANDOFF.md`(worktree판) §8에 적힌 "확인됐다고 말하기 전에
 실제로 N-trial 재실행"과 같은 원칙의 연장.
 
+## 8. 공통 지시문 감사 (D-OWL-1 §4.2 반영, 2026-08-05)
+
+행동 실험(모델에게 판단을 시키고 그 분포를 재는 실험) 사전등록에 **의무**로
+추가한다 — 문자열 검색이 아니라 문장별 정책 효과 분석이어야 한다.
+
+```yaml
+common_instruction_audit:
+  target_behavior: required          # 무엇을 재려는가, 정확히
+  target_mechanism: required          # 어떤 경로로 그 행동이 나오는가
+  common_prompt_sentences_reviewed: required   # 모든 arm 공통 문장 전수
+  direct_prohibition_found: true_or_false
+  semantic_equivalent_prohibition_found: true_or_false   # 직접 문장이
+    # 없어도 같은 효과를 내는 다른 표현이 있는가
+  licensed_path_exists_per_arm: required   # 표적 행동이 실제로 발현될
+    # 여지가 arm마다 있는가(구조상 항상 봉쇄돼 있지 않은가)
+  independent_reviewer: required
+```
+
+**왜 필요한가**: 같은 실패 형태(공통 문장이 표적 행동 자체를 봉쇄해
+arm 대비가 무의미해짐)가 이 workspace에서 **최소 3회** 나왔다 — H1a
+D-H1a-10(잔여 liveness 금지), H1a D-H1a-12(`outside_domain_knowledge`가
+표적 축을 포섭), OWL D-OWL-1(E-B의 anti-laundering 문장이 양 arm 공통).
+세 번째 재발이 곧 이 항목을 신설한 계기다.
+
+이 감사는 사전등록 단계(trial 실행 전)에 완료해야 하고, 결과를 본 뒤
+소급 적용하는 것은 이 문서 §1의 원칙(결과가 설계를 소급 수정하지 못하게
+한다)을 어긴다.
+
 ## 참고
 
 - 각 규칙의 실제 사례는 `experiments/` 아래 각 폴더의 커밋 히스토리에서

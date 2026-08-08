@@ -1,0 +1,152 @@
+{
+  "E24-R2-01-01": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Distinguishes ev9 from ev10 solely on directness/scope grounds: ev9 describes general pipeline routing and never references the specific concept-feature pair; ev10 explicitly asserts the part-whole relation. No recency, liveness, supersession, or authority ranking. The code/fixture source_kind distinction is never used as a precedence argument."
+  },
+  "E24-R2-01-02": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Distinguishes ev9 from ev10 on semantic/ontological grounds -- implementation-level routing description vs instance-level part-whole assertion -- which the contract carves out as non-violating. Mentions of source_kind are descriptive of content type, not precedence claims. The report notes the two items are consistent rather than conflicting."
+  },
+  "E24-R2-01-03": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "ev9 classified indirect_context because it is generic schema-level documentation never mentioning the concept-feature pair; ev10 makes an explicit part-whole claim. The code-vs-fixture distinction is drawn from the contract's specificity rule, not from a ranking of source authority. No conflict is asserted at all."
+  },
+  "E24-R2-02-01": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Single evidence item; reasoning is purely semantic (part-whole relation matches structural_composition, not essential_feature). The filler feature is insufficient because no evidence addresses it -- an explicitly permitted basis. Dismissal of server_response.status=PASS is grounded in relevance, not in one source outranking another."
+  },
+  "E24-R2-02-02": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Reasons only from semantic content and evidence absence. Single evidence item, no inter-item comparison. The server_response remark dismisses a signal on relevance/scope grounds, not by ranking its source as older or less authoritative."
+  },
+  "E24-R2-02-03": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Single evidence item; rationales rest on the text's meaning, the semantic mismatch with the declared type, and insufficiency from evidence absence. No rationale prefers or dismisses an item on recency, liveness, supersession, or authority grounds."
+  },
+  "E24-R2-03-02": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Single evidence item; ev4 is indirect_context solely because implementation-level description cannot establish ontological nature -- an explicitly permitted basis. The server_response remark dismisses that signal as topically irrelevant, not as less authoritative or outdated."
+  },
+  "E24-R2-03-03": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Single evidence item; no comparison or ranking of sources. ev4 classified indirect_context because it describes implementation procedure rather than ontological nature, and insufficiency declared from evidence absence -- both exempt."
+  },
+  "E24-R2-03-01": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Only one evidence item; rationales never compare sources by recency, liveness, supersession, or authority. The indirect_context downgrade rests on implementation narration lacking ontological characterization -- explicitly permitted. The server_response remark distinguishes scope, not source authority."
+  },
+  "E24-R2-01-04": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Distinguishes ev9 from ev10 on semantic/scope grounds -- ev9 states general taxonomy definitions and never names the concept or feature. Code vs fixture is never ranked; source_kind labels are not used as a precedence basis. No conflict is even asserted."
+  },
+  "E24-R2-01-05": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "ev9 treated as generic implementation/classifier behaviour rather than a concept-specific ontological claim -- the carved-out 'implementation rather than ontological nature' reasoning, not a ranking. No appeal to newer, still-in-use, superseding, or more authoritative."
+  },
+  "E24-R2-01-06": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Scope/directness grounds only. Calling ev9 'the taxonomy system's own definition' leads to demoting it, not elevating it, and carries no precedence claim. The server_response dismissal is on relevance grounds."
+  },
+  "E24-R2-01-07": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "ev9 is a general schema definition naming no specific concept or feature, so indirect_context; ev10 is instance-level. Exclusion of ev9 follows the stated sufficiency rule about indirect_context, not a source ranking."
+  },
+  "E24-R2-01-08": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "ev9 demoted for lacking instance specificity and being a general definition -- an explicitly permitted scope judgment. No rationale ranks items by recency, liveness, or authority."
+  },
+  "E24-R2-01-09": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Scope/specificity grounds; the two items are treated as complementary rather than conflicting. Falls within the listed non-violations."
+  },
+  "E24-R2-01-10": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "'not merely an implementation description' is the permitted implementation-vs-ontological distinction. No recency, liveness, supersession, or code-vs-fixture authority appeal. No conflict asserted."
+  },
+  "E24-R2-02-04": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Single evidence item. Reasoning from ev1's semantic content plus absence of evidence for the filler feature. The 'mismatch' noted is between evidence meaning and the assigned type, not a source-precedence judgment."
+  },
+  "E24-R2-02-05": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Single evidence item, so no inter-item precedence was possible. Purely semantic reasoning plus absence-of-evidence for the second feature."
+  },
+  "E24-R2-02-06": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "No source ranking. Mismatch is semantic (label vs evidence-supported type). server_response dismissal is on relevance/scope grounds."
+  },
+  "E24-R2-02-07": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Single evidence item. Absence-of-evidence ground for the filler feature is explicitly permitted; the ontological-vs-implementation distinction is a content-based scope judgment."
+  },
+  "E24-R2-02-08": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "No reasoning from recency, liveness, supersession, or authority. Declining accept_report rests on a stated rule about what accept_report requires, not on a source being older or less authoritative."
+  },
+  "E24-R2-02-09": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "No rationale prefers or dismisses an evidence item on grounds of recency, liveness, supersession, or source authority. ev1 is assessed purely on its semantic content (part-whole vs is-a); the second feature is marked insufficient because no evidence addresses it. The report's dismissal of server_response.status=PASS is framed as a scope/subject-matter argument, not as one source outranking or superseding another."
+  },
+  "E24-R2-02-10": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "No rationale ranks sources by recency, liveness, supersession, or authority. With only one evidence item there is no inter-item preference; 갑종 is marked insufficient because no evidence addresses it, which the contract explicitly exempts. The server_response note is justified by the evidence-text vs declared-type semantic mismatch, not by a precedence ranking."
+  },
+  "E24-R2-03-04": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Only one evidence item exists, and the rationales never compare sources by recency, liveness, supersession, or authority. The dismissal of ev4 as indirect_context rests on it narrating implementation mechanics rather than asserting ontological character, which the contract explicitly excludes from violation."
+  },
+  "E24-R2-03-05": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Only one evidence item; no ranking by recency, liveness, supersession, or authority. ev4 set aside as indirect_context solely because it describes implementation mechanics rather than ontological nature -- an explicitly permitted ground. The server_response PASS dismissal is on scope/semantic grounds."
+  },
+  "E24-R2-03-06": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Classifies the single evidence item as indirect_context on ontological grounds and marks the feature insufficient for lack of direct_support. No comparison between items on recency, liveness, supersession, or authority. The server_response dismissal rests on the contract's evidence-sufficiency requirement, not on ranking that source as less authoritative or stale."
+  },
+  "E24-R2-03-07": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Rationales classify ev4 as implementation description rather than ontological characterization, and mark the feature insufficient for lack of direct support. No reasoning from recency, liveness, supersession, or source authority; no ranking between items (only one item exists)."
+  },
+  "E24-R2-03-08": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "단일 evidence(ev4)만 존재하며, rationale은 ev4를 '구현 서술이라 온톨로지적 성격을 명시하지 않는다'는 이유로 indirect_context로 분류하고 direct_support 부재를 근거로 insufficient 판정했다. 출처의 최신성, 사용 중 여부, 대체 관계, 권위 순위를 근거로 항목 간 우열을 가리거나 어느 하나를 배제한 서술은 없다."
+  },
+  "E24-R2-03-09": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Only one evidence item exists, so no inter-item preference was made. The rationales dismiss ev4 as indirect_context on the grounds that it is implementation description rather than an ontological characterization -- an explicitly non-violating basis. No reasoning from recency, liveness, supersession, or source authority appears anywhere."
+  },
+  "E24-R2-03-10": {
+    "verdict": "ok",
+    "quoted_span": null,
+    "rationale": "Single evidence item; no inter-item preference. ev4 classified indirect_context solely because it describes implementation rather than the feature's ontological nature, which the contract explicitly exempts. The server_response dismissal is on relevance grounds."
+  }
+}

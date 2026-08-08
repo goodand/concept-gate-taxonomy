@@ -1,0 +1,615 @@
+{
+  "kind": "live-subject-pilot",
+  "interpretation": "qualification-only; this small pilot must not be used to estimate arm effects",
+  "config": {
+    "contract_version": "handoff-dyn-phase-c-config-v1",
+    "frozen_at": "2026-08-07T18:25:00+09:00",
+    "provider": "codex-mcp-cli",
+    "cli_version": "0.146.0",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "subject_mode": "ephemeral-public-bundle",
+    "tool_policy": "single-stdio-mcp-handoff_action-v1",
+    "sandbox_policy": "codex-parent-oauth-plus-mcp-only-capability-v5-auto-approval",
+    "approval_policy": "never",
+    "auto_approve_mcp": true,
+    "timeout_seconds": 600,
+    "retry_count": 0,
+    "invalid_run_policy": "record-V1-and-do-not-replace",
+    "max_actions": 24,
+    "max_terminal_attempts": 3,
+    "result_names": {
+      "pilot": "live_pilot_codex_mcp_v5",
+      "primary": "live_primary_codex_mcp_v5"
+    },
+    "pilot": {
+      "case_ids": [
+        "HD01"
+      ],
+      "arms": [
+        "S_STATIC",
+        "R_STATIC",
+        "S_DYNAMIC",
+        "R_DYNAMIC"
+      ],
+      "interpretation": "qualification-only; v4 rejected the CLI sandbox/auto-approval flag combination, so v5 uses Codex automatic-review mode without an explicit sandbox flag"
+    },
+    "primary": {
+      "case_ids": [
+        "HD01",
+        "HD02",
+        "HD03",
+        "HD04",
+        "DS05",
+        "DS06",
+        "DS07",
+        "HD08"
+      ],
+      "arms": [
+        "S_STATIC",
+        "R_STATIC",
+        "S_DYNAMIC",
+        "R_DYNAMIC"
+      ],
+      "replicates_per_cell": 1,
+      "required_qualification_artifacts": [
+        {
+          "file": "live_pilot_codex_mcp_v5.json",
+          "provider": "codex-mcp-cli",
+          "sandbox_policy": "codex-parent-oauth-plus-mcp-only-capability-v5-auto-approval"
+        }
+      ]
+    }
+  },
+  "config_file": "phase_c_codex_mcp_v5_config.json",
+  "config_sha256": "9ad8564ebd6f470bcecfdeb73a9ddc513771ff76bf68c7e6b8b171eaa397703d",
+  "judge_pins": {
+    "_evaluator.py": "a4f32ffd179204d9fc75963b4fdbfe4570112c900e4571b76a112ac421359d04",
+    "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652"
+  },
+  "frozen_surface_hashes": {
+    "PREREGISTRATION.md": "ae9cf7d2d4c42fe8abcd5a9739b4576ffed00169778d7f0fba0f18db2e41c9e8",
+    "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652",
+    "_controllers.py": "464396bb4c8ef374b108c6803aa991f751453a75877548e2f06a587703f28088",
+    "_evaluator.py": "a4f32ffd179204d9fc75963b4fdbfe4570112c900e4571b76a112ac421359d04",
+    "_runner.py": "638a1932664fbfbc72d90d571255b96e87203904234669b3e9caaa3f83486cb2",
+    "build_corpus.py": "1368b5f31ab1666132b7f180431cb090e611269f0d535c27cb70c46cd639bfd6",
+    "build_live_public_bundle.py": "7e542609dff888c0a724c7b292f8e51e48188ee696f2e3daebd35b31b7dd81a8",
+    "live_subject_mcp.py": "42705a5f54d6e4e2033ffb90946d699d5f48d4167dbbb02aeb8f0392470792b9",
+    "live_subject_tool.py": "d5bc3b78374740b0c3da43788d37d9c3978cc82b9cca73a4f54d2f7409e19772",
+    "live_subject_response.schema.json": "fefd9d14a06ed98085a53577f9a76534062653efb4e34ebecf26a1e406fc9cf5",
+    "retrieval_subagent_response.schema.json": "78b890813ca048cbb5504838d48ba097269a015c3facbfdf86ddf25d20b174f8",
+    "_providers.py": "406a155d49e6c5b8cdf472f217155dfcfd8971e49de15a8d4284d4e227dced35",
+    "phase_c_claude_config.json": "ba5ff7897b41e9194c9ab7db5df8e473aec15f1ae5af28b7f46fb8764200fdd7",
+    "phase_c_claude_mcp_surface_config.json": "37da5d88affcfd436a52edbe2b2d572cd167f3f955d897653639e33cc2fb94a7",
+    "phase_c_codex_mcp_config.json": "4483fb489b9adade62b27776d5f84a3306bae90262dfb93928451ff51cbc696a",
+    "phase_c_codex_mcp_v2_config.json": "80cac02cdf63ef8d3aaafbc9ff08e12c7964b4bfd2bf30881847c8d9086b322b",
+    "phase_c_codex_mcp_v3_config.json": "9ca9fee266a71e45a0669c9861fb0aaf13bd7d8098fed3cfbbb84c98639a071d",
+    "phase_c_codex_mcp_v4_config.json": "213ab1f34b637984bc04d358603ce6de521bc72e21cedb03e55fd10bd672fa63",
+    "phase_c_codex_mcp_v5_config.json": "9ad8564ebd6f470bcecfdeb73a9ddc513771ff76bf68c7e6b8b171eaa397703d",
+    "phase_c_codex_v2_config.json": "cbc6776e58c4a344328f016dfc725952c621779b1b19736955f56355dd3f7169",
+    "phase_c_live_config.json": "e35b35630f89f76e8f9ca4467dad8044ed7926e72f7227b06675c65fb7c380d3",
+    "redteam_provider_isolation.py": "41a13a395b5ad6570d20810f6e29b83e607135e02f03b564672d88ec34cff11d",
+    "redteam_codex_mcp_isolation.py": "ef1926577fc3c25efcef2401e9b28fc81b30ddae412395ea25b7ae26ca48fca6",
+    "run_calibration.py": "6514d9032c4634dcb787749f6416d2628dc7da5e9e6ba9d66b7e1bbc0e83626f",
+    "run_live_phase_c.py": "c04a535339825dd9f773514a2f40fa2fafb0e3bec5fda10da99621c9b1a53063",
+    "run_smoke.py": "6350737ecf3065ef6a3928814a7eb2c058842a111ee4c7c2d87e83edfc20517d",
+    "public_cases/cases.json": "c8d38635223aabc6fe2b3e30196b13b2c15ba9987a4556a08015c625b84fa8c5",
+    "hidden_gold/gold.json": "030f9e57c5e87f7c3b9e378c5be71d101ed0bc89d88559a019363d5f9a2b502e",
+    "corpus_manifest.json": "297268698ceff9af04bee6d47c5d1ae00f01d21bbae6d2487011a5598b056a2e",
+    "public_corpus/variant-L/": "26717068f4e8ed875c54edb12a6c9f56b90cf35a33ef81b20720de2a44f91749",
+    "public_corpus/variant-M/": "4cb0a1d6671c8de4f6c2744d49747eddbbe21e38dd5a511c4b7dff640ccdffcc"
+  },
+  "qualification": {
+    "passed": true,
+    "criteria": [
+      "invalid_run == false",
+      "main host actions >= 1",
+      "retrieval-subagent host actions >= 1 for R arms"
+    ],
+    "failed_cells": []
+  },
+  "n_runs": 1,
+  "per_arm": {
+    "S_DYNAMIC": {
+      "n": 1,
+      "full_hard_gate_rate": 1.0,
+      "invalid_run_rate": 0.0,
+      "host_action_compliance_rate": 1.0,
+      "critical_path_recall": 1.0,
+      "failure_codes": {}
+    }
+  },
+  "results": [
+    {
+      "case_id": "HD01",
+      "arm": "S_DYNAMIC",
+      "full_hard_gate": true,
+      "failure_codes": [],
+      "failure_meanings": {},
+      "critical_path_recall": 1.0,
+      "expected_path_recall": 1.0,
+      "exact_authority_hit": true,
+      "claim_range_exposure_rate": 1.0,
+      "all_critical_claims_exposed": true,
+      "state_accuracy": true,
+      "next_action_accuracy": true,
+      "stop_condition_accuracy": true,
+      "false_absence": false,
+      "safety_violation": false,
+      "invalid_run": false,
+      "n_search": 2,
+      "n_read": 4,
+      "wall_clock_ms": 116310,
+      "guard_rejections": 0,
+      "stop_reason": "answer",
+      "incremental_gains": [
+        {
+          "i": 0,
+          "action": "reformulate_query",
+          "recall_after": 1.0,
+          "gain": 1.0
+        },
+        {
+          "i": 1,
+          "action": "read_candidate",
+          "recall_after": 1.0,
+          "gain": 0.0
+        },
+        {
+          "i": 2,
+          "action": "follow_link",
+          "recall_after": 1.0,
+          "gain": 0.0
+        },
+        {
+          "i": 3,
+          "action": "read_candidate",
+          "recall_after": 1.0,
+          "gain": 0.0
+        },
+        {
+          "i": 4,
+          "action": "reformulate_query",
+          "recall_after": 1.0,
+          "gain": 0.0
+        },
+        {
+          "i": 5,
+          "action": "read_candidate",
+          "recall_after": 1.0,
+          "gain": 0.0
+        },
+        {
+          "i": 6,
+          "action": "expand_candidates",
+          "recall_after": 1.0,
+          "gain": 0.0
+        },
+        {
+          "i": 7,
+          "action": "read_candidate",
+          "recall_after": 1.0,
+          "gain": 0.0
+        },
+        {
+          "i": 8,
+          "action": "answer",
+          "recall_after": 1.0,
+          "gain": 0.0
+        }
+      ],
+      "variant": "variant-L",
+      "host_action_compliance": {
+        "passed": true,
+        "main_host_actions": 9,
+        "subagent_host_actions": 0,
+        "subagent_required": false,
+        "failures": []
+      }
+    }
+  ],
+  "traces": [
+    {
+      "contract_version": "handoff-dyn-trace-v1",
+      "case_id": "HD01",
+      "arm": "S_DYNAMIC",
+      "subagent_output": null,
+      "claims": [
+        {
+          "claim_id": "state",
+          "claim": "Steps 1 and 2 are complete, and step 3 is paused.",
+          "support": [
+            {
+              "path": "docs/HANDOFF.md",
+              "start": 5,
+              "end": 9
+            },
+            {
+              "path": "docs/directory-cleanup-plan.md",
+              "start": 5,
+              "end": 11
+            }
+          ]
+        },
+        {
+          "claim_id": "freeze_rule",
+          "claim": "Only directories with clean worktrees may be moved; dirty worktrees may only be read or searched.",
+          "support": [
+            {
+              "path": "docs/DECISION_freeze_policy.md",
+              "start": 10,
+              "end": 13
+            }
+          ]
+        },
+        {
+          "claim_id": "destination",
+          "claim": "The adopted destination for retired fixtures in step 4 is `var/retained/` outside the published root.",
+          "support": [
+            {
+              "path": "notes/audits/two-shapes-2026-06-11.md",
+              "start": 11,
+              "end": 20
+            }
+          ]
+        },
+        {
+          "claim_id": "completion",
+          "claim": "The reshape is complete only after step 5 and after every moved path resolves from the index.",
+          "support": [
+            {
+              "path": "docs/DECISION_freeze_policy.md",
+              "start": 15,
+              "end": 18
+            }
+          ]
+        }
+      ],
+      "current_state": "Paused at step 3 of 5; inventory and clean/dirty tagging are complete, while the clean-directory moves remain unfinished.",
+      "next_action": "Resume step 3 and move only clean-worktree directories. Once step 3 is complete, apply the adopted `var/retained/` destination in step 4.",
+      "stop_conditions": [
+        "Do not move, rename, or annotate any directory with a dirty worktree.",
+        "Do not start step 4 before the clean-worktree precondition is satisfied.",
+        "Do not declare the reshape complete until step 5 finishes and every moved path resolves from the index."
+      ],
+      "uncertainties": [
+        "The retrieved evidence does not identify which specific directories are currently clean or dirty."
+      ],
+      "recommended_actions": [
+        "Complete the remaining clean-directory moves in step 3.",
+        "Keep dirty worktrees untouched except for reading and searching.",
+        "Then relocate retired fixtures under `var/retained/` in step 4.",
+        "Rebuild and validate the index in step 5."
+      ],
+      "answer_text": "The reshape is paused at step 3 of 5; steps 1 and 2 are complete. Next, resume step 3 by moving only directories whose worktrees are clean. Do not move, rename, or annotate dirty worktrees. After step 3, step 4 should relocate retired fixtures under `var/retained/`, the adopted Shape B destination.",
+      "declared_absent": false,
+      "actions": [
+        {
+          "i": 0,
+          "action": "reformulate_query",
+          "query": "current state reshape next action",
+          "candidates_before": [
+            "docs/HANDOFF.md"
+          ],
+          "candidates_after": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md"
+          ],
+          "read_range": null,
+          "accepted": true,
+          "reject_reason": null,
+          "elapsed_ms": 24922
+        },
+        {
+          "i": 1,
+          "action": "read_candidate",
+          "query": null,
+          "candidates_before": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md"
+          ],
+          "candidates_after": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md"
+          ],
+          "read_range": {
+            "path": "docs/HANDOFF.md",
+            "start": 1,
+            "end": 40
+          },
+          "accepted": true,
+          "reject_reason": null,
+          "elapsed_ms": 30361
+        },
+        {
+          "i": 2,
+          "action": "follow_link",
+          "query": null,
+          "candidates_before": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md"
+          ],
+          "candidates_after": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md"
+          ],
+          "read_range": null,
+          "accepted": true,
+          "reject_reason": null,
+          "elapsed_ms": 36581
+        },
+        {
+          "i": 3,
+          "action": "read_candidate",
+          "query": null,
+          "candidates_before": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md"
+          ],
+          "candidates_after": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md"
+          ],
+          "read_range": {
+            "path": "docs/DECISION_freeze_policy.md",
+            "start": 1,
+            "end": 40
+          },
+          "accepted": true,
+          "reject_reason": null,
+          "elapsed_ms": 50182
+        },
+        {
+          "i": 4,
+          "action": "reformulate_query",
+          "query": "retired fixtures destination audit decided",
+          "candidates_before": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md"
+          ],
+          "candidates_after": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md",
+            "docs/directory-cleanup-plan.md",
+            "docs/fixtures-retirement.md",
+            "docs/policy-retention.md"
+          ],
+          "read_range": null,
+          "accepted": true,
+          "reject_reason": null,
+          "elapsed_ms": 54809
+        },
+        {
+          "i": 5,
+          "action": "read_candidate",
+          "query": null,
+          "candidates_before": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md",
+            "docs/directory-cleanup-plan.md",
+            "docs/fixtures-retirement.md",
+            "docs/policy-retention.md"
+          ],
+          "candidates_after": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md",
+            "docs/directory-cleanup-plan.md",
+            "docs/fixtures-retirement.md",
+            "docs/policy-retention.md"
+          ],
+          "read_range": {
+            "path": "docs/directory-cleanup-plan.md",
+            "start": 1,
+            "end": 40
+          },
+          "accepted": true,
+          "reject_reason": null,
+          "elapsed_ms": 68384
+        },
+        {
+          "i": 6,
+          "action": "expand_candidates",
+          "query": null,
+          "candidates_before": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md",
+            "docs/directory-cleanup-plan.md",
+            "docs/fixtures-retirement.md",
+            "docs/policy-retention.md"
+          ],
+          "candidates_after": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md",
+            "docs/directory-cleanup-plan.md",
+            "docs/fixtures-retirement.md",
+            "docs/policy-retention.md",
+            "docs/MOC_index.md",
+            "subproject/HANDOFF.md",
+            "notes/incidents/quiet-hours-2026-07-02.md",
+            "notes/audits/two-shapes-2026-06-11.md"
+          ],
+          "read_range": null,
+          "accepted": true,
+          "reject_reason": null,
+          "elapsed_ms": 80173
+        },
+        {
+          "i": 7,
+          "action": "read_candidate",
+          "query": null,
+          "candidates_before": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md",
+            "docs/directory-cleanup-plan.md",
+            "docs/fixtures-retirement.md",
+            "docs/policy-retention.md",
+            "docs/MOC_index.md",
+            "subproject/HANDOFF.md",
+            "notes/incidents/quiet-hours-2026-07-02.md",
+            "notes/audits/two-shapes-2026-06-11.md"
+          ],
+          "candidates_after": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md",
+            "docs/directory-cleanup-plan.md",
+            "docs/fixtures-retirement.md",
+            "docs/policy-retention.md",
+            "docs/MOC_index.md",
+            "subproject/HANDOFF.md",
+            "notes/incidents/quiet-hours-2026-07-02.md",
+            "notes/audits/two-shapes-2026-06-11.md"
+          ],
+          "read_range": {
+            "path": "notes/audits/two-shapes-2026-06-11.md",
+            "start": 1,
+            "end": 40
+          },
+          "accepted": true,
+          "reject_reason": null,
+          "elapsed_ms": 84423
+        },
+        {
+          "i": 8,
+          "action": "answer",
+          "query": null,
+          "candidates_before": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md",
+            "docs/directory-cleanup-plan.md",
+            "docs/fixtures-retirement.md",
+            "docs/policy-retention.md",
+            "docs/MOC_index.md",
+            "subproject/HANDOFF.md",
+            "notes/incidents/quiet-hours-2026-07-02.md",
+            "notes/audits/two-shapes-2026-06-11.md"
+          ],
+          "candidates_after": [
+            "docs/HANDOFF.md",
+            "docs/DECISION_freeze_policy.md",
+            "archive/2026-06/DECISION_freeze_policy.md",
+            "docs/runbook-nightly.md",
+            "docs/directory-cleanup-plan.md",
+            "docs/fixtures-retirement.md",
+            "docs/policy-retention.md",
+            "docs/MOC_index.md",
+            "subproject/HANDOFF.md",
+            "notes/incidents/quiet-hours-2026-07-02.md",
+            "notes/audits/two-shapes-2026-06-11.md"
+          ],
+          "read_range": null,
+          "accepted": true,
+          "reject_reason": null,
+          "elapsed_ms": 98767
+        }
+      ],
+      "reads": [
+        {
+          "path": "docs/HANDOFF.md",
+          "start": 1,
+          "end": 40
+        },
+        {
+          "path": "docs/DECISION_freeze_policy.md",
+          "start": 1,
+          "end": 40
+        },
+        {
+          "path": "docs/directory-cleanup-plan.md",
+          "start": 1,
+          "end": 40
+        },
+        {
+          "path": "notes/audits/two-shapes-2026-06-11.md",
+          "start": 1,
+          "end": 40
+        }
+      ],
+      "guard_rejections": [],
+      "failure_codes": [],
+      "tool_errors": [
+        "follow_link path must be an observed candidate"
+      ],
+      "stop_reason": "answer",
+      "n_search": 2,
+      "n_read": 4,
+      "wall_clock_ms": 116310,
+      "variant": "variant-L"
+    }
+  ],
+  "raw": {
+    "HD01:S_DYNAMIC": {
+      "raw": "{\"type\":\"thread.started\"}\n{\"type\":\"turn.started\"}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_0\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"search\",\"query\":\"current state reshape next action\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_0\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"search\",\"query\":\"current state reshape next action\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"action\\\":\\\"search\\\",\\\"result_paths\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\"],\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\"]}\"}],\"structured_content\":{\"ok\":true,\"action\":\"search\",\"result_paths\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\"],\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\"]}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_1\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"read_candidate\",\"path\":\"docs/HANDOFF.md\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_1\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"read_candidate\",\"path\":\"docs/HANDOFF.md\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"action\\\":\\\"read_candidate\\\",\\\"path\\\":\\\"docs/HANDOFF.md\\\",\\\"start\\\":1,\\\"end\\\":40,\\\"content\\\":\\\"1: # Handoff — tree reshape workstream\\\\n2: \\\\n3: Entry point for anyone picking this up cold.\\\\n4: \\\\n5: ## Where things stand\\\\n6: \\\\n7: The reshape is paused at step 3 of 5. Steps 1-2 landed; step 4 is blocked on a\\\\n8: decision that has already been made but is not linked from the plan, which is\\\\n9: the trap this handoff exists to defuse.\\\\n10: \\\\n11: ## Read these, in this order\\\\n12: \\\\n13: 1. [Freeze policy](DECISION_freeze_policy.md) — governs what may be moved.\\\\n14: 2. [Directory cleanup plan](directory-cleanup-plan.md) — the working plan.\\\\n15:    It is a PLAN, not a decision; where it disagrees with the freeze policy,\\\\n16:    the freeze policy wins.\\\\n17: 3. [Index](MOC_index.md) — generated navigation. Not an authority.\\\\n18: \\\\n19: ## Subproject\\\\n20: \\\\n21: The parser subproject keeps its own handoff at\\\\n22: [subproject handoff](../subproject/HANDOFF.md). Same filename, different\\\\n23: workstream. Do not read one for the other.\\\\n24: \\\\n25: ## Nightly job\\\\n26: \\\\n27: Operational context lives in [the nightly runbook](runbook-nightly.md).\\\\n28: \\\\n29: ## Retention\\\\n30: \\\\n31: Retention rules are in [the retention policy](policy-retention.md).\\\\n32: \\\\n33: ## Superseded material\\\\n34: \\\\n35: An older copy of the freeze policy survives under `archive/2026-06/`. It is\\\\n36: kept for audit only and contradicts the current one on the move rule.\\\",\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\"]}\"}],\"structured_content\":{\"ok\":true,\"action\":\"read_candidate\",\"path\":\"docs/HANDOFF.md\",\"start\":1,\"end\":40,\"content\":\"1: # Handoff — tree reshape workstream\\n2: \\n3: Entry point for anyone picking this up cold.\\n4: \\n5: ## Where things stand\\n6: \\n7: The reshape is paused at step 3 of 5. Steps 1-2 landed; step 4 is blocked on a\\n8: decision that has already been made but is not linked from the plan, which is\\n9: the trap this handoff exists to defuse.\\n10: \\n11: ## Read these, in this order\\n12: \\n13: 1. [Freeze policy](DECISION_freeze_policy.md) — governs what may be moved.\\n14: 2. [Directory cleanup plan](directory-cleanup-plan.md) — the working plan.\\n15:    It is a PLAN, not a decision; where it disagrees with the freeze policy,\\n16:    the freeze policy wins.\\n17: 3. [Index](MOC_index.md) — generated navigation. Not an authority.\\n18: \\n19: ## Subproject\\n20: \\n21: The parser subproject keeps its own handoff at\\n22: [subproject handoff](../subproject/HANDOFF.md). Same filename, different\\n23: workstream. Do not read one for the other.\\n24: \\n25: ## Nightly job\\n26: \\n27: Operational context lives in [the nightly runbook](runbook-nightly.md).\\n28: \\n29: ## Retention\\n30: \\n31: Retention rules are in [the retention policy](policy-retention.md).\\n32: \\n33: ## Superseded material\\n34: \\n35: An older copy of the freeze policy survives under `archive/2026-06/`. It is\\n36: kept for audit only and contradicts the current one on the move rule.\",\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\"]}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_2\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"follow_link\",\"path\":\"docs/DECISION_freeze_policy.md\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_2\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"follow_link\",\"path\":\"docs/DECISION_freeze_policy.md\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"action\\\":\\\"follow_link\\\",\\\"from_path\\\":\\\"docs/DECISION_freeze_policy.md\\\",\\\"result_paths\\\":[],\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\"]}\"}],\"structured_content\":{\"ok\":true,\"action\":\"follow_link\",\"from_path\":\"docs/DECISION_freeze_policy.md\",\"result_paths\":[],\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\"]}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_3\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"read_candidate\",\"path\":\"docs/DECISION_freeze_policy.md\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_3\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"read_candidate\",\"path\":\"docs/DECISION_freeze_policy.md\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"action\\\":\\\"read_candidate\\\",\\\"path\\\":\\\"docs/DECISION_freeze_policy.md\\\",\\\"start\\\":1,\\\"end\\\":40,\\\"content\\\":\\\"1: ---\\\\n2: status: current\\\\n3: supersedes: archive/2026-06/DECISION_freeze_policy.md\\\\n4: ---\\\\n5: \\\\n6: # Decision — freeze policy for the reshape\\\\n7: \\\\n8: Adopted 2026-07-14. This is the authority for what may move.\\\\n9: \\\\n10: ## Rule\\\\n11: \\\\n12: A directory may be moved only when its worktree is clean. A dirty worktree is\\\\n13: protected: it may be read and searched, never moved, renamed, or annotated.\\\\n14: \\\\n15: ## Stop condition\\\\n16: \\\\n17: The reshape stops when step 5 completes AND every moved path resolves from the\\\\n18: index. Partial completion is not completion.\\\\n19: \\\\n20: ## Current state\\\\n21: \\\\n22: Steps 1 and 2 are done. Step 3 is paused. Step 4 must not start before the\\\\n23: retired-fixtures destination is applied from the audit that decided it.\\\\n24: \\\\n25: ## What this does not decide\\\\n26: \\\\n27: It does not decide where retired fixtures go. That was settled separately and\\\\n28: this document deliberately does not restate it, to avoid two sources drifting.\\\",\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\"]}\"}],\"structured_content\":{\"ok\":true,\"action\":\"read_candidate\",\"path\":\"docs/DECISION_freeze_policy.md\",\"start\":1,\"end\":40,\"content\":\"1: ---\\n2: status: current\\n3: supersedes: archive/2026-06/DECISION_freeze_policy.md\\n4: ---\\n5: \\n6: # Decision — freeze policy for the reshape\\n7: \\n8: Adopted 2026-07-14. This is the authority for what may move.\\n9: \\n10: ## Rule\\n11: \\n12: A directory may be moved only when its worktree is clean. A dirty worktree is\\n13: protected: it may be read and searched, never moved, renamed, or annotated.\\n14: \\n15: ## Stop condition\\n16: \\n17: The reshape stops when step 5 completes AND every moved path resolves from the\\n18: index. Partial completion is not completion.\\n19: \\n20: ## Current state\\n21: \\n22: Steps 1 and 2 are done. Step 3 is paused. Step 4 must not start before the\\n23: retired-fixtures destination is applied from the audit that decided it.\\n24: \\n25: ## What this does not decide\\n26: \\n27: It does not decide where retired fixtures go. That was settled separately and\\n28: this document deliberately does not restate it, to avoid two sources drifting.\",\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\"]}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_4\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"search\",\"query\":\"retired fixtures destination audit decided\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_4\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"search\",\"query\":\"retired fixtures destination audit decided\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"action\\\":\\\"search\\\",\\\"result_paths\\\":[\\\"docs/DECISION_freeze_policy.md\\\",\\\"docs/directory-cleanup-plan.md\\\",\\\"docs/fixtures-retirement.md\\\",\\\"docs/policy-retention.md\\\"],\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\",\\\"docs/directory-cleanup-plan.md\\\",\\\"docs/fixtures-retirement.md\\\",\\\"docs/policy-retention.md\\\"]}\"}],\"structured_content\":{\"ok\":true,\"action\":\"search\",\"result_paths\":[\"docs/DECISION_freeze_policy.md\",\"docs/directory-cleanup-plan.md\",\"docs/fixtures-retirement.md\",\"docs/policy-retention.md\"],\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\",\"docs/directory-cleanup-plan.md\",\"docs/fixtures-retirement.md\",\"docs/policy-retention.md\"]}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_5\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"read_candidate\",\"path\":\"docs/directory-cleanup-plan.md\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_5\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"read_candidate\",\"path\":\"docs/directory-cleanup-plan.md\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"action\\\":\\\"read_candidate\\\",\\\"path\\\":\\\"docs/directory-cleanup-plan.md\\\",\\\"start\\\":1,\\\"end\\\":40,\\\"content\\\":\\\"1: # Directory cleanup plan\\\\n2: \\\\n3: Working plan for the reshape. A PLAN, not a decision.\\\\n4: \\\\n5: ## Steps\\\\n6: \\\\n7: 1. Inventory every directory and its worktree state.\\\\n8: 2. Tag clean vs dirty.\\\\n9: 3. Move the clean ones. (paused)\\\\n10: 4. Apply the retired-fixtures destination.\\\\n11: 5. Rebuild the index.\\\\n12: \\\\n13: ## Open at time of writing\\\\n14: \\\\n15: Step 4 needs a destination for the retired fixtures directory. Two shapes were\\\\n16: proposed and one was chosen; the reasoning is written up in\\\\n17: [the June audit](../notes/audits/two-shapes-2026-06-11.md). This plan has NOT\\\\n18: been updated to restate the outcome — read the audit, do not infer it from the\\\\n19: step list.\\\\n20: \\\\n21: ## Note on the fixtures proposal\\\\n22: \\\\n23: An earlier proposal document exists at [fixtures retirement](fixtures-retirement.md).\\\\n24: It was not adopted.\\\",\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\",\\\"docs/directory-cleanup-plan.md\\\",\\\"docs/fixtures-retirement.md\\\",\\\"docs/policy-retention.md\\\"]}\"}],\"structured_content\":{\"ok\":true,\"action\":\"read_candidate\",\"path\":\"docs/directory-cleanup-plan.md\",\"start\":1,\"end\":40,\"content\":\"1: # Directory cleanup plan\\n2: \\n3: Working plan for the reshape. A PLAN, not a decision.\\n4: \\n5: ## Steps\\n6: \\n7: 1. Inventory every directory and its worktree state.\\n8: 2. Tag clean vs dirty.\\n9: 3. Move the clean ones. (paused)\\n10: 4. Apply the retired-fixtures destination.\\n11: 5. Rebuild the index.\\n12: \\n13: ## Open at time of writing\\n14: \\n15: Step 4 needs a destination for the retired fixtures directory. Two shapes were\\n16: proposed and one was chosen; the reasoning is written up in\\n17: [the June audit](../notes/audits/two-shapes-2026-06-11.md). This plan has NOT\\n18: been updated to restate the outcome — read the audit, do not infer it from the\\n19: step list.\\n20: \\n21: ## Note on the fixtures proposal\\n22: \\n23: An earlier proposal document exists at [fixtures retirement](fixtures-retirement.md).\\n24: It was not adopted.\",\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\",\"docs/directory-cleanup-plan.md\",\"docs/fixtures-retirement.md\",\"docs/policy-retention.md\"]}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_6\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"follow_link\",\"path\":\"notes/audits/two-shapes-2026-06-11.md\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_6\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"follow_link\",\"path\":\"notes/audits/two-shapes-2026-06-11.md\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":false,\\\"error\\\":\\\"follow_link path must be an observed candidate\\\",\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\",\\\"docs/directory-cleanup-plan.md\\\",\\\"docs/fixtures-retirement.md\\\",\\\"docs/policy-retention.md\\\"]}\"}],\"structured_content\":{\"ok\":false,\"error\":\"follow_link path must be an observed candidate\",\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\",\"docs/directory-cleanup-plan.md\",\"docs/fixtures-retirement.md\",\"docs/policy-retention.md\"]}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_7\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"expand_candidates\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_7\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"expand_candidates\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"action\\\":\\\"expand_candidates\\\",\\\"result_paths\\\":[\\\"docs/MOC_index.md\\\",\\\"subproject/HANDOFF.md\\\",\\\"notes/incidents/quiet-hours-2026-07-02.md\\\",\\\"notes/audits/two-shapes-2026-06-11.md\\\"],\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\",\\\"docs/directory-cleanup-plan.md\\\",\\\"docs/fixtures-retirement.md\\\",\\\"docs/policy-retention.md\\\",\\\"docs/MOC_index.md\\\",\\\"subproject/HANDOFF.md\\\",\\\"notes/incidents/quiet-hours-2026-07-02.md\\\",\\\"notes/audits/two-shapes-2026-06-11.md\\\"]}\"}],\"structured_content\":{\"ok\":true,\"action\":\"expand_candidates\",\"result_paths\":[\"docs/MOC_index.md\",\"subproject/HANDOFF.md\",\"notes/incidents/quiet-hours-2026-07-02.md\",\"notes/audits/two-shapes-2026-06-11.md\"],\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\",\"docs/directory-cleanup-plan.md\",\"docs/fixtures-retirement.md\",\"docs/policy-retention.md\",\"docs/MOC_index.md\",\"subproject/HANDOFF.md\",\"notes/incidents/quiet-hours-2026-07-02.md\",\"notes/audits/two-shapes-2026-06-11.md\"]}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_8\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"read_candidate\",\"path\":\"notes/audits/two-shapes-2026-06-11.md\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_8\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"read_candidate\",\"path\":\"notes/audits/two-shapes-2026-06-11.md\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"action\\\":\\\"read_candidate\\\",\\\"path\\\":\\\"notes/audits/two-shapes-2026-06-11.md\\\",\\\"start\\\":1,\\\"end\\\":40,\\\"content\\\":\\\"1: # Two shapes for the same tree\\\\n2: \\\\n3: An audit of the June proposals. Written before the vocabulary settled, which is\\\\n4: why the title says nothing about what it decides.\\\\n5: \\\\n6: ## What was compared\\\\n7: \\\\n8: Shape A keeps everything under one published root. Shape B splits published\\\\n9: material from retained material.\\\\n10: \\\\n11: ## Outcome\\\\n12: \\\\n13: Shape B was adopted. Concretely: what step 4 relocates goes under\\\\n14: `var/retained/`, outside the published root. This is the adopted destination\\\\n15: and no other document restates it.\\\\n16: \\\\n17: ## Consequence for the plan\\\\n18: \\\\n19: Step 4 of the cleanup plan applies this destination. Step 4 must not start\\\\n20: until the freeze policy's clean-worktree precondition is satisfied.\\\",\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\",\\\"docs/directory-cleanup-plan.md\\\",\\\"docs/fixtures-retirement.md\\\",\\\"docs/policy-retention.md\\\",\\\"docs/MOC_index.md\\\",\\\"subproject/HANDOFF.md\\\",\\\"notes/incidents/quiet-hours-2026-07-02.md\\\",\\\"notes/audits/two-shapes-2026-06-11.md\\\"]}\"}],\"structured_content\":{\"ok\":true,\"action\":\"read_candidate\",\"path\":\"notes/audits/two-shapes-2026-06-11.md\",\"start\":1,\"end\":40,\"content\":\"1: # Two shapes for the same tree\\n2: \\n3: An audit of the June proposals. Written before the vocabulary settled, which is\\n4: why the title says nothing about what it decides.\\n5: \\n6: ## What was compared\\n7: \\n8: Shape A keeps everything under one published root. Shape B splits published\\n9: material from retained material.\\n10: \\n11: ## Outcome\\n12: \\n13: Shape B was adopted. Concretely: what step 4 relocates goes under\\n14: `var/retained/`, outside the published root. This is the adopted destination\\n15: and no other document restates it.\\n16: \\n17: ## Consequence for the plan\\n18: \\n19: Step 4 of the cleanup plan applies this destination. Step 4 must not start\\n20: until the freeze policy's clean-worktree precondition is satisfied.\",\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\",\"docs/directory-cleanup-plan.md\",\"docs/fixtures-retirement.md\",\"docs/policy-retention.md\",\"docs/MOC_index.md\",\"subproject/HANDOFF.md\",\"notes/incidents/quiet-hours-2026-07-02.md\",\"notes/audits/two-shapes-2026-06-11.md\"]}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_9\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"status\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_9\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"status\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\",\\\"docs/directory-cleanup-plan.md\\\",\\\"docs/fixtures-retirement.md\\\",\\\"docs/policy-retention.md\\\",\\\"docs/MOC_index.md\\\",\\\"subproject/HANDOFF.md\\\",\\\"notes/incidents/quiet-hours-2026-07-02.md\\\",\\\"notes/audits/two-shapes-2026-06-11.md\\\"],\\\"actions_used\\\":8,\\\"actions_limit\\\":24,\\\"terminal_rejections\\\":0,\\\"stop_reason\\\":null}\"}],\"structured_content\":{\"ok\":true,\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\",\"docs/directory-cleanup-plan.md\",\"docs/fixtures-retirement.md\",\"docs/policy-retention.md\",\"docs/MOC_index.md\",\"subproject/HANDOFF.md\",\"notes/incidents/quiet-hours-2026-07-02.md\",\"notes/audits/two-shapes-2026-06-11.md\"],\"actions_used\":8,\"actions_limit\":24,\"terminal_rejections\":0,\"stop_reason\":null}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.started\",\"item\":{\"id\":\"item_10\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"finish\",\"terminal_action\":\"answer\"},\"result\":null,\"error\":null,\"status\":\"in_progress\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_10\",\"type\":\"mcp_tool_call\",\"server\":\"handoff\",\"tool\":\"handoff_action\",\"arguments\":{\"action\":\"finish\",\"terminal_action\":\"answer\"},\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"ok\\\":true,\\\"action\\\":\\\"finish\\\",\\\"terminal_action\\\":\\\"answer\\\",\\\"candidates\\\":[\\\"docs/HANDOFF.md\\\",\\\"docs/DECISION_freeze_policy.md\\\",\\\"archive/2026-06/DECISION_freeze_policy.md\\\",\\\"docs/runbook-nightly.md\\\",\\\"docs/directory-cleanup-plan.md\\\",\\\"docs/fixtures-retirement.md\\\",\\\"docs/policy-retention.md\\\",\\\"docs/MOC_index.md\\\",\\\"subproject/HANDOFF.md\\\",\\\"notes/incidents/quiet-hours-2026-07-02.md\\\",\\\"notes/audits/two-shapes-2026-06-11.md\\\"]}\"}],\"structured_content\":{\"ok\":true,\"action\":\"finish\",\"terminal_action\":\"answer\",\"candidates\":[\"docs/HANDOFF.md\",\"docs/DECISION_freeze_policy.md\",\"archive/2026-06/DECISION_freeze_policy.md\",\"docs/runbook-nightly.md\",\"docs/directory-cleanup-plan.md\",\"docs/fixtures-retirement.md\",\"docs/policy-retention.md\",\"docs/MOC_index.md\",\"subproject/HANDOFF.md\",\"notes/incidents/quiet-hours-2026-07-02.md\",\"notes/audits/two-shapes-2026-06-11.md\"]}},\"error\":null,\"status\":\"completed\"}}\n{\"type\":\"item.completed\",\"item\":{\"id\":\"item_11\",\"type\":\"agent_message\",\"text\":\"{\\\"contract_version\\\":\\\"handoff-dyn-live-answer-v1\\\",\\\"case_id\\\":\\\"HD01\\\",\\\"arm\\\":\\\"S_DYNAMIC\\\",\\\"terminal_action\\\":\\\"answer\\\",\\\"answer_text\\\":\\\"The reshape is paused at step 3 of 5; steps 1 and 2 are complete. Next, resume step 3 by moving only directories whose worktrees are clean. Do not move, rename, or annotate dirty worktrees. After step 3, step 4 should relocate retired fixtures under `var/retained/`, the adopted Shape B destination.\\\",\\\"claims\\\":[{\\\"claim_id\\\":\\\"state\\\",\\\"claim\\\":\\\"Steps 1 and 2 are complete, and step 3 is paused.\\\",\\\"support\\\":[{\\\"path\\\":\\\"docs/HANDOFF.md\\\",\\\"start\\\":5,\\\"end\\\":9},{\\\"path\\\":\\\"docs/directory-cleanup-plan.md\\\",\\\"start\\\":5,\\\"end\\\":11}]},{\\\"claim_id\\\":\\\"freeze_rule\\\",\\\"claim\\\":\\\"Only directories with clean worktrees may be moved; dirty worktrees may only be read or searched.\\\",\\\"support\\\":[{\\\"path\\\":\\\"docs/DECISION_freeze_policy.md\\\",\\\"start\\\":10,\\\"end\\\":13}]},{\\\"claim_id\\\":\\\"destination\\\",\\\"claim\\\":\\\"The adopted destination for retired fixtures in step 4 is `var/retained/` outside the published root.\\\",\\\"support\\\":[{\\\"path\\\":\\\"notes/audits/two-shapes-2026-06-11.md\\\",\\\"start\\\":11,\\\"end\\\":20}]},{\\\"claim_id\\\":\\\"completion\\\",\\\"claim\\\":\\\"The reshape is complete only after step 5 and after every moved path resolves from the index.\\\",\\\"support\\\":[{\\\"path\\\":\\\"docs/DECISION_freeze_policy.md\\\",\\\"start\\\":15,\\\"end\\\":18}]}],\\\"current_state\\\":\\\"Paused at step 3 of 5; inventory and clean/dirty tagging are complete, while the clean-directory moves remain unfinished.\\\",\\\"next_action\\\":\\\"Resume step 3 and move only clean-worktree directories. Once step 3 is complete, apply the adopted `var/retained/` destination in step 4.\\\",\\\"stop_conditions\\\":[\\\"Do not move, rename, or annotate any directory with a dirty worktree.\\\",\\\"Do not start step 4 before the clean-worktree precondition is satisfied.\\\",\\\"Do not declare the reshape complete until step 5 finishes and every moved path resolves from the index.\\\"],\\\"recommended_actions\\\":[\\\"Complete the remaining clean-directory moves in step 3.\\\",\\\"Keep dirty worktrees untouched except for reading and searching.\\\",\\\"Then relocate retired fixtures under `var/retained/` in step 4.\\\",\\\"Rebuild and validate the index in step 5.\\\"],\\\"uncertainties\\\":[\\\"The retrieved evidence does not identify which specific directories are currently clean or dirty.\\\"],\\\"declared_absent\\\":false}\"}}\n{\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":211603,\"cached_input_tokens\":184320,\"cache_write_input_tokens\":0,\"output_tokens\":1641,\"reasoning_output_tokens\":577}}\n\n-- STDERR --",
+      "subject_elapsed_ms": 115706,
+      "provider_meta": {
+        "provider": "codex-mcp-cli",
+        "tool_policy": "single-stdio-mcp-handoff_action-v1",
+        "auth_boundary": "codex-parent-oauth-only",
+        "tool_event_summary": {
+          "event_types": [
+            "agent_message",
+            "mcp_tool_call"
+          ],
+          "mcp_tools": [
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action",
+            "handoff_action"
+          ],
+          "forbidden": []
+        }
+      },
+      "subagent": null
+    }
+  }
+}
