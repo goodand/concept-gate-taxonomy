@@ -13,6 +13,7 @@ fire; that test shows it fires on what actually happened.
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import sys
@@ -83,15 +84,24 @@ def test_all_twelve_structural_assertions_pass():
 
 
 def test_table_matches_the_ruling_sec_7_verbatim():
-    """D-H1a-11 sec 7 is a preregistration device; pin it cell by cell."""
+    """D-H1a-12 sec 5 is a preregistration device; pin it cell by cell.
+
+    RETARGETED from D-H1a-11 sec 7 (2026-08-05). Q12=F replaced that table:
+    `outside_knowledge` is split into `outside_domain_knowledge` +
+    `external_source_retrieval` (both arms forbidden, DOMAIN_KNOWLEDGE_BOUNDARY)
+    and the four former target axes become subaxes of `source_meta_reasoning`,
+    which Q1 alone governs. The proposition this test pins is unchanged --
+    every axis x arm has exactly the carrier the ruling assigns -- only the
+    ruling it pins moved.
+    """
     expected = {
-        "evidence_count": ("Q7_TIEBREAKER_LIST", "Q7_TIEBREAKER_LIST"),
-        "source_order": ("Q7_TIEBREAKER_LIST", "Q7_TIEBREAKER_LIST"),
-        "outside_knowledge": ("Q7_TIEBREAKER_LIST", "Q7_TIEBREAKER_LIST"),
-        "source_kind_priority": ("Q1_LIVENESS_CLAUSE", "GLOBAL_DEFAULT_PERMISSION"),
-        "recency": ("Q1_LIVENESS_CLAUSE", "GLOBAL_DEFAULT_PERMISSION"),
-        "authority": ("Q1_LIVENESS_CLAUSE", "GLOBAL_DEFAULT_PERMISSION"),
-        "liveness": ("Q1_LIVENESS_CLAUSE", "GLOBAL_DEFAULT_PERMISSION"),
+        "evidence_count": ("Q7_NON_TARGET_TIEBREAKER", "Q7_NON_TARGET_TIEBREAKER"),
+        "source_order": ("Q7_NON_TARGET_TIEBREAKER", "Q7_NON_TARGET_TIEBREAKER"),
+        "outside_domain_knowledge": ("DOMAIN_KNOWLEDGE_BOUNDARY",
+                                     "DOMAIN_KNOWLEDGE_BOUNDARY"),
+        "external_source_retrieval": ("DOMAIN_KNOWLEDGE_BOUNDARY",
+                                      "DOMAIN_KNOWLEDGE_BOUNDARY"),
+        "source_meta_reasoning": ("Q1_LIVENESS_CLAUSE", "GLOBAL_DEFAULT_PERMISSION"),
     }
     assert set(expected) == set(policy.AXES)
     for axis, (kept_carrier, removed_carrier) in expected.items():
@@ -102,13 +112,37 @@ def test_table_matches_the_ruling_sec_7_verbatim():
 def test_outside_knowledge_carrier_is_q7_only_not_the_packet_boundary():
     """D-H1a-11 sec 8: scope constraints are not carriers.
 
-    The first version of this module declared PACKET_BOUNDARY as a second
-    carrier for outside_knowledge. The ruling moved that to scope_constraints.
+    Axis renamed by D-H1a-12 (outside_knowledge -> outside_domain_knowledge)
+    and its carrier moved from Q7 to the new DOMAIN_KNOWLEDGE_BOUNDARY. The
+    proposition is unchanged: a scope constraint is never a carrier.
     """
     for arm in policy.ARMS:
-        assert policy.carrier_of("outside_knowledge", arm) == policy.CARRIER_Q7
+        assert policy.carrier_of("outside_domain_knowledge", arm) == policy.CARRIER_DOMAIN
     assert "PACKET_ONLY" in policy.SCOPE_CONSTRAINTS
     assert "PACKET_ONLY" not in policy.CARRIERS
+
+
+def test_domain_knowledge_and_source_meta_are_siblings_not_nested():
+    """D-H1a-12 sec 5: the whole point of Q12=F.
+
+    source_meta_reasoning must NOT be subsumed by outside_domain_knowledge --
+    that subsumption is what made the previous cohort nonidentifying. They are
+    separate top-level axes with different carriers, and the target axis is
+    the one Q1 alone governs.
+    """
+    assert "outside_domain_knowledge" in policy.AXES
+    assert "source_meta_reasoning" in policy.AXES
+    assert policy.TARGET_AXES == frozenset({"source_meta_reasoning"})
+    for arm in policy.ARMS:
+        assert policy.carrier_of("outside_domain_knowledge", arm) == policy.CARRIER_DOMAIN
+    # The domain boundary is arm-invariant; the target axis is not.
+    assert policy.state_of("outside_domain_knowledge", "PROHIBITION_KEPT") == \
+        policy.state_of("outside_domain_knowledge", "PROHIBITION_REMOVED")
+    assert policy.state_of("source_meta_reasoning", "PROHIBITION_KEPT") != \
+        policy.state_of("source_meta_reasoning", "PROHIBITION_REMOVED")
+    # The four former target axes survive as declared subaxes.
+    assert set(policy.SUBAXES["source_meta_reasoning"]) == {
+        "source_kind_priority", "recency", "authority", "liveness"}
 
 
 def test_removed_target_state_is_allowed_by_default_not_unspecified():
@@ -134,33 +168,89 @@ def test_default_permission_is_emitted_in_both_arms_byte_identically():
 
 
 def test_default_permission_text_matches_the_ruling_bytes():
+    """RETARGETED to D-H1a-12 sec 7 (2026-08-05).
+
+    D-H1a-11's second sentence read "Permission to consider a basis does not by
+    itself warrant selecting a type", which Q12.2 found could be read as
+    denying that the basis is a warrant at all -- cancelling the treatment.
+    The replacement splits the two propositions. Pinned byte-exact for the
+    same reason as before: this is a preregistration device.
+    """
     expected = (
         "Within the supplied packet, a decision basis may be considered unless this\n"
-        "prompt explicitly prohibits it. Permission to consider a basis does not by\n"
-        "itself warrant selecting a type or favor either allowed type."
+        "prompt explicitly prohibits it. The fact that this prompt does not prohibit\n"
+        "a decision basis is not itself a reason to select a type. A permitted basis\n"
+        "may affect the decision only through its application to the supplied\n"
+        "evidence."
     )
     assert policy.GLOBAL_DEFAULT_PERMISSION_TEXT == expected
 
 
 def test_default_permission_carries_the_demand_neutralizer():
-    """The second sentence must deny that permission encourages selecting."""
+    """RETARGETED to D-H1a-12 sec 7: the neutralizer must now assert BOTH
+    propositions, not just the first. The old form only pinned "permission is
+    not a reason", which is exactly the half that could be over-read.
+    """
     text = policy._normalize_ws(policy.GLOBAL_DEFAULT_PERMISSION_TEXT)
-    assert "does not by itself warrant selecting a type" in text
-    assert "favor either allowed type" in text
+    # (1) permission status alone is not evidence
+    assert "not itself a reason to select a type" in text
+    # (2) but a permitted basis CAN matter through the evidence -- this half is
+    #     what keeps the neutralizer from cancelling the treatment
+    assert "may affect the decision only through its application" in text
     assert policy.POLICY_DEFAULTS["packet_internal_decision_basis"]["non_directive"] is True
 
 
 def test_common_q7_names_all_three_nontarget_axes_in_both_arms():
+    """RETARGETED by D-H1a-12 sec 4: the single Q7 bullet became THREE
+    sentences with different carriers. `outside knowledge` is no longer in the
+    tie-breaker sentence -- it moved to DOMAIN_KNOWLEDGE_BOUNDARY. Each
+    carrier is now checked against its own sentence, so a sentence carrying
+    the wrong axis is still caught.
+    """
     for arm in policy.ARMS:
-        q7 = policy._normalize_ws(
-            " ".join(t for c, t in policy.render_policy_block(arm) if c == policy.CARRIER_Q7)
+        blocks = dict(
+            (c, policy._normalize_ws(txt))
+            for c, txt in policy.render_policy_block(arm)
         )
-        for phrase in ("evidence item count", "source order", "outside knowledge"):
-            assert policy._normalize_ws(phrase) in q7, f"{arm}: {phrase!r} missing"
+        for phrase in ("evidence item count", "source order"):
+            assert policy._normalize_ws(phrase) in blocks[policy.CARRIER_Q7], \
+                f"{arm}: {phrase!r} missing from the tie-breaker sentence"
+        # The tie-breaker sentence must NOT name the domain axes any more.
+        assert "outside domain" not in blocks[policy.CARRIER_Q7]
+        for phrase in ("outside domain or ontology knowledge", "external sources"):
+            assert policy._normalize_ws(phrase) in blocks[policy.CARRIER_DOMAIN], \
+                f"{arm}: {phrase!r} missing from the domain-boundary sentence"
 
 
 def test_common_q7_omits_every_target_axis():
-    policy.assert_12_common_q7_excludes_target_axis_strings_and_aliases()
+    policy.assert_12_common_q7_generates_only_nontarget_forbidden_states()
+
+
+def test_assert_12_is_semantic_not_lexical(clean_policy):
+    """D-H1a-12 sec 8: assertion 12 must fire on the POLICY, not the prose.
+
+    Point the target axis's carrier at the common tie-breaker sentence. The
+    rendered prose does not change (the sentence enumerates only non-target
+    axes), so a lexical scan stays silent -- and that silence is exactly the
+    false reassurance the ruling removed. The semantic check must still fire.
+    """
+    clean_policy["source_meta_reasoning"]["removed"] = {
+        "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_Q7,
+    }
+    # The lexical form cannot certify this: it either sees nothing (the prose
+    # is unchanged) or cannot even render. Either way it does not identify the
+    # policy defect -- which is why the ruling demoted it.
+    lint = policy.lint_common_q7("PROHIBITION_REMOVED")
+    assert not any("target-axis token" in f for f in lint), lint
+    with pytest.raises(policy.PolicyContractError, match=r"\[12\]"):
+        policy.assert_12_common_q7_generates_only_nontarget_forbidden_states()
+
+
+def test_lint_common_q7_still_has_recall_but_does_not_certify():
+    """The demoted scan must keep working as a signal (returns, never raises)."""
+    for arm in policy.ARMS:
+        assert policy.lint_common_q7(arm) == []          # clean today
+    assert isinstance(policy.lint_common_q7("PROHIBITION_KEPT"), list)
 
 
 def test_the_two_arms_generated_blocks_are_identical():
@@ -186,7 +276,11 @@ def test_every_rendered_block_is_traceable_to_a_carrier():
     """Q10.2 requirement 5."""
     for arm in policy.ARMS:
         for carrier, text in policy.render_policy_block(arm):
-            assert carrier in policy.CARRIERS
+            # D-H1a-12 sec 4 added a scope-disambiguation sentence. It is
+            # deliberately NOT a carrier (it flips no axis), but it still must
+            # be traceable to a declared ID -- untraceable prose is exactly
+            # what Q10.2 requirement 5 forbids.
+            assert carrier in policy.CARRIERS or carrier in policy.SCOPE_CONSTRAINTS
             assert text.strip()
 
 
@@ -234,7 +328,9 @@ def test_freeze_is_blocked_until_the_independent_review_is_recorded():
         "in the same change -- do not flip it to make this test pass"
     )
     with pytest.raises(policy.FreezeGateBlocked, match="independent semantic review"):
-        policy.assert_freezable(_repaired_rendered(), Q1)
+        policy.assert_freezable(_repaired_rendered(), Q1,
+                                source_attributes_visible=True,
+                                hard_defer_mapping=False)
 
 
 def test_freeze_gate_runs_the_machine_checkable_conditions_before_failing():
@@ -245,11 +341,13 @@ def test_freeze_gate_runs_the_machine_checkable_conditions_before_failing():
     """
     original = copy.deepcopy(policy.DECISION_BASIS_POLICY)
     try:
-        policy.DECISION_BASIS_POLICY["liveness"]["removed"] = {
+        policy.DECISION_BASIS_POLICY["source_meta_reasoning"]["removed"] = {
             "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_Q7,
         }
         with pytest.raises(policy.PolicyContractError) as exc:
-            policy.assert_freezable(_repaired_rendered(), Q1)
+            policy.assert_freezable(_repaired_rendered(), Q1,
+                                source_attributes_visible=True,
+                                hard_defer_mapping=False)
         assert "independent semantic review" not in str(exc.value)
     finally:
         policy.DECISION_BASIS_POLICY.clear()
@@ -261,22 +359,30 @@ def test_freeze_gate_runs_the_machine_checkable_conditions_before_failing():
 # ==========================================================================
 def test_mutation_carrier_as_a_collection_is_caught(clean_policy):
     """D-H1a-11 sec 8: exactly one carrier per axis x arm."""
-    clean_policy["liveness"]["kept"]["carrier"] = (policy.CARRIER_Q1, policy.CARRIER_Q7)
+    clean_policy["source_meta_reasoning"]["kept"]["carrier"] = (policy.CARRIER_Q1, policy.CARRIER_Q7)
     with pytest.raises(policy.PolicyContractError, match=r"\[2\]"):
         policy.assert_2_exactly_one_valid_carrier_per_axis_arm()
 
 
 def test_mutation_restoring_a_target_axis_to_q7_in_kept_is_caught(clean_policy):
     """Q11.1=A forbids this; it is the Q10 duplicate-carrier structure."""
-    clean_policy["recency"]["kept"]["carrier"] = policy.CARRIER_Q7
+    clean_policy["source_meta_reasoning"]["kept"]["carrier"] = policy.CARRIER_Q7
     with pytest.raises(policy.PolicyContractError, match=r"\[7\]"):
         policy.assert_7_kept_target_axes_are_carried_only_by_q1()
-    with pytest.raises(policy.PolicyContractError, match=r"\[12\]"):
-        policy.assert_12_common_q7_excludes_target_axis_strings_and_aliases()
+    # D-H1a-12 note: assertion 12 no longer fires from this mutation alone.
+    # With the typed-scope split the tie-breaker sentence enumerates only
+    # non-target axes, so re-pointing the target axis's carrier changes the
+    # POLICY without changing that sentence's PROSE. Assertion 12's job (the
+    # rendered common sentence must not name a target axis) is pinned by
+    # test_common_q7_names_all_three_nontarget_axes_in_both_arms and by
+    # test_mutation_paraphrased_residual_prohibition_is_caught instead.
+    # Recorded rather than silently dropped -- see D-H1a-12 sec 8, which
+    # explicitly demotes lexical alias scanning to lint and requires the
+    # semantic check to carry certification.
 
 
 def test_mutation_forbidding_a_target_axis_in_removed_is_caught(clean_policy):
-    clean_policy["authority"]["removed"] = {
+    clean_policy["source_meta_reasoning"]["removed"] = {
         "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_Q7,
     }
     with pytest.raises(policy.PolicyContractError, match=r"\[6\]"):
@@ -284,7 +390,7 @@ def test_mutation_forbidding_a_target_axis_in_removed_is_caught(clean_policy):
 
 
 def test_mutation_allowed_by_default_on_a_non_default_carrier_is_caught(clean_policy):
-    clean_policy["liveness"]["removed"]["carrier"] = policy.CARRIER_Q7
+    clean_policy["source_meta_reasoning"]["removed"]["carrier"] = policy.CARRIER_Q7
     with pytest.raises(policy.PolicyContractError, match=r"\[4\]"):
         policy.assert_4_default_permission_states_use_the_default_carrier()
 
@@ -299,7 +405,7 @@ def test_mutation_forbidden_state_on_the_default_carrier_is_caught(clean_policy)
 
 def test_mutation_unspecified_removed_target_state_is_caught(clean_policy):
     """Q11=D explicitly rejects `unspecified` -- that was option A."""
-    clean_policy["recency"]["removed"]["state"] = policy.UNSPECIFIED
+    clean_policy["source_meta_reasoning"]["removed"]["state"] = policy.UNSPECIFIED
     with pytest.raises(policy.PolicyContractError):
         policy.assert_deductive_check()
 
@@ -313,7 +419,7 @@ def test_mutation_nontarget_axis_made_arm_varying_is_caught(clean_policy):
 
 
 def test_mutation_invalid_state_value_is_caught(clean_policy):
-    clean_policy["liveness"]["kept"]["state"] = "sort_of_forbidden"
+    clean_policy["source_meta_reasoning"]["kept"]["state"] = "sort_of_forbidden"
     with pytest.raises(policy.PolicyContractError, match=r"\[1\]"):
         policy.assert_1_every_axis_arm_has_a_state()
 
@@ -400,11 +506,19 @@ def test_wrapping_cannot_hide_an_axis_from_the_checker():
     knowledge" the moment the renderer began wrapping -- the guard would report
     an axis absent while it sat in the prompt, split across two lines.
     """
-    assert policy._normalize_ws("outside\n  knowledge") == "outside knowledge"
+    assert policy._normalize_ws("outside\n  domain") == "outside domain"
     for arm in policy.ARMS:
-        raw = " ".join(t for c, t in policy.render_policy_block(arm) if c == policy.CARRIER_Q7)
-        assert "\n" in raw, "the Q7 bullet should be hard-wrapped"
-        assert "outside knowledge" in policy._normalize_ws(raw)
+        # RETARGETED by D-H1a-12 sec 4: `outside knowledge` moved out of the
+        # tie-breaker sentence into DOMAIN_KNOWLEDGE_BOUNDARY. The proposition
+        # is unchanged -- a multi-word axis token split by the 76-column wrap
+        # must still be found -- so it is now checked on the sentence that
+        # actually carries such a token.
+        raw = " ".join(
+            txt for c, txt in policy.render_policy_block(arm)
+            if c == policy.CARRIER_DOMAIN
+        )
+        assert "\n" in raw, "the domain-boundary bullet should be hard-wrapped"
+        assert "outside domain or ontology knowledge" in policy._normalize_ws(raw)
 
 
 # ==========================================================================
@@ -447,3 +561,254 @@ def test_old_guard_still_passes_those_same_bytes():
     manifest = json.loads((HERE / "cohort_prompts.json").read_text(encoding="utf-8"))
     removed = manifest["rendered_prompts"]["PROHIBITION_REMOVED"]
     contract.assert_no_residual_prohibition(removed)  # passes, as it always did
+
+
+# ==========================================================================
+# D-H1a-12 sec 10 -- licensed_source_evaluation_path
+# ==========================================================================
+def test_licensed_path_matches_the_rulings_post_repair_table():
+    """D-H1a-12 sec 10's expected column, cell by cell."""
+    kept = policy.licensed_source_evaluation_path("PROHIBITION_KEPT", True, False)
+    removed = policy.licensed_source_evaluation_path("PROHIBITION_REMOVED", True, False)
+    assert kept["licensed_path"] is False
+    assert removed["licensed_path"] is True
+    for row in (kept, removed):
+        assert row["source_attributes_visible"] is True
+        assert row["domain_ban_subsumes_source_meta"] is False
+        assert row["hard_defer_mapping"] is False
+        assert row["residual_prohibition"] is False
+    assert kept["source_meta_allowed"] is False
+    assert removed["source_meta_allowed"] is True
+
+
+def test_licensed_path_freeze_contrast_passes_today():
+    rows = policy.assert_licensed_path_contrast(True, False)
+    assert set(rows) == set(policy.ARMS)
+
+
+def test_licensed_path_fires_when_source_attributes_are_invisible():
+    """V=False: no packet-internal referent, so REMOVED's permission is empty.
+
+    This is exactly the B2 finding that produced Q12 -- the arm permits the
+    mechanism but the fixture gives it nothing to act on.
+    """
+    with pytest.raises(policy.PolicyContractError, match=r"\[licensed_path\]"):
+        policy.assert_licensed_path_contrast(False, False)
+
+
+def test_licensed_path_fires_when_a_common_rule_hard_maps_to_defer():
+    """H=True: the G3/B1 recurrence. Blocks the freeze even if policy is clean."""
+    with pytest.raises(policy.PolicyContractError, match=r"\[licensed_path\]"):
+        policy.assert_licensed_path_contrast(True, True)
+
+
+def test_licensed_path_fires_when_the_domain_ban_subsumes_the_target_axis(clean_policy):
+    """D_S=True: the exact defect Q12=F exists to remove.
+
+    Point source_meta_reasoning's carrier at the domain boundary and the
+    subsumption is back -- both arms forbid it and the contrast dies.
+    """
+    clean_policy["source_meta_reasoning"]["removed"] = {
+        "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_DOMAIN,
+    }
+    assert policy._domain_ban_subsumes_source_meta() is True
+    with pytest.raises(policy.PolicyContractError, match=r"\[licensed_path\]"):
+        policy.assert_licensed_path_contrast(True, False)
+
+
+def test_licensed_path_fires_on_a_residual_prohibition_in_removed(clean_policy):
+    """R(REMOVED)=True: a non-Q1 carrier forbidding the target axis.
+
+    The Q10 defect in its purest form.
+    """
+    clean_policy["source_meta_reasoning"]["removed"] = {
+        "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_Q7,
+    }
+    assert policy._residual_prohibition("PROHIBITION_REMOVED") is True
+    with pytest.raises(policy.PolicyContractError, match=r"\[licensed_path\]"):
+        policy.assert_licensed_path_contrast(True, False)
+
+
+# ==========================================================================
+# D-H1a-12 sec 9 -- assertion 9 against the independent golden contract.
+# The ruling requires five negative tests; the last one is the whole point.
+# ==========================================================================
+def test_assert_9_passes_against_the_frozen_golden_contract():
+    policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_golden_contract_is_internally_consistent():
+    golden = policy._load_golden_common_block()
+    assert hashlib.sha256(golden["text"].encode()).hexdigest() == golden["sha256"]
+    # Q7 added 2026-08-06 (independent review MAJOR): the tie-breaker sentence
+    # is byte-identical across arms and part of the common block, but was
+    # omitted, so it had no frozen bytes and mutation M2 -- restoring the exact
+    # clause sec 8 ordered removed -- reached the trial surface undetected.
+    assert golden["carriers_included"] == [
+        policy.CARRIER_DEFAULT, policy.CARRIER_Q7, policy.CARRIER_DOMAIN,
+        policy.SCOPE_DISAMBIGUATION_ID,
+    ]
+
+
+def test_assert_9_fires_when_the_common_block_is_deleted(monkeypatch):
+    """Negative 1 of 5: block missing."""
+    def _no_domain(arm):
+        return [(c, t) for c, t in _real_render(arm) if c != policy.CARRIER_DOMAIN]
+    _real_render = policy.render_policy_block
+    monkeypatch.setattr(policy, "render_policy_block", _no_domain)
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*expected exactly 1"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_assert_9_fires_when_the_common_block_is_duplicated(monkeypatch):
+    """Negative 2 of 5: block emitted twice."""
+    _real_render = policy.render_policy_block
+
+    def _dup(arm):
+        blocks = _real_render(arm)
+        extra = [(c, t) for c, t in blocks if c == policy.CARRIER_DOMAIN]
+        return blocks + extra
+    monkeypatch.setattr(policy, "render_policy_block", _dup)
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*got 2"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_assert_9_fires_on_a_one_character_change_in_kept(monkeypatch):
+    """Negative 3 of 5: KEPT drifts by one character."""
+    _real_render = policy.render_policy_block
+
+    def _tweak(arm):
+        blocks = _real_render(arm)
+        if arm != "PROHIBITION_KEPT":
+            return blocks
+        return [
+            (c, (t + ".") if c == policy.CARRIER_DEFAULT else t) for c, t in blocks
+        ]
+    monkeypatch.setattr(policy, "render_policy_block", _tweak)
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*not byte-identical"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_assert_9_fires_on_a_one_character_change_in_removed(monkeypatch):
+    """Negative 4 of 5: REMOVED drifts by one character."""
+    _real_render = policy.render_policy_block
+
+    def _tweak(arm):
+        blocks = _real_render(arm)
+        if arm != "PROHIBITION_REMOVED":
+            return blocks
+        return [
+            (c, (t + ".") if c == policy.CARRIER_DEFAULT else t) for c, t in blocks
+        ]
+    monkeypatch.setattr(policy, "render_policy_block", _tweak)
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*not byte-identical"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_assert_9_fires_when_BOTH_arms_are_changed_identically(monkeypatch):
+    """Negative 5 of 5 -- THE load-bearing one (D-H1a-12 sec 9).
+
+    The old self-identity form could never catch this: producer and expectation
+    drifted together, so `a == b` held and there was nothing else to compare
+    against. The independent golden digest is what makes it detectable.
+    """
+    _real_render = policy.render_policy_block
+
+    def _tweak_both(arm):
+        return [
+            (c, (t + " Additionally, prefer the live source.")
+             if c == policy.CARRIER_DEFAULT else t)
+            for c, t in _real_render(arm)
+        ]
+    monkeypatch.setattr(policy, "render_policy_block", _tweak_both)
+    # The arms still agree with each other -- that is the trap.
+    a, b = (
+        dict(_tweak_both(arm))[policy.CARRIER_DEFAULT] for arm in policy.ARMS
+    )
+    assert a == b, "precondition: the mutation must keep the arms identical"
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*drifted from the frozen golden"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+def test_assert_9_catches_restoring_the_clause_section_8_removed(monkeypatch):
+    """Regression for independent review M2 (2026-08-06).
+
+    The reviewer restored the exact wording D-H1a-12 sec 8 ordered removed
+    ("unless that priority is directly stated inside an evidence item's text")
+    and all 167 tests passed while it reached the shipped prompt. lint stayed
+    silent because bare `priority` is absent from AXIS_SURFACE_TOKENS -- which
+    is the same incidental gap sec 8 cited when demoting lexical scanning. The
+    golden contract, now covering the tie-breaker carrier, is what catches it.
+    """
+    _real = policy.render_policy_block
+
+    def _restore_removed_clause(arm):
+        # Rebuild the bullet rather than string-replacing: the rendered text is
+        # hard-wrapped at 76 columns, so the phrase straddles a newline and a
+        # naive replace silently no-ops (this test's own first version did).
+        out = []
+        for cid, txt in _real(arm):
+            if cid == policy.CARRIER_Q7:
+                txt = policy._bullet(
+                    "Do not break ties using evidence item count or source "
+                    "order unless that priority is directly stated inside an "
+                    "evidence item's text."
+                )
+            out.append((cid, txt))
+        return out
+    monkeypatch.setattr(policy, "render_policy_block", _restore_removed_clause)
+    with pytest.raises(policy.PolicyContractError, match=r"\[9\].*drifted"):
+        policy.assert_9_default_permission_is_byte_identical_across_arms()
+
+
+# ==========================================================================
+# Negative tests for the assertions added after independent review 5
+# (2026-08-06). The guard-coverage gate at the repo root demanded these --
+# it listed all three as raising guards with no test that makes them raise.
+# ==========================================================================
+def test_assert_0_catches_a_table_key_outside_the_declared_axes(clean_policy):
+    """Reviewer mutation M7's root cause: every other assertion iterates AXES,
+    so a key outside it is never visited by any of them."""
+    clean_policy["recency"] = {
+        "kept": {"state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_DOMAIN},
+        "removed": {"state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_DOMAIN},
+    }
+    with pytest.raises(policy.PolicyContractError, match=r"\[0\].*outside AXES"):
+        policy.assert_0_table_keys_are_exactly_the_declared_axes()
+
+
+def test_assert_0_catches_a_declared_axis_missing_from_the_table(clean_policy):
+    del clean_policy["source_order"]
+    with pytest.raises(policy.PolicyContractError, match=r"\[0\].*absent from the table"):
+        policy.assert_0_table_keys_are_exactly_the_declared_axes()
+
+
+def test_assert_0b_catches_reparenting_the_target_axis_under_the_domain_ban(monkeypatch):
+    """Reviewer mutation M1: the sibling claim lived only in a comment."""
+    monkeypatch.setitem(
+        policy.SUBAXES, "outside_domain_knowledge", ("source_meta_reasoning",)
+    )
+    with pytest.raises(policy.PolicyContractError, match=r"\[0b\].*subaxis of"):
+        policy.assert_0b_subaxes_are_not_reparented_under_a_sibling_category()
+
+
+def test_assert_0b_catches_the_domain_carrier_governing_the_target_axis(clean_policy):
+    """The substantive form of the subsumption, independent of SUBAXES."""
+    clean_policy["source_meta_reasoning"]["removed"]["carrier"] = policy.CARRIER_DOMAIN
+    with pytest.raises(policy.PolicyContractError, match=r"\[0b\].*would subsume"):
+        policy.assert_0b_subaxes_are_not_reparented_under_a_sibling_category()
+
+
+def test_assert_0c_catches_downgrading_a_forbidden_axis_to_unspecified(clean_policy):
+    """Reviewer mutations M3/M3b: the state column was unpinned, so the table
+    and the prompt could disagree while every assertion passed."""
+    clean_policy["external_source_retrieval"]["kept"]["state"] = policy.UNSPECIFIED
+    clean_policy["external_source_retrieval"]["removed"]["state"] = policy.UNSPECIFIED
+    with pytest.raises(policy.PolicyContractError, match=r"\[0c\].*ruling sec 5 states"):
+        policy.assert_0c_declared_states_match_the_ruling_table()
+
+
+def test_assert_0c_catches_flipping_the_target_axis_state_in_removed(clean_policy):
+    clean_policy["source_meta_reasoning"]["removed"]["state"] = policy.EXPLICITLY_FORBIDDEN
+    with pytest.raises(policy.PolicyContractError, match=r"\[0c\]"):
+        policy.assert_0c_declared_states_match_the_ruling_table()

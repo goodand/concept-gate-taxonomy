@@ -52,22 +52,13 @@ GUARD_PREFIXES = ("assert_", "_assert_")
 # fails if an entry disappears or stops being able to raise, so the list cannot
 # rot into a silent cap.
 KNOWN_UNPROVEN: dict[str, str] = {
-    # D-H1a-11 structural assertion 9. Two of its three raise paths cannot be
-    # reached: `render_policy_block` emits `GLOBAL_DEFAULT_PERMISSION_TEXT`
-    # itself, from the module constant, into BOTH arms -- so "arms differ" and
-    # "drifted from the ruling's bytes" are made true by construction, not by
-    # this guard. The third (count != 1) is likewise unreachable while the
-    # emission is unconditional. Firing any of them requires mocking
-    # `render_policy_block`, which would prove the mock, not the guard.
-    # D-H1a-12 Q12.4 (2026-08-05) already ruled on this: replace with an
-    # independent golden contract (frozen artifact + sha256, 5 negative
-    # tests -- see DESIGN_DECISION_H1a_identification_validity.md section 9).
-    # Remove this entry once that lands; do not fabricate a mock-based test
-    # to close it early.
-    "assert_9_default_permission_is_byte_identical_across_arms": (
-        "raise paths unreachable without mocking render_policy_block; "
-        "D-H1a-12 Q12.4 requires an independent golden contract"
-    ),
+    # Emptied 2026-08-05: assert_9's entry is CLOSED. D-H1a-12 Q12.4's
+    # independent golden contract (h1a_common_policy_block_v2.json) replaced
+    # the self-identity comparison, so all three raise paths are now reachable
+    # and the ruling's five negative tests exist and pass -- including the
+    # load-bearing one where BOTH arms drift identically. The ruling forbade
+    # permanent KNOWN_UNPROVEN status for it; this is that condition met, not
+    # waived.
 }
 
 

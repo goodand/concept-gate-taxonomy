@@ -258,8 +258,16 @@ def _fill_policy_slots(template: str, arm: str) -> str:
         "{global_default_permission}", blocks[module.CARRIER_DEFAULT], 1
     )
     # The tie-breaker slot sits on its own line inside the warrant bullet list.
+    # D-H1a-12 sec 4: the single tie-breaker bullet became THREE sentences.
+    # They are emitted into the same slot, in render_policy_block's declared
+    # order, so the template needs no new placeholder and the ordering stays
+    # owned by the policy module (Q10.2: prose is generated FROM policy).
+    ordered = [
+        txt for cid, txt in module.render_policy_block(arm)
+        if cid != module.CARRIER_DEFAULT
+    ]
     out = out.replace(
-        "{decision_basis_tiebreaker}", blocks[module.CARRIER_Q7], 1
+        "{decision_basis_tiebreaker}", "\n".join(ordered), 1
     )
     return out
 

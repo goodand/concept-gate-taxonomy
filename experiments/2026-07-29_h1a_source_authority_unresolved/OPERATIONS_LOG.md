@@ -11,6 +11,230 @@
 
 ---
 
+## 2026-08-06 — D-H1a-12 §16 구현(조건 1~10) + 독립 리뷰 5차 → FREEZE_BLOCKED
+
+worktree `concept-gate-h1a-scope-wt`(브랜치 `codex/h1a-typed-scope-split`)에
+격리해 진행. h1 브랜치는 무손상. **trial 0건 유지.**
+
+### 1. 구현 — §16의 12조건 중 10개
+
+174 passed / 1 skipped. 가드 커버리지 게이트 10 passed.
+
+| # | 조건 | 결과 |
+|---|---|---|
+| 1 | typed-scope split | 축 7→5, `source_meta_reasoning`이 형제 범주, 옛 표적 축 4개는 하위 축 |
+| 2 | 공통 Q7 3문장 분리 | Q7 / DOMAIN / SCOPE_DISAMBIGUATION |
+| 3 | defer 규칙 비방향화 | `conflict`→outcome 직접 매핑 제거 |
+| 4 | demand neutralizer 재문안 | 두 명제 분리 |
+| 5 | `assert_12` 의미 검사화 | 정책 객체 검사, lexical은 `lint_common_q7`로 격하 |
+| 6 | golden contract | `h1a_common_policy_block_v2.json` |
+| 7 | 음성 테스트 5종 | 삭제·중복·KEPT 1자·REMOVED 1자·**양 arm 동일 변경** |
+| 8 | `licensed_source_evaluation_path` | 5-항 논리곱, §10 진리표 일치 |
+| 9 | M4 ceiling 복구 | Q4 승인 문안 범위 갱신 재등재 |
+| 10 | 새 사전등록 | `PREREGISTRATION_TYPED_SCOPE_COHORT.md` |
+
+### 2. 구현 중 가드가 제작자를 잡은 3회 (전부 테스트 약화 아님, 구현 수정)
+
+1. **`assert_5`가 `[5] outside_domain_knowledge`로 발화** — 새 담지자
+   (`DOMAIN_KNOWLEDGE_BOUNDARY`)를 추가하면서 그 span을 strip 목록에 등록하지
+   않았다. 가드가 옳고 구현이 미완성이었다.
+2. **뮤테이션 테스트가 renderer의 `KeyError`를 잡았다** — Q7이 담지하는 축에
+   선언된 문구가 없을 때 죽었다. `PolicyContractError`로 바꿔 "정책/렌더러
+   불일치"라는 실제 성격이 드러나게 했다.
+3. **golden contract가 neutralizer 변경을 즉시 drift로 잡고** "의도된 변경이면
+   별도 커밋으로 재동결하고 이유를 밝혀라"라고 지시했다. 그대로 따라
+   `amendment_history`에 `at_trials: 0`과 함께 기록했다. **자기동일성 검사였던
+   옛 `assert_9`로는 원리상 불가능한 탐지** — 조건 6·7의 목적이 이것이었다.
+
+### 3. 독립 리뷰 5차 — 세 축, 리뷰어 3명
+
+1차 시도(2026-08-05)는 세 명 전원 API 세션 한도로 조기 종료. **전송 실패이지
+리뷰 결과가 아니므로 통과로 기록하지 않았다**(E2.4가 30 trial 중 22개를 같은
+이유로 잃었을 때와 동일 판정). 한도 리셋 후 재실행.
+
+전문: `../../docs/feedback/h1a_typed_scope_review_20260806.md`
+
+#### 축 (b) 렌더된 프롬프트 — BLOCKER 1 + MAJOR 4 + MINOR 3
+
+**BLOCKER: 판정문 §4가 verbatim 처방한 세 번째 문장이 REMOVED arm에서
+dangling reference다.** "Source evaluation is governed by the arm-specific
+source-evaluation clause."인데 REMOVED에는 그 절이 없다(Q1은 KEPT 전용).
+제작 세션이 리뷰어 주장을 그대로 받지 않고 직접 실측:
+
+```
+PROHIBITION_KEPT:    Q1절=True   "arm-specific...clause" 참조=True
+PROHIBITION_REMOVED: Q1절=False  "arm-specific...clause" 참조=True
+```
+
+이 문장이 §4 자신이 의존하는 기제를 무너뜨린다 — §4는 REMOVED가 작동하는
+이유를 "Q1이 없으므로 공통 기본허용 규칙이 적용된다"로 설명하는데, 이 문장이
+그 basis에 **더 구체적인** 지배자를 지목하므로 specific-beats-general 읽기에서
+기본허용이 적용되지 않는다. 침묵에 의한 허용이 불가능해진다.
+
+**D-H1a-11의 "이식된 절이 선행사를 잃는다" 패턴 재발이고, 이번엔 판정문이
+처방한 문장 자체가 그 결함을 갖고 있다** → 운영 세션 수정 불가, D-H1a-13 상신.
+
+#### 축 (a) 정책 계약 — BLOCKER 2 + MAJOR 3 + MINOR 1, 미탐지 뮤테이션 5건
+
+리뷰어가 뮤테이션 9개를 시도해 **5개가 167 통과로 빠져나갔다.** 전부 수정하고
+제작 세션이 직접 재현 검증했다(M1 3 failed / M3 3 failed / M7 4 failed,
+M2는 회귀 테스트로 고정, 복원 후 byte-identical 확인).
+
+- **BLOCKER: §10 술어가 실행 경로에 없었다.** `assert_freezable`이
+  `assert_licensed_path_contrast`를 호출하지 않아, freeze를 실제로 막는
+  게이트는 여전히 `deductive_check`의 `target_mechanism_contrast`(§10이
+  "필요한 명제를 보장하지 못한다"고 교체 명령한 그 술어)에 기대고 있었고
+  대체 술어는 테스트에서만 돌았다. **이번 세션 초반에 내가 고친 "정책 계층이
+  실행 경로에 없다" 결함을 한 층 위에서 그대로 반복했다.** 배선하고 V·H를
+  keyword-only 필수 인자로 만들었다(모듈 기본값 제거 — 기본값이 남으면 한
+  인자 호출이 두 fixture 사실을 조용히 인증한다).
+- **BLOCKER: 비포섭이 주장만 되고 강제되지 않았다.** 근본 원인은 **모든 단언이
+  `AXES`를 순회하므로 `AXES` 밖의 표 키는 어떤 단언도 방문하지 않는다**는 것.
+  신규 `assert_0`(표 키 == AXES)·`assert_0b`(재부모화 금지 + 표적축이
+  `CARRIER_DOMAIN`에 담지 안 됨)로 강제. `assert_12`의 subaxis 루프도
+  `== CARRIER_Q7`에서 "Q1이 아닌 모든 forbidding carrier"로 넓혔다.
+- **MAJOR: §5의 state 열이 고정되지 않았다.** ruling-forbidden 축을 양 arm
+  `UNSPECIFIED`로 강등해도 통과했고 산문은 여전히 금지 — 표와 프롬프트 불일치,
+  Q10 결함의 반대 방향. 신규 `assert_0c`가 5축 state 쌍을 고정.
+- **MAJOR: golden artifact가 tie-breaker 문장을 덮지 않았다.**
+  `carriers_included`에 `Q7_NON_TARGET_TIEBREAKER`가 빠져 그 문장에 동결
+  바이트가 어디에도 없었다. 리뷰어의 M2(§8이 제거 명령한 "unless that priority
+  is directly stated inside an evidence item's text" 복원)가 통과하며 **실제
+  trial 표면에 도달**했다. lint가 침묵한 이유도 §8 자신이 인용한 그 누락
+  (bare `priority`가 `AXIS_SURFACE_TOKENS`에 없음)이다. Q7 포함 재동결 +
+  회귀 테스트 고정.
+
+리뷰어 CONFIRMED-OK: §5 담지자/arm 배정 정확, `assert_12`가 진짜 semantic,
+golden artifact가 진짜 독립(positive control M5 → 8 failed), §9 음성 5종 전부
+존재하며 "양 arm 동일 변경" 케이스 실제 커버, `assert_5` span-stripping과
+`assert_6b` window가 이식·의역 산문 금지를 잡음(M6 → 2 failed, M6b → 5 failed).
+
+#### 축 (c) 사전등록·게이트 — BLOCKER 2 + MAJOR 5 + MINOR 3
+
+리뷰어가 §4 표의 "✅ 자동" 10건을 **하나씩 독립 검증**했다. 결과: 3·4·5·7은
+참, 나머지는 과장 또는 거짓이었다. 제작 세션이 상위 2건을 직접 재현했다.
+
+**F10 (가장 중대) — 게이트가 렌더러와 다른 모듈 객체를 인증한다.**
+`_h1a_contract._fill_policy_slots`가 `_h1a_policy.py`를 `sys.modules`의
+**별도 키**(`_h1a_contract__policy`)로 두 번째로 로드한다
+(`_h1a_contract.py:239-245`). 제작 세션 실측:
+
+```
+사본 존재: True | 같은 객체: False
+copy A(테스트가 변조하는 객체) 변조가 렌더에 반영: False
+```
+
+즉 **프롬프트 바이트는 사본 B가 만들고, 모든 정책 단언·연역 검사·`assert_12`·
+`INDEPENDENT_SEMANTIC_REVIEW_PASSED`는 사본 A에서 읽힌다. 둘이 일치한다고
+단정하는 검사가 없다.** 결과적으로 이 세션이 쓴 모든 뮤테이션-recall 테스트는
+사본 A만 변조하므로 **모델 대면 바이트를 생성하는 객체의 결함을 원리상 탐지할
+수 없다.** `_h1a_cohort.py` 자신의 주석이 이름 붙인 "참인 명제를 잘못된 객체에
+대해 단정한다"가 가장 깊은 층에서 실현된 것이다.
+
+첫 재현 시도는 실패했다 — 제가 `_h1a_policy`를 먼저 import해서 로더가 재사용한
+것으로 착각했다. 사본은 `_fill_policy_slots`가 **호출될 때** lazy로 생기므로
+`render_arm`을 실제로 돌린 뒤에야 드러난다. 리뷰어 지적이 정확했다.
+
+**F5 (BLOCKER) — 조건 9(M4 ceiling) 배선이 약속만 되고 구현되지 않았다.**
+판정문 §14 action 4가 "golden artifact 또는 구조 검사에 배선"을 요구하는데
+`_h1a_score.py`에 `ceiling|modal|uninterpretable|prompt_surface`가 **0건**
+(제작 세션 실측). 사전등록 §5의 "배선한다"는 미래형이었고, §4 표의
+"9 | M4 ceiling 복구 | ✅ 이 문서로"와 §8의 "조건 1~10 전부 구현·통과"는
+**둘 다 거짓**이다.
+
+**F6 (MAJOR) — §5 재등록이 범위만이 아니라 규범 내용을 바꿨다.** 제가
+"규범적 내용은 Q4 승인 문안 그대로"라고 적었는데 거짓이다:
+① `, and MUST NOT be reported as null_effect`를 **추가**했다(승인 문안엔 없음,
+게다가 세 줄 아래 "not a new blocking rule"과 나란히 있다). ② 발동 조건을
+"네 진단 셀"→"이 코호트의 두 arm"으로 바꾼 것은 범위 갱신이 아니다 — 네 셀은
+주 결과 **외부의** anchor×arm 대비였고, "두 arm이 같은 modal 범주"는 **주 결과
+자체**다. 조건이 자기가 수식하는 것에 의해 정의상 함의되므로 ceiling에 대한
+독립 정보를 담지 않는다. ③ "세 문장이 golden에 동결됨"이라 적었으나 F2가
+반증한다.
+
+**F2 (MAJOR) — 공통 tie-breaker 문장을 아무것도 동결하지 않는다.** golden의
+`carriers_included`에 `Q7_NON_TARGET_TIEBREAKER`가 없었고, `grep "break ties"`가
+테스트에서 **0건**이라 §4 표 2행의 "contract 테스트"는 존재하지 않는다.
+리뷰어가 `_Q7_AXIS_PHRASE`를 바꿔 **공통** 문장이 표적 하위축을 금지하게
+만들었는데("how recently a source was updated", "whether a source is still
+maintained") `assert_9`·`assert_12`·`assert_6b`·`licensed_path` 전부 PASS,
+`lint`는 finding 0 — 토큰 목록에 `more recent`는 있고 `recent`는 없고,
+`liveness`는 있고 `still maintained`는 없는 그 우연한 누락이다.
+(제작 세션이 그 뒤 Q7을 golden에 포함시켰으나 **F2의 이 변종은 별개**다.)
+
+**F9 (MAJOR) — §13 재사용·병합 방지가 한쪽만 되어 있다.** `freeze()`는
+fail-close하지만 **`_h1a_score.py`에는 동등한 가드가 없다** — `main()`이
+`trials.json`·`h1a_cohort_score.json`을 무조건 쓰고 보존된
+`trials_raw.json`을 읽는다. **채점기를 돌리면 보존된 40 trial을 재채점하고
+보존 산출물을 덮어쓴다.** 이 세션이 `freeze()`에 대해 막은 것과 같은
+비가역 위반이 하네스의 반대쪽 절반에 남아 있다. 또 `cohort_id` 필드가
+`_h1a_cohort.py`·매니페스트 어디에도 없어 §6의 "cohort_id 분리"는 미구현이고,
+`PREREGISTRATION_REPAIRED_COHORT.md`에 이 문서 참조가 0건이라 그 문서 독자가
+지배 사전등록에 도달할 수 없다.
+
+**F1 (MAJOR) — §4/§8의 완결 주장이 이 문서 자신의 §8.2와 모순된다.** §4는
+조건 1~10을 ✅로 표시하고 §8은 "전부 구현·통과"라 쓰는데, §8.2는 조건 1의
+분리를 모델 대면 프롬프트에서 **구현하는 그 문장**이 REMOVED에서 dangling
+reference라고 기록한다. 조건 1은 정책 표에서는 충족, 렌더 표면에서는 미충족이다.
+
+**F3·F8·F11·F12는 CONFIRMED-OK 또는 MINOR**: `assert_freezable` 순서는 실측
+확인됨(구조 결함이 리뷰 플래그를 가리지 않는다), `KNOWN_UNPROVEN` 비움은
+정당(19 raising 가드 전부 커버), §8.1이 실패한 리뷰를 통과로 취급하지 않음이
+grep으로 확인됨(`= False` 외 대입 0건).
+
+**§16 항목 대조(리뷰어 Q2)**: 1↔1 ~ 12↔12, 누락·병합·재번호 없음. 결함은
+열거가 아니라 **✅ 표시가 무엇을 주장하는가**에 있다.
+
+
+### 4. 이 라운드가 확인한 방법론적 사실
+
+**세 축 합계 BLOCKER 4 + MAJOR 9. 가드가 전부 통과하는 상태에서 리뷰어들이
+뮤테이션 6개 이상을 빠져나갔고, 그중 F10은 테스트가 애초에 잘못된 객체를
+검사하고 있었음을 보였다.**
+
+가장 값진 발견은 **§4 표의 "✅ 자동" 표시 자체가 검증 대상이었다는 것**이다.
+리뷰어 (c)가 10건을 하나씩 재현하자 3·4·5·7만 참이었다. 제작 세션이 "구현했고
+테스트가 통과한다"를 "그 조건이 충족됐다"로 등치한 것이 바로 이 실험이
+반복해서 실패한 그 등치다.
+
+**가드 12개가 전부 통과하는 상태에서 리뷰어가 뮤테이션 5개를 빠져나갔다.**
+그중 둘은 구조적 사각지대였다 — 단언이 `AXES`를 순회하니 그 밖의 키는 안
+보이고, golden artifact가 담지자 하나를 빼먹으니 그 문장은 어디에도 동결
+바이트가 없었다. 두 경우 다 "가드가 있다"는 사실이 "그 명제가 지켜진다"를
+뜻하지 않았다.
+
+**세 발견(렌더 축의 BLOCKER, MAJOR 1·2)은 전부 공통 템플릿 문장에 있어
+arm-diff 증명과 잔여-금지 tripwire가 원리상 볼 수 없다** —
+`_h1a_contract.py`의 KNOWN LIMITATION 주석이 예고한 그대로다.
+
+그리고 **제작자가 자기 산출물의 결함을 못 본다**는 이 실험의 반복 관찰이
+다시 확인됐다: BLOCKER 3건 전부 제작 세션이 아니라 별도 리뷰어가 찾았고,
+그 시점에 제작 세션의 테스트는 전부 통과 중이었다.
+
+### 5. 다음 행동
+
+**운영 세션이 고칠 것(판정 불필요) — 먼저 한다:**
+
+1. **F10 사본 분기** — `_h1a_contract`가 정책을 재로드하지 않게 하거나, 두
+   사본이 일치함을 단정하는 검사를 넣는다. 이걸 고치기 전의 모든 뮤테이션
+   테스트 결과는 신뢰할 수 없다.
+2. **F9 `_h1a_score.py` 덮어쓰기 가드** — `freeze()`와 동등한 fail-close.
+   보존된 40 trial 산출물을 덮어쓸 수 있는 상태다.
+3. **F5 M4 배선** — `_h1a_score.py`에 실제 구현. §4 표의 ✅를 그때까지 ⬜로 정정.
+4. **F6 §5 문안** — 추가된 `MUST NOT be reported as null_effect`를 제거하거나
+   Q4 승인 범위를 넘는 추가임을 명시. 발동 조건이 주 결과와 동어반복이 되는
+   문제는 설계 판정이 필요할 수 있다.
+5. **F1·F2 ✅ 표시 정정** — 과장된 항목을 실제 상태로.
+
+**그 다음 D-H1a-13 상신.** 렌더 축 BLOCKER와 MAJOR 1·2, 그리고 F6의 발동 조건
+동어반복 문제가 판정문 처방 문구(§4·§7·§14)의 결함이라 운영 세션이 고칠 수
+없다.
+
+`FREEZE_BLOCKED` 유지 · `INDEPENDENT_SEMANTIC_REVIEW_PASSED = False` ·
+trial 0건.
+
+---
+
 ## 2026-08-03(3) — Q10.2 정책 계약 구현, Q11 상신
 
 ### 1. 신규 — `_h1a_policy.py` + `test_h1a_policy.py` (28 passed)
