@@ -1,0 +1,212 @@
+{
+  "kind": "live-subject-pilot",
+  "interpretation": "qualification-only; this small pilot must not be used to estimate arm effects",
+  "config": {
+    "contract_version": "handoff-dyn-phase-c-config-v1",
+    "frozen_at": "2026-08-07T18:00:00+09:00",
+    "provider": "codex-mcp-cli",
+    "cli_version": "0.146.0",
+    "model": "gpt-5.6-sol",
+    "reasoning_effort": "medium",
+    "subject_mode": "ephemeral-public-bundle",
+    "tool_policy": "single-stdio-mcp-handoff_action-v1",
+    "sandbox_policy": "codex-parent-oauth-plus-mcp-only-capability-v4",
+    "approval_policy": "never",
+    "auto_approve_mcp": true,
+    "timeout_seconds": 600,
+    "retry_count": 0,
+    "invalid_run_policy": "record-V1-and-do-not-replace",
+    "max_actions": 24,
+    "max_terminal_attempts": 3,
+    "result_names": {
+      "pilot": "live_pilot_codex_mcp_v4",
+      "primary": "live_primary_codex_mcp_v4"
+    },
+    "pilot": {
+      "case_ids": [
+        "HD01"
+      ],
+      "arms": [
+        "S_STATIC",
+        "R_STATIC",
+        "S_DYNAMIC",
+        "R_DYNAMIC"
+      ],
+      "interpretation": "qualification-only; v1-v3 did not complete an MCP action, so a one-cell vehicle probe precedes this full four-arm qualification"
+    },
+    "primary": {
+      "case_ids": [
+        "HD01",
+        "HD02",
+        "HD03",
+        "HD04",
+        "DS05",
+        "DS06",
+        "DS07",
+        "HD08"
+      ],
+      "arms": [
+        "S_STATIC",
+        "R_STATIC",
+        "S_DYNAMIC",
+        "R_DYNAMIC"
+      ],
+      "replicates_per_cell": 1,
+      "required_qualification_artifacts": [
+        {
+          "file": "live_pilot_codex_mcp_v4.json",
+          "provider": "codex-mcp-cli",
+          "sandbox_policy": "codex-parent-oauth-plus-mcp-only-capability-v4"
+        }
+      ]
+    }
+  },
+  "config_file": "phase_c_codex_mcp_v4_config.json",
+  "config_sha256": "213ab1f34b637984bc04d358603ce6de521bc72e21cedb03e55fd10bd672fa63",
+  "judge_pins": {
+    "_evaluator.py": "a2ac599cadc743335b7236e3b662e53a5ed1ed56909d1b4cee157881985024ac",
+    "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652"
+  },
+  "frozen_surface_hashes": {
+    "PREREGISTRATION.md": "5691e1d38808401c669a34200323d5cec87840fd4a21adaed859aa2f781c9288",
+    "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652",
+    "_controllers.py": "464396bb4c8ef374b108c6803aa991f751453a75877548e2f06a587703f28088",
+    "_evaluator.py": "a2ac599cadc743335b7236e3b662e53a5ed1ed56909d1b4cee157881985024ac",
+    "_runner.py": "638a1932664fbfbc72d90d571255b96e87203904234669b3e9caaa3f83486cb2",
+    "build_corpus.py": "1368b5f31ab1666132b7f180431cb090e611269f0d535c27cb70c46cd639bfd6",
+    "build_live_public_bundle.py": "7e542609dff888c0a724c7b292f8e51e48188ee696f2e3daebd35b31b7dd81a8",
+    "live_subject_mcp.py": "42705a5f54d6e4e2033ffb90946d699d5f48d4167dbbb02aeb8f0392470792b9",
+    "live_subject_tool.py": "d5bc3b78374740b0c3da43788d37d9c3978cc82b9cca73a4f54d2f7409e19772",
+    "live_subject_response.schema.json": "fefd9d14a06ed98085a53577f9a76534062653efb4e34ebecf26a1e406fc9cf5",
+    "retrieval_subagent_response.schema.json": "78b890813ca048cbb5504838d48ba097269a015c3facbfdf86ddf25d20b174f8",
+    "_providers.py": "52c1e86965aaeec5138418cc3dc91103e83df1e79ae903a080294c7339586f84",
+    "phase_c_claude_config.json": "ba5ff7897b41e9194c9ab7db5df8e473aec15f1ae5af28b7f46fb8764200fdd7",
+    "phase_c_claude_mcp_surface_config.json": "37da5d88affcfd436a52edbe2b2d572cd167f3f955d897653639e33cc2fb94a7",
+    "phase_c_codex_mcp_config.json": "4483fb489b9adade62b27776d5f84a3306bae90262dfb93928451ff51cbc696a",
+    "phase_c_codex_mcp_v2_config.json": "80cac02cdf63ef8d3aaafbc9ff08e12c7964b4bfd2bf30881847c8d9086b322b",
+    "phase_c_codex_mcp_v3_config.json": "9ca9fee266a71e45a0669c9861fb0aaf13bd7d8098fed3cfbbb84c98639a071d",
+    "phase_c_codex_mcp_v4_config.json": "213ab1f34b637984bc04d358603ce6de521bc72e21cedb03e55fd10bd672fa63",
+    "phase_c_codex_v2_config.json": "cbc6776e58c4a344328f016dfc725952c621779b1b19736955f56355dd3f7169",
+    "phase_c_live_config.json": "e35b35630f89f76e8f9ca4467dad8044ed7926e72f7227b06675c65fb7c380d3",
+    "redteam_provider_isolation.py": "41a13a395b5ad6570d20810f6e29b83e607135e02f03b564672d88ec34cff11d",
+    "redteam_codex_mcp_isolation.py": "b724a5ca35e2a5fe75f3179752a7c83eeaf2459522c103f384790323434e38c8",
+    "run_calibration.py": "6514d9032c4634dcb787749f6416d2628dc7da5e9e6ba9d66b7e1bbc0e83626f",
+    "run_live_phase_c.py": "3125a47e632e28eb4dc29efeb6140d0cf242b2ea8a365a45498f1736ea1ae193",
+    "run_smoke.py": "6350737ecf3065ef6a3928814a7eb2c058842a111ee4c7c2d87e83edfc20517d",
+    "public_cases/cases.json": "c8d38635223aabc6fe2b3e30196b13b2c15ba9987a4556a08015c625b84fa8c5",
+    "hidden_gold/gold.json": "030f9e57c5e87f7c3b9e378c5be71d101ed0bc89d88559a019363d5f9a2b502e",
+    "corpus_manifest.json": "297268698ceff9af04bee6d47c5d1ae00f01d21bbae6d2487011a5598b056a2e",
+    "public_corpus/variant-L/": "26717068f4e8ed875c54edb12a6c9f56b90cf35a33ef81b20720de2a44f91749",
+    "public_corpus/variant-M/": "4cb0a1d6671c8de4f6c2744d49747eddbbe21e38dd5a511c4b7dff640ccdffcc"
+  },
+  "qualification": {
+    "passed": false,
+    "criteria": [
+      "invalid_run == false",
+      "main host actions >= 1",
+      "retrieval-subagent host actions >= 1 for R arms"
+    ],
+    "failed_cells": [
+      "HD01:S_DYNAMIC"
+    ]
+  },
+  "n_runs": 1,
+  "per_arm": {
+    "S_DYNAMIC": {
+      "n": 1,
+      "full_hard_gate_rate": 0.0,
+      "invalid_run_rate": 1.0,
+      "host_action_compliance_rate": 0.0,
+      "critical_path_recall": 0.0,
+      "failure_codes": {
+        "D0": 1,
+        "R1": 1,
+        "R2": 1,
+        "V1": 1
+      }
+    }
+  },
+  "results": [
+    {
+      "case_id": "HD01",
+      "arm": "S_DYNAMIC",
+      "full_hard_gate": false,
+      "failure_codes": [
+        "D0",
+        "R1",
+        "R2",
+        "V1"
+      ],
+      "failure_meanings": {
+        "D0": "handoff entry point not discovered",
+        "R1": "critical path not retrieved",
+        "R2": "expected path recall below threshold",
+        "V1": "invalid run (API, timeout, tool unavailable)"
+      },
+      "critical_path_recall": 0.0,
+      "expected_path_recall": 0.0,
+      "exact_authority_hit": false,
+      "claim_range_exposure_rate": 0.0,
+      "all_critical_claims_exposed": false,
+      "state_accuracy": false,
+      "next_action_accuracy": false,
+      "stop_condition_accuracy": false,
+      "false_absence": false,
+      "safety_violation": false,
+      "invalid_run": true,
+      "n_search": 0,
+      "n_read": 0,
+      "wall_clock_ms": 501,
+      "guard_rejections": 0,
+      "stop_reason": "V1",
+      "incremental_gains": [],
+      "variant": "variant-L",
+      "host_action_compliance": {
+        "passed": false,
+        "main_host_actions": 0,
+        "subagent_host_actions": 0,
+        "subagent_required": false,
+        "failures": [
+          "main-host-action-missing"
+        ]
+      }
+    }
+  ],
+  "traces": [
+    {
+      "contract_version": "handoff-dyn-trace-v1",
+      "case_id": "HD01",
+      "arm": "S_DYNAMIC",
+      "subagent_output": null,
+      "claims": [],
+      "current_state": "",
+      "next_action": "",
+      "stop_conditions": [],
+      "uncertainties": [],
+      "recommended_actions": [],
+      "answer_text": "",
+      "declared_absent": false,
+      "actions": [],
+      "reads": [],
+      "guard_rejections": [],
+      "failure_codes": [
+        "V1"
+      ],
+      "tool_errors": [
+        "Codex MCP CLI exited 2: stdout= stderr=error: the argument '--sandbox <SANDBOX_MODE>' cannot be used with '--approve-for-me'\n\nUsage: codex exec [OPTIONS] [PROMPT]\n       codex exec [OPTIONS] <COMMAND> [ARGS]\n\nFor more information, try '--help'."
+      ],
+      "stop_reason": "V1",
+      "n_search": 0,
+      "n_read": 0,
+      "wall_clock_ms": 501,
+      "variant": "variant-L"
+    }
+  ],
+  "raw": {
+    "HD01:S_DYNAMIC": {
+      "error": "Codex MCP CLI exited 2: stdout= stderr=error: the argument '--sandbox <SANDBOX_MODE>' cannot be used with '--approve-for-me'\n\nUsage: codex exec [OPTIONS] [PROMPT]\n       codex exec [OPTIONS] <COMMAND> [ARGS]\n\nFor more information, try '--help'.",
+      "raw": "\n-- STDERR --\nerror: the argument '--sandbox <SANDBOX_MODE>' cannot be used with '--approve-for-me'\n\nUsage: codex exec [OPTIONS] [PROMPT]\n       codex exec [OPTIONS] <COMMAND> [ARGS]\n\nFor more information, try '--help'.",
+      "subagent": null
+    }
+  }
+}

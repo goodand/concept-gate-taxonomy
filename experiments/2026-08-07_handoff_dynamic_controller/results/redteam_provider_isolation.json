@@ -1,5 +1,5 @@
 {
-  "n_probes": 29,
+  "n_probes": 33,
   "leaks": [
     {
       "q": "Q4/v1",
@@ -21,24 +21,40 @@
   "hardened_profile_leaks": [],
   "hardened_profile_passed": true,
   "frozen_surface_hashes": {
-    "PREREGISTRATION.md": "314214e193b456dab626eee6732238c9603242a000f6e299a35a2edac8a98957",
+    "PREREGISTRATION.md": "fe8f44891778749966c9667cdfee2d5430fd6e6b687db28ce9cb44b07fb0bdec",
     "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652",
     "_controllers.py": "464396bb4c8ef374b108c6803aa991f751453a75877548e2f06a587703f28088",
-    "_evaluator.py": "d3f65d8181ed5cfe106f9e75c774f7b7f692735c2651d8ab0be7c8350ea433c1",
+    "_evaluator.py": "f827173f889eeb495fd168ba7680ab37c6a4e03d340be93f36343c3b32c5ac57",
     "_runner.py": "638a1932664fbfbc72d90d571255b96e87203904234669b3e9caaa3f83486cb2",
     "build_corpus.py": "1368b5f31ab1666132b7f180431cb090e611269f0d535c27cb70c46cd639bfd6",
     "build_live_public_bundle.py": "7e542609dff888c0a724c7b292f8e51e48188ee696f2e3daebd35b31b7dd81a8",
+    "live_subject_mcp.py": "42705a5f54d6e4e2033ffb90946d699d5f48d4167dbbb02aeb8f0392470792b9",
     "live_subject_tool.py": "d5bc3b78374740b0c3da43788d37d9c3978cc82b9cca73a4f54d2f7409e19772",
     "live_subject_response.schema.json": "fefd9d14a06ed98085a53577f9a76534062653efb4e34ebecf26a1e406fc9cf5",
     "retrieval_subagent_response.schema.json": "78b890813ca048cbb5504838d48ba097269a015c3facbfdf86ddf25d20b174f8",
-    "_providers.py": "cf4f8d31c81cef7f770a715004259b2eb3491f2645f2b5e66207550d687f9d90",
+    "_providers.py": "406a155d49e6c5b8cdf472f217155dfcfd8971e49de15a8d4284d4e227dced35",
     "phase_c_claude_config.json": "ba5ff7897b41e9194c9ab7db5df8e473aec15f1ae5af28b7f46fb8764200fdd7",
+    "phase_c_claude_mcp_surface_config.json": "972c9e0c5c84843f332539ba92c56fe34417545ee94a79461dfdd90316670f89",
+    "phase_c_claude_mcp_surface_v2_config.json": "6838da4494c3e07528c3eccf65f4621fd15d8bc5263716e533fba87e414be25e",
+    "phase_c_codex_mcp_config.json": "4483fb489b9adade62b27776d5f84a3306bae90262dfb93928451ff51cbc696a",
+    "phase_c_codex_mcp_v2_config.json": "80cac02cdf63ef8d3aaafbc9ff08e12c7964b4bfd2bf30881847c8d9086b322b",
+    "phase_c_codex_mcp_v3_config.json": "9ca9fee266a71e45a0669c9861fb0aaf13bd7d8098fed3cfbbb84c98639a071d",
+    "phase_c_codex_mcp_v4_config.json": "213ab1f34b637984bc04d358603ce6de521bc72e21cedb03e55fd10bd672fa63",
+    "phase_c_codex_mcp_v5_config.json": "9ad8564ebd6f470bcecfdeb73a9ddc513771ff76bf68c7e6b8b171eaa397703d",
+    "phase_c_codex_mcp_v6_config.json": "dd4e75b07a6d396281a2e4946948ee3aef6627576d1a12137198def0bf45b1d2",
+    "phase_c_codex_mcp_v7_config.json": "bfdc622537e0c861ee5b2dc2884a5ea78e4e7abc9c5ec7a9eb7a0d3a2136480f",
     "phase_c_codex_v2_config.json": "cbc6776e58c4a344328f016dfc725952c621779b1b19736955f56355dd3f7169",
     "phase_c_live_config.json": "e35b35630f89f76e8f9ca4467dad8044ed7926e72f7227b06675c65fb7c380d3",
-    "redteam_provider_isolation.py": "41a13a395b5ad6570d20810f6e29b83e607135e02f03b564672d88ec34cff11d",
+    "redteam_provider_isolation.py": "3ec9034cd89906ecf7484a4eb3bd31650e53b6bb9cb4190d19599f1c1ca97985",
+    "redteam_codex_mcp_isolation.py": "46981c52542632d37a36c2a6afa703cc8d415dbfcb0ab928829c99ae33e551ef",
     "run_calibration.py": "6514d9032c4634dcb787749f6416d2628dc7da5e9e6ba9d66b7e1bbc0e83626f",
-    "run_live_phase_c.py": "3fdc6f0107b44b8dd36dc6f286398908f455a485b279bc72deb3c2c7982fed3d",
+    "run_live_phase_c.py": "86f81192fa629cf11cf19b5d2c322fb1fa802fa55d7e903e4d0178f037dac7cd",
     "run_smoke.py": "6350737ecf3065ef6a3928814a7eb2c058842a111ee4c7c2d87e83edfc20517d",
+    "test_protocol.py": "66f8f0220f4dcd013455341752aaa2a404800ad5b49134adf89c37e78b14b316",
+    "test_live_phase_c.py": "79758a9cee2388a8682e0fd26db4e283f8b8e21f013d99bda8b7767f52d9ca29",
+    "test_live_phase_c_claude.py": "e9416dc6e572bbfcbe076f3fa12849f69396acd0f4dfb76c53f073cbc9250e66",
+    "test_codex_mcp_provider.py": "de8ba0c5fb54985530a861a78a8d96e4c8abf136ce75e6597e8b428aca1deef6",
+    "test_preprimary_gates.py": "85e32410602e794f5929e14972c63c7e6daaafb80e908088ad544a1bb822746d",
     "public_cases/cases.json": "c8d38635223aabc6fe2b3e30196b13b2c15ba9987a4556a08015c625b84fa8c5",
     "hidden_gold/gold.json": "030f9e57c5e87f7c3b9e378c5be71d101ed0bc89d88559a019363d5f9a2b502e",
     "corpus_manifest.json": "297268698ceff9af04bee6d47c5d1ae00f01d21bbae6d2487011a5598b056a2e",
@@ -52,7 +68,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-codex-mcp-wt/experiments/2026-08-07_handoff_dy"
     },
     {
       "q": "Q1/v1",
@@ -60,7 +76,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-codex-mcp-wt/experiments/2026-08-07_handoff_dy"
     },
     {
       "q": "Q1/v1",
@@ -68,7 +84,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-codex-mcp-wt/experiments/2026-08-07_handoff_dy"
     },
     {
       "q": "Q2/v1",
@@ -76,7 +92,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-w2ykvg2e/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-r25790pl/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
     },
     {
       "q": "Q2/v1",
@@ -84,7 +100,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-w2ykvg2e/b/control/input_manifest.json: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-r25790pl/b/control/input_manifest.json: Operation not permitted"
     },
     {
       "q": "Q2/v1",
@@ -124,7 +140,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-codex-mcp-wt/experiments/2026-08-07_handoff_dy"
     },
     {
       "q": "Q1/v2",
@@ -132,7 +148,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-codex-mcp-wt/experiments/2026-08-07_handoff_dy"
     },
     {
       "q": "Q1/v2",
@@ -140,7 +156,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-ada"
+      "detail": "cat: /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-codex-mcp-wt/experiments/2026-08-07_handoff_dy"
     },
     {
       "q": "Q2/v2",
@@ -148,7 +164,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-w2ykvg2e/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-r25790pl/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
     },
     {
       "q": "Q2/v2",
@@ -156,7 +172,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-w2ykvg2e/b/control/input_manifest.json: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-r25790pl/b/control/input_manifest.json: Operation not permitted"
     },
     {
       "q": "Q2/v2",
@@ -273,6 +289,38 @@
     {
       "q": "Q5",
       "probe": "phase_c_claude_config.json: invalid-run record-and-do-not-replace",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "phase_c_codex_mcp_v7_config.json: retry_count == 0",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "phase_c_codex_mcp_v7_config.json: invalid-run record-and-do-not-replace",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "phase_c_claude_mcp_surface_v2_config.json: retry_count == 0",
+      "reachable": false,
+      "expected_reachable": false,
+      "leak": false,
+      "detail": ""
+    },
+    {
+      "q": "Q5",
+      "probe": "phase_c_claude_mcp_surface_v2_config.json: invalid-run record-and-do-not-replace",
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
