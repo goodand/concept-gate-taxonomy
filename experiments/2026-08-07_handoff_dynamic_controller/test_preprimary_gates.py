@@ -527,6 +527,124 @@ def test_verify_ledger_chain_treats_pre_chain_rows_as_a_fixed_prefix(tmp_path):
     assert live.verify_ledger_chain([pre_chain_row]) is True
 
 
+# --- independent review round 8 (2026-08-10): the self-hash chain's
+# security claim was overstated in two ways, plus a real gap in the
+# terminal-append path. All three reproduced first.
+
+def test_verify_ledger_chain_does_not_resist_a_recompute_attack():
+    """Documents a real, NOT fixed limitation (self-hash chains cannot fix
+    this on their own): an actor with ledger write access who edits a row
+    AND recomputes that row's chain_hash from the new content still
+    verifies. This is why _KNOWN_LEGACY_LEDGER_PREFIX_LINE_HASHES exists as
+    a git-committed, out-of-band anchor for the one prefix this experiment
+    actually has to protect -- verify_ledger_chain alone only catches
+    accidental corruption (edited without recomputing), not deliberate
+    recomputation."""
+    r1 = {"status": "started", "authorization_sha256": "a"}
+    r1["chain_hash"] = live._ledger_chain_hash(live._LEDGER_CHAIN_GENESIS, r1)
+    r2 = {"status": "completed", "authorization_sha256": "a", "output_sha256": "real"}
+    r2["chain_hash"] = live._ledger_chain_hash(r1["chain_hash"], r2)
+    assert live.verify_ledger_chain([r1, r2]) is True
+
+    tampered = {**r2, "output_sha256": "forged"}
+    tampered["chain_hash"] = live._ledger_chain_hash(
+        r1["chain_hash"], {k: v for k, v in tampered.items() if k != "chain_hash"})
+    assert live.verify_ledger_chain([r1, tampered]) is True, (
+        "recompute attack succeeds against the chain alone -- documented limitation")
+
+
+def test_legacy_prefix_pin_is_exempt_for_a_path_other_than_the_real_ledger(tmp_path):
+    """The pin only applies to the ONE real production ledger, identified
+    by its fixed path under HERE (not the RESULTS_DIR tests monkeypatch) --
+    a synthetic ledger at any other path is exempt, returning True
+    vacuously, since it has no relationship to the pinned hashes."""
+    fake_path = tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME
+    fake_path.write_text('{"status": "started"}\n', encoding="utf-8")
+    with fake_path.open("r+", encoding="utf-8") as handle:
+        assert live._legacy_ledger_prefix_matches_known_hashes(handle, fake_path) is True
+
+
+def test_legacy_prefix_pin_detects_deletion_and_edit_on_a_copy(monkeypatch, tmp_path):
+    """The gap the review found: verify_ledger_chain alone accepted a
+    legacy prefix with a row deleted OR edited, because it never checks
+    legacy row CONTENT, only that chained rows come after unchained ones.
+    _legacy_ledger_prefix_matches_known_hashes closes this. Operates on a
+    COPY of the real ledger's bytes (never opens the real file for writing)
+    by monkeypatching `live.HERE` so the "real ledger path" resolves inside
+    tmp_path instead."""
+    real_path = live.HERE / "results" / live.PRIMARY_ATTEMPT_LEDGER_NAME
+    real_bytes = real_path.read_bytes()
+    real_lines = [line for line in real_bytes.decode("utf-8").splitlines() if line.strip()]
+    assert len(real_lines) == 2, "test assumes the known 2-row legacy ledger"
+
+    fake_here = tmp_path / "fake_here"
+    (fake_here / "results").mkdir(parents=True)
+    copy_path = fake_here / "results" / live.PRIMARY_ATTEMPT_LEDGER_NAME
+    copy_path.write_bytes(real_bytes)
+    monkeypatch.setattr(live, "HERE", fake_here)
+
+    with copy_path.open("r+", encoding="utf-8") as handle:
+        assert live._legacy_ledger_prefix_matches_known_hashes(handle, copy_path) is True
+
+    copy_path.write_text(real_lines[0] + "\n", encoding="utf-8")  # delete row 2
+    with copy_path.open("r+", encoding="utf-8") as handle:
+        assert live._legacy_ledger_prefix_matches_known_hashes(handle, copy_path) is False
+
+    copy_path.write_text("\n".join(real_lines) + "\n", encoding="utf-8")
+    edited = real_lines[0].replace('"started"', '"tampered"')
+    copy_path.write_text("\n".join([edited, real_lines[1]]) + "\n", encoding="utf-8")
+    with copy_path.open("r+", encoding="utf-8") as handle:
+        assert live._legacy_ledger_prefix_matches_known_hashes(handle, copy_path) is False
+
+
+def test_terminal_append_now_verifies_the_chain_before_writing(monkeypatch, tmp_path):
+    """Reproduced gap: _locked_append_jsonl read `existing` but never called
+    verify_ledger_chain on it, so a corrupted chain stayed silently
+    corrupted after a terminal append instead of being refused."""
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    ledger_path = tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME
+    r1 = {"status": "started", "authorization_sha256": "a"}
+    r1["chain_hash"] = live._ledger_chain_hash(live._LEDGER_CHAIN_GENESIS, r1)
+    r2 = {"status": "started", "authorization_sha256": "a"}
+    r2["chain_hash"] = live._ledger_chain_hash(r1["chain_hash"], r2)
+    ledger_path.write_text(
+        "\n".join(json.dumps(r, sort_keys=True) for r in [r1, r2]) + "\n", encoding="utf-8")
+
+    # Corrupt the chain by editing r2 without recomputing its chain_hash.
+    rows = _read_ledger(ledger_path)
+    rows[1]["output_file"] = "corrupted-without-recompute"
+    ledger_path.write_text(
+        "\n".join(json.dumps(r, sort_keys=True) for r in rows) + "\n", encoding="utf-8")
+
+    with pytest.raises(live.LiveRunError, match="hash chain does not verify"):
+        live._record_primary_attempt_outcome("a", "out.json", "completed", attempt_id="x")
+
+
+def test_claim_refuses_when_the_real_ledgers_legacy_prefix_pin_is_broken(monkeypatch, tmp_path):
+    """End-to-end gap this session's own mutation testing caught: removing
+    the _legacy_ledger_prefix_matches_known_hashes call from
+    _claim_primary_attempt made NO existing test fail -- only the unit-level
+    check on the function itself was covered, not the actual claim path
+    that is supposed to call it. Uses the same live.HERE-monkeypatch
+    technique as test_legacy_prefix_pin_detects_deletion_and_edit_on_a_copy
+    to operate on a copy of the real ledger bytes."""
+    real_path = live.HERE / "results" / live.PRIMARY_ATTEMPT_LEDGER_NAME
+    real_lines = [line for line in real_path.read_text(encoding="utf-8").splitlines()
+                 if line.strip()]
+    assert len(real_lines) == 2
+
+    fake_here = tmp_path / "fake_here"
+    (fake_here / "results").mkdir(parents=True)
+    monkeypatch.setattr(live, "HERE", fake_here)
+    monkeypatch.setattr(live, "RESULTS_DIR", fake_here / "results")
+    copy_path = fake_here / "results" / live.PRIMARY_ATTEMPT_LEDGER_NAME
+    edited = real_lines[0].replace('"started"', '"tampered"')
+    copy_path.write_text("\n".join([edited, real_lines[1]]) + "\n", encoding="utf-8")
+
+    with pytest.raises(live.LiveRunError, match="pre-chain legacy rows"):
+        live._claim_primary_attempt("some-sha", 5, {"status": "started"})
+
+
 def test_claiming_a_new_attempt_refuses_when_the_ledger_itself_is_edited(
         monkeypatch, tmp_path):
     """The actual gate, end to end: editing a row IN THE LEDGER (not the

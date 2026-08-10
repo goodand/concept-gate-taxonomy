@@ -837,6 +837,19 @@ def _assert_primary_authorization(
 
 _LEDGER_CHAIN_GENESIS = "handoff-dyn-primary-attempt-ledger-chain-genesis-v1"
 
+# External anchor for the two real "started" rows recorded for the actual
+# Claude-subject primary attempts (2026-08-09), BEFORE the hash-chain
+# mechanism (Amendment 27) existed. Pinned here, in git-committed source,
+# because the chain itself cannot protect a prefix that predates it --
+# see verify_ledger_chain's docstring (independent review round 8,
+# 2026-08-10) for why. Computed once from the real ledger file's raw line
+# bytes; this constant must never be updated to match a changed ledger --
+# if it stops matching, the ledger changed, which is exactly the point.
+_KNOWN_LEGACY_LEDGER_PREFIX_LINE_HASHES = frozenset({
+    "f7b6c7c65c6179b4ea65a7f45557ca4d22ca738cfe2b23255f410202a1dfaed5",
+    "1e19a8dfec9ad25a7dc1077b364e3e61e42245d3a45af26cc41d4aa9ef2f3799",
+})
+
 
 def _parse_ledger_lines(handle, path: Path) -> list[dict[str, Any]]:
     """Shared by every ledger reader (claim and terminal append) so a
@@ -857,6 +870,41 @@ def _parse_ledger_lines(handle, path: Path) -> list[dict[str, Any]]:
     return entries
 
 
+def _legacy_ledger_prefix_matches_known_hashes(handle, path: Path) -> bool:
+    """Only meaningful for the ONE real production ledger (identified by
+    its fixed path under `HERE`, not the mutable `RESULTS_DIR` tests
+    monkeypatch) -- a test's synthetic ledger has no relationship to the
+    pinned hashes and must not be checked against them. Returns True
+    (vacuously) for any other path.
+
+    Reproduced 2026-08-10 (independent review round 8, finding #1):
+    `verify_ledger_chain` treats any row without `chain_hash` as an
+    unverifiable-but-accepted legacy prefix -- deleting or editing one of
+    the two real legacy rows still returned `verify_ledger_chain() ==
+    True`, so the documented claim that this prefix was "a fixed,
+    backward-compatible prefix" was aspirational, not enforced. This
+    checks the ACTUAL bytes of each legacy (non-chained) line against a
+    git-committed pin -- an attacker would also need to alter the git
+    history of this source file to launder a change past both checks.
+    """
+    if path != (HERE / "results" / PRIMARY_ATTEMPT_LEDGER_NAME):
+        return True
+    handle.seek(0)
+    observed = set()
+    for line in handle:
+        stripped = line.rstrip("\n")
+        if not stripped.strip():
+            continue
+        try:
+            entry = json.loads(stripped)
+        except json.JSONDecodeError:
+            continue
+        if "chain_hash" in entry:
+            continue
+        observed.add(hashlib.sha256(stripped.encode("utf-8")).hexdigest())
+    return observed == _KNOWN_LEGACY_LEDGER_PREFIX_LINE_HASHES
+
+
 def _ledger_chain_hash(prev_chain_hash: str, record: dict[str, Any]) -> str:
     body = {k: v for k, v in record.items() if k != "chain_hash"}
     return hashlib.sha256(
@@ -864,22 +912,32 @@ def _ledger_chain_hash(prev_chain_hash: str, record: dict[str, Any]) -> str:
 
 
 def verify_ledger_chain(rows: list[dict[str, Any]]) -> bool:
-    """Independent review round 6, finding #2: `output_sha256` only detects
-    a tampered/deleted RESULT ARTIFACT -- an attacker who edits the LEDGER
-    itself (deletes a "completed" row entirely, or edits its output_sha256
-    to match a tampered artifact) bypasses that check completely, since the
-    ledger was trusted at face value.
+    """Detects ACCIDENTAL or NAIVE corruption of the ledger -- a row deleted
+    or edited without also recomputing the hashes after it. It does NOT
+    resist a write-capable adversary: independent review round 8 (2026-08-10)
+    correctly demonstrated that editing a row and then recomputing that
+    row's chain_hash from its new content still verifies (`True`), because
+    the hash and the thing it authenticates live in the same writable file
+    -- a self-hash chain has no anchor outside itself. Real resistance to a
+    write-capable attacker needs an anchor OUTSIDE this file (e.g. a signed
+    authorization, a separate read-only manifest, or -- what this module
+    uses for the one prefix that predates the chain --
+    `_KNOWN_LEGACY_LEDGER_PREFIX_LINE_HASHES`, pinned in git-committed
+    source). Treat this function as "did something change without anyone
+    updating the hashes to match", not "was this ledger tampered with by
+    someone who controls it".
 
     Each row written after this mechanism exists carries `chain_hash =
     sha256(previous row's chain_hash + this row's own content)`. Deleting a
     row breaks the link between its former neighbors (the next row's
     chain_hash was computed against a prev_chain_hash that no longer
-    appears anywhere). Editing a row invalidates its own stored chain_hash
-    (recomputing from its new content gives a different value) and every
-    row after it. Rows written BEFORE this mechanism existed have no
-    `chain_hash` field and are treated as a fixed, unverifiable prefix --
-    the chain only needs to hold from the point it started being written;
-    once a chained row appears, every row after it must also be chained.
+    appears anywhere) UNLESS the attacker also recomputes everything after
+    the deletion point, which they can do with only ledger-file write
+    access. Rows written BEFORE this mechanism existed have no `chain_hash`
+    field; this function alone treats them as an unverified prefix (see
+    `_legacy_ledger_prefix_matches_known_hashes` for the actual anchor on
+    that prefix) -- once a chained row appears, every row after it must
+    also be chained.
     """
     prev = _LEDGER_CHAIN_GENESIS
     chain_started = False
@@ -949,8 +1007,16 @@ def _claim_primary_attempt(authorization_sha256: str, max_attempts: int,
         if not verify_ledger_chain(attempts):
             raise LiveRunError(
                 "refusing primary: attempt ledger hash chain does not verify -- "
-                "a row was deleted or edited after being written. The ledger "
-                "itself, not just the result artifacts, fails closed.")
+                "a row was deleted or edited after being written. This detects "
+                "accidental corruption or a change made without recomputing the "
+                "chain; it does NOT resist a write-capable actor who edits a row "
+                "and recomputes chain_hash to match (self-hash chains cannot "
+                "prove that on their own).")
+        if not _legacy_ledger_prefix_matches_known_hashes(handle, path):
+            raise LiveRunError(
+                "refusing primary: the pre-chain legacy rows in this ledger no "
+                "longer match their git-committed pin -- one of the two real "
+                "recorded primary attempts was deleted or edited.")
         # Count only "started" rows. Since Amendment 23 also appends a
         # terminal "completed"/"failed" row per attempt (finding #2 in that
         # amendment), counting every row halved the effective max_attempts:
@@ -1031,11 +1097,27 @@ def _locked_append_jsonl(path: Path, record: dict[str, Any]) -> None:
     read-then-chain like `_claim_primary_attempt` does, so a terminal row
     links into the same hash chain regardless of which of the two writers
     appended most recently.
+
+    Extended again 2026-08-10 (independent review round 8, finding #3):
+    this function read `existing` but never actually called
+    `verify_ledger_chain` on it -- the module docstring's claim that "both
+    claim and terminal append verify the chain" was true for one of the two
+    writers. Reproduced: corrupt the chain, call this function, and it
+    appended a new row without complaint, leaving the ledger permanently
+    corrupted. Now raises the same way `_claim_primary_attempt` does.
     """
     path.parent.mkdir(exist_ok=True)
     with path.open("a+", encoding="utf-8") as handle:
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
         existing = _parse_ledger_lines(handle, path)
+        if not verify_ledger_chain(existing):
+            raise LiveRunError(
+                "refusing to append: attempt ledger hash chain does not verify -- "
+                "a row was deleted or edited after being written.")
+        if not _legacy_ledger_prefix_matches_known_hashes(handle, path):
+            raise LiveRunError(
+                "refusing to append: the pre-chain legacy rows in this ledger no "
+                "longer match their git-committed pin.")
         prev_chain = (existing[-1]["chain_hash"] if existing and "chain_hash" in existing[-1]
                      else _LEDGER_CHAIN_GENESIS)
         record = dict(record)

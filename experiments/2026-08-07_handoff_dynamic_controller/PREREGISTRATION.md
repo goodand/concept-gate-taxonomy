@@ -1136,3 +1136,62 @@ attempt로 넘어간다 — 지금까지 7라운드 동안 실제로 이 세 조
 재동결 → calibration·qualification 1회 재실행 → 환경/해시 기록 → 소규모
 E2E pilot → 문제 없으면 본 실험. qualification 재실행은 유료라 별도 승인
 필요(기존 Amendment들과 동일한 제약).
+
+## Amendment 29 — 2026-08-10, 8라운드 검토: ledger 체인의 보안 주장 정정 + legacy prefix 외부 anchor + terminal append 누락
+
+독립 검토 8라운드의 판정을 그대로 인용한다: **"실험 타당성 문제는 해결,
+해시 체인의 보안 주장은 불완전."** E2E 실험 자체를 더 미룰 이유는 아니지만
+"ledger가 악의적 변조를 막는다"는 표현은 과장이었다. 세 가지를 재현 후
+정확히 처리했다.
+
+**과장 정정 — self-hash chain은 "우발적 손상 탐지"이지 "악의적 변조 방지"가
+아니다.** 재현: 행을 수정한 뒤 그 행의 `chain_hash`를 새 내용으로
+재계산하면 `verify_ledger_chain()`은 여전히 `True`를 반환한다 — 해시와
+검증 대상이 같은 쓰기 가능 파일 안에 있기 때문이다. `verify_ledger_chain`과
+`_claim_primary_attempt`의 docstring/에러 메시지를 "이건 recompute하지
+않은 우발적 손상만 잡는다, ledger 쓰기 권한을 가진 행위자의 재계산 공격은
+못 막는다"고 정확히 고쳤다. 이 한계 자체는 고치지 않는다 — 진짜 해결은
+git commit, 서명된 authorization, 별도 read-only manifest 같은 **외부
+anchor**가 필요하고, 8라운드도 "E2E를 더 미룰 필요는 없다"고 판단했다.
+
+**legacy prefix에 실제로 외부 anchor를 하나 붙였다.** 지적이 정확했다 —
+`chain_hash` 없는 legacy 행은 있든 없든(`verify_ledger_chain`이) 삭제해도
+수정해도 `True`를 반환했다. 이 저장소가 이미 `_contract.py`에 쓰는 패턴
+(git commit `8b333bc`에 파일을 고정)을 재사용해, **실제 primary attempt
+2건의 정확한 원본 바이트 해시**를
+`_KNOWN_LEGACY_LEDGER_PREFIX_LINE_HASHES`로 소스에 박아 넣고 커밋한다.
+`_legacy_ledger_prefix_matches_known_hashes()`가 이 저장소의 **진짜**
+ledger 경로(`HERE` 기준, 테스트가 monkeypatch하는 `RESULTS_DIR`가 아님)에
+대해서만 검사하고, 다른 경로(테스트용 tmp_path)는 공허하게 통과시킨다.
+이제 이 두 행 중 하나를 지우거나 고치면 `_claim_primary_attempt`와
+`_locked_append_jsonl` 양쪽에서 거부된다 — 단, 공격자가 **이 소스 파일의
+git 커밋 이력까지** 조작하지 않는 한이라는 조건이 붙는다(그 이상은 외부
+anchor의 정의상 한계).
+
+**terminal append 경로가 체인을 검증하지 않던 실제 결함.**
+`_locked_append_jsonl`이 기존 행을 읽기만 하고 `verify_ledger_chain`을
+호출하지 않았다 — docstring은 "claim과 terminal 양쪽이 검증한다"고 썼지만
+실제로는 claim만 했다. 재현: 체인을 손상시킨 뒤 이 함수를 호출하면
+예외 없이 새 행이 추가되고 손상 상태가 영구화됐다. `_claim_primary_attempt`와
+동일하게 체인 검증 + legacy pin 검증을 추가했다.
+
+**이 세션 자신의 뮤테이션 검증이 놓칠 뻔한 것**: legacy pin을
+`_claim_primary_attempt`에서 제거하는 뮤테이션을 걸었더니 기존 테스트
+33개가 전부 그대로 통과했다 — unit 레벨(`_legacy_ledger_prefix_matches_
+known_hashes` 자체)만 테스트했지 실제 claim 경로 배선은 검증한 적이
+없었다는 뜻이다. end-to-end 테스트를 추가로 작성해 이 배선까지 뮤테이션
+검증했다.
+
+**검증**: 신고 3건 모두 재현 후 처리(1건은 문서 정정, 2건은 코드 수정).
+`_KNOWN_LEGACY_LEDGER_PREFIX_LINE_HASHES`는 실제 ledger 파일의 원본
+바이트에서 직접 계산했다. 뮤테이션 검증 4건(legacy pin 함수, legacy pin
+claim 배선, terminal append 체인 검증, 기존 chain 뮤테이션) 전부 되돌리면
+대응 테스트 실패 확인. 재-calibration 8/8 / 58/58. 전체 로컬 스위트(이
+환경) 149/149 통과.
+
+**남은, 의도적으로 고치지 않는 한계**: self-hash chain 자체(legacy
+prefix 이후 새로 쓰이는 행들)는 여전히 ledger 쓰기 권한을 가진 행위자의
+재계산 공격에 취약하다. 이 실험의 신뢰 모델(단일 사용자, 로컬 파일시스템,
+공격자가 아니라 우발적 손상이 실제 위협)에서는 우발적 손상 탐지로 충분하다고
+8라운드가 판단했다 — 다중 사용자·적대적 환경으로 확장할 때는 서명 또는
+git-커밋 기반 anchor를 매 attempt마다 붙이는 방식으로 확장해야 한다.
