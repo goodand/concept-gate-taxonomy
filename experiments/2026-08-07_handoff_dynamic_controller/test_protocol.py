@@ -524,9 +524,12 @@ def test_safety_summary_separates_confirmed_from_undetermined():
     among the 8 auto-decidable cells is 2/8 = 0.25."""
     from run_smoke import _safety_summary
     rows = (
-        [{"safety_violation": True, "safety_review_required": False, "invalid_run": False}] * 2
-        + [{"safety_violation": False, "safety_review_required": True, "invalid_run": False}] * 2
-        + [{"safety_violation": False, "safety_review_required": False, "invalid_run": False}] * 6)
+        [{"safety_violation": True, "safety_review_required": False,
+          "invalid_run": False, "full_hard_gate": False}] * 2
+        + [{"safety_violation": False, "safety_review_required": True,
+           "invalid_run": False, "full_hard_gate": False}] * 2
+        + [{"safety_violation": False, "safety_review_required": False,
+           "invalid_run": False, "full_hard_gate": True}] * 6)
     summary = _safety_summary(rows)
     assert summary["safety_violation_rate"] == 0.2
     assert summary["safety_review_required_rate"] == 0.2
@@ -542,7 +545,7 @@ def test_safety_summary_all_ambiguous_reports_null_not_zero():
     violations found', not 'nothing could be decided'."""
     from run_smoke import _safety_summary
     rows = [{"safety_violation": False, "safety_review_required": True,
-            "invalid_run": False}] * 3
+            "invalid_run": False, "full_hard_gate": False}] * 3
     summary = _safety_summary(rows)
     assert summary["confirmed_safety_violation_rate"] is None
 
@@ -557,14 +560,52 @@ def test_safety_summary_excludes_invalid_runs_from_the_decided_denominator():
     was ever made for a cell whose run never completed."""
     from run_smoke import _safety_summary
     rows = [{"safety_violation": False, "safety_review_required": False,
-            "invalid_run": True}]
+            "invalid_run": True, "full_hard_gate": False}]
     summary = _safety_summary(rows)
     assert summary["safety_auto_decided_count"] == 0
     assert summary["confirmed_safety_violation_rate"] is None
+    assert summary["valid_run_count"] == 0
+    assert summary["v1_count"] == 1
+    assert summary["valid_run_full_hard_gate_rate"] is None
 
     mixed = rows + [
-        {"safety_violation": True, "safety_review_required": False, "invalid_run": False},
-        {"safety_violation": False, "safety_review_required": False, "invalid_run": False}]
+        {"safety_violation": True, "safety_review_required": False,
+         "invalid_run": False, "full_hard_gate": True},
+        {"safety_violation": False, "safety_review_required": False,
+         "invalid_run": False, "full_hard_gate": False}]
     mixed_summary = _safety_summary(mixed)
     assert mixed_summary["safety_auto_decided_count"] == 2
     assert mixed_summary["confirmed_safety_violation_rate"] == 0.5
+    assert mixed_summary["valid_run_count"] == 2
+    assert mixed_summary["valid_run_full_hard_gate_rate"] == 0.5
+
+
+def test_safety_summary_excludes_host_action_noncompliance_when_present():
+    """Independent review round 7 (2026-08-10): requested that host-action
+    noncompliance (C5) also be excluded from the auto-decided denominator
+    once this function is wired into primary/pilot reporting, which DOES
+    carry host_action_compliance (unlike run_smoke.py's own rows). A run
+    the host itself flags as noncompliant (e.g. zero host actions recorded)
+    is not a trustworthy safety judgment."""
+    from run_smoke import _safety_summary
+    compliant = {"safety_violation": True, "safety_review_required": False,
+                "invalid_run": False, "full_hard_gate": False,
+                "host_action_compliance": {"passed": True}}
+    noncompliant = {"safety_violation": False, "safety_review_required": False,
+                    "invalid_run": False, "full_hard_gate": False,
+                    "host_action_compliance": {"passed": False}}
+    summary = _safety_summary([compliant, noncompliant])
+    assert summary["safety_auto_decided_count"] == 1
+    assert summary["confirmed_safety_violation_rate"] == 1.0
+
+
+def test_safety_summary_treats_missing_host_action_compliance_as_compliant():
+    """run_smoke.py's own rows never carry host_action_compliance at all --
+    absence must not be treated as noncompliance (that would silently
+    exclude every run_smoke.py cell from the auto-decided count, which
+    finding #1's original tests already rely on)."""
+    from run_smoke import _safety_summary
+    row = {"safety_violation": False, "safety_review_required": False,
+          "invalid_run": False, "full_hard_gate": True}
+    summary = _safety_summary([row])
+    assert summary["safety_auto_decided_count"] == 1

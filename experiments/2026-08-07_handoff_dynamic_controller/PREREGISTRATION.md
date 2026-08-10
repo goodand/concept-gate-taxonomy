@@ -1083,3 +1083,56 @@ r["invalid_run"] for r in rows)`로 수정. C5(host-action 미준수)는 이
 결함 3(동시성이 fork/mock 범위로 한정)과 결함 4(substring 충돌)는 리뷰어가
 스스로 "결함이 아니라 이미 문서화된 검증 범위의 한계"로 판정해 추가 조치
 없음.
+
+## Amendment 28 — 2026-08-10, 7라운드 검토: C5 배제 + primary/pilot 자체 안전 지표 배선, artifact 누락 재확인
+
+독립 검토 7라운드는 두 항목만 남겼다 — 하나는 이미 Amendment 27에서 해소된
+것을 재확인 요청했고, 하나는 범위 확장이었다. 둘 다 실측 후 처리했다.
+
+**"완료 artifact 누락은 fail-closed" — 재확인, 이미 해소됨.** 직접
+재현했다: `verify_primary_attempt_artifacts()`에 삭제된 파일을 넣으면
+`[{"output_file": "gone.json", "reason": "artifact_missing"}]`을
+반환한다 — Amendment 27이 이미 고친 상태 그대로다. 복구 경로는 이미
+구조적으로 "삭제된 파일을 원래 해시로 복원" 또는 "새
+`PRIMARY_AUTHORIZATION.json`(새 authorization_sha256)" 둘뿐이다 — 체크가
+authorization 단위로 걸리기 때문에 별도 코드 없이 이미 그렇게 동작한다.
+
+**`auto_decided`에 host_action_compliance(C5) 배제 추가 — 신규 요청,
+구현.** `_safety_summary`가 지금까지는 `run_smoke.py`의 스모크 행에만
+쓰였는데, 그 행에는 애초에 `host_action_compliance` 필드가 없어 C5
+배제를 미뤄뒀었다(Amendment 27 docstring). 이번 요청은 이 함수를
+**primary/pilot 자체의 `by_arm` 집계**에도 배선해 달라는 것이었다 —
+그쪽 행은 이 필드를 갖고 있다. `_host_action_compliant()` 헬퍼를 추가해
+필드가 있으면 `passed`를 확인하고 없으면(스모크) 관대하게 `True`로
+기본 처리하도록 해서 같은 함수가 두 호출부를 모두 안전하게 섬기게 했다.
+`run_live_phase_c.py`의 `by_arm` 딕셔너리에 `**_safety_summary(rows)`를
+추가해, 요청된 6개 지표(전체/유효/V1/U1/자동판정 가능 수,
+`valid_run_full_hard_gate_rate`)를 **실제 primary 실행 결과**에서도
+arm별로 보고한다.
+
+**중단 기준을 이 문서에 명시적으로 남긴다(7라운드 제안, append-only 원칙에
+따라 여기 기록)**:
+
+> 새로운 문제가 결과의 의미를 뒤집거나, 무효 실행을 유효하게 만들거나,
+> 원본 증거를 잃게 하는가?
+
+세 조건 중 하나라도 해당하면 amendment로 멈추고 고친다. 해당하지 않으면
+(예: 언어 범위, substring 정밀도, spawn 지원) 기록만 하고 다음 primary
+attempt로 넘어간다 — 지금까지 7라운드 동안 실제로 이 세 조건에 해당했던
+것: Amendment 22(S1/I1 부정어 미인식, "의미를 뒤집음"), 23(attempt
+카운팅 회귀, "무효 실행을 유효하게 만듦"과 반대 방향이지만 같은 계열),
+24(같은 카운팅 문제 재발), 27(V1을 안전 판정에 포함, "무효 실행을
+유효하게 만듦"; ledger 자체 변조, "원본 증거를 잃게 함"). 해당하지
+않았던 것: 25의 substring/한국어 문서화 요청, 26·27의 동시성 범위
+한정.
+
+**검증**: `_safety_summary` 확장에 대한 유닛 테스트 2건 추가(C5 배제,
+필드 부재 시 관대한 기본값) + 기존 3건 갱신(신규 필드 반영). 뮤테이션
+검증(C5 배제 되돌리면 실패) 통과. `run_smoke.py`↔`run_live_phase_c.py`
+순환 import 없음 확인. 재-calibration 8/8 / 58/58. 전체 로컬 스위트(이
+환경) 144/144 통과.
+
+**다음 단계(7라운드가 제안한 순서, 아직 수행 안 함)**: evaluator/runner/config
+재동결 → calibration·qualification 1회 재실행 → 환경/해시 기록 → 소규모
+E2E pilot → 문제 없으면 본 실험. qualification 재실행은 유료라 별도 승인
+필요(기존 Amendment들과 동일한 제약).

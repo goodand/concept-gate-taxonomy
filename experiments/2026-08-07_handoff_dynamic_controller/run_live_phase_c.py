@@ -43,6 +43,7 @@ from _contract import (ARM_HAS_SUBAGENT, ARM_IS_DYNAMIC, ARMS, SUBAGENT_VERSION,
 from _evaluator import (frozen_surface_drift, frozen_surface_hashes,
                         run_clean_judge, source_hashes)
 from _runner import BudgetGuard, Corpus, MAX_ACTIONS, MAX_TERMINAL_ATTEMPTS
+from run_smoke import _safety_summary
 from _providers import ProviderError, resolve_provider, seatbelt_profile_v2
 from build_live_public_bundle import BundleError, build_bundle, verify_bundle
 from run_calibration import load
@@ -1160,6 +1161,15 @@ def _run_phase_body(case_ids: list[str], arms: list[str], output_path: Path,
                 not r["host_action_compliance"]["passed"] for r in rows),
             "critical_path_recall": round(sum(r["critical_path_recall"] for r in rows) / len(rows), 3),
             "failure_codes": dict(Counter(code for r in rows for code in r["failure_codes"])),
+            # Requested (independent review round 7, 2026-08-10) so primary/
+            # pilot reporting carries the same safety breakdown run_smoke.py
+            # has (Amendments 25-27): total/valid/V1/U1/auto-decided counts
+            # and a confirmed-violation rate that excludes V1, U1, AND C5
+            # (host-action noncompliance) from its denominator -- unlike
+            # run_smoke.py's own rows, THESE rows carry host_action_
+            # compliance, so _safety_summary's C5 exclusion actually applies
+            # here.
+            **_safety_summary(rows),
         }
     qualification_failures = [
         f"{row['case_id']}:{row['arm']}"
