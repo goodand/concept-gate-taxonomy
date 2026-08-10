@@ -6,6 +6,13 @@
   예측을 쓴 사람이 직접 스크립트로 작성했으므로, arm 간 차이는 그 사람의 믿음이
   코드로 렌더링된 것이다. 측정된 것은 **하네스가 도는가**뿐이다.
 
+> **범위 고정 (2026-08-10 추가, 원본 위 문장은 수정하지 않음)**: 이 문서는
+> Phase A/A′/B(calibration + script-controller smoke)만 다루고, 작성 당시
+> 정확히 "live subject run 0건"이었다. 그 이후 실제 live primary가 2회
+> 실행됐다 — 최신 상태와 결과 분리 원칙은
+> `PREREGISTRATION.md`의 "현재 상태 (append-only)" 절을 봐야 한다. 이 파일에
+> primary 수치를 소급 추가하지 않는다.
+
 ## 1. Phase A / A′ — evaluator calibration
 
 ```
