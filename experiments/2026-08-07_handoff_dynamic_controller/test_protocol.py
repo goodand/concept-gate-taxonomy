@@ -524,9 +524,9 @@ def test_safety_summary_separates_confirmed_from_undetermined():
     among the 8 auto-decidable cells is 2/8 = 0.25."""
     from run_smoke import _safety_summary
     rows = (
-        [{"safety_violation": True, "safety_review_required": False}] * 2
-        + [{"safety_violation": False, "safety_review_required": True}] * 2
-        + [{"safety_violation": False, "safety_review_required": False}] * 6)
+        [{"safety_violation": True, "safety_review_required": False, "invalid_run": False}] * 2
+        + [{"safety_violation": False, "safety_review_required": True, "invalid_run": False}] * 2
+        + [{"safety_violation": False, "safety_review_required": False, "invalid_run": False}] * 6)
     summary = _safety_summary(rows)
     assert summary["safety_violation_rate"] == 0.2
     assert summary["safety_review_required_rate"] == 0.2
@@ -541,6 +541,30 @@ def test_safety_summary_all_ambiguous_reports_null_not_zero():
     confirmed_safety_violation_rate as 0.0 would look identical to 'no
     violations found', not 'nothing could be decided'."""
     from run_smoke import _safety_summary
-    rows = [{"safety_violation": False, "safety_review_required": True}] * 3
+    rows = [{"safety_violation": False, "safety_review_required": True,
+            "invalid_run": False}] * 3
     summary = _safety_summary(rows)
     assert summary["confirmed_safety_violation_rate"] is None
+
+
+def test_safety_summary_excludes_invalid_runs_from_the_decided_denominator():
+    """Independent review round 6, finding #1 (2026-08-10): a V1 (invalid
+    run -- provider/API/trace failure) cell has safety_violation=False and
+    safety_review_required=False, so it used to count as an auto-decided
+    'safe' cell. Reproduced: a single V1-only row reported
+    safety_auto_decided_count=1, confirmed_safety_violation_rate=0.0 -- a
+    provider failure read as a confirmed-safe judgment. No safety judgment
+    was ever made for a cell whose run never completed."""
+    from run_smoke import _safety_summary
+    rows = [{"safety_violation": False, "safety_review_required": False,
+            "invalid_run": True}]
+    summary = _safety_summary(rows)
+    assert summary["safety_auto_decided_count"] == 0
+    assert summary["confirmed_safety_violation_rate"] is None
+
+    mixed = rows + [
+        {"safety_violation": True, "safety_review_required": False, "invalid_run": False},
+        {"safety_violation": False, "safety_review_required": False, "invalid_run": False}]
+    mixed_summary = _safety_summary(mixed)
+    assert mixed_summary["safety_auto_decided_count"] == 2
+    assert mixed_summary["confirmed_safety_violation_rate"] == 0.5

@@ -387,16 +387,21 @@ def test_verify_primary_attempt_artifacts_flags_a_changed_file(tmp_path):
     assert live.verify_primary_attempt_artifacts(attempts, "sha") == []
 
     output_path.write_text('{"n_runs": 999}', encoding="utf-8")
-    assert live.verify_primary_attempt_artifacts(attempts, "sha") == ["out.json"]
+    assert live.verify_primary_attempt_artifacts(attempts, "sha") == [
+        {"output_file": "out.json", "reason": "hash_mismatch"}]
 
 
-def test_verify_primary_attempt_artifacts_ignores_a_missing_file(tmp_path):
-    """A deleted result is a different problem from a silently edited one --
-    this function only flags a PRESENT file with a changed hash."""
+def test_verify_primary_attempt_artifacts_flags_a_missing_file(tmp_path):
+    """Independent review round 6, finding #2 (2026-08-10): a deleted
+    result used to be silently skipped ("different problem from editing").
+    That was wrong for reproducibility/audit purposes -- an unverifiable
+    result (deleted) must fail closed exactly like a tampered one, since a
+    new claim on top of either erases the same evidence trail."""
     live.RESULTS_DIR = tmp_path
     attempts = [{"authorization_sha256": "sha", "status": "completed",
                 "output_file": "gone.json", "output_sha256": "deadbeef"}]
-    assert live.verify_primary_attempt_artifacts(attempts, "sha") == []
+    assert live.verify_primary_attempt_artifacts(attempts, "sha") == [
+        {"output_file": "gone.json", "reason": "artifact_missing"}]
 
 
 def test_verify_primary_attempt_artifacts_ignores_other_authorizations(tmp_path):
@@ -439,6 +444,127 @@ def test_claiming_a_new_attempt_refuses_when_a_prior_completed_artifact_was_tamp
         live.run_phase(
             CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
             output_name="primary_tamper_gate_test_2", phase_name="primary",
+            config_path="phase_c_claude_mcp_surface_v2_config.json")
+
+
+def test_claiming_a_new_attempt_refuses_when_a_prior_completed_artifact_is_deleted(
+        monkeypatch, tmp_path):
+    """Independent review round 6, finding #2 (2026-08-10): deleting a
+    completed primary result used to be silently ignored by the tamper
+    check, so the next claim proceeded as if nothing had happened. Deletion
+    must fail closed exactly like a hash mismatch."""
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    _write_qualifications(tmp_path)
+    verified = live._assert_primary_qualifications(CLAUDE_V2)
+    authorization = _authorization(verified)
+    authorization["max_attempts"] = 3
+    (tmp_path / live.PRIMARY_AUTHORIZATION_NAME).write_text(
+        json.dumps(authorization), encoding="utf-8")
+    monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
+
+    def fake_body(case_ids, arms, output_path, config, config_path, phase_name):
+        output_path.write_text('{"n_runs": 4}', encoding="utf-8")
+        return {"n_runs": 4, "qualification": {"failed_cells": []}}
+    monkeypatch.setattr(live, "_run_phase_body", fake_body)
+
+    live.run_phase(
+        CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+        output_name="primary_delete_gate_test", phase_name="primary",
+        config_path="phase_c_claude_mcp_surface_v2_config.json")
+
+    (tmp_path / "primary_delete_gate_test.json").unlink()
+
+    with pytest.raises(live.LiveRunError, match="could not be verified"):
+        live.run_phase(
+            CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+            output_name="primary_delete_gate_test_2", phase_name="primary",
+            config_path="phase_c_claude_mcp_surface_v2_config.json")
+
+
+# --- ledger self-hash chain (independent review round 6, finding #2,
+# 2026-08-10): output_sha256 only detects a tampered/deleted ARTIFACT. An
+# attacker who edits or deletes a row IN THE LEDGER ITSELF (e.g. deletes a
+# "completed" row, or edits its output_sha256 to match a tampered artifact)
+# bypassed that check entirely, since the ledger's own contents were
+# trusted at face value.
+
+def test_verify_ledger_chain_accepts_a_freshly_written_chain(monkeypatch, tmp_path):
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    live._claim_primary_attempt("sha", 5, {"status": "started"})
+    live._record_primary_attempt_outcome("sha", "a.json", "completed", attempt_id="x")
+    live._claim_primary_attempt("sha", 5, {"status": "started"})
+    rows = _read_ledger(tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME)
+    assert all("chain_hash" in r for r in rows)
+    assert live.verify_ledger_chain(rows) is True
+
+
+def test_verify_ledger_chain_detects_a_deleted_row(monkeypatch, tmp_path):
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    live._claim_primary_attempt("sha", 5, {"status": "started"})
+    live._record_primary_attempt_outcome("sha", "a.json", "completed", attempt_id="x")
+    live._claim_primary_attempt("sha", 5, {"status": "started"})
+    rows = _read_ledger(tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME)
+
+    without_middle_row = [rows[0], rows[2]]  # delete the "completed" row
+    assert live.verify_ledger_chain(without_middle_row) is False
+
+
+def test_verify_ledger_chain_detects_an_edited_row(monkeypatch, tmp_path):
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    live._claim_primary_attempt("sha", 5, {"status": "started"})
+    live._record_primary_attempt_outcome(
+        "sha", "a.json", "completed", attempt_id="x", extra={"output_sha256": "real-hash"})
+    rows = _read_ledger(tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME)
+
+    tampered_rows = [dict(rows[0]), {**rows[1], "output_sha256": "forged-hash"}]
+    assert live.verify_ledger_chain(tampered_rows) is False
+
+
+def test_verify_ledger_chain_treats_pre_chain_rows_as_a_fixed_prefix(tmp_path):
+    """Rows written before this mechanism existed have no chain_hash --
+    they must not make the chain unverifiable by their mere presence."""
+    pre_chain_row = {"status": "started", "authorization_sha256": "old"}
+    assert live.verify_ledger_chain([pre_chain_row]) is True
+
+
+def test_claiming_a_new_attempt_refuses_when_the_ledger_itself_is_edited(
+        monkeypatch, tmp_path):
+    """The actual gate, end to end: editing a row IN THE LEDGER (not the
+    result artifact) must also refuse the next claim."""
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    _write_qualifications(tmp_path)
+    verified = live._assert_primary_qualifications(CLAUDE_V2)
+    authorization = _authorization(verified)
+    authorization["max_attempts"] = 3
+    (tmp_path / live.PRIMARY_AUTHORIZATION_NAME).write_text(
+        json.dumps(authorization), encoding="utf-8")
+    monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
+
+    def fake_body(case_ids, arms, output_path, config, config_path, phase_name):
+        output_path.write_text('{"n_runs": 4}', encoding="utf-8")
+        return {"n_runs": 4, "qualification": {"failed_cells": []}}
+    monkeypatch.setattr(live, "_run_phase_body", fake_body)
+
+    live.run_phase(
+        CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+        output_name="primary_ledger_edit_test", phase_name="primary",
+        config_path="phase_c_claude_mcp_surface_v2_config.json")
+
+    ledger_path = tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME
+    rows = _read_ledger(ledger_path)
+    # Edit a field OTHER than output_sha256 -- the artifact file itself and
+    # its recorded hash both stay untouched and consistent, so this isolates
+    # the chain check: verify_primary_attempt_artifacts alone would see
+    # nothing wrong here, only verify_ledger_chain can catch a row's content
+    # changing after it was written.
+    rows[1]["n_runs"] = 999
+    ledger_path.write_text(
+        "\n".join(json.dumps(r, sort_keys=True) for r in rows) + "\n", encoding="utf-8")
+
+    with pytest.raises(live.LiveRunError, match="hash chain does not verify"):
+        live.run_phase(
+            CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+            output_name="primary_ledger_edit_test_2", phase_name="primary",
             config_path="phase_c_claude_mcp_surface_v2_config.json")
 
 

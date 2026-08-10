@@ -834,24 +834,92 @@ def _assert_primary_authorization(
     return authorization_sha256, max_attempts
 
 
+_LEDGER_CHAIN_GENESIS = "handoff-dyn-primary-attempt-ledger-chain-genesis-v1"
+
+
+def _parse_ledger_lines(handle, path: Path) -> list[dict[str, Any]]:
+    """Shared by every ledger reader (claim and terminal append) so a
+    malformed line is caught the same way everywhere."""
+    handle.seek(0)
+    entries = []
+    for line_number, line in enumerate(handle, 1):
+        if not line.strip():
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise LiveRunError(
+                f"invalid JSONL record in {path.name}:{line_number}: {exc}") from exc
+        if not isinstance(entry, dict):
+            raise LiveRunError(f"non-object JSONL record in {path.name}:{line_number}")
+        entries.append(entry)
+    return entries
+
+
+def _ledger_chain_hash(prev_chain_hash: str, record: dict[str, Any]) -> str:
+    body = {k: v for k, v in record.items() if k != "chain_hash"}
+    return hashlib.sha256(
+        prev_chain_hash.encode("utf-8") + _canonical_json_bytes(body)).hexdigest()
+
+
+def verify_ledger_chain(rows: list[dict[str, Any]]) -> bool:
+    """Independent review round 6, finding #2: `output_sha256` only detects
+    a tampered/deleted RESULT ARTIFACT -- an attacker who edits the LEDGER
+    itself (deletes a "completed" row entirely, or edits its output_sha256
+    to match a tampered artifact) bypasses that check completely, since the
+    ledger was trusted at face value.
+
+    Each row written after this mechanism exists carries `chain_hash =
+    sha256(previous row's chain_hash + this row's own content)`. Deleting a
+    row breaks the link between its former neighbors (the next row's
+    chain_hash was computed against a prev_chain_hash that no longer
+    appears anywhere). Editing a row invalidates its own stored chain_hash
+    (recomputing from its new content gives a different value) and every
+    row after it. Rows written BEFORE this mechanism existed have no
+    `chain_hash` field and are treated as a fixed, unverifiable prefix --
+    the chain only needs to hold from the point it started being written;
+    once a chained row appears, every row after it must also be chained.
+    """
+    prev = _LEDGER_CHAIN_GENESIS
+    chain_started = False
+    for row in rows:
+        if "chain_hash" not in row:
+            if chain_started:
+                return False
+            continue
+        chain_started = True
+        if row["chain_hash"] != _ledger_chain_hash(prev, row):
+            return False
+        prev = row["chain_hash"]
+    return True
+
+
 def verify_primary_attempt_artifacts(attempts: list[dict[str, Any]],
-                                     authorization_sha256: str) -> list[str]:
-    """Tamper-DETECTION, not just tamper-evidence: returns the output_file
-    name of any "completed" attempt (under this authorization) whose
-    on-disk artifact no longer matches the output_sha256 recorded at
-    completion time. Called from `_claim_primary_attempt` as an actual gate
-    -- a mismatch refuses the NEW claim, it does not just get logged
-    somewhere nobody reads.
+                                     authorization_sha256: str) -> list[dict[str, str]]:
+    """Tamper-DETECTION, not just tamper-evidence: returns one entry per
+    "completed" attempt (under this authorization) whose recorded artifact
+    can no longer be verified -- either its hash no longer matches
+    (`reason: "hash_mismatch"`) or the file is gone
+    (`reason: "artifact_missing"`). Called from `_claim_primary_attempt` as
+    an actual gate -- any entry refuses the NEW claim, it does not just get
+    logged somewhere nobody reads.
 
     Added 2026-08-10 (independent review round 5, finding #2): output_sha256
     (Amendment 24) was written but nothing ever read it back and compared --
     the field proved tampering was DETECTABLE in principle, not that the
-    system actually detected it. A missing artifact is NOT treated as
-    tampering here (deleting a result is a different, and differently
-    serious, problem from silently editing one) -- only a PRESENT file with
-    a different hash counts.
+    system actually detected it.
+
+    A missing artifact used to be silently skipped ("deleting a result is a
+    different, and differently serious, problem from silently editing
+    one"). Independent review round 6, finding #2 correctly rejected that:
+    for reproducibility/audit purposes a "completed" row whose artifact is
+    simply gone is exactly as unverifiable as a tampered one, and silently
+    allowing a new claim on top of it erases the evidence trail the same
+    way. Reproduced: deleting a completed attempt's output file left
+    `verify_primary_attempt_artifacts() == []`, so the next claim proceeded
+    as if nothing had happened. Both failure modes now fail closed.
     """
-    tampered = []
+    problems = []
     for entry in attempts:
         if (entry.get("authorization_sha256") != authorization_sha256
                 or entry.get("status") != "completed"):
@@ -862,10 +930,11 @@ def verify_primary_attempt_artifacts(attempts: list[dict[str, Any]],
             continue
         path = RESULTS_DIR / output_file
         if not path.is_file():
+            problems.append({"output_file": output_file, "reason": "artifact_missing"})
             continue
         if _sha256_path(path) != recorded_hash:
-            tampered.append(output_file)
-    return tampered
+            problems.append({"output_file": output_file, "reason": "hash_mismatch"})
+    return problems
 
 
 def _claim_primary_attempt(authorization_sha256: str, max_attempts: int,
@@ -875,21 +944,12 @@ def _claim_primary_attempt(authorization_sha256: str, max_attempts: int,
     path.parent.mkdir(exist_ok=True)
     with path.open("a+", encoding="utf-8") as handle:
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
-        handle.seek(0)
-        attempts = []
-        for line_number, line in enumerate(handle, 1):
-            if not line.strip():
-                continue
-            try:
-                entry = json.loads(line)
-            except json.JSONDecodeError as exc:
-                raise LiveRunError(
-                    f"invalid JSONL record in {path.name}:{line_number}: {exc}"
-                ) from exc
-            if not isinstance(entry, dict):
-                raise LiveRunError(
-                    f"non-object JSONL record in {path.name}:{line_number}")
-            attempts.append(entry)
+        attempts = _parse_ledger_lines(handle, path)
+        if not verify_ledger_chain(attempts):
+            raise LiveRunError(
+                "refusing primary: attempt ledger hash chain does not verify -- "
+                "a row was deleted or edited after being written. The ledger "
+                "itself, not just the result artifacts, fails closed.")
         # Count only "started" rows. Since Amendment 23 also appends a
         # terminal "completed"/"failed" row per attempt (finding #2 in that
         # amendment), counting every row halved the effective max_attempts:
@@ -905,14 +965,17 @@ def _claim_primary_attempt(authorization_sha256: str, max_attempts: int,
             for entry in attempts)
         if used >= max_attempts:
             raise LiveRunError("refusing primary: authorization attempt limit exhausted")
-        tampered = verify_primary_attempt_artifacts(attempts, authorization_sha256)
-        if tampered:
+        unverifiable = verify_primary_attempt_artifacts(attempts, authorization_sha256)
+        if unverifiable:
             raise LiveRunError(
-                f"refusing primary: completed result artifact(s) changed since "
-                f"they were recorded -- {tampered}. A prior primary result was "
-                f"modified after scoring; do not claim a new attempt on top of "
-                f"a tampered result history.")
+                f"refusing primary: prior completed result artifact(s) could not "
+                f"be verified -- {unverifiable}. Whether changed since they were "
+                f"recorded or deleted outright, both fail closed: do not claim a "
+                f"new attempt on top of an unverifiable result history.")
+        prev_chain = attempts[-1]["chain_hash"] if attempts and "chain_hash" in attempts[-1] \
+            else _LEDGER_CHAIN_GENESIS
         entry = {**record, "authorization_sha256": authorization_sha256}
+        entry["chain_hash"] = _ledger_chain_hash(prev_chain, entry)
         handle.seek(0, os.SEEK_END)
         handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
         handle.flush()
@@ -962,10 +1025,20 @@ def _locked_append_jsonl(path: Path, record: dict[str, Any]) -> None:
     "started" write went through `_claim_primary_attempt`'s
     read-under-lock-then-append. Two processes racing a claim and a
     terminal append against the same file could interleave partial writes.
+
+    Extended 2026-08-10 (independent review round 6, finding #2) to also
+    read-then-chain like `_claim_primary_attempt` does, so a terminal row
+    links into the same hash chain regardless of which of the two writers
+    appended most recently.
     """
     path.parent.mkdir(exist_ok=True)
     with path.open("a+", encoding="utf-8") as handle:
         fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        existing = _parse_ledger_lines(handle, path)
+        prev_chain = (existing[-1]["chain_hash"] if existing and "chain_hash" in existing[-1]
+                     else _LEDGER_CHAIN_GENESIS)
+        record = dict(record)
+        record["chain_hash"] = _ledger_chain_hash(prev_chain, record)
         handle.seek(0, os.SEEK_END)
         handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
         handle.flush()
