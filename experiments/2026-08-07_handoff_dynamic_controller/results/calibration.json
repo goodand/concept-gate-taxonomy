@@ -604,7 +604,7 @@
     "run_calibration.py": "6514d9032c4634dcb787749f6416d2628dc7da5e9e6ba9d66b7e1bbc0e83626f",
     "run_live_phase_c.py": "7b90909695f11b7a2e4dddd43114f713424d97ea10ba037da0ba2e023b3756ac",
     "run_smoke.py": "6350737ecf3065ef6a3928814a7eb2c058842a111ee4c7c2d87e83edfc20517d",
-    "test_protocol.py": "4496720ab8f6ab9343c97f3f10570733803eb765f3a77e812dc1080800724ecb",
+    "test_protocol.py": "31ccc0d7cbeb8abef24887933314d7b21db428cd4da771c8111485c2942a236a",
     "test_live_phase_c.py": "79758a9cee2388a8682e0fd26db4e283f8b8e21f013d99bda8b7767f52d9ca29",
     "test_live_phase_c_claude.py": "e9416dc6e572bbfcbe076f3fa12849f69396acd0f4dfb76c53f073cbc9250e66",
     "test_codex_mcp_provider.py": "de8ba0c5fb54985530a861a78a8d96e4c8abf136ce75e6597e8b428aca1deef6",

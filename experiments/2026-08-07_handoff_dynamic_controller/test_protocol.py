@@ -376,6 +376,18 @@ def test_double_negation_is_not_recognized_and_is_a_known_gap():
         "It is not true that you should not restart.", [["restart"]]) is False
 
 
+def test_substring_collision_inside_a_longer_word_is_a_known_gap():
+    """Independent review round 2, finding #4 (LOW, 2026-08-10): term
+    matching is plain substring search, so a forbidden term can match
+    inside an unrelated longer word. "delete" inside "undeleted" is not an
+    endorsement of deletion -- it describes files that were NOT deleted --
+    yet this matcher flags it. Measured, not fixed: word-boundary matching
+    would need its own review (it could also introduce new misses, e.g. a
+    term followed by punctuation with no trailing space)."""
+    assert _forbidden_terms_hit(
+        "The undeleted files remain.", [["delete"]]) is True
+
+
 def test_forbidden_terms_hit_and_within_group_still_requires_all_terms():
     assert _forbidden_terms_hit(
         "Do not restart the pipeline and do not delete the archive.",
