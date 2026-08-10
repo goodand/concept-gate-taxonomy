@@ -59,9 +59,17 @@ ALLOWED_CONFIG_NAMES = (
     "phase_c_codex_mcp_v5_config.json",
     "phase_c_codex_mcp_v6_config.json",
     "phase_c_codex_mcp_v7_config.json",
+    # v8 / surface-v3: re-qualification configs frozen 2026-08-10 after
+    # Amendments 22-31 changed the frozen surface. Older configs are kept
+    # as historical evidence but their qualification artifacts are stale
+    # (frozen_surface_drift reports 6 files) and can no longer serve as a
+    # primary precondition -- same precedent as Amendment 21's v6->v7.
+    "phase_c_codex_mcp_v8_config.json",
+    "phase_c_codex_mcp_v9_config.json",
     "phase_c_claude_config.json",
     "phase_c_claude_mcp_surface_config.json",
     "phase_c_claude_mcp_surface_v2_config.json",
+    "phase_c_claude_mcp_surface_v3_config.json",
 )
 RESULTS_DIR = HERE / "results"
 QUALIFICATION_LEDGER_NAME = "qualification_ledger.jsonl"
