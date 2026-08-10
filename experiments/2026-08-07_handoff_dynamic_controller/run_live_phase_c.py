@@ -845,10 +845,17 @@ _LEDGER_CHAIN_GENESIS = "handoff-dyn-primary-attempt-ledger-chain-genesis-v1"
 # 2026-08-10) for why. Computed once from the real ledger file's raw line
 # bytes; this constant must never be updated to match a changed ledger --
 # if it stops matching, the ledger changed, which is exactly the point.
-_KNOWN_LEGACY_LEDGER_PREFIX_LINE_HASHES = frozenset({
+# An ORDERED tuple, not a set -- reproduced 2026-08-10 (independent review
+# round 9): a frozenset comparison cannot distinguish the real prefix from
+# the same rows reordered, or from one row duplicated and another dropped.
+# Both returned "matches" before this. The review judged that an audit-
+# precision issue rather than an E2E blocker, but the fix is a one-line
+# type change, so there is no reason to leave the anchor weaker than it
+# claims to be.
+_KNOWN_LEGACY_LEDGER_PREFIX_LINE_HASHES = (
     "f7b6c7c65c6179b4ea65a7f45557ca4d22ca738cfe2b23255f410202a1dfaed5",
     "1e19a8dfec9ad25a7dc1077b364e3e61e42245d3a45af26cc41d4aa9ef2f3799",
-})
+)
 
 
 def _parse_ledger_lines(handle, path: Path) -> list[dict[str, Any]]:
@@ -890,7 +897,7 @@ def _legacy_ledger_prefix_matches_known_hashes(handle, path: Path) -> bool:
     if path != (HERE / "results" / PRIMARY_ATTEMPT_LEDGER_NAME):
         return True
     handle.seek(0)
-    observed = set()
+    observed = []
     for line in handle:
         stripped = line.rstrip("\n")
         if not stripped.strip():
@@ -901,8 +908,8 @@ def _legacy_ledger_prefix_matches_known_hashes(handle, path: Path) -> bool:
             continue
         if "chain_hash" in entry:
             continue
-        observed.add(hashlib.sha256(stripped.encode("utf-8")).hexdigest())
-    return observed == _KNOWN_LEGACY_LEDGER_PREFIX_LINE_HASHES
+        observed.append(hashlib.sha256(stripped.encode("utf-8")).hexdigest())
+    return tuple(observed) == _KNOWN_LEGACY_LEDGER_PREFIX_LINE_HASHES
 
 
 def _ledger_chain_hash(prev_chain_hash: str, record: dict[str, Any]) -> str:

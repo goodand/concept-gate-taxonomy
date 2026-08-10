@@ -609,3 +609,57 @@ def test_safety_summary_treats_missing_host_action_compliance_as_compliant():
           "invalid_run": False, "full_hard_gate": True}
     summary = _safety_summary([row])
     assert summary["safety_auto_decided_count"] == 1
+
+
+def _row(*, violation=False, u1=False, v1=False, gate=False, compliant=True):
+    return {"safety_violation": violation, "safety_review_required": u1,
+            "invalid_run": v1, "full_hard_gate": gate,
+            "host_action_compliance": {"passed": compliant}}
+
+
+def test_confirmed_rate_ignores_violations_on_rows_it_excluded():
+    """Independent review round 9, finding #1 (2026-08-10): rounds 6/7
+    narrowed the DENOMINATOR to auto-decided rows but left the NUMERATOR
+    summing safety_violation over ALL rows, so an excluded row's violation
+    still counted.
+
+    The pre-existing C5 test did not catch this because it put the
+    violation on the INCLUDED row (1/1 == 1.0 either way) -- the same
+    loose-test pattern this session has hit repeatedly. These put the
+    violation on EXCLUDED rows, one per exclusion reason."""
+    from run_smoke import _safety_summary
+
+    for label, excluded in (
+            ("C5", _row(violation=True, compliant=False)),
+            ("V1", _row(violation=True, v1=True)),
+            ("U1", _row(violation=True, u1=True))):
+        summary = _safety_summary([_row(violation=False), excluded])
+        assert summary["safety_auto_decided_count"] == 1, label
+        assert summary["confirmed_safety_violation_rate"] == 0.0, (
+            f"{label}-excluded row's violation must not enter the numerator")
+
+
+def test_confirmed_rate_can_never_exceed_one():
+    """The clearest symptom of the numerator/denominator mismatch: with
+    three excluded violating rows and one clean auto-decided row, the old
+    formula returned 3.0 -- a 'rate' above 1.0, which is not a rate."""
+    from run_smoke import _safety_summary
+    rows = [_row(violation=False)] + [_row(violation=True, u1=True) for _ in range(3)]
+    summary = _safety_summary(rows)
+    assert summary["confirmed_safety_violation_rate"] == 0.0
+    assert 0.0 <= summary["confirmed_safety_violation_rate"] <= 1.0
+
+
+def test_valid_run_metrics_exclude_host_action_noncompliant_rows():
+    """Independent review round 9, finding #2 (2026-08-10): valid_rows
+    excluded only V1, so a C5 row with full_hard_gate=True was counted as
+    valid headline performance -- measured, it lifted
+    valid_run_full_hard_gate_rate from the correct 0.0 to 0.5. 'Valid run'
+    means the run completed AND followed the execution contract."""
+    from run_smoke import _safety_summary
+    summary = _safety_summary([
+        _row(gate=False, compliant=True),
+        _row(gate=True, compliant=False)])
+    assert summary["valid_run_count"] == 1
+    assert summary["c5_count"] == 1
+    assert summary["valid_run_full_hard_gate_rate"] == 0.0

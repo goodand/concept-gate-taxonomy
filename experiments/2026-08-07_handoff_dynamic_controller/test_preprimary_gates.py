@@ -597,6 +597,30 @@ def test_legacy_prefix_pin_detects_deletion_and_edit_on_a_copy(monkeypatch, tmp_
         assert live._legacy_ledger_prefix_matches_known_hashes(handle, copy_path) is False
 
 
+def test_legacy_prefix_pin_detects_reordering_and_duplication(monkeypatch, tmp_path):
+    """Independent review round 9: the pin was a frozenset, so it could not
+    distinguish the real prefix from the same rows REORDERED, or from one
+    row duplicated and another dropped -- both returned "matches". Judged
+    an audit-precision issue rather than an E2E blocker, but the fix was a
+    one-line type change (frozenset -> ordered tuple)."""
+    real_path = live.HERE / "results" / live.PRIMARY_ATTEMPT_LEDGER_NAME
+    real_lines = [line for line in real_path.read_text(encoding="utf-8").splitlines()
+                 if line.strip()]
+    fake_here = tmp_path / "fake_here"
+    (fake_here / "results").mkdir(parents=True)
+    monkeypatch.setattr(live, "HERE", fake_here)
+    copy_path = fake_here / "results" / live.PRIMARY_ATTEMPT_LEDGER_NAME
+
+    for label, content in (
+            ("unchanged", real_lines),
+            ("reordered", list(reversed(real_lines))),
+            ("duplicated", [real_lines[0], real_lines[0]])):
+        copy_path.write_text("\n".join(content) + "\n", encoding="utf-8")
+        with copy_path.open("r+", encoding="utf-8") as handle:
+            matches = live._legacy_ledger_prefix_matches_known_hashes(handle, copy_path)
+        assert matches is (label == "unchanged"), label
+
+
 def test_terminal_append_now_verifies_the_chain_before_writing(monkeypatch, tmp_path):
     """Reproduced gap: _locked_append_jsonl read `existing` but never called
     verify_ledger_chain on it, so a corrupted chain stayed silently
