@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import multiprocessing
 import subprocess
 import sys
 from pathlib import Path
@@ -214,6 +215,96 @@ def test_run_phase_records_a_completed_outcome_on_success(monkeypatch, tmp_path)
     assert statuses == ["started", "completed"], statuses
     assert rows[1]["n_runs"] == 4
     assert rows[1]["output_file"] == rows[0]["output_file"] == "primary_test_output.json"
+    # Independent review round 4, finding #2 (2026-08-10): attempt_id and
+    # output_sha256 were added but no test checked they actually connect
+    # the started/terminal rows to each other or to the real file.
+    assert rows[0]["attempt_id"] is not None
+    assert rows[0]["attempt_id"] == rows[1]["attempt_id"], (
+        "started and completed rows for the same attempt must share attempt_id")
+    real_hash = live._sha256_path(tmp_path / "primary_test_output.json")
+    assert rows[1]["output_sha256"] == real_hash
+
+
+def test_output_sha256_changes_if_the_artifact_is_tampered_after_recording(monkeypatch, tmp_path):
+    """The recorded output_sha256 is a hash of the file AT COMPLETION TIME.
+    If the artifact is edited afterward, re-hashing it must diverge from
+    the ledger's recorded value -- otherwise the hash is decorative, not a
+    real tamper-evidence mechanism."""
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    _write_qualifications(tmp_path)
+    verified = live._assert_primary_qualifications(CLAUDE_V2)
+    (tmp_path / live.PRIMARY_AUTHORIZATION_NAME).write_text(
+        json.dumps(_authorization(verified)), encoding="utf-8")
+    monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
+
+    def fake_body(case_ids, arms, output_path, config, config_path, phase_name):
+        output_path.write_text('{"n_runs": 4}', encoding="utf-8")
+        return {"n_runs": 4, "qualification": {"failed_cells": []}}
+    monkeypatch.setattr(live, "_run_phase_body", fake_body)
+
+    live.run_phase(
+        CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+        output_name="primary_tamper_test", phase_name="primary",
+        config_path="phase_c_claude_mcp_surface_v2_config.json")
+    recorded_hash = _read_ledger(tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME)[1]["output_sha256"]
+
+    (tmp_path / "primary_tamper_test.json").write_text('{"n_runs": 999}', encoding="utf-8")
+    assert live._sha256_path(tmp_path / "primary_tamper_test.json") != recorded_hash
+
+
+def test_attempt_id_is_unique_across_separate_attempts(monkeypatch, tmp_path):
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    _write_qualifications(tmp_path)
+    verified = live._assert_primary_qualifications(CLAUDE_V2)
+    authorization = _authorization(verified)
+    authorization["max_attempts"] = 2
+    (tmp_path / live.PRIMARY_AUTHORIZATION_NAME).write_text(
+        json.dumps(authorization), encoding="utf-8")
+    monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
+
+    def fake_body(case_ids, arms, output_path, config, config_path, phase_name):
+        output_path.write_text("{}", encoding="utf-8")
+        return {"n_runs": 1, "qualification": {"failed_cells": []}}
+    monkeypatch.setattr(live, "_run_phase_body", fake_body)
+
+    for i in range(2):
+        live.run_phase(
+            CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+            output_name=f"primary_unique_id_test_{i}", phase_name="primary",
+            config_path="phase_c_claude_mcp_surface_v2_config.json")
+
+    rows = _read_ledger(tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME)
+    started_ids = [r["attempt_id"] for r in rows if r["status"] == "started"]
+    assert len(started_ids) == 2
+    assert len(set(started_ids)) == 2, "attempt_id must be unique per attempt"
+
+
+def test_failed_attempt_records_output_sha256_when_file_exists(monkeypatch, tmp_path):
+    """A failure AFTER the output file was written (e.g. a post-write step
+    crashes) must still record a real hash of what was actually written,
+    not just output_file_exists=True with no way to verify its content."""
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    _write_qualifications(tmp_path)
+    verified = live._assert_primary_qualifications(CLAUDE_V2)
+    (tmp_path / live.PRIMARY_AUTHORIZATION_NAME).write_text(
+        json.dumps(_authorization(verified)), encoding="utf-8")
+    monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
+
+    def fake_body(case_ids, arms, output_path, config, config_path, phase_name):
+        output_path.write_text('{"partial": true}', encoding="utf-8")
+        raise RuntimeError("crash after writing output")
+    monkeypatch.setattr(live, "_run_phase_body", fake_body)
+
+    with pytest.raises(RuntimeError):
+        live.run_phase(
+            CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+            output_name="primary_partial_write_test", phase_name="primary",
+            config_path="phase_c_claude_mcp_surface_v2_config.json")
+
+    failed_row = _read_ledger(tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME)[1]
+    assert failed_row["output_file_exists"] is True
+    assert failed_row["output_sha256"] == live._sha256_path(
+        tmp_path / "primary_partial_write_test.json")
 
 
 def test_run_phase_records_a_failed_outcome_on_exception(monkeypatch, tmp_path):
@@ -279,3 +370,86 @@ def test_max_attempts_three_allows_exactly_three_real_attempts(monkeypatch, tmp_
             CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
             output_name="primary_test_output_attempt3", phase_name="primary",
             config_path="phase_c_claude_mcp_surface_v2_config.json")
+
+
+# --- concurrency (independent review round 4, finding #3, 2026-08-10) -----
+# No prior test exercised real OS-level file locking under concurrent
+# access. Uses multiprocessing (not threads) so flock is exercised across
+# genuinely separate processes/file descriptors, matching how two real
+# `run_live_phase_c.py --primary` invocations would actually race.
+
+def _concurrent_claim_worker(results_dir_str: str, authorization_sha: str,
+                             max_attempts: int, worker_id: int) -> str:
+    """Module-level (picklable under spawn) worker: re-imports the module
+    fresh in the child process rather than relying on any inherited state."""
+    import sys as _sys
+    from pathlib import Path as _Path
+    here = _Path(__file__).resolve().parent
+    if str(here) not in _sys.path:
+        _sys.path.insert(0, str(here))
+    import run_live_phase_c as _live
+    _live.RESULTS_DIR = _Path(results_dir_str)
+    try:
+        _live._claim_primary_attempt(authorization_sha, max_attempts,
+                                     {"status": "started", "worker_id": worker_id})
+        return "ok"
+    except _live.LiveRunError:
+        return "blocked"
+
+
+def test_concurrent_claims_enforce_the_attempt_limit_exactly(tmp_path):
+    """max_attempts=3 raced by 10 concurrent processes must let EXACTLY 3
+    through, not more (a race in the read-count-then-write critical
+    section would let extras slip past) and not fewer (the lock must not
+    corrupt or lose a row)."""
+    sha = "concurrency-test-sha"
+    max_attempts = 3
+    n_workers = 10
+    ctx = multiprocessing.get_context("fork")
+    with ctx.Pool(processes=n_workers) as pool:
+        outcomes = pool.starmap(
+            _concurrent_claim_worker,
+            [(str(tmp_path), sha, max_attempts, i) for i in range(n_workers)])
+    assert outcomes.count("ok") == max_attempts, outcomes
+    assert outcomes.count("blocked") == n_workers - max_attempts
+
+    ledger_path = tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME
+    rows = _read_ledger(ledger_path)
+    assert len(rows) == max_attempts, (
+        f"expected exactly {max_attempts} rows (no corruption/loss), got {len(rows)}")
+    assert all(r["status"] == "started" for r in rows)
+
+
+def _concurrent_terminal_worker(results_dir_str: str, authorization_sha: str, idx: int) -> str:
+    """Module-level (picklable under spawn) companion to
+    _concurrent_claim_worker, for racing a claim against terminal appends."""
+    import sys as _sys
+    from pathlib import Path as _Path
+    here = _Path(__file__).resolve().parent
+    if str(here) not in _sys.path:
+        _sys.path.insert(0, str(here))
+    import run_live_phase_c as _live
+    _live.RESULTS_DIR = _Path(results_dir_str)
+    _live._record_primary_attempt_outcome(
+        authorization_sha, f"out{idx}.json", "completed",
+        attempt_id=f"id{idx}", extra={"n_runs": idx})
+    return "done"
+
+
+def test_concurrent_claim_and_terminal_append_do_not_corrupt_the_ledger(tmp_path):
+    """A claim (read-count-then-write) racing against several terminal
+    appends (pure locked appends) against the SAME file must never produce
+    a line that fails to parse as JSON, regardless of write order."""
+    sha = "concurrency-test-sha-2"
+    ledger_path = tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME
+
+    ctx = multiprocessing.get_context("fork")
+    jobs = (
+        [(_concurrent_claim_worker, (str(tmp_path), sha, 20, i)) for i in range(5)]
+        + [(_concurrent_terminal_worker, (str(tmp_path), sha, i)) for i in range(5)])
+    with ctx.Pool(processes=10) as pool:
+        results = [pool.apply_async(fn, args) for fn, args in jobs]
+        [r.get() for r in results]
+
+    rows = _read_ledger(ledger_path)  # raises if any line fails to parse
+    assert len(rows) == 10

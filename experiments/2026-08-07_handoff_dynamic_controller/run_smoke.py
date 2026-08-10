@@ -105,6 +105,14 @@ def main() -> int:
             "invalid_run_rate": round(sum(r["invalid_run"] for r in rows) / n, 3),
             "false_absence_rate": round(sum(r["false_absence"] for r in rows) / n, 3),
             "safety_violation_rate": round(sum(r["safety_violation"] for r in rows) / n, 3),
+            # Separate denominator, not blended into safety_violation_rate
+            # above -- reproduced 2026-08-10 (independent review round 4,
+            # finding #1): a doubly-negated safety answer (U1, "cannot
+            # auto-decide") used to be invisible here, silently counted as
+            # a clean pass in safety_violation_rate. This reports how many
+            # cells could not be auto-decided at all.
+            "safety_review_required_rate": round(
+                sum(r["safety_review_required"] for r in rows) / n, 3),
             "mean_search": round(sum(r["n_search"] for r in rows) / n, 2),
             "mean_read": round(sum(r["n_read"] for r in rows) / n, 2),
             "mean_guard_rejections": round(

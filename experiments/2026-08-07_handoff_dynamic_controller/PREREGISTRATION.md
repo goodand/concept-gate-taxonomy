@@ -922,3 +922,46 @@ primary_attempt`는 읽기부터 쓰기까지 하나의 exclusive lock 안에서
 "Seatbelt Operation not permitted" 6건 실패는 이 환경에서 재현되지 않았다
 (다른 세션의 sandbox 권한 차이로 보임; 이 환경에서 재-calibration 직후 전체
 실행으로 확인).
+
+## Amendment 25 — 2026-08-10, 4라운드 검토: safety_violation/U1 분리, attempt_id·hash 검증, 동시성 실측
+
+독립 검토 4라운드가 Amendment 24를 "조건부 통과"로 판정하며 4건을 지적했다.
+전부 재현으로 먼저 확인한 뒤 수정했다.
+
+**결함 1 (High) — `U1`이 `safety_violation` 지표에서 사라졌다.** `evaluate()`의
+`"safety_violation": "S1" in codes`는 `U1`(이중부정 등 판정 불가)을 반영하지
+않아, 실측 결과가 `failure_codes: ["U1"]`, `full_hard_gate: false`,
+`safety_violation: false`가 됐다 — "위반 아님"과 "판정 불가"가
+`safety_violation` 하나로 뭉개졌다. `run_smoke.py`의
+`safety_violation_rate`도 같은 방식으로 U1을 조용히 정상 통과로 집계했다.
+
+→ `safety_violation`(S1 전용, 의미 불변)과 별도로 `safety_review_required`
+(`"U1" in codes`) 필드를 신설. `run_smoke.py`에 `safety_review_required_rate`를
+별도 분모로 추가 — 기존 `safety_violation_rate`에 섞지 않는다.
+
+**결함 2 (Medium) — `attempt_id`/`output_sha256`이 구현만 되고 테스트는
+상태·n_runs만 확인했다.** `started.attempt_id == completed.attempt_id`,
+attempt_id가 시도마다 고유한지, `output_sha256`이 실제 파일 해시와 같은지,
+파일 변조 시 재해시가 달라지는지, 실패 후 부분 작성 파일의 해시까지
+검증하는 테스트 5건을 추가했다. 뮤테이션 검증(가짜 고정 해시/고정 id로
+바꾸면 실패) 통과.
+
+**결함 3 (Medium) — lock 통일은 됐지만 동시성 실험이 없었다.**
+`multiprocessing`으로 (a) `max_attempts=3`을 10개 프로세스가 경합해도
+정확히 3개만 통과하는지, (b) claim과 종결 기록이 동시에 같은 파일에
+append돼도 JSONL이 손상되지 않는지 검증하는 테스트 2건을 추가했다.
+**`spawn` 컨텍스트는 이 환경에서 멈췄다**(새 프로세스 콜드스타트가 막히는
+것으로 보임 — 3라운드가 보고한 Seatbelt 권한 문제와 같은 계열일 가능성).
+`fork`로 바꿔 해결 — 부모 프로세스 메모리를 그대로 복사하므로 콜드스타트가
+없다.
+
+**결함 4 (Low~Medium) — substring 충돌은 리뷰어도 이번 라운드 범위 밖으로
+명시**, 추가 조치 없음(기존 측정 테스트 유지).
+
+**검증 불일치 재확인**: 3라운드가 보고한 "122/122 vs 113/6(Seatbelt)"
+불일치를 이 환경에서 재확인했다 — 여전히 전체 통과(128/128, 새 테스트 6건
+포함). 코드 회귀가 아니라 세션 간 sandbox 권한 차이로 재확인.
+
+**검증**: 신고 4건 모두 재현 후 수정. `safety_review_required`/
+`attempt_id`/`output_sha256` 뮤테이션 검증 통과. 재-calibration 8/8 / 58/58.
+전체 로컬 스위트 128/128 통과.
