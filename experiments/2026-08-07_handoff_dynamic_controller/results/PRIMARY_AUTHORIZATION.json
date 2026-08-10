@@ -1,0 +1,29 @@
+{
+  "authorized_by": "goodand",
+  "authorized_at": "2026-08-09T05:51:02Z",
+  "config_file": "phase_c_claude_mcp_surface_v2_config.json",
+  "config_sha256": "6838da4494c3e07528c3eccf65f4621fd15d8bc5263716e533fba87e414be25e",
+  "qualification_sha256": {
+    "live_pilot_claude_mcp_surface_v2.json": "da4b8648e144240a210f52d5c777bc3dbd86b99f0dd77fcc5dc59b0e37aa64cc",
+    "live_pilot_codex_mcp_v7.json": "b437305f4fabd255817de204db6fc6b005923770e29b372e4d7cd0eacae54180"
+  },
+  "matrix": {
+    "case_ids": [
+      "HD01",
+      "HD02",
+      "HD03",
+      "HD04",
+      "DS05",
+      "DS06",
+      "DS07",
+      "HD08"
+    ],
+    "arms": [
+      "S_STATIC",
+      "R_STATIC",
+      "S_DYNAMIC",
+      "R_DYNAMIC"
+    ]
+  },
+  "max_attempts": 3
+}
