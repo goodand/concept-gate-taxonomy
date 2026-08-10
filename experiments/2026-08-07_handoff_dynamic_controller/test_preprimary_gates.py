@@ -172,3 +172,62 @@ def test_all_test_modules_are_frozen():
     from _evaluator import FROZEN_SURFACE_FILES
     expected = {path.name for path in HERE.glob("test_*.py")}
     assert expected <= set(FROZEN_SURFACE_FILES)
+
+
+# --- regressions for the primary_attempt_ledger completeness gap
+# (independent review, 2026-08-10, finding #2): before this, the ledger
+# recorded ONLY "started" -- no way to distinguish a completed run from a
+# rate-limit abort, a crash, or any other failure. "N attempts consumed" was
+# really "N attempts started".
+
+def _read_ledger(path: Path) -> list[dict]:
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def test_run_phase_records_a_completed_outcome_on_success(monkeypatch, tmp_path):
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    _write_qualifications(tmp_path)
+    verified = live._assert_primary_qualifications(CLAUDE_V2)
+    (tmp_path / live.PRIMARY_AUTHORIZATION_NAME).write_text(
+        json.dumps(_authorization(verified)), encoding="utf-8")
+
+    monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
+    fake_out = {"n_runs": 4, "qualification": {"failed_cells": []}}
+    monkeypatch.setattr(live, "_run_phase_body", lambda *a, **k: fake_out)
+
+    exit_code = live.run_phase(
+        CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+        output_name="primary_test_output", phase_name="primary",
+        config_path="phase_c_claude_mcp_surface_v2_config.json")
+    assert exit_code == 0
+
+    rows = _read_ledger(tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME)
+    statuses = [row["status"] for row in rows]
+    assert statuses == ["started", "completed"], statuses
+    assert rows[1]["n_runs"] == 4
+    assert rows[1]["output_file"] == rows[0]["output_file"] == "primary_test_output.json"
+
+
+def test_run_phase_records_a_failed_outcome_on_exception(monkeypatch, tmp_path):
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    _write_qualifications(tmp_path)
+    verified = live._assert_primary_qualifications(CLAUDE_V2)
+    (tmp_path / live.PRIMARY_AUTHORIZATION_NAME).write_text(
+        json.dumps(_authorization(verified)), encoding="utf-8")
+
+    monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
+    def boom(*a, **k):
+        raise RuntimeError("simulated provider rate limit")
+    monkeypatch.setattr(live, "_run_phase_body", boom)
+
+    with pytest.raises(RuntimeError, match="simulated provider rate limit"):
+        live.run_phase(
+            CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+            output_name="primary_test_output_2", phase_name="primary",
+            config_path="phase_c_claude_mcp_surface_v2_config.json")
+
+    rows = _read_ledger(tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME)
+    statuses = [row["status"] for row in rows]
+    assert statuses == ["started", "failed"], statuses
+    assert "simulated provider rate limit" in rows[1]["error"]
+    assert rows[1]["output_file_exists"] is False

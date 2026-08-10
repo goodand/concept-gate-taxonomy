@@ -900,6 +900,28 @@ def _score(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[st
     return results, payload_hashes
 
 
+def _record_primary_attempt_outcome(authorization_sha256: str | None, output_file: str,
+                                    status: str, *, extra: dict[str, Any] | None = None) -> None:
+    """Append a terminal-status row to the same attempt ledger `_claim_
+    primary_attempt` writes "started" rows to. Correlated by `output_file`
+    (unique per attempt, per the never-overwrite rule) and
+    `authorization_sha256`.
+
+    Added 2026-08-10 (independent review, finding #2): before this, the
+    ledger recorded ONLY "started" -- there was no way to distinguish a
+    completed 32-cell run from a rate-limit abort, a process crash, or a
+    failure after the output artifact was already written. "2 attempts
+    consumed, 1 remaining" was, precisely, "2 attempts STARTED" -- an
+    incomplete audit trail for something whose entire purpose is auditing
+    attempt consumption.
+    """
+    record = {"authorization_sha256": authorization_sha256, "output_file": output_file,
+              "status": status, "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    if extra:
+        record.update(extra)
+    _append_jsonl(RESULTS_DIR / PRIMARY_ATTEMPT_LEDGER_NAME, record)
+
+
 def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
               phase_name: str = "pilot", config_path: str | Path = CONFIG_PATH) -> int:
     config = _assert_ready(config_path)
@@ -920,6 +942,26 @@ def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
             "status": "started",
             "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         })
+    try:
+        out = _run_phase_body(case_ids, arms, output_path, config, config_path, phase_name)
+    except BaseException as exc:
+        if phase_name == "primary":
+            _record_primary_attempt_outcome(
+                authorization_sha256, output_path.name, "failed",
+                extra={"error": f"{type(exc).__name__}: {exc}",
+                      "output_file_exists": output_path.exists()})
+        raise
+    if phase_name == "primary":
+        _record_primary_attempt_outcome(
+            authorization_sha256, output_path.name, "completed",
+            extra={"n_runs": out["n_runs"],
+                  "qualification_failed_cells": out["qualification"]["failed_cells"]})
+    return 0
+
+
+def _run_phase_body(case_ids: list[str], arms: list[str], output_path: Path,
+                    config: dict[str, Any], config_path: str | Path,
+                    phase_name: str) -> dict[str, Any]:
     cases, gold = load()
     unknown = set(case_ids) - set(cases)
     if unknown:
@@ -1006,7 +1048,7 @@ def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
     print(json.dumps({"output": str(output_path),
                       "n_runs": len(results), "qualification": qualification,
                       "per_arm": by_arm}, ensure_ascii=False, indent=2))
-    return 0
+    return out
 
 
 def main() -> int:

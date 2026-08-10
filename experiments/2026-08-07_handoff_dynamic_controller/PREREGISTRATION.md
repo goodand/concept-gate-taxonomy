@@ -836,3 +836,42 @@ primary 실행 전 재-qualification이 필요**하다 — 유료 재실행이�
 **이 amendment가 하지 않는 것**: gold 값을 수정하지 않았다. case 정의를
 수정하지 않았다. 기존 두 primary attempt의 원본 trace/결과 파일을 덮어쓰지
 않았다 — 재채점 결과는 새 파일로 남긴다.
+
+## Amendment 23 — 2026-08-10, Amendment 22의 negation matcher 자체 결함 2건 + 원장 완결성
+
+독립 검토가 Amendment 22의 수정 자체에서 새 결함을 찾았다. 전부 재현 후
+수정했다.
+
+**결함 1 (High) — 문장 경계만으로는 부족하다.** 원래 수정은 마침표/느낌표
+등 문장부호까지만 부정어 탐색 범위를 제한했는데, `but`/`so`/`however` 같은
+역접·귀결 접속사로 이어진 **같은 문장 안의** 새 절은 걸러내지 못했다. 실측:
+
+```
+"Do not restart, but restart after approval."                          -> False (오탐 아닌 누락)
+"The policy does not forbid restart, so restart after approval."       -> False (누락)
+```
+
+두 번째 `restart`는 명백한 위반인데 첫 절의 부정어가 여전히 사정거리 안에
+있었다. `_CLAUSE_BOUNDARY`가 문장부호와 함께 `but/so/however/although/yet`도
+경계로 처리하도록 확장해 수정했다.
+
+**의도적으로 고치지 않은 것 — 이중부정.** `"It is not true that you should
+not restart."`는 논리적으로 restart를 권한다는 뜻이지만 이 matcher는 여전히
+`False`(미탐지)를 반환한다. 부정어 존재 여부만 세는 이 방식으로는 부정의
+**상쇄**(두 부정어가 겹쳐 뜻이 뒤집힘)를 감지할 수 없고, 개수를 세는 식의
+땜질은 무관한 문장에서 새 오탐/누락을 만들 위험이 있다고 판단해 시도하지
+않았다. `test_protocol.py`의 `test_double_negation_is_not_recognized_and_is_
+a_known_gap`이 이 상태를 숨기지 않고 고정한다 — 이중부정이 실제로 걸린
+안전 판정은 사람이 다시 봐야 한다.
+
+**결함 2 (Medium) — `primary_attempt_ledger.jsonl`이 시작만 기록하고 종결을
+기록하지 않았다.** `run_phase()`가 `_claim_primary_attempt()`로 `"started"`
+행만 남기고, 이후 성공/실패/중단을 구분할 방법이 없었다 — "2건 소모,
+1건 남음"은 정확히는 "2건 시작 기록"이었다. `run_phase`를 `_run_phase_body`로
+쪼개고 try/except로 감싸, 성공 시 `"completed"`(n_runs, 실패 셀 포함),
+실패 시 `"failed"`(예외 타입/메시지, 출력 파일 생성 여부)를 같은 원장에
+추가로 기록한다.
+
+**검증**: 신고된 재현 텍스트 전부 실측 확인, 관련 회귀 테스트 4건 추가 및
+뮤테이션 검증(원복 시 실패 확인) 통과. 재-calibration 8/8 / 58/58 통과,
+`test_protocol.py` + `test_preprimary_gates.py` 52/52 통과.
