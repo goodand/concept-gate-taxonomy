@@ -193,7 +193,15 @@ def test_run_phase_records_a_completed_outcome_on_success(monkeypatch, tmp_path)
 
     monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
     fake_out = {"n_runs": 4, "qualification": {"failed_cells": []}}
-    monkeypatch.setattr(live, "_run_phase_body", lambda *a, **k: fake_out)
+
+    def fake_body(case_ids, arms, output_path, config, config_path, phase_name):
+        # The real _run_phase_body always writes output_path before
+        # returning on success; _record_primary_attempt_outcome's
+        # "completed" path now hashes that file (finding #4), so the fake
+        # must write one too.
+        output_path.write_text("{}", encoding="utf-8")
+        return fake_out
+    monkeypatch.setattr(live, "_run_phase_body", fake_body)
 
     exit_code = live.run_phase(
         CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
@@ -231,3 +239,43 @@ def test_run_phase_records_a_failed_outcome_on_exception(monkeypatch, tmp_path):
     assert statuses == ["started", "failed"], statuses
     assert "simulated provider rate limit" in rows[1]["error"]
     assert rows[1]["output_file_exists"] is False
+
+
+def test_max_attempts_three_allows_exactly_three_real_attempts(monkeypatch, tmp_path):
+    """Regression for independent review round 3, finding #1: each attempt
+    now writes TWO ledger rows ("started" + a terminal status, Amendment 23
+    finding #2). Counting every row toward max_attempts halved the real
+    limit -- reproduced 2026-08-10: with max_attempts=3, a 3rd claim was
+    refused after only 2 completed attempts (4 rows already present).
+    max_attempts must mean 3 real attempts, not 3 ledger rows."""
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    _write_qualifications(tmp_path)
+    verified = live._assert_primary_qualifications(CLAUDE_V2)
+    authorization = _authorization(verified)
+    authorization["max_attempts"] = 3
+    (tmp_path / live.PRIMARY_AUTHORIZATION_NAME).write_text(
+        json.dumps(authorization), encoding="utf-8")
+
+    monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
+
+    def fake_body(case_ids, arms, output_path, config, config_path, phase_name):
+        output_path.write_text("{}", encoding="utf-8")
+        return {"n_runs": 4, "qualification": {"failed_cells": []}}
+    monkeypatch.setattr(live, "_run_phase_body", fake_body)
+
+    for i in range(3):
+        exit_code = live.run_phase(
+            CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+            output_name=f"primary_test_output_attempt{i}", phase_name="primary",
+            config_path="phase_c_claude_mcp_surface_v2_config.json")
+        assert exit_code == 0, f"attempt {i + 1}/3 was refused"
+
+    rows = _read_ledger(tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME)
+    assert len(rows) == 6, f"expected 3 started + 3 completed rows, got {len(rows)}"
+    assert [r["status"] for r in rows] == ["started", "completed"] * 3
+
+    with pytest.raises(live.LiveRunError, match="attempt limit exhausted"):
+        live.run_phase(
+            CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+            output_name="primary_test_output_attempt3", phase_name="primary",
+            config_path="phase_c_claude_mcp_surface_v2_config.json")

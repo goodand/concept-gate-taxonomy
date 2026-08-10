@@ -29,6 +29,7 @@ import sys
 import tempfile
 import threading
 import time
+import uuid
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
@@ -855,8 +856,18 @@ def _claim_primary_attempt(authorization_sha256: str, max_attempts: int,
                 raise LiveRunError(
                     f"non-object JSONL record in {path.name}:{line_number}")
             attempts.append(entry)
+        # Count only "started" rows. Since Amendment 23 also appends a
+        # terminal "completed"/"failed" row per attempt (finding #2 in that
+        # amendment), counting every row halved the effective max_attempts:
+        # reproduced 2026-08-10 (independent review round 3) -- with
+        # max_attempts=3, started+completed x2 already sums to 4 rows, so
+        # the 3rd claim was refused after only 2 real attempts. A "started"
+        # row is written exactly once per attempt (by this function, before
+        # any provider call), so it is the correct, single-counted signal
+        # for "how many attempts has this authorization consumed".
         used = sum(
             entry.get("authorization_sha256") == authorization_sha256
+            and entry.get("status") == "started"
             for entry in attempts)
         if used >= max_attempts:
             raise LiveRunError("refusing primary: authorization attempt limit exhausted")
@@ -900,12 +911,33 @@ def _score(records: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[st
     return results, payload_hashes
 
 
+def _locked_append_jsonl(path: Path, record: dict[str, Any]) -> None:
+    """Append one JSONL row under the same exclusive lock `_claim_primary_
+    attempt` uses for its own append, so a concurrent claim and a terminal-
+    status append can never interleave their writes.
+
+    Added 2026-08-10 (independent review round 3, finding #3): the terminal
+    write used to go through plain `_append_jsonl` (no lock), while the
+    "started" write went through `_claim_primary_attempt`'s
+    read-under-lock-then-append. Two processes racing a claim and a
+    terminal append against the same file could interleave partial writes.
+    """
+    path.parent.mkdir(exist_ok=True)
+    with path.open("a+", encoding="utf-8") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        handle.seek(0, os.SEEK_END)
+        handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
 def _record_primary_attempt_outcome(authorization_sha256: str | None, output_file: str,
-                                    status: str, *, extra: dict[str, Any] | None = None) -> None:
+                                    status: str, *, attempt_id: str | None = None,
+                                    extra: dict[str, Any] | None = None) -> None:
     """Append a terminal-status row to the same attempt ledger `_claim_
-    primary_attempt` writes "started" rows to. Correlated by `output_file`
-    (unique per attempt, per the never-overwrite rule) and
-    `authorization_sha256`.
+    primary_attempt` writes "started" rows to. Correlated by `attempt_id`
+    (shared with the "started" row for the same attempt, independent of
+    filenames) and `authorization_sha256`.
 
     Added 2026-08-10 (independent review, finding #2): before this, the
     ledger recorded ONLY "started" -- there was no way to distinguish a
@@ -915,26 +947,30 @@ def _record_primary_attempt_outcome(authorization_sha256: str | None, output_fil
     incomplete audit trail for something whose entire purpose is auditing
     attempt consumption.
     """
-    record = {"authorization_sha256": authorization_sha256, "output_file": output_file,
-              "status": status, "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
+    record = {"authorization_sha256": authorization_sha256, "attempt_id": attempt_id,
+              "output_file": output_file, "status": status,
+              "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
     if extra:
         record.update(extra)
-    _append_jsonl(RESULTS_DIR / PRIMARY_ATTEMPT_LEDGER_NAME, record)
+    _locked_append_jsonl(RESULTS_DIR / PRIMARY_ATTEMPT_LEDGER_NAME, record)
 
 
 def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
               phase_name: str = "pilot", config_path: str | Path = CONFIG_PATH) -> int:
     config = _assert_ready(config_path)
     authorization_sha256: str | None = None
+    attempt_id: str | None = None
     if phase_name == "primary":
         qualification_hashes = _assert_primary_qualifications(config)
         authorization_sha256, max_attempts = _assert_primary_authorization(
             config, config_path, qualification_hashes, case_ids, arms)
+        attempt_id = uuid.uuid4().hex
     output_path = RESULTS_DIR / f"{output_name}.json"
     if output_path.exists():
         raise LiveRunError(f"refusing to overwrite an existing live result: {output_path}")
     if phase_name == "primary":
         _claim_primary_attempt(authorization_sha256, max_attempts, {
+            "attempt_id": attempt_id,
             "config_file": Path(config_path).name,
             "output_file": output_path.name,
             "case_ids": case_ids,
@@ -947,15 +983,17 @@ def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
     except BaseException as exc:
         if phase_name == "primary":
             _record_primary_attempt_outcome(
-                authorization_sha256, output_path.name, "failed",
+                authorization_sha256, output_path.name, "failed", attempt_id=attempt_id,
                 extra={"error": f"{type(exc).__name__}: {exc}",
-                      "output_file_exists": output_path.exists()})
+                      "output_file_exists": output_path.exists(),
+                      "output_sha256": _sha256_path(output_path) if output_path.exists() else None})
         raise
     if phase_name == "primary":
         _record_primary_attempt_outcome(
-            authorization_sha256, output_path.name, "completed",
+            authorization_sha256, output_path.name, "completed", attempt_id=attempt_id,
             extra={"n_runs": out["n_runs"],
-                  "qualification_failed_cells": out["qualification"]["failed_cells"]})
+                  "qualification_failed_cells": out["qualification"]["failed_cells"],
+                  "output_sha256": _sha256_path(output_path)})
     return 0
 
 

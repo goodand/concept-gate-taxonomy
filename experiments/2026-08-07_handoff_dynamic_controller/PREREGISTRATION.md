@@ -875,3 +875,50 @@ a_known_gap`이 이 상태를 숨기지 않고 고정한다 — 이중부정이 
 **검증**: 신고된 재현 텍스트 전부 실측 확인, 관련 회귀 테스트 4건 추가 및
 뮤테이션 검증(원복 시 실패 확인) 통과. 재-calibration 8/8 / 58/58 통과,
 `test_protocol.py` + `test_preprimary_gates.py` 52/52 통과.
+
+## Amendment 24 — 2026-08-10, Amendment 23의 자기 회귀 + 이중부정 manual-review 코드
+
+독립 검토 3라운드가 Amendment 23의 원장 완결 기록 기능 자체가 만든 새 회귀를
+찾았고, 이중부정을 "known gap"으로만 남긴 판정에 재차 이의를 제기했다.
+
+**결함 1 (High, 자기 회귀) — `max_attempts`가 실제 시도 3회가 아니라 원장
+행 3개로 해석됐다.** Amendment 23이 시도당 `started` + 종결(`completed`/
+`failed`) 2행을 남기게 바꿨는데, `_claim_primary_attempt`의 카운팅
+(`used = sum(entry["authorization_sha256"] == ... )`)은 행 종류를 구분하지
+않고 전부 셌다. `max_attempts=3`에서 완료 2회 후 이미 4행이 쌓여 3번째
+시도가 거부되는 것을 재현했다 — **실행 3회가 아니라 원장 행 3개**로 동작한
+것. `status == "started"`인 행만 세도록 수정. `test_max_attempts_three_
+allows_exactly_three_real_attempts`가 완료 2회 후 3번째 claim이 성공하고,
+그 다음 4번째가 거부되는 것까지 end-to-end로 고정한다.
+
+**결함 2 (Medium) — 종결 기록이 claim과 다른 lock을 썼다.** `_claim_
+primary_attempt`는 읽기부터 쓰기까지 하나의 exclusive lock 안에서 처리하는데,
+종결 기록(`_record_primary_attempt_outcome`)은 잠금 없는 `_append_jsonl`을
+썼다. 두 함수가 경합하면 원장 파일에 부분 쓰기/순서 뒤섞임이 생길 수 있었다.
+공통 `_locked_append_jsonl`로 통일.
+
+**결함 3 (Medium) — 종결 기록이 결과 artifact와 암호학적으로 안 묶여
+있었다.** `attempt_id`(uuid4, `started`/종결 행 공통)와 완료 시
+`output_sha256`(실제 작성된 결과 파일의 해시)를 추가해, 이후 그 artifact가
+바뀌어도 원장만으로 "이 완료 기록이 가리키는 파일이 그때 그 내용이었는가"를
+확인할 수 있게 했다.
+
+**이중부정 — "known gap 문서화"에서 "U1(수동 검토 필요) 코드 반환"으로
+격상.** 3라운드 지적: 안전 평가에서 이중부정이 조용히 "위반 없음"으로
+통과하는 것은 문서화만으로 충분하지 않다. 여전히 극성(polarity)을 스스로
+판단하지는 않는다 — 대신 같은 절 안에 독립된 부정어가 2개 이상 있으면
+"ambiguous"로 반환하고, `evaluate()`가 이를 `I1`/`S1` 대신 새 코드 `U1`로
+`failure_codes`에 추가해 `full_hard_gate`를 자동으로 막는다. `U1`의 의미는
+`_contract.py`(git commit `8b333bc`에 고정된 provider-execution isolation
+표면)가 아니라 `_evaluator.py`에 로컬로 정의한다 — `_contract.py`를 건드리면
+`test_the_adapter_did_not_modify_the_frozen_surface`가 깨진다는 것을 먼저
+재현으로 확인한 뒤 그 파일은 되돌리고 이쪽에 정의했다.
+
+**검증**: `test_max_attempts_three_allows_exactly_three_real_attempts` 뮤테이션
+검증(카운팅 수정 되돌리면 실패) 통과, `U1` 배선 뮤테이션 검증(모호성 탐지
+제거하면 실패) 통과. 재-calibration 8/8 / 58/58. `test_protocol.py` +
+`test_preprimary_gates.py` + `test_live_phase_c.py` +
+`test_live_phase_c_claude.py` 122/122 통과 — 3라운드 검토가 보고한
+"Seatbelt Operation not permitted" 6건 실패는 이 환경에서 재현되지 않았다
+(다른 세션의 sandbox 권한 차이로 보임; 이 환경에서 재-calibration 직후 전체
+실행으로 확인).
