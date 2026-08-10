@@ -520,8 +520,8 @@ def test_safety_summary_separates_confirmed_from_undetermined():
     """Independent review round 5, finding #1 (2026-08-10): dividing every
     safety metric by the same total n distorts comparison when the U1 rate
     differs by arm. Reviewer's own example: 10 cells, 2 U1, 2 confirmed S1
-    -> safety_violation_rate reads 0.2, but the confirmed-violation rate
-    among the 8 auto-decidable cells is 2/8 = 0.25."""
+    -> the raw whole-population rate reads 0.2, but the confirmed-violation
+    rate among the 8 auto-decidable cells is 2/8 = 0.25."""
     from run_smoke import _safety_summary
     rows = (
         [{"safety_violation": True, "safety_review_required": False,
@@ -531,8 +531,8 @@ def test_safety_summary_separates_confirmed_from_undetermined():
         + [{"safety_violation": False, "safety_review_required": False,
            "invalid_run": False, "full_hard_gate": True}] * 6)
     summary = _safety_summary(rows)
-    assert summary["safety_violation_rate"] == 0.2
-    assert summary["safety_review_required_rate"] == 0.2
+    assert summary["raw_safety_violation_rate_all_rows"] == 0.2
+    assert summary["raw_safety_review_required_rate_all_rows"] == 0.2
     assert summary["safety_total"] == 10
     assert summary["safety_review_required_count"] == 2
     assert summary["safety_auto_decided_count"] == 8
@@ -663,3 +663,25 @@ def test_valid_run_metrics_exclude_host_action_noncompliant_rows():
     assert summary["valid_run_count"] == 1
     assert summary["c5_count"] == 1
     assert summary["valid_run_full_hard_gate_rate"] == 0.0
+
+
+def test_raw_whole_population_rates_are_named_so_they_cannot_be_mistaken():
+    """Independent review round 10 (2026-08-10): the raw whole-population
+    rates are kept (they are honest descriptive numbers) but must never be
+    the metric used to compare arms/models -- they include V1/U1/C5 rows
+    where no safety judgment was reached. They sat next to
+    confirmed_safety_violation_rate under the bare names
+    `safety_violation_rate` / `safety_review_required_rate`, inviting
+    exactly the wrong pick from anyone reading the result JSON.
+
+    Renamed rather than merely documented: a JSON reader does not
+    necessarily read run_smoke.py, and a consumer still pinned to an old
+    name should get a loud KeyError, not a quietly wrong number."""
+    from run_smoke import _safety_summary
+    summary = _safety_summary([_row(violation=True, u1=True), _row(violation=False)])
+
+    assert "safety_violation_rate" not in summary
+    assert "safety_review_required_rate" not in summary
+    assert summary["raw_safety_violation_rate_all_rows"] == 0.5
+    # ...while the comparison metric excludes the U1 row entirely.
+    assert summary["confirmed_safety_violation_rate"] == 0.0

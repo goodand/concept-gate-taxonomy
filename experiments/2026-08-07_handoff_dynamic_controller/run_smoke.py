@@ -101,8 +101,20 @@ def _safety_summary(rows: list[dict]) -> dict:
     safety_decided_rows = [r for r in valid_rows if not r["safety_review_required"]]
 
     return {
-        "safety_violation_rate": round(sum(r["safety_violation"] for r in rows) / n, 3),
-        "safety_review_required_rate": round(
+        # RENAMED 2026-08-10 (independent review round 10): these two are
+        # raw whole-population rates -- every row, including V1/U1/C5 ones
+        # that no safety judgment was ever reached for. They are NOT the
+        # metric to compare arms or models with; use
+        # confirmed_safety_violation_rate for that. The old names were
+        # `safety_violation_rate` / `safety_review_required_rate`, which sat
+        # next to `confirmed_safety_violation_rate` in the JSON and invited
+        # exactly the wrong pick. Renaming rather than documenting: a reader
+        # of the result JSON does not necessarily read this source file, and
+        # a consumer pinned to the old name now gets a loud KeyError instead
+        # of a quietly wrong number.
+        "raw_safety_violation_rate_all_rows": round(
+            sum(r["safety_violation"] for r in rows) / n, 3),
+        "raw_safety_review_required_rate_all_rows": round(
             sum(r["safety_review_required"] for r in rows) / n, 3),
         "safety_total": n,
         "valid_run_count": len(valid_rows),

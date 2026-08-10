@@ -1252,3 +1252,54 @@ Amendment 29의 legacy anchor가 `frozenset`이라 **행 순서 변경과 중복
 전체 rows로 되돌리기, valid_rows에서 C5 배제 제거, tuple→set 되돌리기) 전부
 대응 테스트 실패 확인. 재-calibration 8/8 / 58/58. 전체 로컬 스위트(이
 환경) 153/153 통과.
+
+## Amendment 31 — 2026-08-10, 10라운드: 수정 루프 종료. raw rate 명명 + 남은 부채 기록
+
+독립 검토 10라운드가 **b84471a를 통과 판정**하고 "이제 수정 루프를 종료하는
+것이 맞다"고 판단했다. 새 E2E blocker 없음. 남은 비차단 지적 2건을 아래와
+같이 처리하고 이 루프를 닫는다.
+
+**지적 1 (처리: 하지 않음, 기록만) — `run_live_phase_c.py`가 실행 스크립트
+`run_smoke.py`의 private helper(`_safety_summary`)를 import한다.** 사실이다
+(`run_live_phase_c.py:46`). 검토자 본인이 "지금 옮기면 frozen surface가 다시
+바뀌므로 E2E 이후 리팩터링 대상으로 두는 것이 맞다"고 판단했고, 동의한다.
+**post-E2E 과제로 여기 기록한다**: 두 호출부가 공유하는 지표 계산을
+`_metrics.py` 같은 공용 모듈로 분리하고, 그때 frozen surface를 한 번에
+갱신한다. 지금 하지 않는 이유는 게으름이 아니라, 동결 직전에 표면을 또
+흔드는 것이 이 루프에서 반복적으로 새 결함을 낳았기 때문이다.
+
+**지적 2 (처리: 이름으로 고정) — 기존 `safety_violation_rate`가 하위 호환
+때문에 여전히 전체 행 기준이라, 모델 비교에 잘못 쓰일 수 있다.** 검토자는
+"결과 보고서에서 legacy/raw rate로 명확히 표시하라"고 했다. 문서로만 표시하는
+대신 **필드 이름 자체를 자기설명적으로 바꿨다**:
+
+```
+safety_violation_rate         → raw_safety_violation_rate_all_rows
+safety_review_required_rate   → raw_safety_review_required_rate_all_rows
+```
+
+이유: 결과 JSON을 읽는 사람이 이 소스 파일이나 이 문서를 읽는다는 보장이
+없고, 두 이름이 `confirmed_safety_violation_rate` 바로 옆에 나란히 앉아 있는
+한 잘못 고르기 쉽다. 또한 옛 이름에 고정된 소비자는 이제 **조용히 틀린 숫자가
+아니라 KeyError**를 받는다 — 이 저장소가 일관되게 택해온 실패 방향이다.
+외부 소비자가 없음을 먼저 확인했다(출력에도 쓰이지 않고 테스트 1곳뿐).
+값과 의미는 바뀌지 않았다.
+
+**새 primary 결과를 읽는 방법(10라운드 지시, 정본으로 여기 고정)**: 다음
+7개를 **한 묶음으로** 해석한다 — `valid_run_count`, `v1_count`, `u1_count`,
+`c5_count`, `safety_auto_decided_count`, `confirmed_safety_violation_rate`,
+`valid_run_full_hard_gate_rate`. arm·모델 비교에는 반드시
+`confirmed_safety_violation_rate`와 `valid_run_full_hard_gate_rate`를 쓰고,
+`raw_*_all_rows`는 서술용으로만 쓴다.
+
+**이 수정 루프의 종료를 선언한다.** 10라운드에 걸쳐 반복된 리뷰-수정
+사이클에서, 실제로 "결과의 의미를 뒤집거나 / 무효 실행을 유효하게 만들거나 /
+원본 증거를 잃게 하는" 기준(Amendment 28에 기록)에 해당한 것은
+Amendment 22·23·24·27·30이었다. 나머지는 문서화·검증 범위 문제였다. 다음
+단계는 수정이 아니라 **동결 → calibration 1회 → qualification 재실행 →
+환경/commit/artifact hash 기록 → 소규모 E2E pilot → 본 실험**이며,
+qualification 재실행부터는 유료라 별도 승인이 필요하다.
+
+**검증**: 지적 2건 모두 사실 확인 후 처리(1건은 의도적 미수정+기록, 1건은
+rename). rename의 의도(옛 이름은 존재하지 않아야 함)를 테스트로 고정했다.
+재-calibration 8/8 / 58/58. 전체 로컬 스위트(이 환경) 154/154 통과.
