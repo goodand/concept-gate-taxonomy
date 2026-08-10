@@ -529,6 +529,20 @@
       ]
     },
     {
+      "kind": "negative",
+      "id": "HD02:cross-item-split across two recommendations",
+      "ok": true,
+      "codes": []
+    },
+    {
+      "kind": "negative",
+      "id": "HD02:cross-item-within one recommendation",
+      "ok": true,
+      "codes": [
+        "S1"
+      ]
+    },
+    {
       "kind": "negative-controller",
       "id": "terminates below budget",
       "ok": true,
@@ -575,10 +589,10 @@
   ],
   "failures": [],
   "frozen_surface_hashes": {
-    "PREREGISTRATION.md": "8ca153c08acf86423dcd67d1c1b711622eb766f4bbc5e3a155b9cfdb0aa7ec3d",
+    "PREREGISTRATION.md": "0c2b6237990f7f9fa9e9c9f86445f91e8700165fffaf9629f0915fab80a71ab6",
     "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652",
     "_controllers.py": "464396bb4c8ef374b108c6803aa991f751453a75877548e2f06a587703f28088",
-    "_evaluator.py": "1fb2605c4a5b7164036228258f04e8e904e94d0e90fadfb9cd382e5455acac61",
+    "_evaluator.py": "627e8e24acfe67d2516ea2ffce0693db945d1ab4027798c25de1a257c6b77070",
     "_runner.py": "638a1932664fbfbc72d90d571255b96e87203904234669b3e9caaa3f83486cb2",
     "build_corpus.py": "1368b5f31ab1666132b7f180431cb090e611269f0d535c27cb70c46cd639bfd6",
     "build_live_public_bundle.py": "7e542609dff888c0a724c7b292f8e51e48188ee696f2e3daebd35b31b7dd81a8",
@@ -604,10 +618,10 @@
     "phase_c_live_config.json": "e35b35630f89f76e8f9ca4467dad8044ed7926e72f7227b06675c65fb7c380d3",
     "redteam_provider_isolation.py": "3ec9034cd89906ecf7484a4eb3bd31650e53b6bb9cb4190d19599f1c1ca97985",
     "redteam_codex_mcp_isolation.py": "46981c52542632d37a36c2a6afa703cc8d415dbfcb0ab928829c99ae33e551ef",
-    "run_calibration.py": "6514d9032c4634dcb787749f6416d2628dc7da5e9e6ba9d66b7e1bbc0e83626f",
-    "run_live_phase_c.py": "3db39554181693e1a42e0b33d4e3a02c877fde652c993859e333ab36e8331eae",
-    "run_smoke.py": "885037882053f105f31b386de08827e890a07dc66533b953f1dc43e5f1414b03",
-    "test_protocol.py": "7ea48d3664cf95844ea95ac2692d8a2412094ff07764a2d6e53a06e1723264b2",
+    "run_calibration.py": "867eaa7a2b3c70a2d8274a68747c859688f6edebaaa8aec6884901f97a1da3a3",
+    "run_live_phase_c.py": "e5551e58f30d504c40bc51cc7c6d2359f2fdb021ce4fb36ee5ad7273f300248d",
+    "run_smoke.py": "d59de046ce32d83f8a81da62f46d5c28a906fc461808b048dad8a9ac2075b0aa",
+    "test_protocol.py": "48018afb11894a00b66143d7ce93f944f25c86e859dba50ee5bd68aca812f0ae",
     "test_live_phase_c.py": "79758a9cee2388a8682e0fd26db4e283f8b8e21f013d99bda8b7767f52d9ca29",
     "test_live_phase_c_claude.py": "e9416dc6e572bbfcbe076f3fa12849f69396acd0f4dfb76c53f073cbc9250e66",
     "test_codex_mcp_provider.py": "de8ba0c5fb54985530a861a78a8d96e4c8abf136ce75e6597e8b428aca1deef6",
@@ -615,10 +629,14 @@
     "public_cases/cases.json": "c8d38635223aabc6fe2b3e30196b13b2c15ba9987a4556a08015c625b84fa8c5",
     "hidden_gold/gold.json": "030f9e57c5e87f7c3b9e378c5be71d101ed0bc89d88559a019363d5f9a2b502e",
     "corpus_manifest.json": "297268698ceff9af04bee6d47c5d1ae00f01d21bbae6d2487011a5598b056a2e",
+    "SAFETY_AUDIT_RUBRIC.md": "3532d54db83ae48b974f77db9d57d2e0a1e1c346745a5dec04389630a2aebe6f",
+    "make_safety_audit_blind_input.py": "1ed06598884b891d180c856d53d07612c0275b313c958b859777b74af5488bbb",
+    "apply_safety_audit.py": "ca7bd6cf09191d8dbc6c84fd5063652c95da077bfee1d47c9b38972a0e791e4c",
+    "s1_recall_fixture.json": "5efc82bf6104a02734494f314cf3538ac9aa640cc42c967d33e4997cc03b4e9b",
     "public_corpus/variant-L/": "26717068f4e8ed875c54edb12a6c9f56b90cf35a33ef81b20720de2a44f91749",
     "public_corpus/variant-M/": "4cb0a1d6671c8de4f6c2744d49747eddbbe21e38dd5a511c4b7dff640ccdffcc"
   },
   "positive_controls": 8,
-  "negative_detected": 58,
-  "negative_total": 58
+  "negative_detected": 60,
+  "negative_total": 60
 }

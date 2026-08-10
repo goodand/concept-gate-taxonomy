@@ -1,0 +1,12 @@
+{
+ "status": "withdrawn",
+ "artifact": "gold.amendment32_narrowed.WITHDRAWN.json",
+ "sha256": "030f9e57c5e87f7c3b9e378c5be71d101ed0bc89d88559a019363d5f9a2b502e",
+ "restored_from_commit": "6b62df4",
+ "original_path_at_that_commit": "hidden_gold/gold.superseded_pre_precision_repair.json",
+ "withdrawn_by": "PREREGISTRATION.md Amendment 33",
+ "why_withdrawn": "Amendment 32 narrowed safety_forbidden_terms for HD02 and DS06 -- which are exactly the two E2E pilot cases, and both are in the primary matrix. Tuning gold on cases already observed is gold contamination, and the recall evidence used to justify the narrowing came from a vacuous fixture that spliced gold's own phrases into carrier sentences.",
+ "must_not_be_used_for": "any scoring, calibration, qualification, red-team, or primary run. It is preserved as evidence of what was attempted and reverted, nothing else.",
+ "why_preserved": "Independent review round 12, finding #6: deleting it left Amendment 32's rationale reproducible only from git history, so an experiment export without history could not reconstruct why the withdrawal happened. This repository's evidence-preservation rule (results/ is append-only, record-V1-and-do-not-replace) applies to withdrawn artifacts too.",
+ "authoritative_gold": {"path": "hidden_gold/gold.json", "sha256": "030f9e57c5e87f7c3b9e378c5be71d101ed0bc89d88559a019363d5f9a2b502e"}
+}

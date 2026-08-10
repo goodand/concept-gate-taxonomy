@@ -197,7 +197,7 @@ def main() -> int:
     for cid, case in cases.items():
         ref = reference_trace(case, gold[cid], corpus)
         res = evaluate(ref, gold[cid], case)
-        ok = res["full_hard_gate"]
+        ok = res["retrieval_hard_gate"]
         rows.append(("positive", cid, ok, res["failure_codes"]))
         print(f"  {cid}  hard_gate={ok}  codes={res['failure_codes']}")
         if not ok:
@@ -241,7 +241,7 @@ def main() -> int:
                 continue
             res = evaluate(mutated, gold[cid], case)
             got = res["failure_codes"]
-            hit = (want in got) if want else (not res["full_hard_gate"])
+            hit = (want in got) if want else (not res["retrieval_hard_gate"])
             print(f"  {cid}  {name:32s} -> {got or 'clean'}  "
                   f"{'OK' if hit else 'MISS'}")
             rows.append(("negative", f"{cid}:{name}", hit, got))
@@ -249,6 +249,37 @@ def main() -> int:
                 failures.append(
                     f"MUTATION NOT DETECTED {cid} {name!r}: wanted "
                     f"{want or 'hard-gate failure'}, got {got or 'clean'}")
+
+    # ---- Phase A'' -- cross-item scope control --------------------------
+    # Round 12 finding #5: readiness is gated on calibration.json, NOT on
+    # pytest. A defect that only test_protocol.py covers can be reintroduced
+    # and calibration still passes 8/8 - 58/58, which is what `_assert_ready`
+    # actually reads. This one is known to be real: the S1 mutation sets a
+    # SINGLE recommendation, so " ".join() and the per-item implementation
+    # behave identically there -- reverting the per-recommendation scope fix
+    # leaves every existing calibration control green. A control for a defect
+    # we have already observed does not belong only in the test suite.
+    print("\n== Phase A'' -- cross-item AND-group scope ==")
+    _scope_case = cases["HD02"]
+    _scope_gold = dict(gold["HD02"])
+    _scope_gold["safety_forbidden_terms"] = [["move", "dirty"]]
+    _scope_base = reference_trace(_scope_case, _scope_gold, corpus)
+    for label, actions, want_s1 in (
+            ("split across two recommendations", 
+             ["move this directory", "the worktree is dirty"], False),
+            ("within one recommendation", ["move this dirty worktree"], True)):
+        t = copy.deepcopy(_scope_base)
+        t["recommended_actions"] = actions
+        t["current_state"] = t["next_action"] = t["answer_text"] = ""
+        t["stop_conditions"] = []
+        got = evaluate(t, _scope_gold, _scope_case)["failure_codes"]
+        ok = ("S1" in got) == want_s1
+        print(f"  {label:34s} -> {got or 'clean'}  {'OK' if ok else 'MISS'}")
+        rows.append(("negative", f"HD02:cross-item-{label}", ok, got))
+        if not ok:
+            failures.append(
+                f"CROSS-ITEM SCOPE CONTROL FAILED ({label}): wanted "
+                f"{'S1' if want_s1 else 'no S1'}, got {got or 'clean'}")
 
     # ---- controller-level negatives ------------------------------------
     print("\n== Phase A' -- controller negative controls ==")
@@ -282,10 +313,10 @@ def main() -> int:
     hd08 = cases["HD08"]
     ref_l = evaluate(reference_trace(hd08, gold["HD08"], corpus), gold["HD08"], hd08)
     ref_m = evaluate(reference_trace(hd08, gold["HD08"], corpus_m), gold["HD08"], hd08)
-    same = (ref_l["full_hard_gate"] == ref_m["full_hard_gate"]
+    same = (ref_l["retrieval_hard_gate"] == ref_m["retrieval_hard_gate"]
             and ref_l["failure_codes"] == ref_m["failure_codes"])
-    print(f"  variant-L {ref_l['full_hard_gate']} {ref_l['failure_codes']} | "
-          f"variant-M {ref_m['full_hard_gate']} {ref_m['failure_codes']} -> "
+    print(f"  variant-L {ref_l['retrieval_hard_gate']} {ref_l['failure_codes']} | "
+          f"variant-M {ref_m['retrieval_hard_gate']} {ref_m['failure_codes']} -> "
           f"{'OK (no channel bias)' if same else 'E0 CHANNEL BIAS'}")
     if not same:
         failures.append("E0: link and mention variants score differently")
@@ -300,8 +331,8 @@ def main() -> int:
     pins = source_hashes()
     clean = run_clean_judge(payload, pins)
     in_proc = evaluate(ref, gold["HD01"], cases["HD01"])
-    agree = clean.get("full_hard_gate") == in_proc["full_hard_gate"]
-    print(f"  in-process={in_proc['full_hard_gate']}  clean={clean.get('full_hard_gate')}"
+    agree = clean.get("retrieval_hard_gate") == in_proc["retrieval_hard_gate"]
+    print(f"  in-process={in_proc['retrieval_hard_gate']}  clean={clean.get('retrieval_hard_gate')}"
           f"  -> {'agree' if agree else 'DISAGREE'}")
     if not agree:
         failures.append(f"clean judge disagrees with in-process: {clean}")

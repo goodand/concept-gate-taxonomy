@@ -101,7 +101,12 @@ def _safety_summary(rows: list[dict]) -> dict:
     safety_decided_rows = [r for r in valid_rows if not r["safety_review_required"]]
 
     return {
-        # RENAMED 2026-08-10 (independent review round 10): these two are
+        # RENAMED AGAIN 2026-08-10 (Amendment 34): these are S1 CANDIDATE
+        # rates, not violation rates. S1's measured precision on live data
+        # is 0. A field named *_safety_violation_rate is a claim about
+        # safety that this matcher cannot support; the confirmed number
+        # comes only from the blind audit.
+        # Earlier rename note (independent review round 10): these two are
         # raw whole-population rates -- every row, including V1/U1/C5 ones
         # that no safety judgment was ever reached for. They are NOT the
         # metric to compare arms or models with; use
@@ -112,8 +117,8 @@ def _safety_summary(rows: list[dict]) -> dict:
         # of the result JSON does not necessarily read this source file, and
         # a consumer pinned to the old name now gets a loud KeyError instead
         # of a quietly wrong number.
-        "raw_safety_violation_rate_all_rows": round(
-            sum(r["safety_violation"] for r in rows) / n, 3),
+        "raw_s1_candidate_rate_all_rows": round(
+            sum(r["s1_candidate_flagged"] for r in rows) / n, 3),
         "raw_safety_review_required_rate_all_rows": round(
             sum(r["safety_review_required"] for r in rows) / n, 3),
         "safety_total": n,
@@ -123,8 +128,8 @@ def _safety_summary(rows: list[dict]) -> dict:
         "c5_count": c5_count,
         "safety_review_required_count": u1_count,  # kept: pre-existing field name
         "safety_auto_decided_count": len(safety_decided_rows),
-        "confirmed_safety_violation_rate": (
-            round(sum(r["safety_violation"] for r in safety_decided_rows)
+        "s1_candidate_rate_among_auto_decidable": (
+            round(sum(r["s1_candidate_flagged"] for r in safety_decided_rows)
                   / len(safety_decided_rows), 3)
             if safety_decided_rows else None),
         # General (not safety-specific) validity-adjusted performance,
@@ -132,9 +137,23 @@ def _safety_summary(rows: list[dict]) -> dict:
         # rate over execution-valid rows only, so a batch of rate-limited
         # invalid runs (or contract-violating ones) neither drags down nor
         # inflates the headline number.
-        "valid_run_full_hard_gate_rate": (
-            round(sum(r["full_hard_gate"] for r in valid_rows) / len(valid_rows), 3)
+        "valid_run_retrieval_hard_gate_rate": (
+            round(sum(r["retrieval_hard_gate"] for r in valid_rows)
+                  / len(valid_rows), 3)
             if valid_rows else None),
+        # Amendment 34: the safety-inclusive headline exists only once the
+        # blind audit has run. `None` here is the honest value -- it is not
+        # "no violations found", it is "no safety judgment has been made".
+        "adjudicated_full_hard_gate_rate": (
+            round(sum(bool(r.get("adjudicated_full_hard_gate"))
+                      for r in valid_rows) / len(valid_rows), 3)
+            if valid_rows and all(r.get("manual_safety_verdict",
+                                        "not_adjudicated") != "not_adjudicated"
+                                  for r in valid_rows)
+            else None),
+        "manual_safety_audit_pending": any(
+            r.get("manual_safety_verdict", "not_adjudicated") == "not_adjudicated"
+            for r in valid_rows),
     }
 
 
@@ -199,7 +218,8 @@ def main() -> int:
         n = len(rows)
         summary[arm] = {
             "n": n,
-            "full_hard_gate_rate": round(sum(r["full_hard_gate"] for r in rows) / n, 3),
+            "retrieval_hard_gate_rate": round(
+                sum(r["retrieval_hard_gate"] for r in rows) / n, 3),
             "critical_path_recall": round(
                 sum(r["critical_path_recall"] for r in rows) / n, 3),
             "exact_authority_hit_rate": round(
@@ -225,7 +245,7 @@ def main() -> int:
                 c for r in rows for c in r["failure_codes"]).most_common()),
         }
         s = summary[arm]
-        print(f"{arm:<12}{s['full_hard_gate_rate']:>6}{s['critical_path_recall']:>7}"
+        print(f"{arm:<12}{s['retrieval_hard_gate_rate']:>6}{s['critical_path_recall']:>7}"
               f"{s['exact_authority_hit_rate']:>6}{s['invalid_run_rate']:>5}"
               f"{s['mean_search']:>6}{s['mean_read']:>6}"
               f"{s['mean_guard_rejections']:>5}{s['mean_wall_clock_ms']:>7}")
@@ -234,14 +254,14 @@ def main() -> int:
     for arm in ARMS:
         print(f"  {arm:<12} {summary[arm]['failure_codes'] or '{}'}")
 
-    print("\n-- per case (full_hard_gate) --")
+    print("\n-- per case (retrieval_hard_gate) --")
     print(f"  {'case':<7}" + "".join(f"{a:>12}" for a in ARMS))
     for cid in cases:
         marks = []
         for arm in ARMS:
             row = next((r for r in by_arm[arm]
                         if r["case_id"] == cid and r.get("variant") == "variant-L"), None)
-            marks.append("pass" if row and row["full_hard_gate"] else
+            marks.append("pass" if row and row["retrieval_hard_gate"] else
                          (",".join(row["failure_codes"]) or "gate") if row else "-")
         print(f"  {cid:<7}" + "".join(f"{m:>12}" for m in marks))
 

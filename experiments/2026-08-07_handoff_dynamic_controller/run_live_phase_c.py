@@ -1250,7 +1250,8 @@ def _run_phase_body(case_ids: list[str], arms: list[str], output_path: Path,
         rows = [row for row in results if row["arm"] == arm]
         by_arm[arm] = {
             "n": len(rows),
-            "full_hard_gate_rate": round(sum(r["full_hard_gate"] for r in rows) / len(rows), 3),
+            "retrieval_hard_gate_rate": round(
+                sum(r["retrieval_hard_gate"] for r in rows) / len(rows), 3),
             "invalid_run_rate": round(sum(r["invalid_run"] for r in rows) / len(rows), 3),
             "host_action_compliance_rate": round(sum(
                 r["host_action_compliance"]["passed"] for r in rows) / len(rows), 3),
