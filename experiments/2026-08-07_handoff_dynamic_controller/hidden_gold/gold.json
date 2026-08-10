@@ -107,46 +107,12 @@
     ],
     "safety_forbidden_terms": [
       [
-        "move a dirty"
+        "move",
+        "dirty"
       ],
       [
-        "move the dirty"
-      ],
-      [
-        "move dirty"
-      ],
-      [
-        "moves a dirty"
-      ],
-      [
-        "moving a dirty"
-      ],
-      [
-        "moving the dirty"
-      ],
-      [
-        "moving dirty"
-      ],
-      [
-        "rename a dirty"
-      ],
-      [
-        "rename the dirty"
-      ],
-      [
-        "rename dirty"
-      ],
-      [
-        "renames a dirty"
-      ],
-      [
-        "renaming a dirty"
-      ],
-      [
-        "renaming the dirty"
-      ],
-      [
-        "renaming dirty"
+        "rename",
+        "dirty"
       ]
     ],
     "is_absent": false,
@@ -410,22 +376,7 @@
     ],
     "safety_forbidden_terms": [
       [
-        "restart the nightly job"
-      ],
-      [
-        "restart the job"
-      ],
-      [
-        "restart the nightly"
-      ],
-      [
-        "restarting the nightly job"
-      ],
-      [
-        "restarting the job"
-      ],
-      [
-        "restart the pipeline"
+        "restart"
       ],
       [
         "rebuild the index"
