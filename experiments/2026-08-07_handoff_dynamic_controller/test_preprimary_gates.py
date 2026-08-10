@@ -6,6 +6,7 @@ import json
 import multiprocessing
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -372,6 +373,75 @@ def test_max_attempts_three_allows_exactly_three_real_attempts(monkeypatch, tmp_
             config_path="phase_c_claude_mcp_surface_v2_config.json")
 
 
+# --- tamper-DETECTION, not just tamper-evidence (independent review
+# round 5, finding #2, 2026-08-10) -----------------------------------------
+
+def test_verify_primary_attempt_artifacts_flags_a_changed_file(tmp_path):
+    output_path = tmp_path / "out.json"
+    output_path.write_text('{"n_runs": 1}', encoding="utf-8")
+    live.RESULTS_DIR = tmp_path
+    original_hash = live._sha256_path(output_path)
+    attempts = [{"authorization_sha256": "sha", "status": "completed",
+                "output_file": "out.json", "output_sha256": original_hash}]
+
+    assert live.verify_primary_attempt_artifacts(attempts, "sha") == []
+
+    output_path.write_text('{"n_runs": 999}', encoding="utf-8")
+    assert live.verify_primary_attempt_artifacts(attempts, "sha") == ["out.json"]
+
+
+def test_verify_primary_attempt_artifacts_ignores_a_missing_file(tmp_path):
+    """A deleted result is a different problem from a silently edited one --
+    this function only flags a PRESENT file with a changed hash."""
+    live.RESULTS_DIR = tmp_path
+    attempts = [{"authorization_sha256": "sha", "status": "completed",
+                "output_file": "gone.json", "output_sha256": "deadbeef"}]
+    assert live.verify_primary_attempt_artifacts(attempts, "sha") == []
+
+
+def test_verify_primary_attempt_artifacts_ignores_other_authorizations(tmp_path):
+    output_path = tmp_path / "out.json"
+    output_path.write_text('{"n_runs": 1}', encoding="utf-8")
+    live.RESULTS_DIR = tmp_path
+    attempts = [{"authorization_sha256": "different-sha", "status": "completed",
+                "output_file": "out.json", "output_sha256": "wrong-hash-but-irrelevant"}]
+    assert live.verify_primary_attempt_artifacts(attempts, "sha") == []
+
+
+def test_claiming_a_new_attempt_refuses_when_a_prior_completed_artifact_was_tampered(
+        monkeypatch, tmp_path):
+    """The actual gate, end to end: tampering with a completed primary
+    result must block claiming the NEXT attempt under the same
+    authorization, not merely be detectable by someone who thinks to check."""
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    _write_qualifications(tmp_path)
+    verified = live._assert_primary_qualifications(CLAUDE_V2)
+    authorization = _authorization(verified)
+    authorization["max_attempts"] = 3
+    (tmp_path / live.PRIMARY_AUTHORIZATION_NAME).write_text(
+        json.dumps(authorization), encoding="utf-8")
+    monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
+
+    def fake_body(case_ids, arms, output_path, config, config_path, phase_name):
+        output_path.write_text('{"n_runs": 4}', encoding="utf-8")
+        return {"n_runs": 4, "qualification": {"failed_cells": []}}
+    monkeypatch.setattr(live, "_run_phase_body", fake_body)
+
+    live.run_phase(
+        CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+        output_name="primary_tamper_gate_test", phase_name="primary",
+        config_path="phase_c_claude_mcp_surface_v2_config.json")
+
+    (tmp_path / "primary_tamper_gate_test.json").write_text(
+        '{"n_runs": 999}', encoding="utf-8")
+
+    with pytest.raises(live.LiveRunError, match="changed since they were recorded"):
+        live.run_phase(
+            CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+            output_name="primary_tamper_gate_test_2", phase_name="primary",
+            config_path="phase_c_claude_mcp_surface_v2_config.json")
+
+
 # --- concurrency (independent review round 4, finding #3, 2026-08-10) -----
 # No prior test exercised real OS-level file locking under concurrent
 # access. Uses multiprocessing (not threads) so flock is exercised across
@@ -453,3 +523,65 @@ def test_concurrent_claim_and_terminal_append_do_not_corrupt_the_ledger(tmp_path
 
     rows = _read_ledger(ledger_path)  # raises if any line fails to parse
     assert len(rows) == 10
+
+
+# --- full run_phase() concurrency, not just the raw claim/append primitives
+# (independent review round 5, finding #3, 2026-08-10): the tests above
+# prove flock correctness for the low-level functions, which the reviewer
+# correctly pointed out is a narrower claim than "concurrent run_phase() is
+# safe". This drives the actual public entry point under a real race, with
+# the provider call itself mocked (a real Claude/Codex CLI call cannot be
+# raced in a unit test) but every other part of run_phase() -- claim,
+# _run_phase_body, terminal recording, tamper-check -- running for real.
+
+def _full_run_phase_worker(results_dir_str: str, output_name: str, idx: int) -> tuple[str, str]:
+    import sys as _sys
+    from pathlib import Path as _Path
+    here = _Path(__file__).resolve().parent
+    if str(here) not in _sys.path:
+        _sys.path.insert(0, str(here))
+    import run_live_phase_c as _live
+    _live.RESULTS_DIR = _Path(results_dir_str)
+    try:
+        code = _live.run_phase(
+            CLAUDE_V2["primary"]["case_ids"], CLAUDE_V2["primary"]["arms"],
+            output_name=f"{output_name}_{idx}", phase_name="primary",
+            config_path="phase_c_claude_mcp_surface_v2_config.json")
+        return ("ok", str(code))
+    except _live.LiveRunError as exc:
+        return ("blocked", str(exc))
+
+
+def test_concurrent_full_run_phase_enforces_the_attempt_limit(monkeypatch, tmp_path):
+    """8 processes race a real run_phase() call (claim -> body -> terminal
+    record -> tamper-check) against max_attempts=3. Fork happens AFTER the
+    monkeypatches below are applied, so every child inherits the patched
+    module state (unlike spawn, which would cold-reimport and lose them)."""
+    monkeypatch.setattr(live, "RESULTS_DIR", tmp_path)
+    _write_qualifications(tmp_path)
+    verified = live._assert_primary_qualifications(CLAUDE_V2)
+    authorization = _authorization(verified)
+    authorization["max_attempts"] = 3
+    (tmp_path / live.PRIMARY_AUTHORIZATION_NAME).write_text(
+        json.dumps(authorization), encoding="utf-8")
+    monkeypatch.setattr(live, "_assert_ready", lambda config_path: CLAUDE_V2)
+
+    def fake_body(case_ids, arms, output_path, config, config_path, phase_name):
+        time.sleep(0.05)  # widen the race window between claim and terminal record
+        output_path.write_text("{}", encoding="utf-8")
+        return {"n_runs": 4, "qualification": {"failed_cells": []}}
+    monkeypatch.setattr(live, "_run_phase_body", fake_body)
+
+    n_workers = 8
+    ctx = multiprocessing.get_context("fork")
+    with ctx.Pool(processes=n_workers) as pool:
+        outcomes = pool.starmap(
+            _full_run_phase_worker,
+            [(str(tmp_path), "concurrent_full_run_phase", i) for i in range(n_workers)])
+
+    statuses = [o[0] for o in outcomes]
+    assert statuses.count("ok") == 3, outcomes
+    assert statuses.count("blocked") == n_workers - 3, outcomes
+
+    rows = _read_ledger(tmp_path / live.PRIMARY_ATTEMPT_LEDGER_NAME)
+    assert sorted(r["status"] for r in rows) == ["completed"] * 3 + ["started"] * 3

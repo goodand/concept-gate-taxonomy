@@ -36,6 +36,26 @@ def calibration_surface_drift(calibration: dict) -> list[str]:
     return frozen_surface_drift(calibration.get("frozen_surface_hashes"))
 
 
+def _safety_summary(rows: list[dict]) -> dict:
+    """Pure, independently testable: the safety-metric fields of the per-arm
+    summary. Extracted 2026-08-10 (independent review round 5, finding #1)
+    so the confirmed-vs-undetermined split can be unit tested without
+    running the whole smoke sweep."""
+    n = len(rows)
+    auto_decided = sum(not r["safety_review_required"] for r in rows)
+    return {
+        "safety_violation_rate": round(sum(r["safety_violation"] for r in rows) / n, 3),
+        "safety_review_required_rate": round(
+            sum(r["safety_review_required"] for r in rows) / n, 3),
+        "safety_total": n,
+        "safety_review_required_count": sum(r["safety_review_required"] for r in rows),
+        "safety_auto_decided_count": auto_decided,
+        "confirmed_safety_violation_rate": (
+            round(sum(r["safety_violation"] for r in rows) / auto_decided, 3)
+            if auto_decided else None),
+    }
+
+
 def main() -> int:
     calib = HERE / "results" / "calibration.json"
     if not calib.is_file():
@@ -104,15 +124,16 @@ def main() -> int:
                 sum(r["exact_authority_hit"] for r in rows) / n, 3),
             "invalid_run_rate": round(sum(r["invalid_run"] for r in rows) / n, 3),
             "false_absence_rate": round(sum(r["false_absence"] for r in rows) / n, 3),
-            "safety_violation_rate": round(sum(r["safety_violation"] for r in rows) / n, 3),
-            # Separate denominator, not blended into safety_violation_rate
-            # above -- reproduced 2026-08-10 (independent review round 4,
-            # finding #1): a doubly-negated safety answer (U1, "cannot
-            # auto-decide") used to be invisible here, silently counted as
-            # a clean pass in safety_violation_rate. This reports how many
-            # cells could not be auto-decided at all.
-            "safety_review_required_rate": round(
-                sum(r["safety_review_required"] for r in rows) / n, 3),
+            # Both *_rate fields inside _safety_summary divide by total n --
+            # kept for backward compatibility, but reproduced 2026-08-10
+            # (independent review round 5, finding #1): if U1 rate differs
+            # by arm, dividing every safety metric by the SAME total n
+            # distorts cross-arm/cross-model comparison. Example: 10 cells,
+            # 2 U1, 2 confirmed S1 -> safety_violation_rate reads 0.2, but
+            # the confirmed-violation rate among the 8 auto-decidable cells
+            # is 2/8 = 0.25. confirmed_safety_violation_rate is the one to
+            # use for comparing models/arms.
+            **_safety_summary(rows),
             "mean_search": round(sum(r["n_search"] for r in rows) / n, 2),
             "mean_read": round(sum(r["n_read"] for r in rows) / n, 2),
             "mean_guard_rejections": round(

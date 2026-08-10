@@ -834,6 +834,40 @@ def _assert_primary_authorization(
     return authorization_sha256, max_attempts
 
 
+def verify_primary_attempt_artifacts(attempts: list[dict[str, Any]],
+                                     authorization_sha256: str) -> list[str]:
+    """Tamper-DETECTION, not just tamper-evidence: returns the output_file
+    name of any "completed" attempt (under this authorization) whose
+    on-disk artifact no longer matches the output_sha256 recorded at
+    completion time. Called from `_claim_primary_attempt` as an actual gate
+    -- a mismatch refuses the NEW claim, it does not just get logged
+    somewhere nobody reads.
+
+    Added 2026-08-10 (independent review round 5, finding #2): output_sha256
+    (Amendment 24) was written but nothing ever read it back and compared --
+    the field proved tampering was DETECTABLE in principle, not that the
+    system actually detected it. A missing artifact is NOT treated as
+    tampering here (deleting a result is a different, and differently
+    serious, problem from silently editing one) -- only a PRESENT file with
+    a different hash counts.
+    """
+    tampered = []
+    for entry in attempts:
+        if (entry.get("authorization_sha256") != authorization_sha256
+                or entry.get("status") != "completed"):
+            continue
+        recorded_hash = entry.get("output_sha256")
+        output_file = entry.get("output_file")
+        if not recorded_hash or not output_file:
+            continue
+        path = RESULTS_DIR / output_file
+        if not path.is_file():
+            continue
+        if _sha256_path(path) != recorded_hash:
+            tampered.append(output_file)
+    return tampered
+
+
 def _claim_primary_attempt(authorization_sha256: str, max_attempts: int,
                            record: dict[str, Any]) -> None:
     """Atomically consume one authorized attempt before any provider call."""
@@ -871,6 +905,13 @@ def _claim_primary_attempt(authorization_sha256: str, max_attempts: int,
             for entry in attempts)
         if used >= max_attempts:
             raise LiveRunError("refusing primary: authorization attempt limit exhausted")
+        tampered = verify_primary_attempt_artifacts(attempts, authorization_sha256)
+        if tampered:
+            raise LiveRunError(
+                f"refusing primary: completed result artifact(s) changed since "
+                f"they were recorded -- {tampered}. A prior primary result was "
+                f"modified after scoring; do not claim a new attempt on top of "
+                f"a tampered result history.")
         entry = {**record, "authorization_sha256": authorization_sha256}
         handle.seek(0, os.SEEK_END)
         handle.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")

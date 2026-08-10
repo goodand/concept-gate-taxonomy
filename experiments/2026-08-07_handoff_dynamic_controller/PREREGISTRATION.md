@@ -34,6 +34,16 @@
   qualification pin과 불일치가 발생했고, 재-calibration은 완료했다(8/8
   positive, 58/58 negative). 재-qualification은 유료 재실행이라 별도 승인
   없이는 하지 않는다.
+- **primary 수치 해석 시 반드시 포함할 제한사항(독립 검토 5라운드,
+  2026-08-10)**: `_forbidden_terms_hit`의 term 매칭은 순수 substring이라
+  `delete`가 `undeleted` 안에서 매칭되는 것처럼 **다른 단어 안에 우연히
+  포함된 경우도 위반으로 집계될 수 있다.** 안전 게이트 자체는 보수적
+  실패(false positive) 방향이라 개별 판정으로는 수용 가능하지만, **모델·arm
+  간 안전 지표를 비교할 때는 이 오탐이 결과를 오염시킬 수 있다** — 아직
+  별도 진단 지표로 분리되지 않았다(`test_substring_collision_inside_a_
+  longer_word_is_a_known_gap`으로 측정만 됨). 같은 이유로
+  `confirmed_safety_violation_rate`(Amendment 25)도 U1만 분리했을 뿐
+  substring 오탐은 걸러내지 못한다.
 
 ## 0. 상위 하네스와의 관계 — 왜 별도 폴더인가
 
@@ -965,3 +975,55 @@ append돼도 JSONL이 손상되지 않는지 검증하는 테스트 2건을 추�
 **검증**: 신고 4건 모두 재현 후 수정. `safety_review_required`/
 `attempt_id`/`output_sha256` 뮤테이션 검증 통과. 재-calibration 8/8 / 58/58.
 전체 로컬 스위트 128/128 통과.
+
+## Amendment 26 — 2026-08-10, 5라운드 검토: 안전 지표 분모 분리, 변조 탐지 게이트, run_phase() 전체 경로 동시성
+
+독립 검토 5라운드가 Amendment 25를 다시 "조건부 통과"로 판정했다. 4건 전부
+재현 후 수정했다.
+
+**결함 1 (High) — `safety_violation_rate`/`safety_review_required_rate`
+분모가 여전히 전체 n이었다.** Amendment 25가 `safety_review_required`
+필드를 만들었지만, `run_smoke.py`의 두 비율은 둘 다 전체 셀 수로 나눴다.
+리뷰어 예시(10칸, U1 2칸, 확정 S1 2칸)로 재현: 두 비율 모두 0.2로 나오지만,
+자동 판정 가능한 8칸 기준 확정 위반율은 2/8=0.25다. arm마다 U1 비율이
+다르면 이 차이가 비교를 왜곡한다.
+
+→ `run_smoke.py`에 `_safety_summary(rows)` 순수 함수를 분리하고
+`safety_total`, `safety_review_required_count`, `safety_auto_decided_count`,
+`confirmed_safety_violation_rate`(U1 제외 분모)를 추가했다. 기존
+`safety_violation_rate`/`safety_review_required_rate`는 하위 호환을 위해
+그대로 둔다(값도 의미도 안 바뀜) — 비교 목적에는 `confirmed_safety_
+violation_rate`를 쓴다.
+
+**결함 2 (Medium) — `output_sha256`이 기록만 되고 자동 거부 경로가
+없었다.** tamper-evidence(변조 여부를 계산할 수 있다)와
+tamper-detection-gate(변조를 실제로 거부한다)를 구분한 지적이 정확했다.
+`verify_primary_attempt_artifacts()`를 신설해 `_claim_primary_attempt`
+안에서 호출한다 — 이 authorization의 기존 `completed` 행 중 하나라도
+현재 파일 해시가 기록된 해시와 다르면(파일이 **존재하는데** 다른 경우만;
+삭제는 별개 문제로 취급해 여기서 걸지 않는다) 새 claim 자체를 거부한다.
+
+**결함 3 (Medium) — 동시성 테스트가 `_claim_primary_attempt`/`_record_
+primary_attempt_outcome`을 직접 호출해 저수준 lock만 검증했다.** "ledger
+lock 검증 완료"는 과장이었다 — 실제 공개 진입점인 `run_phase()`를
+동시에 도는 경로는 검증하지 않았다. `run_phase()` 전체(claim → body →
+종결 기록 → 변조 검사)를 8개 fork 프로세스가 경합하는 테스트를 추가해
+`max_attempts=3`이 정확히 3개만 통과시키는 것을 확인했다. SIGKILL 이후
+orphaned `started` 처리와 `spawn` 환경 자체의 견고성은 여전히 범위 밖으로
+남긴다 — 전자는 정직하게 재현하기 어렵고, 후자는 이 환경에서 `spawn`
+자체가 멈추는 것으로 이미 확인됐다(Amendment 25).
+
+**결함 4 (Low~Medium) — substring 충돌이 여전히 점수 오염 요소.** 해결하지
+않기로 한 판단은 유지하되, 위 "현재 상태" 절에 primary 결과 해석 시
+반드시 포함해야 할 제한사항으로 명시했다.
+
+**검증 불일치 표현 수정**: 이전 amendment가 "코드 회귀가 아니다"라고 확정
+지었던 것은 과했다는 지적을 받아들인다. 이 환경에서는 재-calibration 직후
+전체 스위트가 반복적으로 전부 통과하지만(이번엔 135/135), **다른 세션의
+sandbox 권한 차이가 계속 재현되므로 그 환경에서까지 회귀가 아니라고 독립적으로
+확정할 수는 없다.** 이후로는 "이 환경에서 통과"로만 서술한다.
+
+**검증**: 신고 4건 모두 재현 후 수정. `_safety_summary`, `verify_primary_
+attempt_artifacts`, `run_phase()` 전체 경로 동시성 뮤테이션/end-to-end
+검증 통과. 재-calibration 8/8 / 58/58. 전체 로컬 스위트(이 환경) 135/135
+통과.
