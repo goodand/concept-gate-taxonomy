@@ -425,6 +425,7 @@ Amendment 37/38에서 추가·변경된 것:
 - [`redteam_codex_mcp_isolation.py`](../experiments/2026-08-07_handoff_dynamic_controller/redteam_codex_mcp_isolation.py)
 - [17라운드 검증·수정 계획](feedback/plan_round17_doctor_delegation_and_real_e2e.md)
 - [19라운드 검증·수정 계획](feedback/plan_round19_freeze_closure_and_provenance_envelope.md)
+- [세션 회고 — 파이프라인 게이트와 provenance](feedback/session_retrospective_20260811_pipeline_gates_and_provenance.md)
 
 - [`run_pipeline.py`](../experiments/2026-08-07_handoff_dynamic_controller/run_pipeline.py)
 - [`safety_audit_spec.json`](../experiments/2026-08-07_handoff_dynamic_controller/safety_audit_spec.json)
