@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import platform
 import shutil
 import subprocess
@@ -779,6 +780,27 @@ def _git(*args: str) -> str:
         return ""
 
 
+RECEIPT_DIR_ENV = "CG_RELEASE_RECEIPT_DIR"
+
+
+def release_receipt_dir() -> Path:
+    """Where release receipts go. `results/` unless a harness redirects it.
+
+    Round 21 found this the hard way: `write_release_receipt` was called from
+    `run_pipeline()`, so the ACCEPTANCE SUITE -- which shells out to
+    `e2e --release` against the real tree -- wrote a receipt into the committed,
+    append-only `results/` on every run. Worse, the receipt records the git
+    commit and dirty flag, so a clean tree and a dirty tree produce DIFFERENT
+    documents: committing one made the next suite run write another, forever.
+
+    A test harness sets this variable to a temp directory. Production does not
+    set it, so the CLI still leaves its evidence where a reader looks for it --
+    the point of finding #8 is not weakened.
+    """
+    override = os.environ.get(RECEIPT_DIR_ENV)
+    return Path(override) if override else RESULTS
+
+
 def write_release_receipt(spec: RunSpec, verdict: int, *,
                           closure_digest: str | None,
                           obligations: dict) -> Path:
@@ -817,7 +839,9 @@ def write_release_receipt(spec: RunSpec, verdict: int, *,
     digest = hashlib.sha256(
         json.dumps(body, sort_keys=True, ensure_ascii=False).encode("utf-8")
     ).hexdigest()
-    out = RESULTS / f"release_{digest[:12]}.json"
+    out_dir = release_receipt_dir()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"release_{digest[:12]}.json"
     if not out.exists():
         out.write_text(json.dumps({**body, "receipt_sha256": digest},
                                   ensure_ascii=False, indent=1),

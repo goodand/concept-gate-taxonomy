@@ -32,9 +32,22 @@ sys.path.insert(0, str(HERE))
 PASS, FAIL, BLOCKED = 0, 1, 2
 
 
-def _run(*args: str) -> subprocess.CompletedProcess:
+def _run(*args: str, receipt_dir: str | None = None) -> subprocess.CompletedProcess:
+    """Drive the CLI. Release receipts are redirected away from `results/`.
+
+    Round 21: `e2e --release` writes a receipt recording the git commit and
+    dirty flag, so running the suite against the real tree deposited a new file
+    in the committed, append-only `results/` on every invocation -- and a clean
+    vs dirty tree produced different documents, so committing one guaranteed the
+    next run wrote another. Tests must not add to the experiment's evidence.
+    """
+    import os
+    import tempfile
+    env = dict(os.environ)
+    env["CG_RELEASE_RECEIPT_DIR"] = receipt_dir or tempfile.mkdtemp(
+        prefix="cg-receipts-")
     return subprocess.run([sys.executable, *args], cwd=HERE,
-                          capture_output=True, text=True)
+                          capture_output=True, text=True, env=env)
 
 
 def test_doctor_exit_code_is_three_valued():
@@ -654,3 +667,26 @@ def test_a_pass_without_evidence_is_rejected_by_the_shared_validator():
                              evidence="")
     errors = validate_result(bogus, registry=rp.OBLIGATION_REGISTRY)
     assert any(e["code"] == "MISSING_EVIDENCE" for e in errors), errors
+
+
+def test_the_suite_does_not_add_receipts_to_the_committed_results_dir():
+    """Round 21, a defect I introduced with finding #8's fix.
+
+    `write_release_receipt` was called from `run_pipeline()`, so every suite run
+    that exercised `e2e --release` against the real tree deposited a file in the
+    committed, append-only `results/`. And because the receipt records the git
+    commit and dirty flag, a clean tree and a dirty tree produce DIFFERENT
+    documents -- committing one guaranteed the next run wrote another. Tests
+    must not add to the experiment's evidence.
+    """
+    import run_pipeline as rp
+    before = {p.name for p in (HERE / "results").glob("release_*.json")}
+    proc = _run("run_pipeline.py", "e2e", "--release")
+    after = {p.name for p in (HERE / "results").glob("release_*.json")}
+    assert after == before, (
+        f"the suite wrote {sorted(after - before)} into results/ "
+        f"(exit {proc.returncode})")
+    # And the redirect must actually have produced a receipt somewhere, or this
+    # test would pass by the receipt never being written at all.
+    assert "receipt: release_" in proc.stdout or proc.returncode != PASS, (
+        "no receipt was written anywhere; the redirect disabled the mechanism")
