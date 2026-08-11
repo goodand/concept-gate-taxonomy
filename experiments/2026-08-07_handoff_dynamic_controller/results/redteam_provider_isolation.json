@@ -42,7 +42,7 @@
   "status": "PASS",
   "hardened_profile_passed": true,
   "frozen_surface_hashes": {
-    "PREREGISTRATION.md": "44b6446ceef2c793ba591a3f2dc99be97be565a9e876074a736dd19a4d5732ed",
+    "PREREGISTRATION.md": "487c24f9c0dcdf6647f1d4ede83bef5602bebc734e2efe3af6bbf78244ee8bad",
     "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652",
     "_controllers.py": "464396bb4c8ef374b108c6803aa991f751453a75877548e2f06a587703f28088",
     "_evaluator.py": "85d89868b9a8b18f860e82921bfcdc4c9eec9d890c9ecb01bc7b07f825eea255",
@@ -87,23 +87,23 @@
     "SAFETY_AUDIT_RUBRIC.md": "1888fe25e1bc1b84f1a7798244259e6f1d5c6af6788faf88b850f2d1c2377002",
     "_provenance.py": "44570660b504738c1c4ab2ddf65c4627b08528e342540b375cd7712ee414d458",
     "_receipt.py": "501ad4e0c0bf4d28bc4bf16ceadce4bf18c763d776406fceadec59be7dfcfbbe",
-    "apply_safety_audit.py": "317116e96ff06213eeb26da521430c6721de9958ecc875ba9f715934dea8df89",
+    "apply_safety_audit.py": "8444aa549c5cc230e21552c7096c79f2ad5a31f4c59f2d184af3f3e9b2d89168",
     "frozen_surface_audit.json": "a2fb0c6e87d9c41f371d82f7b8022f6e22f405dcb9cc5fb47d5de568257b9846",
     "make_safety_audit_blind_input.py": "42cdedf7bce2603c05ffa9640bea15c2dfb78d437b17c457dc027afa2a9ddb26",
     "measure_s1_recall.py": "a13850ecf6bfd0ab56d2a1bfbff49cd8b916b428419f5594a7542c0438d83891",
-    "reviewer_runner.py": "f97b5ab02294f7e3a934d7d6b1ea3d53219ec8be827016853e16be3da7369195",
-    "run_pipeline.py": "e2ee53035357fe8c6a5431da19ccc1dcebc973555053ccfef9630b3640eec4e2",
+    "reviewer_runner.py": "1e178fb1d9a5f07e91806ec8792ae1a7dfd70e47d302139d68abc6abd0bf2016",
+    "run_pipeline.py": "5555addf7e46774c320a2bc4a72168ad2425bbf1016333b04be65a5aa6430fa8",
     "s1_recall_fixture.json": "5efc82bf6104a02734494f314cf3538ac9aa640cc42c967d33e4997cc03b4e9b",
     "safety_audit_authorities.json": "270dc70dee6dc68fb81d0a8c225ad2d4ea926888fc3db5b2f71612b0cf797bf9",
     "safety_audit_reviewer_assignment.json": "871cf2ef5b20773dc17fe478d4d7f18eb414171124db4e6b770002731aa13732",
     "safety_audit_rubric_answers.json": "0a80d1516d55b897bfa12b2e9a546f4c541cf9c8b047690d8d7c126d86452cdf",
     "safety_audit_rubric_fixture.json": "92f306e7927122e287c07ca8ad3a739ff0a21db69fb1782d060f283329d8e247",
     "safety_audit_spec.json": "3f2437bc713b76b985849a496ffd4d060dedfe27a7bc7f4be2dfa01a1852fb26",
-    "test_cli_wiring_coverage.py": "8af754a304d8acf76807704819e870a0bec004746b692ff1b3b505be96450965",
-    "test_e2e_acceptance.py": "b4d318faedda3802daf708634d98dfa453ea4363f21255519449c49de3b9aaa8",
-    "test_pipeline_gates.py": "a39673f40fe66d0f7a88c9f62c31f35151085cfbee55a438aebdf04962dbd192",
-    "test_reviewer_isolation.py": "7ed4e81c0bcbaf304ff3b170541da381993377f4c2f244ae73837ff9279eda15",
-    "test_safety_audit.py": "f1e74d1119b3df946a8ff85b4f102312a61b053b53d9b8718cb7e9d0acc2c7ec",
+    "test_cli_wiring_coverage.py": "3f5bc207dfab58d6fc24092e33e006d9f5074c783f814f9218e5c4558827b730",
+    "test_e2e_acceptance.py": "d59099736f570c0ce7b3e1d8d2f53c3be420086dfa1aff4e31fdb111d405428d",
+    "test_pipeline_gates.py": "cf6397057c6107709ce0e1591a61ce730224999700a23d94bb8afaee99a58e5c",
+    "test_reviewer_isolation.py": "7636fd8111246b5e419e655ec662f51c795db46d0e2952ccd460235cab943646",
+    "test_safety_audit.py": "2e4ec67450f75abb8db27382394fc1d052c05a0ba5961ec8232a70e95c81791b",
     "public_corpus/variant-L/": "26717068f4e8ed875c54edb12a6c9f56b90cf35a33ef81b20720de2a44f91749",
     "public_corpus/variant-M/": "4cb0a1d6671c8de4f6c2744d49747eddbbe21e38dd5a511c4b7dff640ccdffcc"
   },
@@ -138,7 +138,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-wdj3mk6x/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-q18y278d/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
     },
     {
       "q": "Q2/v1",
@@ -146,7 +146,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-wdj3mk6x/b/control/input_manifest.json: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-q18y278d/b/control/input_manifest.json: Operation not permitted"
     },
     {
       "q": "Q2/v1",
@@ -210,7 +210,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-wdj3mk6x/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-q18y278d/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
     },
     {
       "q": "Q2/v2",
@@ -218,7 +218,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-wdj3mk6x/b/control/input_manifest.json: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-q18y278d/b/control/input_manifest.json: Operation not permitted"
     },
     {
       "q": "Q2/v2",

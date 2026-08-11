@@ -22,8 +22,18 @@ python3 run_pipeline.py e2e --release  # 하류 경로가 증명됐나 (오직 0
 doctor         exit 1   4 pass, 1 fail, 3 blocked
                         [FAIL] qualification artifacts ... is stale
                         reviewer assignment는 UNASSIGNED(BLOCKED)
-e2e --release  exit 0   obligations 10/10 PASS, obligations_unknown []
+e2e --release  exit 0   의무 11/11, effective_unknown []
+e2e --offline  exit 2   PARTIAL — reviewer를 돌리지 않으므로
+                        reviewer.labels.from-launcher가 UNKNOWN이다.
+                        **2는 성공이 아니지만 여기서는 정직한 상태다**
 ```
+
+**이 블록은 실제 출력이어야 한다.** 21b라운드에서 여기가 `10/10` / 예전 coverage
+키 이름 / `offline exit 0`으로 남아 있었고 — 의무는 11종, 키는
+`effective_unknown`, offline은 2였다. 뒤쪽 §3b가 고쳐 놓았으므로 **한 문서에 두
+현재 상태**가 있었고, §1이 먼저 읽히므로 무맥락 agent는 무엇을 성공으로 읽을지를
+틀린 채 시작했다. `test_the_handoff_entry_block_matches_what_the_commands_actually_print`
+가 이제 낡은 수치를 실패로 만든다.
 
 **`run_pipeline.py closure`는 여기 없다.** 그것은 **쓰기** 명령이며
 (calibration + red-team 2종을 다시 돌려 `results/` 세 파일을 덮어쓴다)
@@ -106,6 +116,8 @@ HEAD   : eca3edb  docs — round-20 링크, closure receipt 1개만 유지
 독립 검토 21라운드가 8건을 지적했고 **8/8 재현됐다.** 검증 중 **리뷰어가 지적
 하지 않은 2건**을 더 찾았다. 계획·근거는
 [`docs/feedback/plan_round21_forgeable_receipts_and_real_reviewer.md`](feedback/plan_round21_forgeable_receipts_and_real_reviewer.md),
+후속 독립 검증과 권한 환경 차이·잔여 통합 결함은
+[`docs/feedback/external_review_round21_20260811_reviewer_launcher_and_runtime.md`](feedback/external_review_round21_20260811_reviewer_launcher_and_runtime.md),
 계약 개정은 `PREREGISTRATION.md` Amendment 42.
 
 **두 개는 손으로 위조해서 확인했다** — 주장이 아니라 실행 결과다:
@@ -209,6 +221,60 @@ doctor          exit 1     4 pass, 1 fail, 3 blocked  (qualification stale — �
 qualification 답안까지 바꿔 다른 신호(자격 미달)를 냈다. label artifact에 공백
 한 칸을 덧붙이는 것으로 좁혔다 — JSON은 유효하고 label과 qualification은 그대로이며
 **바뀌는 것은 바이트뿐**이다. mutation은 한 가지만 분리해야 한다.
+
+## 3c. 21b라운드 — 감사 경로가 launcher를 우회하고 있었다
+
+후속 독립 검증이 **8건을 지적했고 8/8 확인**됐다. 계획·근거는
+[`plan_round21b_audit_path_bypasses_the_launcher.md`](feedback/plan_round21b_audit_path_bypasses_the_launcher.md),
+원문은
+[`external_review_round21_20260811_reviewer_launcher_and_runtime.md`](feedback/external_review_round21_20260811_reviewer_launcher_and_runtime.md).
+
+**리뷰어가 "남은 것은 canary 하나"를 기각했고 그게 맞다.** 21라운드가 만든
+receipt를 **실제 adjudicator가 열지 않았다** — `apply_safety_audit.py`에
+`isolation`이라는 문자열조차 없었다. 검증하는 곳은 release E2E와 `doctor`뿐이었고,
+handoff가 사람에게 안내하는 수동 제출 절차로는 HMAC을 통째로 우회할 수 있었다.
+즉 "reviewer 출력이 감사까지 전달된다"는 **합성 E2E 안에서만** 참이었다.
+
+| 닫은 것 | 무엇이었나 |
+|---|---|
+| **F1** | adjudicator가 `kind: agent` 판정자에게 launcher 서명 receipt를 요구한다. receipt 부재·서명 불일치·다른 packet 결속·probe-only receipt·서명 후 편집된 label을 **각각 다른 사유로** 거부한다. human은 요구하지 않고(launcher는 사람이 아니라 프로세스를 가둔다) 번들이 `reviewer_isolation.machine_confined`로 누가 실제로 갇혔는지 적는다 |
+| **F1b** | 공개 CLI가 `--command` / `--labels-out`을 받는다. 그전에는 probe-only여서 문서가 안내하는 진입점으로는 reviewer를 **돌릴 수가 없었다** |
+| **F2** | `doctor`가 receipt에 없는 `packet_file` 필드로 경로를 지어내 **정상 경로에서 FileNotFoundError로 죽었다.** 검증기를 `authenticate_...`(서명+assignment)와 `verify_...`(+packet)로 나눴다. doctor는 packet이 없으므로 앞쪽만 묻고, 그 행이 "packet 결속은 adjudicator가 본다"고 말한다 |
+| **F5** | execution identity가 argv만 해시했다. 같은 경로의 스크립트를 갈아치워도 값이 같았다. argv 토큰이 가리키는 **실제 파일의 sha256**을 포함한다. 못 덮는 것(원격 모델, CLI 의존성, 런타임 외부 읽기)은 docstring이 명시한다 |
+| **F7** | 이 문서 §1과 PREREGISTRATION 상태 블록이 `10/10` / `offline exit 0`으로 남아 있었다. 의무는 12종, offline은 2다. **한 문서에 두 현재 상태**가 있었고 §1이 먼저 읽힌다 |
+
+### 이번에도 mutation이 내 결함을 잡았다
+
+- **게이트 순서.** isolation을 per-label 검사 **앞**에 두자 stage 6의 자격 미달
+  음성이 그 전에 걸려 `refused=False`가 됐다. **가려진 검사는 없는 검사와
+  구별되지 않는다** — 새 게이트를 기존 것 앞에 두면 기존 커버리지를 조용히
+  없앤다. 마지막으로 옮겼다.
+- **`declared_by_id[...]`.** assignment 멤버십 mutation이 그 검사를 끄면 KeyError가
+  나 그 mutation의 신호가 **크래시로 바뀌었다.** `.get`으로 고쳤다 — 한 게이트가
+  다른 게이트의 증거를 파괴하는 같은 형태의 두 번째다.
+
+### 21b라운드 실측 (이 환경)
+
+```
+e2e --release   exit 0     의무 12/12, [7c] audit.isolation-required refused=True
+e2e --offline   exit 2     PARTIAL (reviewer 미실행 — 정직한 상태)
+실험 suite      309 passed / 1 skipped   (mutation 12종)
+저장소 게이트   9 passed / 1 failed(owlready2 부재, 기존) / 1 blocked
+```
+
+### 권한 환경이 결과를 바꾼다 — 기록
+
+| 환경 | 결과 |
+|---|---|
+| Codex 관리형 sandbox | 274 passed, 20 failed, 1 skipped |
+| 동일 checkout, host 권한 | 294 passed, 1 skipped |
+
+원인은 `sandbox-exec: sandbox_apply: Operation not permitted`. **workspace가 같아도
+상위 sandbox 권한 때문에 달라진다.** 지금 그 20건은 `_skip_without_sandbox()`로
+skip이 되는데, skip은 이 저장소 어휘로 `BLOCKED`이고 **exit code에 반영되지
+않는다** — 즉 sandbox 없는 환경에서 suite가 초록인데 isolation은 검증되지 않았다.
+F1을 닫아 그 환경에서는 감사 자체가 거부되므로 실질 위험은 줄었으나 **lane 분리는
+아직 남았다**(아래 미해결).
 
 ## 4. 절대 하면 안 되는 것
 
@@ -625,6 +691,10 @@ qualification 러너 자체는 보이므로 현재 구성으로 동작한다.
       실행하고 stdout을 schema 검증한 뒤 label artifact를 쓴다. release E2E가
       adjudicator에게 넘기는 파일의 바이트가 서명된 receipt의
       `reviewer_output_sha256`과 같은지 대조하며, 그 결속에 mutation 케이스가 있다
+- [ ] **F3/F4/F6/F8 + 권한 lane 분리** — 21b 계획 §6이 각각 왜 미뤄졌는지 적는다.
+      F4(mutation 결과 결속)는 난이도가 아니라 **순환** 때문이다: mutation 하네스가
+      자기 workspace에서 closure와 release를 다시 돌리므로 closure가 증거를 만들면
+      재귀한다
 - [ ] **live canary — 1 case × 1 arm 실제 provider 호출.** 다음 할 일. `command`에
       실제 CLI를 넘기는 자리는 이제 있다 — `_stub_reviewer_script`가 그 자리를
       점유한 stub이며 무엇이 아닌지 docstring이 명시한다
