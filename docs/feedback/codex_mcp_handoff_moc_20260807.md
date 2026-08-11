@@ -14,6 +14,10 @@ before interpreting a pilot result or changing a frozen experiment surface.
 
 ## Current State
 
+- [[docs/feedback/session_retrospective_20260811_codex_retrieval_migration_and_canary|Codex retrieval migration and canary retrospective]]
+  continues the Codex-only `C-Ixx` issue chain with the portable Obsidian
+  retrieval migration, permission-lane reproductions, and the bounded canary
+  interpretation. It does not import Claude Code's defect counters.
 - [[docs/feedback/codex_mcp_handoff_qualification_log_20260807|Continuation log]] records
   issues, repeated failures, hypotheses, evidence, and the next repair sequence.
 - [[docs/feedback/codex_handoff_continuation_prompt_20260807|Continuation prompt]]

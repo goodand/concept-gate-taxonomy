@@ -6,6 +6,8 @@
 - Related Codex review: [[external_review_round21_20260811_reviewer_launcher_and_runtime]]
 - Claude Code's Round 21b response is evidence read by Codex, not a Codex-owned issue log:
   [[plan_round21b_audit_path_bypasses_the_launcher]]
+- Continuation for Codex's own retrieval migration and canary verification issues:
+  [[session_retrospective_20260811_codex_retrieval_migration_and_canary]]
 
 ## Boundary and numbering
 
@@ -328,4 +330,3 @@ replace the research target, then using support-harness findings to delay the re
 canary. The next high-information action is the real **1 case × 1 arm retrieval canary**.
 Further Codex review is justified only by a demonstrated causal blocker or by a failure
 observed in that vertical run.
-
