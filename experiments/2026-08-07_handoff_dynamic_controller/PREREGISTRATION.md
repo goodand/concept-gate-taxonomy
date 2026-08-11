@@ -2251,3 +2251,142 @@ legacy prefix pin도 이제 감사 경로가 적용한다.
 execution surface(`run_live_phase_c.py`, `test_protocol.py`)가 바뀌었다.
 **closure를 이 문단 다음에 실행한다** — calibration → codex red-team →
 provider red-team 순으로. 이번 라운드의 결함이 정확히 이 순서를 어긴 것이다.
+
+## Amendment 41 — 2026-08-11, 20라운드: Walking Skeleton으로 전환. release가 PARTIAL을 받지 않는다
+
+**계기.** 12~19라운드는 개별 결함을 하나씩 고쳤다. 20라운드 검토가 그 방식의
+한계를 두 사실로 보였다:
+
+- 내 커밋 `1f12e2f`의 제목은 "one canonical for each thing"인데
+  `_receipt_sha256`이 **두 벌**이었고, 그 주석은 **존재하지 않는 테스트**를
+  인용했다.
+- "개수 비교를 집합 일치로 바꿨다"고 썼으나 **단위가 틀렸다** — stage 차집합이라
+  `reviewer.assignment.frozen`이 같은 stage의 형제가 보호된다는 이유로 **숨었다.**
+  "미보호 stage 3"은 맞고 "미보호 의무 3"은 틀렸다(최소 4).
+
+그래서 리뷰어의 전략 판단을 받아들였다: **방어를 다 완성한 뒤 E2E가 아니라,
+가장 얇은 실제 수직 경로를 먼저 끝까지 성공시키고 강화한다.** 이번 라운드는
+**기능 동결**이며 새 guard와 비차단 리팩터링을 멈췄다.
+
+### A. 완료 단위를 obligation으로
+
+`OBLIGATIONS: dict[str, Verdict]` 10종. 집계는 새로 만들지 않고
+`conceptgate/cg_obligations.py`의 `Verdict`/`aggregate()`를 **import**한다 —
+"전부 PASS일 때만 PASS, 그 외 UNKNOWN"이 이미 거기 있고, 두 번째 판정 어휘가
+바로 20라운드가 지적한 중복이다.
+
+`PROVEN_BY`가 obligation마다 **증명 기제**를 기록한다(`mutation` 또는
+`acceptance:<테스트명>`). PASS가 두 가지 뜻을 갖지 않게 한다.
+
+`reviewer.assignment.frozen`은 E2E 단계를 추가해 실제로 닫았다 — **미선언
+reviewer_id를 CLI로 제출**하고 거부를 요구한다. 검사를 아무것도 실행하지 않으면
+없는 검사와 구별되지 않는다(단계 6과 같은 형태, 필드 하나 옆).
+
+### B. `e2e` 세 모드, 파이프라인은 하나
+
+| 모드 | 성공 | 전제 |
+|---|---|---|
+| `--offline-smoke` | 0 또는 2 | 없음 |
+| `--release` | **오직 0** | launcher + closure receipt |
+| `--primary` | 0 | release 통과 후 |
+
+세 진입점은 `RunSpec`만 다르고 **같은 `run_pipeline(spec)`을 호출**한다. 세
+파이프라인이면 서로 드리프트한다 — 동결 결정(2026-07-28 §3, 필수 테스트 #7:
+스모크·본 실행·재실행이 동일 builder)의 요구다.
+
+전제가 없으면 **전부 열거**한다. 하나씩 알려주면 고치고 다시 돌려 다음을
+발견하게 되고, 출력이 실제 부족분을 축소해 말한다.
+
+### C. Reviewer Launcher — 이번 라운드의 본체
+
+`reviewer_runner.py`. **새로 설계하지 않고 두 선례를 조합했다**:
+
+- public-only bundle — `.vault-harness/.../build_handoff_reuse_public_bundle.py`의
+  경로 부분 제외 목록과 **symlink 거부**(따라가지 않는다)
+- Seatbelt v2 — `_providers.py`. 그 v1은 충분하다고 믿었으나 `/bin/cat` probe가
+  `~/.claude/projects`와 `~/.codex` 읽힘을 찾았다. **profile 문자열은 주장이고
+  probe가 증거다.**
+
+`seatbelt_profile`은 **추출하지 않고 import**했다. 추출하면
+`run_live_phase_c.py`(EXECUTION)를 고쳐 red-team·qualification 둘 다 무효가
+된다 — 리팩터링 하나에 그 대가를 치를 이유가 없고, 세션 계약("E2E 이후로 파일
+분리 미룸")과도 맞는다.
+
+**receipt는 launcher가 관측해서 만든다.** `produced_by`와 packet·assignment·
+profile 해시에 결속되고, 자기 내용에 대한 `receipt_sha256`을 담는다.
+adjudicator와 doctor는 `verify_isolation_receipt()`를 호출한다 — **reviewer가 낸
+boolean은 더 이상 입력이 아니다.** 손으로 쓴 PASS, 편집된 receipt, 다른 packet에
+결속된 receipt가 전부 거부된다(음성 테스트 12건).
+
+**양방향 probe.** 허용 probe(자기 packet 읽기)가 실패하면 sandbox가 안 도는
+것이므로 **BLOCKED**이지 PASS가 아니다 — 17라운드가 provider red-team에서 닫은
+fail-open과 같은 논리다. 실측: 허용 통과, 금지 4종(answer key, PREREGISTRATION,
+results/, host transcripts) 전부 차단.
+
+### D. `closure` 명령
+
+```bash
+python3 run_pipeline.py closure
+```
+
+calibration → Codex red-team → provider red-team → 전체 hash 재검사 →
+`results/closure_<digest>.json`. **`--release`가 이 receipt를 요구**하므로
+재생성 순서가 규율에서 기제로 옮겨졌다. 19라운드에 그 규율이 실패했고(커밋
+`98c604f`가 `PREREGISTRATION.md` `4d53fccb`와 artifact `4eec976f`로 나갔다),
+내가 보고한 수치는 그 커밋의 상태가 아니었다.
+
+**부수 발견**: 동결면 파일을 변이하면 closure receipt가 무효화돼 release가
+먼저 거부한다 — mutation 신호가 가려진다. 그래서 mutation harness가 워크스페이스
+안에서 `closure`를 다시 돌려 mutant를 **일관된 트리**로 만든다. 그러지 않으면
+모든 release-mode mutation이 "탐지됨"으로 보이지만 실제로는 closure 게이트가
+잡은 것이다 — 최후 방어선에서의 위양성.
+
+### E. canonicalization 1벌 — 잎 모듈
+
+`_receipt.py`(의존 0)에 `receipt_sha256()` 하나. **의존성을 측정하고 결정했다**:
+
+```
+import apply_safety_audit    5,051 us
+import _provenance          19,292 us   (run_live_phase_c를 끌어옴)
+```
+
+`_provenance`에 두고 adjudicator가 import하면 판정 결합기가 `run_smoke`·
+`run_calibration`·`_providers`를 전이적으로 끌어온다 — 14라운드가 이미 명명한
+계층 역전이다. 잎 모듈이 **정본 하나를 만족하면서 그 edge를 만들지 않는 유일한
+배치**다. 주석이 인용했던 없는 테스트도 실제로 만들었다.
+
+### mutation 범위를 제한한다
+
+모든 stage를 mutation으로 증명하려 하면 개발이 mutation harness 개발이 된다
+(리뷰어 지적 채택). 9종만 남기고 나머지는 CLI acceptance test다.
+`freeze.closure.current`는 mutation이 **효과상 no-op**이라 acceptance로 증명한다 —
+유효한 receipt가 있는 트리에서 검사를 지워도 관측이 같다.
+
+`reviewer.isolation.enforced`도 같은 함정을 거쳤다. 처음엔 `elif leaked:`를
+지웠는데 **누출이 없으니 놓칠 누출도 없어** 소스는 바뀌고 동작은 같았다.
+`run_calibration`의 applied-check는 소스 수준 no-op을 잡지만, 이것은 **한 층 더
+깊은 no-op**(적용됐으나 실행되지 않는 경로)이다. 그래서 profile을
+`(allow default)`로 바꿔 **누출을 실제로 발생시키는** 변이로 교체했다.
+
+### 완료 상태 (closure 이후 측정)
+
+```
+e2e --release   exit 0     obligations 10/10 PASS, obligations_unknown []
+e2e --offline   exit 0
+doctor          exit 1     qualification 2종 stale — 실제 남은 상태
+tests           256 passed / 2 skipped (이 환경)
+closure receipt closure_2186b3886b68
+```
+
+**EXECUTION 층은 이 개정 이전까지 무변경이었다** — 단계 A~E 전부가 AUDIT 층
+안에서 끝났고, 이는 Amendment 40의 층 분리가 처음으로 값을 낸 사례다. 이
+문단(PREREGISTRATION)이 EXECUTION이므로 그 뒤 closure가 재실행됐다.
+
+### 남은 것
+
+| 항목 | 상태 |
+|---|---|
+| live canary (1 case × 1 arm) | **다음.** 32칸 확장 전에 수직 경로를 실제 provider로 통과시킨다 |
+| qualification 2종 | stale. doctor가 `exit 1`로 말한다 |
+| red-team의 실행 환경 결속 | 미구현 |
+| `metrics.py`·`experiment_data.py`·`sandbox.py` 추출 | primary 이후 |
