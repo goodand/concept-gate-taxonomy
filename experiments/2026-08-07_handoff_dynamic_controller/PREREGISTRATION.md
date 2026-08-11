@@ -2408,8 +2408,8 @@ import _provenance          19,292 us   (run_live_phase_c를 끌어옴)
 ### 완료 상태 (closure 이후 측정)
 
 ```
-e2e --release   exit 0     obligations 10/10 PASS, obligations_unknown []
-e2e --offline   exit 0
+e2e --release   exit 0     의무 11/11, effective_unknown []
+e2e --offline   exit 2     PARTIAL (reviewer 미실행 — 정직한 상태)
 doctor          exit 1     qualification 2종 stale — 실제 남은 상태
 tests           256 passed / 2 skipped (이 환경)
 closure receipt closure_2186b3886b68
