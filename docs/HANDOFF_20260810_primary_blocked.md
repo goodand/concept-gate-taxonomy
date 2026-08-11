@@ -726,7 +726,16 @@ Amendment 37/38에서 추가·변경된 것:
 현행 두 개만 링크한다:
 
 - [`closure_5f5f37c4e53e.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_5f5f37c4e53e.json)
-- [`release_607419c6cd99.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_607419c6cd99.json)
+- [`release_c525664cbe88.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_c525664cbe88.json) —
+  **clean 트리에서 나온 첫 receipt** (`git_dirty: false`, commit `20c54cc`,
+  의무 11/11 pass, closure `5f5f37c4e53e`). 앞선 것들은 커밋 전에 돌아
+  `git_dirty: true`이고 부모 커밋을 가리킨다
+
+**release receipt는 자기 자신을 담은 커밋을 가리킬 수 없다.** clean 트리에서
+release를 돌리면 트리에 없던 파일이 하나 생기고, 그것을 커밋하면 commit 해시가
+또 바뀐다. 링크된 receipt는 **직전 커밋 상태**를 증언하며, 그 이상을 주장하지
+않는다. 재현하려면 `e2e --release`를 다시 돌려 새 receipt를 이전 것과 비교하라 —
+`exit`·`obligations`·`closure_digest`가 같아야 하고 `git_commit`만 달라야 한다.
 
 **대체된 receipt는 링크하지 않는다. 그것이 의도다.** AUDIT 표면을 고칠 때마다
 closure receipt가 낡으므로 이번 라운드에 여러 번 돌았고 — "closure는 마지막에"가
