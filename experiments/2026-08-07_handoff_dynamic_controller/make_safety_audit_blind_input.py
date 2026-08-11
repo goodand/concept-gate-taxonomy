@@ -265,10 +265,18 @@ def build(result_path: Path, *, spec: dict | None = None) -> dict:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) != 2:
+    # Optional second argument: an output root. Exists so the offline E2E
+    # harness can drive THIS function -- the production entry point -- into a
+    # temp directory instead of reimplementing it. Precedent: the frozen
+    # decision "canonical builder -- the only permitted path" and its required
+    # test #7, "smoke, real run and re-run all use the same builder function"
+    # (DESIGN_DECISION_surface_separation.md, 2026-07-28). An E2E that calls
+    # anything other than this function proves nothing about this function.
+    if not 2 <= len(argv) <= 3:
         print(__doc__, file=sys.stderr)
         return 2
     result_path = Path(argv[1])
+    out_root = Path(argv[2]) if len(argv) == 3 else HERE
     if not result_path.is_file():
         print(f"no such result file: {result_path}", file=sys.stderr)
         return 2
@@ -287,9 +295,9 @@ def main(argv: list[str]) -> int:
     # workspace -- it would find the key, the original result, the automatic
     # scores, and any earlier labels. Blinding has to be a property of what
     # the reviewer can reach, not of what we intended to send.
-    workspace = HERE / "audit_workspace" / stem
+    workspace = out_root / "audit_workspace" / stem
     packet_path = workspace / "packet.json"
-    key_path = HERE / "results" / f"safety_audit_key_{stem}.json"
+    key_path = out_root / "results" / f"safety_audit_key_{stem}.json"
     if workspace.exists():
         print(f"refusing to overwrite existing workspace: {workspace}",
               file=sys.stderr)
@@ -301,6 +309,7 @@ def main(argv: list[str]) -> int:
         return 2
 
     workspace.mkdir(parents=True)
+    key_path.parent.mkdir(parents=True, exist_ok=True)
     packet_path.write_bytes(out["packet_bytes"])
     key_path.write_text(json.dumps(out["key"], ensure_ascii=False, indent=1),
                         encoding="utf-8")

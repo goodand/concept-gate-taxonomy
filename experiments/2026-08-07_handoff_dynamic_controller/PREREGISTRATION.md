@@ -1828,3 +1828,84 @@ execution surface(`_evaluator.py`, `run_live_phase_c.py`, `test_protocol.py`)가
 바뀌었다. **red-team 2종과 qualification 2종은 stale이다** — 재calibration →
 red-team → qualification → authorization 순서를 다시 밟는다. 다음부터는 감사
 전용 수정이 이 대가를 요구하지 않는다.
+
+## Amendment 37 — 2026-08-11, 16라운드: 개별 결함을 고치는 대신 파이프라인을 검증한다
+
+**계기 — 방법의 오류.** 12~15라운드가 같은 모양의 결함을 반복해서 찾았다:
+검사가 있는데 배선이 안 됨, 문서가 코드에 없는 계약을 가르침, 게이트가 실행
+불가라서 통과함. 나는 그때마다 **개별 수정**을 했다. 그것이 틀렸다. 다섯 번의
+반복은 서로 다른 다섯 개의 실수가 아니라, **전 경로를 한 번에 실행하는 것이
+없다**는 하나의 사실이었다. 단계와 단계 **사이**의 공백은 사람이 코드를 읽기
+전까지 보이지 않았다.
+
+사용자 지적: *"오류가 계속 반복된다면 코드를 새로 쓰기보다 기존 선례를 찾게
+했어야 했다. workspace를 먼저 찾고, 못 찾으면 web search라도. 또는 전체
+파이프라인의 문제일 수 있다 — 간단한 파이프라인으로 E2E를 빠르게 하고
+확장했어야 했다."* 둘 다 맞다.
+
+**선례를 찾았다 — 새로 설계할 것이 아니었다.** vault 검색이
+[`DESIGN_DECISION_surface_separation.md`](../../../concept-gate-e2.2-wt/experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/DESIGN_DECISION_surface_separation.md)
+(2026-07-28, **동결**)를 반환했다. §3이 **canonical builder — 유일 허용 경로**를
+이미 정하고 있고, 필수 테스트 #7이 *"스모크·본 실행·재실행이 모두 동일 builder
+함수를 사용"*을 요구한다. web search는 불필요했다. 이번에 만든 것은 그 규칙을
+payload builder에서 **파이프라인 전체로 확장**한 것이다.
+
+### `run_pipeline.py` — 단일 진입점
+
+```bash
+python3 run_pipeline.py doctor          # 모든 게이트 상태, 부작용 없음
+python3 run_pipeline.py e2e --offline   # 전 경로를 임시 디렉터리에서, provider 없이
+```
+
+`e2e --offline`은 **production 진입점을 호출한다**(사본이 아니라). primary
+artifact → 감사 입력 게이트(음성 3종 포함) → packet(실제 CLI) → 블라인딩 →
+판정자 자격 → 라벨 → adjudication → 최종 번들. provider 호출 0, 시도 소모 0,
+**0.0초**.
+
+**첫 실행에서 바로 공백을 하나 찾았다**: 참조 trace에 `recommended_actions`가
+없어 32칸 전부 `not_applicable`이 되고 **최종 번들에 안전 판정이 아예 없었다.**
+정직한 동작이지만, 그 아래 단계들이 한 번도 실행된 적 없었다는 뜻이다. 이것이
+E2E가 리뷰보다 먼저 잡는 종류다.
+
+### red-team의 fail-open을 닫는다 (16라운드 #1)
+
+`leak = reachable and not expected_reachable`이었다. **도달 가능해야 하는
+probe가 막힌 경우는 실패로 계산되지 않았고**, sandbox가 아예 실행 안 되는
+환경(모든 probe가 `Operation not permitted`)에서 leak 0으로 **PASS**했다.
+같은 환경에서 Seatbelt 테스트 6건은 실패한다.
+
+이제 `expected_reachable_but_blocked`를 세고 `conclusive`/`status`를 기록한다.
+게이트 3값 어휘와 같다 — 실행하지 못한 red-team은 통과도 실패도 아닌
+**`BLOCKED`**이며, `hardened_profile_passed`는 False라 readiness가 계속 거부한다.
+Codex MCP red-team에도 같은 필드를 넣어 doctor가 양쪽을 같은 방식으로 읽는다.
+
+### 층 분리가 **실제 변경 단위**에서 무너지던 것을 고친다 (15라운드 #6)
+
+리뷰어가 예측했고, `run_pipeline.py`를 추가하다가 **실측됐다**: 감사 파일 하나를
+추가하려면 목록을 가진 `_evaluator.py`와 감사 테스트를 가진 `test_protocol.py`를
+고쳐야 하는데 **둘 다 execution surface**라, doctor가 양쪽 red-team을 stale로
+찍었다. 층 분리의 이득이 0이었다.
+
+원인을 제거했다:
+
+- 두 목록을 **데이터 파일**로: `frozen_surface_execution.json`(41) /
+  `frozen_surface_audit.json`(13)
+- 감사 테스트를 **`test_safety_audit.py`**로 분리(audit layer)
+- 감사 전용 개정은 **`SAFETY_AUDIT_CHANGELOG.md`**(audit layer)에. 이 문서
+  (PREREGISTRATION)는 execution surface라 여기 적으면 재무효화가 다시 발생한다
+
+실측 — 현실적인 감사 변경 번들 3파일(rubric + 감사 테스트 + 감사 목록):
+
+```
+execution drift: []
+audit drift    : ['SAFETY_AUDIT_RUBRIC.md', 'frozen_surface_audit.json',
+                  'test_safety_audit.py']
+provider red-team 유효: True
+```
+
+### 이 개정이 무효화하는 것
+
+`_evaluator.py`·`test_protocol.py`·red-team 2종이 바뀌었으므로 execution
+surface 변경이다. calibration → red-team 2종을 이 순서로 재실행했고 전부
+통과했다(doctor 7 pass / 0 fail / 1 blocked, blocked는 판정자 미배정).
+**qualification 2종은 여전히 stale이며 그것이 다음 단계다.**

@@ -1,0 +1,20 @@
+{
+ "layer": "audit",
+ "why": "These govern how the manual safety audit is conducted. They are result-affecting -- the audit is the only route by which a safety judgement reaches a headline -- but editing the audit rubric has no causal path to whether a provider was isolated during a pilot that already ran. Editing this list does NOT invalidate provider evidence.",
+ "kept_separate_because": "Amendment 37: the lists used to live in _evaluator.py, so adding one audit file forced an execution-layer edit and the split saved nothing. Measured, not predicted -- it happened while adding run_pipeline.py.",
+ "files": [
+  "SAFETY_AUDIT_CHANGELOG.md",
+  "SAFETY_AUDIT_RUBRIC.md",
+  "apply_safety_audit.py",
+  "frozen_surface_audit.json",
+  "make_safety_audit_blind_input.py",
+  "measure_s1_recall.py",
+  "run_pipeline.py",
+  "s1_recall_fixture.json",
+  "safety_audit_authorities.json",
+  "safety_audit_reviewer_assignment.json",
+  "safety_audit_rubric_fixture.json",
+  "safety_audit_spec.json",
+  "test_safety_audit.py"
+ ]
+}

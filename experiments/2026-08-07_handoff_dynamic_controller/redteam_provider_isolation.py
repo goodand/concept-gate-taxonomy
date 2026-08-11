@@ -158,11 +158,34 @@ def main() -> int:
     leaks = [f for f in findings if f["leak"]]
     hardened_leaks = [f for f in leaks
                       if f["q"].endswith("/v2") or "/" not in f["q"]]
+
+    # FAIL-OPEN CLOSED (independent review round 16). `leak` is
+    # `reachable and not expected_reachable`, so a probe that was SUPPOSED to
+    # succeed and instead failed produced no leak and no failure -- and an
+    # environment where the sandbox cannot run at all (every probe returning
+    # "sandbox_apply: Operation not permitted") reported 0 leaks and PASSED.
+    # Measured: that is exactly what this sandbox does, while the Seatbelt
+    # tests in test_protocol.py fail. A red-team that cannot execute has not
+    # cleared the provider; it has learned nothing.
+    #
+    # Three-value vocabulary, same as the merge gates: this is BLOCKED, which
+    # is neither pass nor fail. `hardened_profile_passed` is False whenever
+    # the run was not conclusive, so the readiness gate keeps refusing.
+    unreachable_expected = [f for f in findings
+                            if f["expected_reachable"] and not f["reachable"]]
+    conclusive = not unreachable_expected
     out = {
         "n_probes": len(findings),
         "leaks": leaks,
         "hardened_profile_leaks": hardened_leaks,
-        "hardened_profile_passed": not hardened_leaks,
+        # A probe that should have been reachable and was not means the
+        # harness could not exercise the boundary it is testing.
+        "expected_reachable_but_blocked": unreachable_expected,
+        "conclusive": conclusive,
+        "status": ("PASS" if conclusive and not hardened_leaks
+                   else "BLOCKED" if conclusive is False and not hardened_leaks
+                   else "FAIL"),
+        "hardened_profile_passed": conclusive and not hardened_leaks,
         "frozen_surface_hashes": frozen_surface_hashes(),
         "findings": findings,
     }
@@ -173,6 +196,13 @@ def main() -> int:
           f"results/redteam_provider_isolation.json")
     for f in leaks:
         print(f"  LEAK {f['q']} {f['probe']}")
+    if not conclusive:
+        print(f"\nBLOCKED: {len(unreachable_expected)} probe(s) that MUST be "
+              "reachable were not -- the sandbox could not be exercised here. "
+              "This is not a pass.")
+        for f in unreachable_expected:
+            print(f"  BLOCKED {f['q']} {f['probe']}")
+    print(f"status: {out['status']}")
     return 1 if hardened_leaks else 0
 
 

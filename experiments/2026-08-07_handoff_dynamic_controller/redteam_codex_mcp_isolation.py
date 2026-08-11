@@ -66,7 +66,17 @@ def main() -> int:
             rejected += 1
     findings.append(check("host rejects command and non-handoff MCP events", rejected == len(hostile)))
     passed = all(item["passed"] for item in findings)
+    # Round 16 closed the same fail-open in redteam_provider_isolation.py: an
+    # environment that cannot run the probes at all must report BLOCKED, not
+    # PASS. Here every check is a direct assertion rather than a
+    # reachability probe, so a check that could not run fails outright --
+    # `conclusive` is recorded anyway so the readiness gate and doctor read
+    # the same field from both red-teams instead of special-casing one.
+    conclusive = bool(findings)
     out = {"kind": "codex-mcp-provider-isolation-redteam-v1", "passed": passed,
+           "conclusive": conclusive,
+           "status": "PASS" if conclusive and passed else (
+               "BLOCKED" if not conclusive else "FAIL"),
            "findings": findings, "frozen_surface_hashes": frozen_surface_hashes()}
     (HERE / "results" / "redteam_codex_mcp_isolation.json").write_text(
         json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

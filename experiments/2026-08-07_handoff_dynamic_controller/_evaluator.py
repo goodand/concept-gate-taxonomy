@@ -498,78 +498,26 @@ JUDGE_SOURCES = ("_evaluator.py", "_contract.py")
 # A passed calibration is meaningful only for the exact evaluator, controller,
 # corpus, and hidden labels it exercised. Generated result files are
 # observations, not experiment inputs, so they are intentionally excluded.
-EXECUTION_SURFACE_FILES = (
-    "PREREGISTRATION.md",
-    "_contract.py",
-    "_controllers.py",
-    "_evaluator.py",
-    "_runner.py",
-    "build_corpus.py",
-    "build_live_public_bundle.py",
-    "live_subject_mcp.py",
-    "live_subject_tool.py",
-    "live_subject_response.schema.json",
-    "retrieval_subagent_response.schema.json",
-    "_providers.py",
-    "phase_c_claude_config.json",
-    "phase_c_claude_mcp_surface_config.json",
-    "phase_c_claude_mcp_surface_v2_config.json",
-    "phase_c_claude_mcp_surface_v3_config.json",
-    "phase_c_codex_mcp_config.json",
-    "phase_c_codex_mcp_v2_config.json",
-    "phase_c_codex_mcp_v3_config.json",
-    "phase_c_codex_mcp_v4_config.json",
-    "phase_c_codex_mcp_v5_config.json",
-    "phase_c_codex_mcp_v6_config.json",
-    "phase_c_codex_mcp_v7_config.json",
-    "phase_c_codex_mcp_v8_config.json",
-    "phase_c_codex_mcp_v9_config.json",
-    "phase_c_codex_v2_config.json",
-    "phase_c_live_config.json",
-    "redteam_provider_isolation.py",
-    "redteam_codex_mcp_isolation.py",
-    "run_calibration.py",
-    "run_live_phase_c.py",
-    "run_smoke.py",
-    "test_protocol.py",
-    "test_live_phase_c.py",
-    "test_live_phase_c_claude.py",
-    "test_codex_mcp_provider.py",
-    "test_preprimary_gates.py",
-    "public_cases/cases.json",
-    "hidden_gold/gold.json",
-    "corpus_manifest.json",
-)
+# Amendment 37: the two surface lists live in DATA files, not here.
+#
+# They were tuples in this module, which meant adding one audit file required
+# editing `_evaluator.py` -- execution surface -- so an audit-only change still
+# invalidated provider qualification and the two-layer split saved nothing.
+# That was not a prediction; it happened while adding run_pipeline.py, and the
+# doctor printed both red-teams stale on `_evaluator.py`.
+#
+# EXECUTION: change one and the run MEANS something different or EXECUTES
+# differently. Invalidates red-team, qualification, authorization.
+# AUDIT: how the manual safety audit is conducted. Result-affecting, but with
+# no causal path to whether a provider was isolated during a pilot that has
+# already run. Does NOT invalidate provider evidence.
+def _surface_list(name: str) -> tuple[str, ...]:
+    return tuple(json.loads((HERE / name).read_text(encoding="utf-8"))["files"])
 
-# Amendment 36 (independent review round 15): the audit surface is pinned just
-# as tightly, but SEPARATELY.
-#
-# Everything above changes what a run MEANS or how it EXECUTES: change one and
-# the provider's isolation evidence, its qualification pilot, and the
-# authorization built on them are all describing a different experiment.
-#
-# The files below govern how the manual safety audit is conducted. They are
-# result-affecting -- the audit is the only route by which a safety judgement
-# reaches a headline -- but editing the audit's rubric has no causal path to
-# whether a provider was isolated during a pilot that already ran. Folding
-# them into one hash set made every audit fix invalidate paid provider
-# qualification, which is a standing pressure NOT to fix the audit. Measured
-# this session: three consecutive audit-only corrections each required a full
-# requalification sequence.
-#
-# Both layers are pinned; they simply answer different questions. See
-# `surface_drift_by_layer`.
-AUDIT_SURFACE_FILES = (
-    "SAFETY_AUDIT_RUBRIC.md",
-    "safety_audit_spec.json",
-    "safety_audit_authorities.json",
-    "safety_audit_reviewer_assignment.json",
-    "safety_audit_rubric_fixture.json",
-    "make_safety_audit_blind_input.py",
-    "apply_safety_audit.py",
-    "measure_s1_recall.py",
-    "s1_recall_fixture.json",
-)
+
+EXECUTION_SURFACE_FILES = _surface_list("frozen_surface_execution.json")
+AUDIT_SURFACE_FILES = _surface_list("frozen_surface_audit.json")
+
 
 # Kept as the union so every existing pin, artifact, and drift check continues
 # to cover BOTH layers -- narrowing what gets hashed is not the change here.
