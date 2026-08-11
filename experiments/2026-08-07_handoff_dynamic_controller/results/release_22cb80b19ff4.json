@@ -1,0 +1,25 @@
+{
+ "kind": "release-run-receipt-v1",
+ "mode": "release",
+ "exit": "PASS",
+ "closure_digest": "f9537e3ca4527c156548248820a2121c70d27f7520844d8197d6d4598e6d2e6e",
+ "obligations": {
+  "audit.input-validated": "pass",
+  "audit.provenance.bytes-compared": "pass",
+  "audit.provenance.propagated": "pass",
+  "packet.blinding.applied": "pass",
+  "reviewer.qualification.required": "pass",
+  "reviewer.assignment.frozen": "pass",
+  "reviewer.count.enforced": "pass",
+  "bundle.written.to.disk": "pass",
+  "reviewer.isolation.enforced": "pass",
+  "freeze.closure.current": "pass"
+ },
+ "git_commit": "3dd60a32039fa2a9c0029b1e189e3d83e0cbe2cb",
+ "git_dirty": true,
+ "python": "3.13.13",
+ "platform": "Darwin 25.5.0",
+ "sandbox_available": true,
+ "tests_not_recorded_why": "a pytest summary would require this command to run the suite that runs this command; read it from the commit's own gate output",
+ "receipt_sha256": "22cb80b19ff48833d397ec7e258bf141ac71d26a2f3defee9f548b3a6cc6173d"
+}
