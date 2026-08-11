@@ -2307,21 +2307,38 @@ reviewer_id를 CLI로 제출**하고 거부를 요구한다. 검사를 아무것
   `~/.claude/projects`와 `~/.codex` 읽힘을 찾았다. **profile 문자열은 주장이고
   probe가 증거다.**
 
-`seatbelt_profile`은 **추출하지 않고 import**했다. 추출하면
+profile은 **추출하지 않고 import**했다. 추출하면
 `run_live_phase_c.py`(EXECUTION)를 고쳐 red-team·qualification 둘 다 무효가
 된다 — 리팩터링 하나에 그 대가를 치를 이유가 없고, 세션 계약("E2E 이후로 파일
 분리 미룸")과도 맞는다.
 
-**receipt는 launcher가 관측해서 만든다.** `produced_by`와 packet·assignment·
-profile 해시에 결속되고, 자기 내용에 대한 `receipt_sha256`을 담는다.
-adjudicator와 doctor는 `verify_isolation_receipt()`를 호출한다 — **reviewer가 낸
-boolean은 더 이상 입력이 아니다.** 손으로 쓴 PASS, 편집된 receipt, 다른 packet에
-결속된 receipt가 전부 거부된다(음성 테스트 12건).
+**receipt는 launcher가 관측해서 만든다.** packet·assignment·profile 해시에
+결속되고, **host-only key로 HMAC 서명된다**(`_receipt.sign`). adjudicator와
+doctor는 `verify_isolation_receipt()`를 호출한다 — **reviewer가 낸 boolean은 더
+이상 입력이 아니다.**
 
 **양방향 probe.** 허용 probe(자기 packet 읽기)가 실패하면 sandbox가 안 도는
 것이므로 **BLOCKED**이지 PASS가 아니다 — 17라운드가 provider red-team에서 닫은
-fail-open과 같은 논리다. 실측: 허용 통과, 금지 4종(answer key, PREREGISTRATION,
-results/, host transcripts) 전부 차단.
+fail-open과 같은 논리다.
+
+> **21라운드 개정(Amendment 42).** 위 두 단락은 원래 각각 `produced_by` 문자열과
+> 공개 `receipt_sha256`, 그리고 금지 probe 4종(answer key, PREREGISTRATION,
+> `results/`, host transcripts) "전부 차단"을 기록했다. **둘 다 틀렸다.**
+>
+> - `produced_by`는 호출자가 타이핑하는 문자열이고 `receipt_sha256`은 공개
+>   입력에 대한 공개 함수다. 필드를 채우고 같은 함수를 부르면 **launcher를 한
+>   번도 실행하지 않은 문서가 PASS로 검증됐다** — 재현됨. 그래서 HMAC으로
+>   바꿨다. **막는 것과 못 막는 것**은 `_receipt.sign`이 정본이다: sandbox 안의
+>   reviewer와 손으로 쓴 문서는 막고, host 파일시스템 접근 주체는 막지 못한다.
+> - `results/`와 host transcripts는 **디렉터리**였고 `/bin/cat`은 디렉터리에
+>   대해 sandbox와 무관하게 실패한다. 즉 두 probe는 deny가 0건인
+>   `(allow default)`에서도 `ok`로 보고됐다 — **sandbox를 측정하지 않았다.**
+>   이제 probe 대상은 전부 파일이며, 각 probe는 먼저 permissive 통제
+>   프로파일에서 도달 가능함을 보여야 한다. 통제가 실패하면 그 probe는
+>   **BLOCKED**이고, BLOCKED가 하나라도 있으면 실행 전체가 PASS가 아니다.
+> - 위 §의 "Seatbelt v2" 인용도 **문장만 옮겨왔고 코드는 v1을 불렀다.**
+>   `_providers.seatbelt_profile_v2`로 교체했고, v1이 host transcript를 누출하고
+>   v2가 차단하는 **대조 테스트**를 넣어 "v2를 쓴다"를 반증 가능하게 만들었다.
 
 ### D. `closure` 명령
 

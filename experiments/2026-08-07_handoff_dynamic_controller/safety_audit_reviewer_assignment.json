@@ -7,13 +7,16 @@
    "the reviewer_id on a label file was declared before any label was seen",
    "no id appears twice",
    "at least min_distinct_reviewer_ids (from safety_audit_spec.json) submitted",
-   "the labels are bound to this assignment by its sha256"
+   "the labels are bound to this assignment by its sha256",
+   "that an AGENT reviewer launched by reviewer_runner.py ran under a Seatbelt v2 profile, that four forbidden FILES were probed with /bin/cat and denied, that each of those probes was first shown to succeed under a permissive control profile (a probe that cannot reach its target under (allow default) measures nothing), and that the resulting receipt is HMAC-signed with a host-only key the reviewer's profile denies"
   ],
   "NOT_machine_verified": [
    "that two declared ids are two different PEOPLE",
    "that the reviewers did not confer",
    "that a reviewer did not see the automatic scores by other means",
-   "that an AGENT reviewer could not read the repository (no sandboxed launcher exists yet -- doctor reports this as BLOCKED once an agent reviewer is declared; see SAFETY_AUDIT_RUBRIC.md)"
+   "that a HUMAN reviewer's workspace was restricted at all -- reviewer_runner.py confines processes, not people",
+   "that the probed set is exhaustive: four paths were shown unreachable, which is not the same as 'nothing was reachable'",
+   "that a party with host filesystem access could not forge a receipt -- the HMAC key is a file on this host. It defends against the sandboxed reviewer and against a hand-authored document, and nothing more"
   ],
   "consequence": "Report this audit as 'two distinct reviewer IDs, independence procedural'. Do NOT report it as 'two independent reviewers' -- that is a claim about people, and nothing here establishes it."
  },
