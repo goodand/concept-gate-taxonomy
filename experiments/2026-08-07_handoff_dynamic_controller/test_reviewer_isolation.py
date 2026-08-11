@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -355,3 +356,140 @@ def test_assert_reachable_workspace_refuses_a_denied_path_directly():
     # And the positive direction, so a guard that refuses everything fails here.
     outside = Path("/tmp") / "cg-reviewer-positive"
     assert rr.assert_reachable_workspace(outside) == outside
+
+
+# ---- #3: the launcher must actually RUN the reviewer -----------------------
+# Round 21, finding #3: `run_reviewer(command=...)` called subprocess.run and
+# THREW THE RESULT AWAY. The release E2E passed no command at all, and the
+# "reviewer labels" in it were written by the E2E from the answer key. So the
+# component was a sandbox probe runner wearing a launcher's name, and nothing
+# downstream could tell.
+
+FIXTURE = HERE / "safety_audit_rubric_fixture.json"
+ANSWERS = HERE / "safety_audit_rubric_answers.json"
+
+
+def _fake_reviewer(tmp_path, payload: str, *, exit_code: int = 0) -> list[str]:
+    """A reviewer that prints `payload` on stdout. Stands in for an agent CLI.
+
+    The adapter must not care what produced the JSON -- that is the point of a
+    schema at a trust boundary.
+    """
+    script = tmp_path / "fake_reviewer.py"
+    script.write_text(
+        "import sys\n"
+        f"sys.stdout.write({payload!r})\n"
+        f"sys.exit({exit_code})\n", encoding="utf-8")
+    return [sys.executable, str(script)]
+
+
+def _good_output(blind_ids) -> str:
+    answers = json.loads(ANSWERS.read_text(encoding="utf-8"))["answers"]
+    return json.dumps({"qualification": answers,
+                       "labels": {b: "MENTION" for b in blind_ids}})
+
+
+@pytest.fixture
+def packet_bundle(tmp_path):
+    """A bundle whose packet has two blind ids, like a real one."""
+    packet = tmp_path / "packet.json"
+    packet.write_text(json.dumps(
+        {"reviewer_packet": [{"blind_id": "R0000"}, {"blind_id": "R0001"}]}),
+        encoding="utf-8")
+    return rr.build_reviewer_bundle(packet, tmp_path / "bundle")
+
+
+def test_a_reviewers_output_becomes_a_label_artifact(packet_bundle, tmp_path):
+    """The positive path. Without it, refusing everything would look correct."""
+    _skip_without_sandbox()
+    command = _fake_reviewer(tmp_path, _good_output(["R0000", "R0001"]))
+    doc = rr.run_reviewer(packet_bundle, "e2e-A", command=command,
+                          assignment=ASSIGNMENT, labels_out=tmp_path / "labels.json")
+    assert doc["status"] == "PASS", doc
+    labels = json.loads((tmp_path / "labels.json").read_text(encoding="utf-8"))
+    # Exactly the shape apply_safety_audit reads -- bound to packet, assignment
+    # and the frozen qualification fixture.
+    assert labels["reviewer_id"] == "e2e-A"
+    assert labels["packet_sha256"] == rr._sha256(packet_bundle)
+    assert labels["assignment_sha256"] == rr._sha256(ASSIGNMENT)
+    assert labels["fixture_sha256"] == rr._sha256(FIXTURE)
+    assert set(labels["labels"]) == {"R0000", "R0001"}
+    # And the receipt binds what ran to what came out.
+    assert doc["reviewer_command_sha256"] and doc["reviewer_output_sha256"]
+
+
+def test_a_reviewer_that_emits_garbage_is_refused(packet_bundle, tmp_path):
+    _skip_without_sandbox()
+    command = _fake_reviewer(tmp_path, "I am a helpful assistant!")
+    with pytest.raises(rr.ReviewerRunnerError, match="not JSON"):
+        rr.run_reviewer(packet_bundle, "e2e-A", command=command,
+                        assignment=ASSIGNMENT, labels_out=tmp_path / "labels.json")
+    assert not (tmp_path / "labels.json").exists(), (
+        "a label artifact was written from unparseable output")
+
+
+def test_a_reviewer_output_missing_labels_is_refused(packet_bundle, tmp_path):
+    _skip_without_sandbox()
+    answers = json.loads(ANSWERS.read_text(encoding="utf-8"))["answers"]
+    command = _fake_reviewer(tmp_path, json.dumps({"qualification": answers}))
+    with pytest.raises(rr.ReviewerRunnerError, match="labels"):
+        rr.run_reviewer(packet_bundle, "e2e-A", command=command,
+                        assignment=ASSIGNMENT, labels_out=tmp_path / "labels.json")
+
+
+def test_labels_for_ids_outside_the_packet_are_refused(packet_bundle, tmp_path):
+    """The adjudicator already refuses a mismatched id set. Catching it HERE
+    means the launcher does not hand on an artifact it knows is wrong."""
+    _skip_without_sandbox()
+    command = _fake_reviewer(tmp_path, _good_output(["R0000", "R9999"]))
+    with pytest.raises(rr.ReviewerRunnerError, match="do not match the packet"):
+        rr.run_reviewer(packet_bundle, "e2e-A", command=command,
+                        assignment=ASSIGNMENT, labels_out=tmp_path / "labels.json")
+
+
+def test_a_label_outside_the_rubric_is_refused(packet_bundle, tmp_path):
+    _skip_without_sandbox()
+    answers = json.loads(ANSWERS.read_text(encoding="utf-8"))["answers"]
+    command = _fake_reviewer(tmp_path, json.dumps(
+        {"qualification": answers,
+         "labels": {"R0000": "PROBABLY_FINE", "R0001": "MENTION"}}))
+    with pytest.raises(rr.ReviewerRunnerError, match="outside the rubric"):
+        rr.run_reviewer(packet_bundle, "e2e-A", command=command,
+                        assignment=ASSIGNMENT, labels_out=tmp_path / "labels.json")
+
+
+def test_a_reviewer_that_exits_nonzero_is_blocked(packet_bundle, tmp_path):
+    """It did not fail the boundary and it did not pass -- it did not run."""
+    _skip_without_sandbox()
+    command = _fake_reviewer(tmp_path, _good_output(["R0000", "R0001"]),
+                             exit_code=3)
+    with pytest.raises(rr.ReviewerRunnerError, match="exited 3"):
+        rr.run_reviewer(packet_bundle, "e2e-A", command=command,
+                        assignment=ASSIGNMENT, labels_out=tmp_path / "labels.json")
+
+
+def test_the_receipt_binding_covers_the_reviewer_output(packet_bundle, tmp_path):
+    """Editing the labels after the fact must invalidate the receipt, or the
+    receipt attests to a run whose output nobody can still identify."""
+    _skip_without_sandbox()
+    command = _fake_reviewer(tmp_path, _good_output(["R0000", "R0001"]))
+    doc = rr.run_reviewer(packet_bundle, "e2e-A", command=command,
+                          assignment=ASSIGNMENT, labels_out=tmp_path / "labels.json")
+    tampered = {**doc, "reviewer_output_sha256": "0" * 64}
+    with pytest.raises(rr.ReviewerRunnerError, match="signature"):
+        rr.verify_isolation_receipt(tampered, packet=packet_bundle,
+                                    assignment=ASSIGNMENT)
+
+
+def test_a_probe_only_run_says_so_rather_than_implying_a_reviewer_ran():
+    """`command=None` is legitimate -- the release E2E asks only whether the
+    boundary holds. It must not be indistinguishable from a run that produced
+    labels, which is how finding #3 stayed invisible."""
+    _skip_without_sandbox()
+    packet = Path(tempfile.mkdtemp()) / "packet.json"
+    packet.write_text(json.dumps({"reviewer_packet": [{"blind_id": "R0000"}]}),
+                      encoding="utf-8")
+    bundled = rr.build_reviewer_bundle(packet, packet.parent / "b")
+    doc = rr.run_reviewer(bundled, "probe-only", assignment=ASSIGNMENT)
+    assert doc["reviewer_command_sha256"] is None
+    assert doc["reviewer_output_sha256"] is None

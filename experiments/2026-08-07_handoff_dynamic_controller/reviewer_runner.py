@@ -73,7 +73,11 @@ from _receipt import load_or_create_key, sign, verify  # noqa: E402
 # `run_live_phase_c.py` already imports it from here. Importing a file does not
 # change it, so this whole fix stays inside the AUDIT layer at zero
 # qualification cost.
-from _providers import home_leak_denies, seatbelt_profile_v2  # noqa: E402
+from _providers import (  # noqa: E402
+    ProviderError, home_leak_denies, seatbelt_profile_v2,
+    validate_against_schema)
+# VALID_LABELS is the rubric's own vocabulary; the adjudicator owns it.
+from apply_safety_audit import VALID_LABELS  # noqa: E402
 
 SANDBOX = Path("/usr/bin/sandbox-exec")
 CAT = Path("/bin/cat")
@@ -118,6 +122,12 @@ class IsolationReceipt:
     sandbox_profile_sha256: str
     allowed_probe_passed: bool
     forbidden_probes: tuple[dict, ...]
+    # None on a probe-only run. Round 21, finding #3: without these a receipt
+    # from `command=None` was indistinguishable from one where a reviewer
+    # actually produced labels, which is how a launcher that ran nothing looked
+    # like a launcher.
+    reviewer_command_sha256: str | None = None
+    reviewer_output_sha256: str | None = None
 
     def as_dict(self, *, key: bytes) -> dict:
         doc = {
@@ -128,6 +138,8 @@ class IsolationReceipt:
             "sandbox_profile_sha256": self.sandbox_profile_sha256,
             "allowed_probe_passed": self.allowed_probe_passed,
             "forbidden_probes": [dict(p) for p in self.forbidden_probes],
+            "reviewer_command_sha256": self.reviewer_command_sha256,
+            "reviewer_output_sha256": self.reviewer_output_sha256,
         }
         # HMAC, not a hash of the document by itself. Round 21: a public hash
         # over public fields is recomputable by whoever wants the answer to be
@@ -301,16 +313,107 @@ def probe_isolation(bundle_packet: Path) -> dict:
             "allowed_detail": allowed_detail, "forbidden_probes": forbidden}
 
 
+# The reviewer's stdout contract. Deliberately narrow: two objects of strings.
+# Validated with `_providers.validate_against_schema`, the same checker the
+# provider adapters use on model output -- a reviewer is a model at a trust
+# boundary too, and there is no reason for a second validator here.
+REVIEWER_OUTPUT_SCHEMA = {
+    "type": "object",
+    "required": ["qualification", "labels"],
+    "properties": {"qualification": {"type": "object"},
+                   "labels": {"type": "object"}},
+}
+
+
+def _packet_blind_ids(bundle_packet: Path) -> set[str]:
+    packet = json.loads(bundle_packet.read_text(encoding="utf-8"))
+    items = packet.get("reviewer_packet") or []
+    return {item["blind_id"] for item in items if "blind_id" in item}
+
+
+def _label_artifact(reviewer_id: str, output: dict, *, bundle_packet: Path,
+                    assignment: Path, fixture: Path) -> dict:
+    """Turn validated reviewer output into the document the adjudicator reads.
+
+    Round 21, finding #3: the release E2E wrote these itself, from the ANSWER
+    KEY. So the stage printed "reviewer labels" about labels no reviewer had
+    produced. This is the only place they may come from now.
+
+    The checks here duplicate `apply_safety_audit` on purpose -- not as defence
+    in depth, but so the launcher does not hand on an artifact it already knows
+    the adjudicator will refuse. A refusal three stages later names the wrong
+    component.
+    """
+    labels = output["labels"]
+    expected = _packet_blind_ids(bundle_packet)
+    if set(labels) != expected:
+        extra = sorted(set(labels) - expected)
+        missing = sorted(expected - set(labels))
+        raise ReviewerRunnerError(
+            f"reviewer {reviewer_id}: label ids do not match the packet "
+            f"(extra={extra[:5]}, missing={missing[:5]})")
+    bad = {k: v for k, v in labels.items() if v not in VALID_LABELS}
+    if bad:
+        raise ReviewerRunnerError(
+            f"reviewer {reviewer_id}: labels outside the rubric: {bad}")
+    return {"reviewer_id": reviewer_id,
+            "packet_sha256": _sha256(bundle_packet),
+            "assignment_sha256": _sha256(assignment),
+            "fixture_sha256": _sha256(fixture),
+            "qualification": dict(output["qualification"]),
+            "labels": dict(labels)}
+
+
+def _run_reviewer_process(command: list[str], profile: str, cwd: Path) -> dict:
+    """Execute the reviewer inside the sandbox and parse its stdout.
+
+    Every failure mode is a REFUSAL, never a default label. A reviewer that
+    crashed, printed prose, or omitted a field has not reviewed anything, and
+    the one thing that must not happen is a plausible-looking artifact standing
+    in for a judgement nobody made.
+    """
+    proc = subprocess.run([str(SANDBOX), "-p", profile, *command],
+                          cwd=cwd, capture_output=True, text=True)
+    if proc.returncode != 0:
+        raise ReviewerRunnerError(
+            f"the reviewer exited {proc.returncode}; it did not review "
+            f"anything. stderr: {(proc.stderr or '').strip()[:200]}")
+    try:
+        payload = json.loads(proc.stdout)
+    except json.JSONDecodeError as exc:
+        raise ReviewerRunnerError(
+            f"the reviewer's stdout is not JSON ({exc}); first 200 chars: "
+            f"{proc.stdout[:200]!r}") from None
+    try:
+        validate_against_schema(payload, REVIEWER_OUTPUT_SCHEMA)
+    except ProviderError as exc:
+        raise ReviewerRunnerError(
+            f"the reviewer's output does not match the schema: {exc}") from None
+    return payload
+
+
 def run_reviewer(bundle_packet: Path, reviewer_id: str, *,
                  command: list[str] | None = None,
-                 assignment: Path | None = None) -> dict:
+                 assignment: Path | None = None,
+                 labels_out: Path | None = None,
+                 fixture: Path | None = None) -> dict:
     """Probe isolation, then (optionally) run the reviewer inside it.
 
     `command` is the reviewer process. With none given this is probe-only,
     which is what the release E2E needs: the question it must answer is
-    whether the boundary holds, not what a particular reviewer labelled.
+    whether the boundary holds, not what a particular reviewer labelled. The
+    receipt says which of the two happened -- round 21 found the two were
+    indistinguishable, so "the launcher ran the reviewer" was unfalsifiable.
+
+    `labels_out` is where the label artifact goes. Required with `command`:
+    running a reviewer and discarding its judgement is what finding #3 was.
     """
     assignment = assignment or (HERE / "safety_audit_reviewer_assignment.json")
+    fixture = fixture or (HERE / "safety_audit_rubric_fixture.json")
+    if command and labels_out is None:
+        raise ReviewerRunnerError(
+            "running a reviewer without somewhere to put its labels discards "
+            "the judgement -- pass labels_out")
     probes = probe_isolation(bundle_packet)
 
     leaked = [p for p in probes["forbidden_probes"] if p["reachable"]]
@@ -331,9 +434,28 @@ def run_reviewer(bundle_packet: Path, reviewer_id: str, *,
     else:
         status = "PASS"
 
-    if command and status == "PASS":
-        subprocess.run([str(SANDBOX), "-p", probes["profile"], *command],
-                       cwd=bundle_packet.parent, capture_output=True, text=True)
+    command_sha = output_sha = None
+    if command:
+        if status != "PASS":
+            # Running a reviewer inside a boundary that was not shown to hold
+            # would produce labels nobody can attribute to a blind review.
+            reached = [p["probe"] for p in probes["forbidden_probes"]
+                       if p["status"] != "DENIED"]
+            raise ReviewerRunnerError(
+                f"refusing to run the reviewer: isolation is {status}; it "
+                f"reached {reached}. Labels produced inside a boundary nobody "
+                "verified cannot be attributed to a blind review")
+        output = _run_reviewer_process(command, probes["profile"],
+                                       bundle_packet.parent)
+        artifact = _label_artifact(reviewer_id, output,
+                                   bundle_packet=bundle_packet,
+                                   assignment=assignment, fixture=fixture)
+        body = json.dumps(artifact, ensure_ascii=False, indent=1)
+        labels_out.parent.mkdir(parents=True, exist_ok=True)
+        labels_out.write_text(body, encoding="utf-8")
+        command_sha = hashlib.sha256(
+            "\x00".join(command).encode("utf-8")).hexdigest()
+        output_sha = hashlib.sha256(body.encode("utf-8")).hexdigest()
 
     receipt = IsolationReceipt(
         reviewer_id=reviewer_id,
@@ -344,6 +466,8 @@ def run_reviewer(bundle_packet: Path, reviewer_id: str, *,
             probes["profile"].encode("utf-8")).hexdigest(),
         allowed_probe_passed=probes["allowed_probe_passed"],
         forbidden_probes=tuple(probes["forbidden_probes"]),
+        reviewer_command_sha256=command_sha,
+        reviewer_output_sha256=output_sha,
     )
     return receipt.as_dict(key=load_or_create_key(launcher_key_path()))
 

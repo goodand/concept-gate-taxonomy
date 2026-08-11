@@ -140,6 +140,26 @@ OBLIGATIONS = (
         mode="--release",
     ),
     Obligation(
+        obligation_id="reviewer.labels.from-launcher",
+        stage_id="reviewer.labels-from-launcher",
+        target="reviewer_runner.py",
+        # Round 21, finding #3: the launcher ran subprocess.run and discarded
+        # the result, and the E2E wrote "reviewer labels" from the ANSWER KEY.
+        # The obligation is that the bytes the adjudicator reads are the bytes
+        # the SIGNED receipt attests to. Changing the artifact after the receipt
+        # was computed is the one mutation that isolates exactly that -- not
+        # whether a reviewer ran, but whether its output is still identifiable.
+        remove='        labels_out.write_text(body, encoding="utf-8")',
+        # A trailing space: still valid JSON, same qualification, same labels.
+        # `body.replace("MENTION", "UNRELATED")` was tried first and is TOO
+        # BROAD -- it also rewrote the qualification answers, so the adjudicator
+        # refused for failed qualification and the mutation proved a different
+        # obligation. A mutation must isolate ONE thing.
+        replace_with='        labels_out.write_text(body + " ", encoding="utf-8")',
+        expected_signal="not the ones the isolation receipt",
+        mode="--release",
+    ),
+    Obligation(
         obligation_id="bundle.written.to.disk",
         stage_id="bundle.persisted",
         target="apply_safety_audit.py",
@@ -338,10 +358,20 @@ def test_obligations_match_the_pipeline_registry_exactly():
 
 
 def test_the_e2e_reports_partial_while_any_obligation_is_unknown():
+    """Round 21: this used to skip, because it asked `overall_verdict()` -- the
+    STATIC layer, where every obligation was PASS by construction. So the PARTIAL
+    branch was unreachable and untested for four rounds.
+
+    It is reachable now for an honest reason: `offline-smoke` runs no reviewer,
+    so `reviewer.labels.from-launcher` is UNKNOWN on that run whatever the
+    static layer says. That is the current-run layer doing its job."""
     import run_pipeline as rp
     from conceptgate.cg_obligations import Verdict
-    if rp.overall_verdict() is Verdict.PASS:
-        pytest.skip("nothing unknown; the PARTIAL path has nothing to report")
+    offline = rp.effective_obligations(
+        {"reviewer.labels.from-launcher": rp.RunVerdict(
+            Verdict.UNKNOWN, "offline-smoke runs no reviewer")})
+    assert rp.overall_verdict(offline) is not Verdict.PASS, (
+        "an offline run with no reviewer must not aggregate to PASS")
     proc = _run_e2e_subprocess()
     assert "PARTIAL" in proc.stdout, (
         "the E2E reports PASS while obligations are unproven")

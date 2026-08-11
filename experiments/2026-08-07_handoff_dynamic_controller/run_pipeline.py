@@ -96,6 +96,9 @@ STAGE_IDS = {
     7: "reviewer.assignment-enforced",
     8: "adjudication.applied",
     9: "bundle.persisted",
+    # Round 21, finding #3. Not an integer: it sits between 7 and 8 and
+    # renumbering the others would break every mutation's expected_signal.
+    "7b": "reviewer.labels-from-launcher",
 }
 
 # OBLIGATIONS -- the unit of completion.
@@ -133,6 +136,7 @@ DECLARED_OBLIGATIONS: tuple[str, ...] = (
     "reviewer.count.enforced",
     "bundle.written.to.disk",
     "reviewer.isolation.enforced",
+    "reviewer.labels.from-launcher",
     "freeze.closure.current",
 )
 
@@ -150,6 +154,7 @@ PROVEN_BY: dict[str, str] = {
     "reviewer.count.enforced":         "mutation",
     "bundle.written.to.disk":          "mutation",
     "reviewer.isolation.enforced":     "mutation",
+    "reviewer.labels.from-launcher":   "mutation",
     "freeze.closure.current":
         "acceptance:test_release_refuses_without_a_current_closure_receipt",
 }
@@ -721,6 +726,33 @@ def _record_completed(root: Path, auth_copy: Path, artifact: Path, *,
         encoding="utf-8")
 
 
+def _stub_reviewer_script(root: Path, answers: dict) -> Path:
+    """A stand-in reviewer PROCESS, for exercising the launcher end to end.
+
+    Round 21, finding #3: the launcher ran `subprocess.run(...)` and discarded
+    the result, the release E2E passed no command at all, and the "reviewer
+    labels" it fed the adjudicator were written by the E2E from the ANSWER KEY.
+    So no stage anywhere had ever moved a judgement from a sandboxed process
+    into the audit.
+
+    WHAT THIS STUB IS AND IS NOT. It is plumbing: it reads `packet.json` from
+    its cwd -- proving the bundle is readable from inside the sandbox -- and
+    emits one label per blind id. It is NOT a reviewer: the qualification
+    answers are handed to it on argv because the profile denies the answer key,
+    which is the boundary working. This exercises the PATH, and says nothing
+    about anyone's judgement. A live canary replaces it with a real CLI.
+    """
+    script = root / "stub_reviewer.py"
+    script.write_text(
+        "import json, pathlib, sys\n"
+        "packet = json.loads(pathlib.Path('packet.json').read_text())\n"
+        "ids = [i['blind_id'] for i in packet['reviewer_packet']]\n"
+        "print(json.dumps({'qualification': json.loads(sys.argv[1]),\n"
+        "                  'labels': {i: 'MENTION' for i in ids}}))\n",
+        encoding="utf-8")
+    return script
+
+
 def _qualify_reviewer(reviewer_id: str, submitted: dict[str, str]) -> tuple[bool, list]:
     """Thin wrapper over the ADJUDICATOR's scoring.
 
@@ -1059,15 +1091,92 @@ def run_pipeline(spec: RunSpec) -> int:
         fixture_sha = _sha256(HERE / "safety_audit_rubric_fixture.json")
         answers = json.loads((HERE / "safety_audit_rubric_answers.json").read_text(
             encoding="utf-8"))["answers"]
-        labels = []
-        for rid in ("e2e-A", "e2e-B"):
-            lp = root / f"labels_{rid}.json"
-            lp.write_text(json.dumps(
-                {"reviewer_id": rid, "packet_sha256": p_sha,
-                 "assignment_sha256": a_sha, "fixture_sha256": fixture_sha,
-                 "qualification": dict(answers),
-                 "labels": {i: "MENTION" for i in ids}}), encoding="utf-8")
-            labels.append(lp)
+        # --- 7b. reviewer isolation AND the labels it produces ----------
+        # Round 21, finding #3: this block used to sit AFTER adjudication, so
+        # even a launcher that produced labels could not have supplied the ones
+        # the adjudicator read. `require_launcher` decides where labels come
+        # from -- one pipeline, one RunSpec field, per the round-20 rule that
+        # modes may differ only in that object.
+        labels: list[Path] = []
+        launcher_receipts: dict[str, dict] = {}
+        if spec.require_launcher:
+            import reviewer_runner as rr
+            stub = _stub_reviewer_script(root, answers)
+            iso_status = []
+            for rid in ("e2e-A", "e2e-B"):
+                lp = root / f"labels_{rid}.json"
+                try:
+                    bundled = rr.build_reviewer_bundle(
+                        packet_path, root / "reviewer" / rid)
+                    doc = rr.run_reviewer(
+                        bundled, rid, assignment=assignment,
+                        command=[sys.executable, str(stub),
+                                 json.dumps(answers)],
+                        labels_out=lp)
+                    rr.verify_isolation_receipt(doc, packet=bundled,
+                                                assignment=assignment)
+                except rr.ReviewerRunnerError as exc:
+                    failures.append(f"reviewer isolation for {rid}: {exc}")
+                    iso_status.append("ERROR")
+                    continue
+                iso_status.append(doc["status"])
+                launcher_receipts[rid] = doc
+                leaked = [x["probe"] for x in doc["forbidden_probes"]
+                          if x["reachable"]]
+                if leaked:
+                    failures.append(f"reviewer {rid} reached {leaked}")
+                elif doc["status"] != "PASS":
+                    failures.append(
+                        f"reviewer isolation for {rid} is {doc['status']}: the "
+                        "boundary was not exercised, which is not a pass")
+                # THE binding for finding #3: the bytes the adjudicator is about
+                # to read must be the bytes the signed receipt attests to. A
+                # label file assembled anywhere else fails here.
+                if lp.is_file():
+                    if _sha256(lp) != doc.get("reviewer_output_sha256"):
+                        failures.append(
+                            f"labels for {rid} are not the ones the isolation "
+                            "receipt attests to")
+                    labels.append(lp)
+                else:
+                    failures.append(f"the launcher wrote no labels for {rid}")
+            print(f"  [7b] {STAGE_IDS['7b']:<31}{iso_status} "
+                  f"{[p.name for p in labels]}")
+            current_run["reviewer.labels.from-launcher"] = (
+                RunVerdict(Verdict.PASS,
+                           f"{len(labels)} label file(s) whose bytes match the "
+                           "signed receipt's reviewer_output_sha256")
+                if len(labels) == 2 else
+                RunVerdict(Verdict.FAIL,
+                           f"only {len(labels)} launcher-produced label file(s)"))
+        else:
+            # No sandbox needed: offline-smoke asks whether the downstream
+            # stages are wired, and says so in its own output.
+            for rid in ("e2e-A", "e2e-B"):
+                lp = root / f"labels_{rid}.json"
+                lp.write_text(json.dumps(
+                    {"reviewer_id": rid, "packet_sha256": p_sha,
+                     "assignment_sha256": a_sha, "fixture_sha256": fixture_sha,
+                     "qualification": dict(answers),
+                     "labels": {i: "MENTION" for i in ids}}), encoding="utf-8")
+                labels.append(lp)
+            print(f"  [7b] {STAGE_IDS['7b']:<31}skipped "
+                  "(offline: labels are synthetic, no reviewer ran)")
+            current_run["reviewer.labels.from-launcher"] = RunVerdict(
+                Verdict.UNKNOWN,
+                "offline-smoke runs no reviewer; these labels are synthetic")
+        # Stages 6 and 7 examine THE ADJUDICATOR: does it refuse an unqualified
+        # reviewer, and an undeclared one? Each needs one bad label file and one
+        # acceptable companion. That companion must NOT come from the launcher --
+        # round 21: when the launcher produced nothing (the isolation mutation),
+        # `labels[1]` raised IndexError and the E2E died mid-run instead of
+        # reporting, so a mutation that worked looked like a crash.
+        companion = root / "labels_companion.json"
+        companion.write_text(json.dumps(
+            {"reviewer_id": "e2e-B", "packet_sha256": p_sha,
+             "assignment_sha256": a_sha, "fixture_sha256": fixture_sha,
+             "qualification": dict(answers),
+             "labels": {i: "MENTION" for i in ids}}), encoding="utf-8")
         naive_label = root / "labels_unqualified.json"
         naive_label.write_text(json.dumps(
             {"reviewer_id": "e2e-A", "packet_sha256": p_sha,
@@ -1076,7 +1185,7 @@ def run_pipeline(spec: RunSpec) -> int:
              "labels": {i: "MENTION" for i in ids}}), encoding="utf-8")
         try:
             asa.main(["run_pipeline", str(primary), str(packet_path),
-                      str(key_path), str(naive_label), str(labels[1]),
+                      str(key_path), str(naive_label), str(companion),
                       "--out-root", str(root)])
         except SystemExit as exc:
             refused = "failed qualification" in str(exc)
@@ -1099,7 +1208,7 @@ def run_pipeline(spec: RunSpec) -> int:
              "labels": {i: "MENTION" for i in ids}}), encoding="utf-8")
         try:
             asa.main(["run_pipeline", str(primary), str(packet_path),
-                      str(key_path), str(walkin), str(labels[1]),
+                      str(key_path), str(walkin), str(companion),
                       "--out-root", str(root)])
         except SystemExit as exc:
             refused_walkin = "is not in" in str(exc)
@@ -1109,32 +1218,12 @@ def run_pipeline(spec: RunSpec) -> int:
         if not refused_walkin:
             failures.append("the adjudicator accepted an undeclared reviewer")
 
-        # --- reviewer isolation (release only) --------------------------
+        # --- what the run OBSERVED about isolation ----------------------
+        # The probing and label production happened in 7b, above adjudication --
+        # round 21, finding #3: a block that ran after the adjudicator could not
+        # possibly have supplied the labels it read.
         if spec.require_launcher:
-            import reviewer_runner as rr
-            iso_status = []
-            for rid in ("e2e-A", "e2e-B"):
-                try:
-                    bundled = rr.build_reviewer_bundle(
-                        packet_path, root / "reviewer" / rid)
-                    doc = rr.run_reviewer(bundled, rid, assignment=assignment)
-                    rr.verify_isolation_receipt(doc, packet=bundled,
-                                                assignment=assignment)
-                except rr.ReviewerRunnerError as exc:
-                    failures.append(f"reviewer isolation for {rid}: {exc}")
-                    iso_status.append("ERROR")
-                    continue
-                iso_status.append(doc["status"])
-                leaked = [x["probe"] for x in doc["forbidden_probes"]
-                          if x["reachable"]]
-                if leaked:
-                    failures.append(f"reviewer {rid} reached {leaked}")
-                elif doc["status"] != "PASS":
-                    failures.append(
-                        f"reviewer isolation for {rid} is {doc['status']}: the "
-                        "boundary was not exercised, which is not a pass")
-            print(f"  [--] reviewer.isolation-enforced      {iso_status}")
-            # Round 21, finding #5: this list used to be printed while the
+            # Round 21, finding #5: this status list used to be printed while the
             # coverage block reported `reviewer.isolation.enforced: PASS` from a
             # constant. The run's own observation now decides.
             if iso_status and all(s == "PASS" for s in iso_status):
@@ -1150,9 +1239,21 @@ def run_pipeline(spec: RunSpec) -> int:
                     f"the boundary was not exercised on this host: {iso_status}")
 
         # --- 8. adjudication -------------------------------------------
-        rc = asa.main(["run_pipeline", str(primary), str(packet_path),
-                       str(key_path), *[str(p) for p in labels],
-                       "--out-root", str(root)])
+        # `asa.main` raises SystemExit on a refusal, and an uncaught one kills
+        # this process before the FAIL list is printed -- so a run that failed
+        # for a nameable reason looked like a crash. Found by round 21's new
+        # mutation, which the E2E could not report because of exactly this.
+        if len(labels) < 2:
+            failures.append(
+                f"only {len(labels)} label file(s) to adjudicate; the stages "
+                "below cannot run")
+        try:
+            rc = asa.main(["run_pipeline", str(primary), str(packet_path),
+                           str(key_path), *[str(p) for p in labels],
+                           "--out-root", str(root)])
+        except SystemExit as exc:
+            rc = 1
+            failures.append(f"the adjudicator refused: {exc}")
         if rc != 0:
             failures.append("adjudicator CLI returned non-zero")
         bundle_path = root / "results" / f"adjudicated_{primary.stem}.json"
