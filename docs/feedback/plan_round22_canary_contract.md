@@ -3,6 +3,11 @@
 작성 2026-08-11. 대상 커밋 `efea0f2`. 검토 제안: `--canary` 모드를 먼저 고정한 뒤
 HD01 × S_STATIC 실행.
 
+**구현 완료 — 라운드 22는 5커밋이다**: `5e7dc06` · `65da9fc` · `8726df8` ·
+`8257139` · `186c058`. 최초 보고에서 마지막(검증 receipt)이 빠졌다.
+후속 검토와 잔여 항목은
+[`plan_round22b_canary_assessment_and_vacuous_guards.md`](plan_round22b_canary_assessment_and_vacuous_guards.md).
+
 ## 1. 주장 검증 — 6/6 확인, 그중 하나는 더 나쁘고 하나는 더 약하다
 
 | # | 지적 | 판정 | 실측 |
@@ -134,7 +139,7 @@ SHA-256이 불변임을 확인한다 — 거부 경로에서 ledger가 오염되
 | 파일 | 표면 | 이번 범위 |
 |---|---|---|
 | `run_live_phase_c.py` | **EXECUTION** | 편집 — `--canary`, `kind` 매핑, ledger가 실제 override 기록 |
-| `test_live_phase_c.py` | AUDIT | 음성 테스트 N1~N3, N8 |
+| `test_live_phase_c.py` | **EXECUTION** | 음성 테스트 N1~N3, N8. *(초안에 AUDIT이라 적었다 — 틀렸다. 실측으로 EXECUTION이며, 결론(closure 1회)은 같지만 사실이 달랐다)* |
 | `docs/HANDOFF_…md` | 문서(canary 입력) | 명칭 분리, 절차에 모드·kind 명시 |
 | `PREREGISTRATION.md` | **동결** | canary 계약 amendment |
 | `_evaluator.py`, `_providers.py` | EXECUTION | **무변경** |

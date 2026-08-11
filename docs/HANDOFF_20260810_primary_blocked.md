@@ -405,8 +405,45 @@ provider·dynamic decision·subagent·retrieval이 동시에 후보가 된다.
 **실패해도 지우거나 같은 이름으로 다시 돌리지 마라.** `--output-name`에
 `_attempt2`를 붙인다 — overwrite는 러너가 거부한다.
 
-**판정은 3층으로 분리한다**(Amendment 43): Runtime / Retrieval / Reconstruction.
-단일 PASS/FAIL로 뭉치면 provider 문제와 검색 문제와 해석 문제가 구별되지 않는다.
+### canary 판정 — 3층, 실존 필드로
+
+**`qualification.passed`를 canary 판정에 쓰지 마라.** 코드가
+`"passed": phase_name == "pilot" and ...`이므로 **정상 canary도 항상 `false`**다.
+그것은 "자격 미달"이 아니라 **"자격 심사가 아님"**이다. 22b라운드 실측: 이
+필드명이 구조적으로 "qualification failed"처럼 읽혀 무맥락 agent가 오독한다.
+
+| 층 | 판정 근거 (artifact에 실존하는 키) | 실패의 뜻 |
+|---|---|---|
+| **Runtime** | artifact 존재 · `raw` 보존 · 행별 `invalid_run == false` | provider adapter·권한 |
+| **Retrieval** | 행별 `host_action_compliance.passed == true` · `read` 액션 ≥ 1 · `critical_path_recall` | 검색 workflow |
+| **Reconstruction** | `state_accuracy` · `next_action_accuracy` · `stop_condition_accuracy` | 문맥 해석 |
+
+읽는 법:
+
+```
+Runtime 실패                        → provider·권한. 32칸 금지
+Runtime 통과 + Retrieval 실패        → grep/read/action 계약을 고친다
+Retrieval 통과 + Reconstruction 실패 → 문맥 해석. 프롬프트·계약 문제
+세 층 통과                          → 수직 경로 완성. 다음은 1×4 (`--pilot`)
+```
+
+**단일 PASS/FAIL로 뭉치지 마라** — 세 실패의 대응이 서로 다르다.
+
+### canary 직후 처리할 큐 (22b라운드, closure 1회에 묶는다)
+
+계획은
+[`plan_round22b_canary_assessment_and_vacuous_guards.md`](feedback/plan_round22b_canary_assessment_and_vacuous_guards.md).
+**canary를 막지 않으므로 먼저 돌린다.** 현재 코드는 옳고, 약한 것은 회귀 방지다.
+
+- **내 가드 2개가 공허하다**(오염 시험으로 재현). `test_live_phase_c.py`의
+  특권-함수 AST 테스트는 조건을 `!=`로 뒤집어 **canary가 primary attempt를 claim
+  하게 만들어도 통과**하고, ledger 테스트는 `arms: [], case_ids: []`를 기록해도
+  통과한다. 문자열 존재만 봤다. → 성공 경로를 실제 실행해 특권 함수 호출 0회를
+  spy로 관측하고, `_record_qualification`을 임시 ledger에 실행해 **값으로** 대조
+- canary artifact의 `qualification` 필드를 제거하거나 `phase_assessment`로 대체
+  + 판정 sidecar(원본 불변)
+- `e2e --release`가 의도된 음성 대조 거부를 **헤더보다 먼저** 출력한다 —
+  실행 실패로 오인된다
 
 ### 4번(새 config)의 세부
 
