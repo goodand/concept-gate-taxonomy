@@ -1,0 +1,64 @@
+flowchart TB
+    C["Contracts<br/>Schemas · Versions · Audit Policy<br/>Govern Execution And Evaluation"]
+    PUBLIC["Public Corpus<br/>Public Cases"]
+    GOLD["Hidden Gold<br/>Judge-only"]
+
+    W_START["Workflow Module<br/>Authorized Run Dispatch"]
+
+    subgraph EXECUTION["Execution Plane"]
+        direction LR
+        K["Knowledge<br/>Search · Link · Bundle"]
+        H["Host Runtime<br/>Guard · Tool · Trace"]
+        P["Providers<br/>Codex · Claude"]
+
+        K --> H
+        P -->|tool request| H
+        H -->|observation| P
+    end
+
+    TRACE["Host-owned Trace"]
+
+    subgraph EVALUATION["Trusted Post-run Evaluation"]
+        direction LR
+        AUTO["Automatic Retrieval Evaluation"]
+        PACKET["Blind Packet Builder"]
+        ADJ["Manual Safety Adjudication"]
+    end
+
+    REVIEW["Isolated Blind Review Boundary"]
+
+    W_GATE["Workflow Module<br/>Post-run Gate · Ledger · CLI"]
+    REPORT["Final Report"]
+
+    C -.->|system-wide contract| W_START
+
+    PUBLIC -->|public knowledge input| K
+    W_START -->|start authorized run| P
+
+    H -->|host-owned output| TRACE
+    TRACE -->|scoring input| AUTO
+    TRACE -->|audit source| PACKET
+    GOLD -->|judge only| AUTO
+
+    PACKET -->|packet only| REVIEW
+    REVIEW -->|labels only| ADJ
+
+    AUTO -->|post-run metrics| W_GATE
+    ADJ -->|adjudicated audit| W_GATE
+    W_GATE --> REPORT
+
+    classDef source fill:#dff1e8,stroke:#6e9b84,color:#173c2a
+    classDef restricted fill:#f8d9d5,stroke:#c86f62,color:#55241e
+    classDef module fill:#edf2ee,stroke:#809187,color:#20372d
+    classDef workflow fill:#dce8f6,stroke:#668ab9,color:#173751
+    classDef contract fill:#f2eee4,stroke:#8d8778,color:#39362e
+    classDef artifact fill:#e5dcf3,stroke:#8f77b6,color:#38274f
+    classDef reviewer fill:#ffedbd,stroke:#b98b25,color:#4c3500
+
+    class PUBLIC source
+    class GOLD restricted
+    class K,H,P,AUTO,PACKET,ADJ module
+    class W_START,W_GATE workflow
+    class C contract
+    class TRACE,REPORT artifact
+    class REVIEW reviewer

@@ -41,6 +41,7 @@ from _contract import (ARM_HAS_SUBAGENT, ARM_IS_DYNAMIC, ARMS, SUBAGENT_VERSION,
                        TRACE_VERSION, ContractError, validate_subagent_output,
                        validate_trace)
 from _evaluator import (frozen_surface_drift, frozen_surface_hashes,
+                        surface_drift_by_layer,
                         run_clean_judge, source_hashes)
 from _runner import BudgetGuard, Corpus, MAX_ACTIONS, MAX_TERMINAL_ATTEMPTS
 from run_smoke import _safety_summary
@@ -691,7 +692,14 @@ def _assert_provider_preflight(config: dict[str, Any]) -> None:
         report = json.loads(path.read_text(encoding="utf-8"))
         if report.get("passed") is not True:
             raise LiveRunError("refusing Codex MCP run: MCP-isolation red-team failed")
-        drift = frozen_surface_drift(report.get("frozen_surface_hashes"))
+    # Amendment 36: PROVIDER evidence is invalidated by execution-surface
+    # drift only. Whether a provider was isolated during a run that already
+    # happened cannot be changed by later editing the manual audit's rubric,
+    # and pretending otherwise made every audit fix cost a full
+    # requalification -- a standing pressure not to fix the audit. Audit-layer
+    # drift is still pinned and still reported; it gates the AUDIT artifact,
+    # not this one.
+        drift = surface_drift_by_layer(report.get("frozen_surface_hashes"))["execution"]
         if drift:
             raise LiveRunError(
                 f"refusing Codex MCP run: MCP-isolation red-team is stale: {drift}")
@@ -704,7 +712,8 @@ def _assert_provider_preflight(config: dict[str, Any]) -> None:
     report = json.loads(path.read_text(encoding="utf-8"))
     if report.get("hardened_profile_passed") is not True:
         raise LiveRunError("refusing v2 run: hardened provider-isolation red-team failed")
-    drift = frozen_surface_drift(report.get("frozen_surface_hashes"))
+    # Execution layer only -- same reasoning as the MCP red-team above.
+    drift = surface_drift_by_layer(report.get("frozen_surface_hashes"))["execution"]
     if drift:
         raise LiveRunError(
             f"refusing v2 run: provider-isolation red-team is stale: {drift}")
@@ -793,7 +802,10 @@ def _assert_primary_qualifications(config: dict[str, Any]) -> dict[str, str]:
                 per_arm[arm].get("n") != len(expected_cases) for arm in expected_arms):
             raise LiveRunError(
                 f"refusing primary: qualification arm coverage is incomplete: {path.name}")
-        drift = frozen_surface_drift(artifact.get("frozen_surface_hashes"))
+        # Execution layer only: a qualification pilot measured how a provider
+        # behaves under this contract and corpus. The audit rubric was not an
+        # input to it.
+        drift = surface_drift_by_layer(artifact.get("frozen_surface_hashes"))["execution"]
         if drift:
             raise LiveRunError(
                 f"refusing primary: qualification artifact is stale: {path.name}: {drift}")

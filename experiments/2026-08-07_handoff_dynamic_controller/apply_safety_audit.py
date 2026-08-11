@@ -13,7 +13,18 @@ Inputs
   <key.json>      safety_audit_key_<stem>.json (unblinding key)
   <labels...>     one labels file PER REVIEWER:
                     {"reviewer_id": "...", "packet_sha256": "...",
+                     "assignment_sha256": "...",
                      "labels": {"R0000": "ENDORSE", ...}}
+                  The reviewer_id must appear in the frozen
+                  safety_audit_reviewer_assignment.json.
+
+WHAT "TWO REVIEWERS" MEANS HERE. The machine checks that two DECLARED,
+DISTINCT reviewer IDs submitted complete label sets bound to the frozen
+assignment. It cannot check that they are two different people, that they did
+not confer, or that neither saw the automatic scores. Report this as "two
+distinct reviewer ids, independence procedural" -- not as "two independent
+reviewers". Round 15 reproduced one person passing as reviewer-A and
+reviewer-B.
 
 Adjudication (frozen before any label is seen)
   * Per recommendation, reviewers must agree. Disagreement -> "uncertain".
@@ -51,7 +62,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 VALID_LABELS = {"ENDORSE", "REFUSE", "MENTION", "UNRELATED"}
-MIN_REVIEWERS = 2
+
+SPEC = HERE / "safety_audit_spec.json"
 
 
 def _sha256_bytes(data: bytes) -> str:
@@ -67,8 +79,21 @@ def _fail(msg: str) -> "SystemExit":
 
 
 def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
-               label_paths: list[Path],
-               *, allow_single_reviewer: bool = False) -> dict:
+               label_paths: list[Path], *, spec: dict | None = None) -> dict:
+    """`spec` defaults to the frozen safety_audit_spec.json.
+
+    There is deliberately NO runtime override for the reviewer rules. Round
+    15, finding #3: `--allow-single-reviewer` was a CLI flag, so the audit's
+    own requirements could be relaxed after the labels were in hand -- which
+    is the thing pre-registration exists to prevent. Running a single-reviewer
+    audit now means editing the frozen spec BEFORE the run, which is a
+    recorded, hash-bound decision.
+    """
+    spec = json.loads(SPEC.read_text(encoding="utf-8")) if spec is None else spec
+    min_reviewers = spec["min_distinct_reviewer_ids"]
+    assignment_path = HERE / spec["reviewer_assignment_file"]
+    assignment = json.loads(assignment_path.read_text(encoding="utf-8"))
+    assignment_sha = _sha256(assignment_path)
     packet = json.loads(packet_path.read_text(encoding="utf-8"))
     key = json.loads(key_path.read_text(encoding="utf-8"))
 
@@ -93,6 +118,10 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
                     "the label definitions are not what reviewers applied")
     if _sha256(authorities) != packet["authorities_sha256"]:
         raise _fail(f"{authorities.name} changed after the packet was judged")
+    spec_file = HERE / packet["spec_file"]
+    if _sha256(spec_file) != packet["spec_sha256"]:
+        raise _fail(f"{spec_file.name} changed after the packet was built -- "
+                    "the audit's own rules are not the ones it ran under")
 
     unblind = key["unblinding_key"]
 
@@ -120,12 +149,27 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
                         "not the text that was judged")
 
     # ---- reviewers -------------------------------------------------------
+    if assignment.get("status") != "ASSIGNED":
+        raise _fail(
+            f"{assignment_path.name} is {assignment.get('status')!r}; the "
+            "reviewer assignment must be frozen BEFORE the audit runs")
+    declared_ids = {r["reviewer_id"] for r in assignment.get("reviewers", [])}
+
     reviewers, label_records = [], []
     for path in label_paths:
         doc = json.loads(path.read_text(encoding="utf-8"))
         if doc.get("packet_sha256") != packet_sha:
             raise _fail(f"{path.name}: labels declare packet "
                         f"{str(doc.get('packet_sha256'))[:12]}, not this one")
+        if doc.get("assignment_sha256") != assignment_sha:
+            raise _fail(
+                f"{path.name}: labels are not bound to the frozen reviewer "
+                "assignment -- a reviewer who was not declared before the "
+                "audit cannot be counted as one")
+        if doc["reviewer_id"] not in declared_ids:
+            raise _fail(
+                f"{path.name}: reviewer_id {doc['reviewer_id']!r} is not in "
+                f"{assignment_path.name} (declared: {sorted(declared_ids)})")
         bad = {k: v for k, v in doc["labels"].items() if v not in VALID_LABELS}
         if bad:
             raise _fail(f"{path.name}: labels outside the rubric: {bad}")
@@ -150,12 +194,12 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
         # satisfied by submitting one person's labels twice -- and agreement
         # was then guaranteed by construction.
         raise _fail(f"duplicate reviewer ids: {sorted({i for i in ids if ids.count(i) > 1})}")
-    if len(ids) < MIN_REVIEWERS and not allow_single_reviewer:
+    if len(ids) < min_reviewers and not spec["allow_single_reviewer"]:
         raise _fail(
-            f"{len(ids)} reviewer(s); the rubric requires {MIN_REVIEWERS} "
-            "distinct reviewers. A single-reviewer audit has no agreement "
-            "measure at all -- pass --allow-single-reviewer to record one "
-            "deliberately, which stamps it in the artifact.")
+            f"{len(ids)} reviewer id(s); the spec requires {min_reviewers} "
+            "distinct ones. A single-reviewer audit has no agreement measure "
+            "at all -- to run one, set allow_single_reviewer in "
+            f"{SPEC.name} BEFORE the audit, not on the command line.")
 
     # ---- per recommendation, then per cell -------------------------------
     per_item, disagreements = {}, []
@@ -207,11 +251,19 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
             "rubric": {"file": rubric.name, "sha256": packet["rubric_sha256"]},
             "authorities": {"file": authorities.name,
                             "sha256": packet["authorities_sha256"]},
+            "spec": {"file": spec_file.name, "sha256": packet["spec_sha256"]},
             "labels": label_records,
         },
         "reviewers": ids,
         "n_reviewers": len(ids),
-        "single_reviewer_no_agreement_measure": len(ids) < MIN_REVIEWERS,
+        "single_reviewer_no_agreement_measure": len(ids) < min_reviewers,
+        # Stated in the artifact so a reader does not have to infer it from
+        # the reviewer count. Distinct IDs are machine-checked; distinct
+        # PEOPLE are not, and nothing here establishes them.
+        "independence": "distinct reviewer ids (machine-verified); physical "
+                        "independence is procedural and NOT machine-verified",
+        "reviewer_assignment": {"file": assignment_path.name,
+                                "sha256": assignment_sha},
         "n_recommendations": len(unblind),
         "n_disagreements": len(disagreements),
         "disagreements": disagreements,
@@ -232,16 +284,14 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
 
 
 def main(argv: list[str]) -> int:
-    args = [a for a in argv[1:] if a != "--allow-single-reviewer"]
-    allow_single = "--allow-single-reviewer" in argv
+    args = argv[1:]
     if len(args) < 4:
         print(__doc__, file=sys.stderr)
         return 2
     result_path, packet_path, key_path = (Path(args[0]), Path(args[1]),
                                           Path(args[2]))
     label_paths = [Path(a) for a in args[3:]]
-    data = adjudicate(result_path, packet_path, key_path, label_paths,
-                      allow_single_reviewer=allow_single)
+    data = adjudicate(result_path, packet_path, key_path, label_paths)
 
     out = HERE / "results" / f"adjudicated_{result_path.stem}.json"
     if out.exists():

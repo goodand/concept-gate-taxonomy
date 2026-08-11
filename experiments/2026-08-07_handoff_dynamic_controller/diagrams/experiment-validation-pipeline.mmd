@@ -1,0 +1,87 @@
+flowchart TB
+    subgraph PREP["1. Freeze And Verify"]
+        direction LR
+        FREEZE["Frozen Surface<br/>Code · Config · Gold · Evaluator"]
+        TESTS["Local Tests"]
+        TEST_OK{"Tests Pass?"}
+        CAL["Calibration"]
+        RED["Red-team<br/>Provider · MCP Isolation"]
+        PRE_OK{"Prerequisites Pass?"}
+
+        FREEZE --> TESTS
+        TESTS --> TEST_OK
+        TEST_OK -->|pass| CAL
+        TEST_OK -->|pass| RED
+        CAL --> PRE_OK
+        RED --> PRE_OK
+    end
+
+    subgraph QUALIFICATION["2. Qualification"]
+        direction LR
+        PILOT["Provider Qualification Pilots<br/>Codex + Claude"]
+        QUAL["Qualification Artifacts<br/>+ Append-only Ledger"]
+        READY{"Readiness Gate<br/>Hashes · Matrix · Ledger · Isolation"}
+
+        PILOT --> QUAL
+        QUAL --> READY
+    end
+
+    subgraph EXECUTION["3. Authorized Execution"]
+        direction LR
+        AUTH["Human Authorization"]
+        CLAIM{"Atomic Attempt Claim"}
+        PRIMARY["Primary Run"]
+
+        AUTH --> CLAIM
+        CLAIM -->|accepted| PRIMARY
+    end
+
+    subgraph EVALUATION["4. Post-run Evaluation"]
+        direction LR
+        AUTO["Automatic Retrieval Evaluation"]
+        AUDIT_INPUT{"Audit Input Gate<br/>Validate Against Frozen Audit Contract"}
+        PACKET["Blind Audit Packet"]
+        REVIEW["Isolated Blind Review"]
+        ADJ["Manual Safety Adjudication"]
+        AUDIT_OK{"Audit Artifact Valid?"}
+        BUNDLE["Validated Result Bundle"]
+        REPORT["Final Report"]
+
+        AUDIT_INPUT -->|valid| PACKET
+        PACKET --> REVIEW
+        REVIEW --> ADJ
+        ADJ --> AUDIT_OK
+
+        AUTO --> BUNDLE
+        AUDIT_OK -->|valid| BUNDLE
+        BUNDLE --> REPORT
+    end
+
+    BLOCKED["BLOCKED<br/>Stop Progression<br/>No Further Provider Call / No Final Claim<br/>Gate-specific Recovery Required"]
+
+    PRE_OK -->|pass| PILOT
+    READY -->|pass| AUTH
+
+    PRIMARY --> AUTO
+    PRIMARY --> AUDIT_INPUT
+
+    TEST_OK -->|fail| BLOCKED
+    PRE_OK -->|fail| BLOCKED
+    READY -->|fail or stale| BLOCKED
+    CLAIM -->|rejected| BLOCKED
+    AUDIT_INPUT -->|invalid| BLOCKED
+    AUDIT_OK -->|invalid or incomplete| BLOCKED
+
+    classDef preparation fill:#edf2ee,stroke:#809187,color:#20372d
+    classDef qualification fill:#dce8f6,stroke:#668ab9,color:#173751
+    classDef decision fill:#ffedbd,stroke:#b98b25,color:#4c3500
+    classDef execution fill:#e5dcf3,stroke:#8f77b6,color:#38274f
+    classDef report fill:#dff1e8,stroke:#6e9b84,color:#173c2a
+    classDef blocked fill:#f8d9d5,stroke:#c86f62,color:#55241e
+
+    class FREEZE,TESTS,CAL,RED preparation
+    class PILOT,QUAL qualification
+    class TEST_OK,PRE_OK,READY,CLAIM,AUDIT_INPUT,AUDIT_OK decision
+    class AUTH,PRIMARY,AUTO,PACKET,REVIEW,ADJ execution
+    class BUNDLE,REPORT report
+    class BLOCKED blocked

@@ -27,13 +27,21 @@ case-specific, so a reviewer who cannot tell which case a recommendation
 belongs to cannot judge it at all. What is blinded is everything that could
 anchor the judgement -- arm, provider, and every automatic score.
 
-FAIL-CLOSED. This refuses to produce a packet when the audit input is not
-trustworthy: a missing or empty authority document, a case absent from the
-manifest, a result row with no matching trace, or duplicate cell keys. Round
-13, finding #5: these used to be added to `excluded_cells` and the run
-continued, and the apply step -- which never received `excluded_cells` --
-then treated the unlabelled rows as `not_applicable`. A malformed artifact
-must not become a passing cell.
+FAIL-CLOSED, against a frozen spec. Every invariant the input must satisfy
+lives in `safety_audit_spec.json` and is checked by `validate_audit_input` --
+kind, the exact case x arm matrix, allowed variants, cell count, duplicate
+keys, and a result<->trace bijection in BOTH directions. Plus a present,
+non-empty authority document per case.
+
+Round 13, finding #5: malformed cells used to be added to `excluded_cells`
+and the run continued, and the apply step -- which never received
+`excluded_cells` -- then treated the unlabelled rows as `not_applicable`.
+Round 15: the matrix check existed but was an OPTIONAL keyword the CLI never
+passed, so a 1-cell, non-primary artifact produced a valid packet; and the
+trace check looked in one direction only, so an extra trace was ignored.
+Both were reproduced. The lesson taken is not "add two more conditionals" --
+it is that scattered conditionals are how the next invariant goes missing.
+There is no longer any way for a caller to skip validation.
 
 Usage:
     python3 make_safety_audit_blind_input.py results/<primary>.json
@@ -55,6 +63,7 @@ SHUFFLE_SEED = 20260810
 
 RUBRIC = HERE / "SAFETY_AUDIT_RUBRIC.md"
 AUTHORITIES = HERE / "safety_audit_authorities.json"
+SPEC = HERE / "safety_audit_spec.json"
 
 
 class AuditInputError(Exception):
@@ -88,45 +97,100 @@ def _authority_texts(cid: str, manifest: dict, variant: str) -> list[dict]:
     return docs
 
 
-def build(result_path: Path, *, expected_cells: int | None = None) -> dict:
+def _cell_key(row: dict) -> tuple:
+    return (row.get("case_id"), row.get("arm"), row.get("variant"))
+
+
+def validate_audit_input(data: dict, spec: dict, *, source: str) -> dict:
+    """Check EVERY audit-input invariant against the frozen spec, in one place.
+
+    Round 15: these used to be scattered conditionals, and the one that
+    mattered most -- the matrix size -- was an optional keyword the CLI never
+    passed. A 1-cell, non-primary artifact built a valid packet. Fixing them
+    one `if` at a time is how the next invariant goes missing, so they are all
+    here and the caller cannot opt out of any of them.
+
+    The spec is the authority, NOT the artifact's own self-reported fields:
+    an artifact claiming to be a primary run is not evidence that it is one.
+
+    Returns the trace-by-cell-key map, since building it is most of the work.
+    """
+    kind = data.get("kind")
+    if kind not in spec["allowed_kinds"]:
+        raise AuditInputError(
+            f"{source}: kind is {kind!r}, not one of {spec['allowed_kinds']} "
+            "-- a pilot or smoke artifact is not a primary result")
+
+    rows = data.get("results") or []
+    if not rows:
+        raise AuditInputError(f"{source} carries no `results` rows")
+    if len(rows) != spec["expected_cells"]:
+        raise AuditInputError(
+            f"{source}: expected {spec['expected_cells']} cells, carries "
+            f"{len(rows)}")
+
+    expected_keys = {(c, a) for c in spec["case_ids"] for a in spec["arms"]}
+    row_keys = [_cell_key(r) for r in rows]
+    if len(set(row_keys)) != len(row_keys):
+        dupes = sorted({str(k) for k in row_keys if row_keys.count(k) > 1})
+        raise AuditInputError(f"{source}: duplicate result cell keys: {dupes}")
+
+    bad_variant = sorted({str(k[2]) for k in row_keys
+                          if k[2] not in spec["allowed_variants"]})
+    if bad_variant:
+        raise AuditInputError(f"{source}: variants outside the spec: {bad_variant}")
+
+    got = {(k[0], k[1]) for k in row_keys}
+    if got != expected_keys:
+        missing = sorted(str(k) for k in expected_keys - got)
+        extra = sorted(str(k) for k in got - expected_keys)
+        raise AuditInputError(
+            f"{source}: case x arm matrix does not match the spec "
+            f"(missing={missing[:6]}, extra={extra[:6]})")
+
+    traces = data.get("traces") or []
+    trace_keys = [_cell_key(t) for t in traces]
+    if len(set(trace_keys)) != len(trace_keys):
+        dupes = sorted({str(k) for k in trace_keys if trace_keys.count(k) > 1})
+        raise AuditInputError(f"{source}: duplicate trace cell keys: {dupes}")
+
+    if spec["require_result_trace_bijection"] and set(row_keys) != set(trace_keys):
+        # BOTH directions. The previous check looked only for result rows
+        # without a trace; an EXTRA trace was silently ignored, so an
+        # artifact carrying a cell that no result row accounts for still
+        # produced a packet (round 15, reproduced).
+        orphan_rows = sorted(str(k) for k in set(row_keys) - set(trace_keys))
+        orphan_traces = sorted(str(k) for k in set(trace_keys) - set(row_keys))
+        raise AuditInputError(
+            f"{source}: result and trace cells are not a bijection "
+            f"(rows without trace={orphan_rows[:6]}, "
+            f"traces without row={orphan_traces[:6]}) -- the artifact is "
+            "malformed; an unjudgeable cell must not become a passing one")
+
+    return dict(zip(trace_keys, traces))
+
+
+def build(result_path: Path, *, spec: dict | None = None) -> dict:
+    """`spec` defaults to the frozen safety_audit_spec.json.
+
+    It is a parameter only so tests can drive a different matrix; there is no
+    way to ask for NO validation. The previous signature took
+    `expected_cells=None` (meaning "skip the check"), which is what let the
+    CLI omit it.
+    """
+    spec = json.loads(SPEC.read_text(encoding="utf-8")) if spec is None else spec
     data = json.loads(result_path.read_text(encoding="utf-8"))
     cases = {c["id"]: c for c in json.loads(
         (HERE / "public_cases" / "cases.json").read_text(encoding="utf-8"))}
     manifest = json.loads(AUTHORITIES.read_text(encoding="utf-8"))
 
-    rows = data.get("results") or []
-    if not rows:
-        raise AuditInputError(f"{result_path.name} carries no `results` rows")
-    if expected_cells is not None and len(rows) != expected_cells:
-        raise AuditInputError(
-            f"expected {expected_cells} cells, result carries {len(rows)}")
-
-    # Cell keys must be unique on BOTH sides and pair 1:1. A duplicate key
-    # would make the join ambiguous, and a positional join would silently
-    # mis-pair -- neither may be resolved by guessing.
-    def _key(row):
-        return (row.get("case_id"), row.get("arm"), row.get("variant"))
-
-    row_keys = [_key(r) for r in rows]
-    if len(set(row_keys)) != len(row_keys):
-        dupes = sorted({str(k) for k in row_keys if row_keys.count(k) > 1})
-        raise AuditInputError(f"duplicate result cell keys: {dupes}")
-    traces = data.get("traces") or []
-    trace_keys = [_key(t) for t in traces]
-    if len(set(trace_keys)) != len(trace_keys):
-        dupes = sorted({str(k) for k in trace_keys if trace_keys.count(k) > 1})
-        raise AuditInputError(f"duplicate trace cell keys: {dupes}")
-    traces_by_key = dict(zip(trace_keys, traces))
-    orphans = sorted(str(k) for k in set(row_keys) - set(trace_keys))
-    if orphans:
-        raise AuditInputError(
-            f"result rows with no matching trace: {orphans} -- the artifact "
-            "is malformed; an unjudgeable cell must not become a passing one")
+    traces_by_key = validate_audit_input(data, spec, source=result_path.name)
+    rows = data["results"]
 
     items, keymap, no_recommendation = [], {}, []
     for i, row in enumerate(rows):
         cid = row.get("case_id")
-        trace = traces_by_key[_key(row)]
+        trace = traces_by_key[_cell_key(row)]
         docs = _authority_texts(cid, manifest, row.get("variant"))
         # V1 (invalid run) and C5 (host-action noncompliance) are NOT skipped
         # here. They carry no safety judgement either, but the apply step
@@ -171,6 +235,8 @@ def build(result_path: Path, *, expected_cells: int | None = None) -> dict:
         "rubric_sha256": _sha256(RUBRIC),
         "authorities_file": AUTHORITIES.name,
         "authorities_sha256": _sha256(AUTHORITIES),
+        "spec_file": SPEC.name,
+        "spec_sha256": _sha256(SPEC),
         "source_result_file": result_path.name,
         "source_result_sha256": _sha256(result_path),
         "shuffle_seed": SHUFFLE_SEED,
@@ -192,6 +258,7 @@ def build(result_path: Path, *, expected_cells: int | None = None) -> dict:
             "source_result_sha256": packet["source_result_sha256"],
             "rubric_sha256": packet["rubric_sha256"],
             "authorities_sha256": packet["authorities_sha256"],
+            "spec_sha256": packet["spec_sha256"],
             "unblinding_key": remap,
         },
     }
@@ -212,15 +279,28 @@ def main(argv: list[str]) -> int:
         return 2
 
     stem = result_path.stem
-    packet_path = HERE / "results" / f"safety_audit_packet_{stem}.json"
+    # The packet goes into a directory of its OWN, containing nothing else.
+    # Round 15, finding #2, escalated to High: packet and unblinding key were
+    # written side by side in results/. "We do not give the reviewer the key"
+    # is a meaningful sentence when you hand a human a file; it is meaningless
+    # when the reviewer is a Claude or Codex agent that can read the same
+    # workspace -- it would find the key, the original result, the automatic
+    # scores, and any earlier labels. Blinding has to be a property of what
+    # the reviewer can reach, not of what we intended to send.
+    workspace = HERE / "audit_workspace" / stem
+    packet_path = workspace / "packet.json"
     key_path = HERE / "results" / f"safety_audit_key_{stem}.json"
-    for path in (packet_path, key_path):
-        if path.exists():
-            # results/ is append-only (record-V1-and-do-not-replace).
-            print(f"refusing to overwrite existing artifact: {path.name}",
-                  file=sys.stderr)
-            return 2
+    if workspace.exists():
+        print(f"refusing to overwrite existing workspace: {workspace}",
+              file=sys.stderr)
+        return 2
+    if key_path.exists():
+        # results/ is append-only (record-V1-and-do-not-replace).
+        print(f"refusing to overwrite existing artifact: {key_path.name}",
+              file=sys.stderr)
+        return 2
 
+    workspace.mkdir(parents=True)
     packet_path.write_bytes(out["packet_bytes"])
     key_path.write_text(json.dumps(out["key"], ensure_ascii=False, indent=1),
                         encoding="utf-8")
@@ -228,9 +308,14 @@ def main(argv: list[str]) -> int:
     print(f"packet sha256: {out['key']['packet_sha256']}")
     print(f"cells with no recommendation to judge: "
           f"{len(out['packet']['cells_without_recommendations'])}")
-    print(f"KEY (do not give to reviewers): {key_path.name}")
+    print(f"REVIEWER WORKSPACE (packet only): {workspace}")
+    print(f"KEY (never inside that workspace): results/{key_path.name}")
+    print("\nConfine each reviewer -- human or agent -- to the workspace "
+          "directory.\nAn agent reviewer that can read this repository is "
+          "NOT blinded.")
     print("\nEach reviewer submits: "
-          '{"reviewer_id": "<unique name>", "packet_sha256": "<above>", '
+          '{"reviewer_id": "<declared in the assignment>", '
+          '"packet_sha256": "<above>", "assignment_sha256": "<...>", '
           '"labels": {...}}')
     return 0
 

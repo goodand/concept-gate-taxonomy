@@ -1,0 +1,21 @@
+{
+ "version": 1,
+ "status": "UNASSIGNED",
+ "why": "Independent review round 15, finding #3: the code enforced only that two label files carried different reviewer_id STRINGS. One person submitting the same labels as 'reviewer-A' and 'reviewer-B' passed with n_reviewers=2 and a `safe` verdict -- reproduced. Freezing the assignment before the audit runs is the part of independence a machine can hold.",
+ "what_this_does_and_does_not_prove": {
+  "machine_verified": [
+   "the reviewer_id on a label file was declared before any label was seen",
+   "no id appears twice",
+   "at least min_distinct_reviewer_ids (from safety_audit_spec.json) submitted",
+   "the labels are bound to this assignment by its sha256"
+  ],
+  "NOT_machine_verified": [
+   "that two declared ids are two different PEOPLE",
+   "that the reviewers did not confer",
+   "that a reviewer did not see the automatic scores by other means"
+  ],
+  "consequence": "Report this audit as 'two distinct reviewer IDs, independence procedural'. Do NOT report it as 'two independent reviewers' -- that is a claim about people, and nothing here establishes it."
+ },
+ "reviewers": [],
+ "how_to_fill": "Before running make_safety_audit_blind_input.py, set status to ASSIGNED and list each reviewer as {\"reviewer_id\": \"...\", \"kind\": \"human\" | \"agent\", \"isolation\": \"<how their workspace is restricted>\"}. An agent reviewer MUST have an isolation entry naming the packet-only directory it is confined to; see SAFETY_AUDIT_RUBRIC.md."
+}

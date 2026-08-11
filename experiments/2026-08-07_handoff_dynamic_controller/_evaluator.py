@@ -498,7 +498,7 @@ JUDGE_SOURCES = ("_evaluator.py", "_contract.py")
 # A passed calibration is meaningful only for the exact evaluator, controller,
 # corpus, and hidden labels it exercised. Generated result files are
 # observations, not experiment inputs, so they are intentionally excluded.
-FROZEN_SURFACE_FILES = (
+EXECUTION_SURFACE_FILES = (
     "PREREGISTRATION.md",
     "_contract.py",
     "_controllers.py",
@@ -539,22 +539,41 @@ FROZEN_SURFACE_FILES = (
     "public_cases/cases.json",
     "hidden_gold/gold.json",
     "corpus_manifest.json",
-    # Amendment 34: the blind safety audit is now the ONLY route by which a
-    # safety judgement reaches a result, so its rubric, its blinding, and its
-    # adjudication rules are result-affecting surface. Changing any of them
-    # after qualification must invalidate downstream artifacts exactly as an
-    # evaluator change does -- otherwise the audit's rules could be edited
-    # between seeing the labels and reporting the number.
+)
+
+# Amendment 36 (independent review round 15): the audit surface is pinned just
+# as tightly, but SEPARATELY.
+#
+# Everything above changes what a run MEANS or how it EXECUTES: change one and
+# the provider's isolation evidence, its qualification pilot, and the
+# authorization built on them are all describing a different experiment.
+#
+# The files below govern how the manual safety audit is conducted. They are
+# result-affecting -- the audit is the only route by which a safety judgement
+# reaches a headline -- but editing the audit's rubric has no causal path to
+# whether a provider was isolated during a pilot that already ran. Folding
+# them into one hash set made every audit fix invalidate paid provider
+# qualification, which is a standing pressure NOT to fix the audit. Measured
+# this session: three consecutive audit-only corrections each required a full
+# requalification sequence.
+#
+# Both layers are pinned; they simply answer different questions. See
+# `surface_drift_by_layer`.
+AUDIT_SURFACE_FILES = (
     "SAFETY_AUDIT_RUBRIC.md",
+    "safety_audit_spec.json",
+    "safety_audit_authorities.json",
+    "safety_audit_reviewer_assignment.json",
+    "safety_audit_rubric_fixture.json",
     "make_safety_audit_blind_input.py",
     "apply_safety_audit.py",
-    "s1_recall_fixture.json",
-    # Amendment 35: the reviewer's rule source. Editing which documents a
-    # reviewer judges against changes what "unsafe" means, so it is
-    # result-affecting surface exactly as the rubric is.
-    "safety_audit_authorities.json",
     "measure_s1_recall.py",
+    "s1_recall_fixture.json",
 )
+
+# Kept as the union so every existing pin, artifact, and drift check continues
+# to cover BOTH layers -- narrowing what gets hashed is not the change here.
+FROZEN_SURFACE_FILES = EXECUTION_SURFACE_FILES + AUDIT_SURFACE_FILES
 
 
 def source_hashes() -> dict[str, str]:
@@ -589,6 +608,22 @@ def frozen_surface_drift(pins: dict[str, str] | None) -> list[str]:
     if not isinstance(pins, dict):
         return ["missing frozen_surface_hashes"]
     return sorted(key for key in set(now) | set(pins) if now.get(key) != pins.get(key))
+
+
+def surface_drift_by_layer(pins: dict[str, str] | None) -> dict[str, list[str]]:
+    """Split `frozen_surface_drift` into the execution and audit layers.
+
+    A caller deciding whether a PROVIDER artifact (red-team, qualification) is
+    still valid asks about the execution layer only. A caller deciding whether
+    an AUDIT artifact is still valid asks about both -- an evaluator change
+    moves the numbers the audit is attached to.
+    """
+    drift = set(frozen_surface_drift(pins))
+    audit = set(AUDIT_SURFACE_FILES)
+    return {
+        "execution": sorted(d for d in drift if d not in audit),
+        "audit": sorted(d for d in drift if d in audit),
+    }
 
 
 def run_clean_judge(payload_path: Path, pins: dict[str, str] | None = None) -> dict:
