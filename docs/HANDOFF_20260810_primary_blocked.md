@@ -155,6 +155,29 @@ HEAD   : eca3edb  docs — round-20 링크, closure receipt 1개만 유지
 docstring이 명시한다: 증거가 **존재**한다는 뜻이고 마지막으로 **통과**했다는 뜻이
 아니다.
 
+**#3 — launcher가 이제 실제로 reviewer를 실행한다.** 이전에는
+`subprocess.run(...)`을 부르고 **결과를 버렸고**, release E2E는 command를 아예
+넘기지 않았으며 그 안의 "reviewer label"은 E2E가 **답안 파일에서** 만든 것이었다.
+지금은 stdout을 schema로 검증하고(provider 어댑터와 같은 검사기), blind_id
+집합·rubric 어휘를 대조한 뒤 label artifact를 쓴다. 파싱 실패·schema 불일치·id
+불일치·rubric 외 label·비영 종료는 **전부 거부**다.
+
+결속이 핵심이다: release E2E는 **adjudicator에게 넘기는 파일의 바이트가 서명된
+receipt의 `reviewer_output_sha256`과 같은지** 대조하고, 그 대조에 mutation
+케이스(`reviewer.labels.from-launcher`)가 붙어 있다. probe-only 실행은 두 해시가
+`null`이라 **구별된다** — 이전에는 구별되지 않아 "launcher가 reviewer를 돌렸다"가
+반증 불가능했다.
+
+이 배선이 순서도 바로잡았다. isolation 블록은 **adjudication 뒤**에 있었으므로
+label을 만들었더라도 adjudicator가 읽은 것일 수가 없었다. 지금은 7b(adjudication
+앞)다.
+
+**부수 효과: `e2e --offline`이 이제 exit 2다.** offline은 reviewer를 돌리지 않으니
+`reviewer.labels.from-launcher`가 정직하게 UNKNOWN이고, PARTIAL은 pass가 아니다.
+`allow_partial=True`라 BLOCKED(2)이며 smoke 테스트가 받는 값이다. 덕분에 **네
+라운드 동안 도달 불가였던 PARTIAL 분기가 실제로 실행된다** — 그 테스트는 정적
+계층을 물어보고 있었고, 정적 계층은 구성상 전부 PASS였다.
+
 **`e2e --primary`는 거부한다**(exit 2). provider·authorization·attempt claim이
 없는데 "the 32-cell run"이라 안내하고 있었다. 실제 primary는
 `run_live_phase_c.py --primary --config <name>`이다.
@@ -169,14 +192,23 @@ receipt는 자기 자신을 담은 커밋을 가리킬 수 없어 `git_commit`�
 ### 21라운드 실측 (이 환경)
 
 ```
-closure         322dc9e37532
-e2e --release   exit 0     current_run 3종 PASS, effective_unknown []
-                receipt release_dd1aefd94e99.json
+closure         5f5f37c4e53e
+e2e --release   exit 0     current_run 4종 PASS, effective_unknown []
+                [7b] labels-from-launcher ['PASS','PASS'] 두 파일
+                receipt release_607419c6cd99.json
+e2e --offline   exit 2     PARTIAL — reviewer를 돌리지 않으므로
+                           reviewer.labels.from-launcher UNKNOWN (정직한 상태)
 e2e --primary   exit 2     BLOCKED: primary mode is not implemented
 doctor          exit 1     4 pass, 1 fail, 3 blocked  (qualification stale — §5)
-실험 suite      283 passed / 2 skipped
+실험 suite      294 passed / 1 skipped   (mutation 11종 포함)
 저장소 게이트   9 passed / 1 failed(owlready2 부재, 기존) / 1 blocked
 ```
+
+**의무는 11종이 됐다** — `reviewer.labels.from-launcher`가 추가됐고 mutation
+케이스를 가진다. 그 mutation은 처음에 `MENTION`→`UNRELATED`였는데 **너무 넓어서**
+qualification 답안까지 바꿔 다른 신호(자격 미달)를 냈다. label artifact에 공백
+한 칸을 덧붙이는 것으로 좁혔다 — JSON은 유효하고 label과 qualification은 그대로이며
+**바뀌는 것은 바이트뿐**이다. mutation은 한 가지만 분리해야 한다.
 
 ## 4. 절대 하면 안 되는 것
 
@@ -589,11 +621,13 @@ qualification 러너 자체는 보이므로 현재 구성으로 동작한다.
 - [x] **21라운드 수정 9건 — 완료.**
       [`docs/feedback/plan_round21_forgeable_receipts_and_real_reviewer.md`](feedback/plan_round21_forgeable_receipts_and_real_reviewer.md).
       8/8 재현 + 내가 놓친 2건. 상태는 §3b
-- [ ] **실제 reviewer adapter (#3)** — `run_reviewer(command=...)`가 프로세스를
-      실행하는 경로는 있으나 **stdout JSON 수집·schema 검증·label artifact 저장이
-      없다.** release E2E는 command를 넘기지 않는 probe-only이고, 그 안의 label은
-      answer key에서 만든 합성물이다. canary에 실제 판정을 시키려면 이것이 먼저다
-- [ ] **live canary — 1 case × 1 arm 실제 provider 호출.** 다음 할 일
+- [x] **실제 reviewer adapter (#3) — 완료.** launcher가 sandbox 안에서 프로세스를
+      실행하고 stdout을 schema 검증한 뒤 label artifact를 쓴다. release E2E가
+      adjudicator에게 넘기는 파일의 바이트가 서명된 receipt의
+      `reviewer_output_sha256`과 같은지 대조하며, 그 결속에 mutation 케이스가 있다
+- [ ] **live canary — 1 case × 1 arm 실제 provider 호출.** 다음 할 일. `command`에
+      실제 CLI를 넘기는 자리는 이제 있다 — `_stub_reviewer_script`가 그 자리를
+      점유한 stub이며 무엇이 아닌지 docstring이 명시한다
 - [ ] 5절 절차 (canary → 32칸 → 재-qualification → primary)
 - [ ] 판정자 배정 (`safety_audit_reviewer_assignment.json`이 `UNASSIGNED`)
 - [ ] **감사 가능한 primary artifact** — 현 authorization이 가리키는 config로
@@ -689,20 +723,27 @@ Amendment 37/38에서 추가·변경된 것:
 
 ### 21라운드가 만든 receipt
 
-closure가 **3벌**인 것은 실수가 아니라 기록이다. AUDIT 표면을 고칠 때마다
-closure receipt가 낡으므로, 편집이 끝날 때까지 세 번 돌았다 — "closure는
-마지막에"라는 규율이 왜 규율인지를 그대로 보여준다. 앞의 둘은 현재 표면을
-기술하지 않으므로 `_closure_receipt()`가 건너뛴다. `results/`는 append-only라
-지우지 않는다.
+현행 두 개만 링크한다:
 
-- [`closure_322dc9e37532.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_322dc9e37532.json) — **현행**
-- [`closure_f9537e3ca452.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_f9537e3ca452.json) — 대체됨
-- [`closure_ec6a8edc59ff.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_ec6a8edc59ff.json) — 대체됨
-- [`closure_972be6f2df75.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_972be6f2df75.json) — 대체됨
-- [`release_dd1aefd94e99.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_dd1aefd94e99.json) — **현행**
-- [`release_22cb80b19ff4.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_22cb80b19ff4.json) — 대체됨
-- [`release_231f554f5cea.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_231f554f5cea.json) — 대체됨
-- [`release_1f64ed9080d8.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_1f64ed9080d8.json) — 대체됨
+- [`closure_5f5f37c4e53e.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_5f5f37c4e53e.json)
+- [`release_607419c6cd99.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_607419c6cd99.json)
+
+**대체된 receipt는 링크하지 않는다. 그것이 의도다.** AUDIT 표면을 고칠 때마다
+closure receipt가 낡으므로 이번 라운드에 여러 번 돌았고 — "closure는 마지막에"가
+왜 규율인지의 실측이다 — `results/`는 append-only라 지우지 않는다. 대체된 것들을
+이 파일에 열거하면 **실행마다 썩는 목록**이 생긴다.
+
+따라서 `--fail-on orphans`는 **대체된 closure/release receipt를 이름으로
+지목한다. 그것이 기대되는 상태다** — 그들은 문서가 아니라 생성된 증거다. 현행
+두 개가 링크돼 있는지만 확인하라. 어느 것이 현행인지는 파일이 아니라 코드가
+말한다:
+
+```bash
+python3 -c "
+import sys; sys.path.insert(0,'.')
+import run_pipeline as rp
+print(rp._closure_receipt()['frozen_surface_digest'][:12])"
+```
 
 **이 절의 링크는 도달성 검증용이고, 그 검증은 기본값으로 돌지 않는다.**
 `scripts/handoff_reachability.py`의 `DEFAULT_ENTRY`는 `docs/HANDOFF.md`이고,
@@ -715,7 +756,8 @@ python3 scripts/handoff_reachability.py \
     --ref <base-commit> --fail-on orphans
 ```
 
-실측(base `3dd60a3`, 21라운드): 이 진입점으로 **orphans 0**, 기본 진입점으로는 4건.
+실측(base `3dd60a3`, 21라운드): 이 진입점으로 **orphans는 대체된 receipt뿐**
+(위 절 참조), 문서·코드 변경은 전부 도달 가능.
 
 **`--ref`를 빼면 다른 것을 측정한다.** `--ref`는 그 커밋 이후 **변경된 파일**로
 범위를 좁힌다. 빼면 저장소 전역이 되고, 그때 orphans는 이 편집과 무관하게
