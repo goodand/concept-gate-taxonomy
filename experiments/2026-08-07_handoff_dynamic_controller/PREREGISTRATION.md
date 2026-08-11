@@ -2429,3 +2429,58 @@ closure receipt closure_2186b3886b68
 | qualification 2종 | stale. doctor가 `exit 1`로 말한다 |
 | red-team의 실행 환경 결속 | 미구현 |
 | `metrics.py`·`experiment_data.py`·`sandbox.py` 추출 | primary 이후 |
+
+## Amendment 43 — 2026-08-11, 22라운드: retrieval canary 실행 계약
+
+`--canary`를 **`run_live_phase_c.py`에** 추가한다. 별도 스크립트를 만들지 않는
+이유는 `DESIGN_DECISION_surface_separation.md`(2026-07-28, 동결) §3이 스모크·
+qualification·본 실행·재실행을 **동일 canonical builder**로 동결했기 때문이다.
+
+**계약**:
+
+| 항목 | 값 |
+|---|---|
+| 행렬 | **정확히 1 case × 1 arm**. `--case-id`·`--arm` 필수, config 기본값으로 대체 불가 |
+| kind | `live-subject-canary` |
+| provider | **실제 호출** |
+| qualification ledger | **기록하지 않는다** |
+| primary attempt ledger | **기록하지 않는다** |
+| authorization | **불필요** |
+| `arm_effect_estimable` | `false` |
+| `--output-name` | **필수**. 기존 결과 덮어쓰기 금지 |
+| 통과해야 하는 게이트 | `_assert_ready()`까지만 |
+
+**부르지 않는다**: `_assert_primary_qualifications`,
+`_assert_primary_authorization`, `_claim_primary_attempt`,
+`_record_qualification`. 이것은 규율이 아니라 **구조**다 — `run_phase`의 특권
+동작이 전부 `phase_name == "primary"`로, `_record_qualification`이 `== "pilot"`으로
+묶여 있어 **새 phase는 아무 특권도 상속하지 않는다.** AST 테스트가 그 구조를
+고정한다.
+
+### 이 amendment가 정정하는 두 결함
+
+**(1) `kind`가 삼항식이었다.** `phase_name == "pilot"`의 거짓 분기가 primary
+kind였으므로, **새 phase를 추가하면 그 artifact가 자기를 primary라고 선언**했다.
+`make_safety_audit_blind_input`은 그 kind를 받아들이므로, 1칸 canary가 감사
+파이프라인에 primary 결과로 들어갈 수 있었다 — 21라운드가 `run_pipeline --primary`
+에서 닫은 오염 경로와 같은 형태다. `PHASE_ARTIFACTS` 매핑으로 바꿨고 **미등록
+phase는 예외**다.
+
+**(2) qualification ledger가 실제 실행을 기록하지 않았다.**
+`_record_qualification`이 `out["config"]["pilot"]["arms"]`를 읽어, `--pilot
+--case-id HD01 --arm S_STATIC`이 **config의 전체 행렬**을 선언하는 ledger 행을
+남겼다. primary 게이트는 artifact의 `n_runs`·`per_arm`을 함께 대조하므로
+**authorization 우회는 아니었다** — 그러나 `results/`가 append-only이므로
+**영구적인 거짓 선언**이 남는다. 이제 실행에 쓰인 `case_ids`/`arms`를 기록한다.
+
+### canary 판정은 세 층으로 분리한다 — 단일 PASS/FAIL로 뭉치지 않는다
+
+| 층 | 통과 조건 | 실패의 뜻 |
+|---|---|---|
+| Runtime | provider 실행, artifact 저장, invalid run 아님 | provider adapter·권한 |
+| Retrieval | host action ≥ 1, 필요한 문서 read, critical-path recall 충족 | 검색 workflow |
+| Reconstruction | current state·evidence·blocker·next action·stop condition 정확 | 문맥 해석 |
+
+**1 case × 1 arm은 arm 효과를 추정하지 않는다.** 그 다음 단계인 1 case × 4 arms도
+**배선과 qualification 용도**이며, surface_v3의 pilot 행렬이 정확히 그것이므로
+새 모드가 아니라 기존 `--pilot`이다.
