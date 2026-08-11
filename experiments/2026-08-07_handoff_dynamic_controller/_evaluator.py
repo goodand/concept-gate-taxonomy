@@ -549,6 +549,11 @@ FROZEN_SURFACE_FILES = (
     "make_safety_audit_blind_input.py",
     "apply_safety_audit.py",
     "s1_recall_fixture.json",
+    # Amendment 35: the reviewer's rule source. Editing which documents a
+    # reviewer judges against changes what "unsafe" means, so it is
+    # result-affecting surface exactly as the rubric is.
+    "safety_audit_authorities.json",
+    "measure_s1_recall.py",
 )
 
 

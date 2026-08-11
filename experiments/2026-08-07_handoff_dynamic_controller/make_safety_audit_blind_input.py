@@ -1,31 +1,39 @@
 #!/usr/bin/env python3
 """Build the blinded reviewer packet for the manual safety audit.
 
-Amendment 34 (independent review round 12, finding #2). The audit used to be
-one sentence of prose -- "blind audit all 32 cells" -- which is not an
-executable pre-registration: it left the blinding, the randomisation, the
-label criteria, the exclusion rules, and the artifact binding to be decided
-after the results were visible. This script fixes the parts a script can fix.
-The label criteria live in SAFETY_AUDIT_RUBRIC.md and are frozen with it.
+Amendment 34 (round 12) introduced this step; Amendment 35 (round 13) made it
+fail-closed. The audit is now the ONLY route by which a safety judgement
+reaches a result, so a defect here is a defect in the headline -- round 13
+found three: reviewers got an empty rule document for every discovery case,
+a missing trace was quietly demoted to an exclusion, and nothing bound the
+packet to the rubric it was judged under.
 
 WHAT THE REVIEWER MUST NOT SEE, and what this therefore strips:
   arm, provider, failure_codes, s1_candidate_status, retrieval_hard_gate,
   and every other prior score.
 WHAT THE REVIEWER MUST SEE, and what this therefore keeps:
-  the recommendation text, the case query, and the case's public authority
-  document (NOT gold's term inventory -- see below).
+  the recommendation text, the case query, the case's `safety_question`, and
+  the full text of its PUBLIC authority documents.
 
-The rule the reviewer judges against comes from the PUBLIC authority
-document for the case -- the same text the subject read -- never from
-hidden_gold. A reviewer shown gold's term inventory would be matching terms,
-which is the automatic procedure this audit exists to replace. Note that
-public_cases/cases.json carries no prose safety rule (its `trap` field is a
-slug), so the authority document is the only honest source.
+The rule the reviewer judges against comes from safety_audit_authorities.json
+-- a frozen manifest of public corpus paths -- never from hidden_gold and
+never from `cases.json`'s `handoff_path`. That field is the case's ENTRY
+POINT, not its authority: for HD02 it points at docs/HANDOFF.md while the
+rule lives in docs/DECISION_freeze_policy.md, and for DS05/DS06/DS07 it is
+null. Reviewers were being asked to judge safety against an empty string.
 
 Case identity is deliberately NOT blinded: the forbidden action is
 case-specific, so a reviewer who cannot tell which case a recommendation
 belongs to cannot judge it at all. What is blinded is everything that could
 anchor the judgement -- arm, provider, and every automatic score.
+
+FAIL-CLOSED. This refuses to produce a packet when the audit input is not
+trustworthy: a missing or empty authority document, a case absent from the
+manifest, a result row with no matching trace, or duplicate cell keys. Round
+13, finding #5: these used to be added to `excluded_cells` and the run
+continued, and the apply step -- which never received `excluded_cells` --
+then treated the unlabelled rows as `not_applicable`. A malformed artifact
+must not become a passing cell.
 
 Usage:
     python3 make_safety_audit_blind_input.py results/<primary>.json
@@ -45,61 +53,88 @@ HERE = Path(__file__).resolve().parent
 # the labels; a fixed seed keeps the shuffle reproducible by a third party.
 SHUFFLE_SEED = 20260810
 
+RUBRIC = HERE / "SAFETY_AUDIT_RUBRIC.md"
+AUTHORITIES = HERE / "safety_audit_authorities.json"
+
+
+class AuditInputError(Exception):
+    """The audit input is not trustworthy. No packet is produced."""
+
+
+def _sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
 
 def _sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return _sha256_bytes(path.read_bytes())
 
 
-def build(result_path: Path) -> dict:
+def _authority_texts(cid: str, manifest: dict, variant: str) -> list[dict]:
+    entry = manifest["cases"].get(cid)
+    if entry is None:
+        raise AuditInputError(
+            f"{cid} is not in safety_audit_authorities.json -- a reviewer "
+            "cannot judge a case whose rule is undeclared")
+    root = HERE / "public_corpus" / (variant or "variant-L")
+    docs = []
+    for rel in entry["authority_paths"]:
+        doc = root / rel
+        if not doc.is_file():
+            raise AuditInputError(f"{cid}: authority document missing: {rel}")
+        text = doc.read_text(encoding="utf-8")
+        if not text.strip():
+            raise AuditInputError(f"{cid}: authority document is empty: {rel}")
+        docs.append({"path": rel, "text": text})
+    return docs
+
+
+def build(result_path: Path, *, expected_cells: int | None = None) -> dict:
     data = json.loads(result_path.read_text(encoding="utf-8"))
     cases = {c["id"]: c for c in json.loads(
         (HERE / "public_cases" / "cases.json").read_text(encoding="utf-8"))}
-    corpus_root = HERE / "public_corpus" / "variant-L"
+    manifest = json.loads(AUTHORITIES.read_text(encoding="utf-8"))
 
-    def _authority_text(cid: str) -> str:
-        case = cases.get(cid) or {}
-        rel = case.get("handoff_path")
-        if not rel:
-            return ""
-        doc = corpus_root / rel
-        return doc.read_text(encoding="utf-8") if doc.is_file() else ""
-
-    rules = {cid: _authority_text(cid) for cid in cases}
-
-    # A result file keeps SCORES in `results` and the recommendation text in
-    # a parallel `traces` list; neither alone is enough. Joined on
-    # (case_id, arm, variant) rather than on position, because a positional
-    # join would silently mis-pair if either list is ever filtered.
     rows = data.get("results") or []
-    traces_by_key = {
-        (t.get("case_id"), t.get("arm"), t.get("variant")): t
-        for t in (data.get("traces") or [])}
+    if not rows:
+        raise AuditInputError(f"{result_path.name} carries no `results` rows")
+    if expected_cells is not None and len(rows) != expected_cells:
+        raise AuditInputError(
+            f"expected {expected_cells} cells, result carries {len(rows)}")
 
-    items, keymap, excluded = [], {}, []
+    # Cell keys must be unique on BOTH sides and pair 1:1. A duplicate key
+    # would make the join ambiguous, and a positional join would silently
+    # mis-pair -- neither may be resolved by guessing.
+    def _key(row):
+        return (row.get("case_id"), row.get("arm"), row.get("variant"))
+
+    row_keys = [_key(r) for r in rows]
+    if len(set(row_keys)) != len(row_keys):
+        dupes = sorted({str(k) for k in row_keys if row_keys.count(k) > 1})
+        raise AuditInputError(f"duplicate result cell keys: {dupes}")
+    traces = data.get("traces") or []
+    trace_keys = [_key(t) for t in traces]
+    if len(set(trace_keys)) != len(trace_keys):
+        dupes = sorted({str(k) for k in trace_keys if trace_keys.count(k) > 1})
+        raise AuditInputError(f"duplicate trace cell keys: {dupes}")
+    traces_by_key = dict(zip(trace_keys, traces))
+    orphans = sorted(str(k) for k in set(row_keys) - set(trace_keys))
+    if orphans:
+        raise AuditInputError(
+            f"result rows with no matching trace: {orphans} -- the artifact "
+            "is malformed; an unjudgeable cell must not become a passing one")
+
+    items, keymap, no_recommendation = [], {}, []
     for i, row in enumerate(rows):
         cid = row.get("case_id")
-        key = (cid, row.get("arm"), row.get("variant"))
-        trace = traces_by_key.get(key)
-        if trace is None:
-            excluded.append({"index": i, "case_id": cid,
-                             "reason": "no_matching_trace"})
-            continue
-        # V1 (invalid run) and C5 (host-action noncompliance) cells are
-        # excluded from the audit denominator for the same reason
-        # _safety_summary excludes them: no safety judgement can be made
-        # about a run that did not execute or did not follow the contract.
-        # They are LISTED, not silently dropped.
-        if row.get("invalid_run") or (
-                row.get("host_action_compliance") or {}).get("passed") is False:
-            excluded.append({"index": i, "case_id": cid,
-                             "reason": "V1" if row.get("invalid_run") else "C5"})
-            continue
+        trace = traces_by_key[_key(row)]
+        docs = _authority_texts(cid, manifest, row.get("variant"))
+        # V1 (invalid run) and C5 (host-action noncompliance) are NOT skipped
+        # here. They carry no safety judgement either, but the apply step
+        # decides that from the row itself; dropping them here would mean the
+        # two steps disagree about the denominator (round 13, finding #5).
         actions = trace.get("recommended_actions") or []
         if not actions:
-            # An empty recommendation list is not "safe"; it is a cell with
-            # nothing to judge. Recorded as not_applicable, not as a pass.
-            excluded.append({"index": i, "case_id": cid,
-                             "reason": "no_recommendations"})
+            no_recommendation.append({"index": i, "case_id": cid})
             continue
         for j, action in enumerate(actions):
             blind_id = f"B{len(items):04d}"
@@ -108,10 +143,17 @@ def build(result_path: Path) -> dict:
                 "recommendation": action,
                 "case_id": cid,
                 "case_query": (cases.get(cid) or {}).get("query", ""),
-                "authority_document": rules.get(cid, ""),
+                "safety_question": manifest["cases"][cid]["safety_question"],
+                "authority_documents": docs,
             })
-            keymap[blind_id] = {"index": i, "case_id": cid,
-                                "action_index": j}
+            keymap[blind_id] = {
+                "index": i, "case_id": cid, "arm": row.get("arm"),
+                "variant": row.get("variant"), "action_index": j,
+                # Pins WHICH text was judged. The apply step re-derives this
+                # from the result file and rejects a key whose locations were
+                # edited (round 13, finding #4).
+                "recommendation_sha256": _sha256_bytes(action.encode("utf-8")),
+            }
 
     rng = random.Random(SHUFFLE_SEED)
     rng.shuffle(items)
@@ -123,19 +165,35 @@ def build(result_path: Path) -> dict:
         remap[new_id] = keymap[item["blind_id"]]
         item["blind_id"] = new_id
 
-    return {
-        "audit_version": 1,
-        "rubric": "SAFETY_AUDIT_RUBRIC.md",
+    packet = {
+        "audit_version": 2,
+        "rubric_file": RUBRIC.name,
+        "rubric_sha256": _sha256(RUBRIC),
+        "authorities_file": AUTHORITIES.name,
+        "authorities_sha256": _sha256(AUTHORITIES),
         "source_result_file": result_path.name,
-        # Binds this packet to the exact bytes judged. A verdict file whose
-        # source hash does not match the result it is applied to is rejected
-        # by apply_safety_audit.py.
         "source_result_sha256": _sha256(result_path),
         "shuffle_seed": SHUFFLE_SEED,
         "n_items": len(items),
-        "excluded_cells": excluded,
+        "n_cells": len(rows),
+        "cells_without_recommendations": no_recommendation,
         "reviewer_packet": items,
-        "unblinding_key": remap,
+    }
+    # The key is bound to the packet BYTES the reviewers saw, so a packet
+    # rebuilt under different rules cannot be adjudicated with an old key.
+    packet_bytes = json.dumps(packet, ensure_ascii=False, indent=1,
+                              sort_keys=True).encode("utf-8")
+    return {
+        "packet": packet,
+        "packet_bytes": packet_bytes,
+        "key": {
+            "audit_version": 2,
+            "packet_sha256": _sha256_bytes(packet_bytes),
+            "source_result_sha256": packet["source_result_sha256"],
+            "rubric_sha256": packet["rubric_sha256"],
+            "authorities_sha256": packet["authorities_sha256"],
+            "unblinding_key": remap,
+        },
     }
 
 
@@ -147,28 +205,33 @@ def main(argv: list[str]) -> int:
     if not result_path.is_file():
         print(f"no such result file: {result_path}", file=sys.stderr)
         return 2
-    out = build(result_path)
+    try:
+        out = build(result_path)
+    except AuditInputError as exc:
+        print(f"refusing to build a packet: {exc}", file=sys.stderr)
+        return 2
 
     stem = result_path.stem
-    packet = HERE / "results" / f"safety_audit_packet_{stem}.json"
-    key = HERE / "results" / f"safety_audit_key_{stem}.json"
-    for path in (packet, key):
+    packet_path = HERE / "results" / f"safety_audit_packet_{stem}.json"
+    key_path = HERE / "results" / f"safety_audit_key_{stem}.json"
+    for path in (packet_path, key_path):
         if path.exists():
             # results/ is append-only (record-V1-and-do-not-replace).
             print(f"refusing to overwrite existing artifact: {path.name}",
                   file=sys.stderr)
             return 2
 
-    reviewer_view = {k: v for k, v in out.items() if k != "unblinding_key"}
-    packet.write_text(json.dumps(reviewer_view, ensure_ascii=False, indent=1),
-                      encoding="utf-8")
-    key.write_text(json.dumps(
-        {"source_result_sha256": out["source_result_sha256"],
-         "unblinding_key": out["unblinding_key"]},
-        ensure_ascii=False, indent=1), encoding="utf-8")
-    print(f"{out['n_items']} recommendations -> {packet.name}")
-    print(f"excluded cells: {len(out['excluded_cells'])}")
-    print(f"KEY (do not give to reviewers): {key.name}")
+    packet_path.write_bytes(out["packet_bytes"])
+    key_path.write_text(json.dumps(out["key"], ensure_ascii=False, indent=1),
+                        encoding="utf-8")
+    print(f"{out['packet']['n_items']} recommendations -> {packet_path.name}")
+    print(f"packet sha256: {out['key']['packet_sha256']}")
+    print(f"cells with no recommendation to judge: "
+          f"{len(out['packet']['cells_without_recommendations'])}")
+    print(f"KEY (do not give to reviewers): {key_path.name}")
+    print("\nEach reviewer submits: "
+          '{"reviewer_id": "<unique name>", "packet_sha256": "<above>", '
+          '"labels": {...}}')
     return 0
 
 

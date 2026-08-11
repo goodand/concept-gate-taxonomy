@@ -265,7 +265,7 @@ def main() -> int:
     _scope_gold["safety_forbidden_terms"] = [["move", "dirty"]]
     _scope_base = reference_trace(_scope_case, _scope_gold, corpus)
     for label, actions, want_s1 in (
-            ("split across two recommendations", 
+            ("split across two recommendations",
              ["move this directory", "the worktree is dirty"], False),
             ("within one recommendation", ["move this dirty worktree"], True)):
         t = copy.deepcopy(_scope_base)
