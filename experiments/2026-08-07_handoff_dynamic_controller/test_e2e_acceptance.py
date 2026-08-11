@@ -54,11 +54,12 @@ class Obligation:
     remove: str            # exact source fragment whose deletion disables it
     replace_with: str      # what to put in its place (keeps syntax valid)
     expected_signal: str   # what the E2E must print once it is gone
+    mode: str = "--offline"  # some obligations only run under --release
 
 
 OBLIGATIONS = (
     Obligation(
-        obligation_id="audit.input.validated",
+        obligation_id="audit.input-validated",
         stage_id="audit.input-validated",
         target="make_safety_audit_blind_input.py",
         remove="    traces_by_key = validate_audit_input(data, spec, source=result_path.name)",
@@ -112,11 +113,29 @@ OBLIGATIONS = (
     ),
     Obligation(
         obligation_id="reviewer.assignment.frozen",
-        stage_id="reviewer.qualification-enforced",
+        stage_id="reviewer.assignment-enforced",
         target="apply_safety_audit.py",
         remove='        if doc["reviewer_id"] not in declared_ids:',
         replace_with="        if False:",
-        expected_signal="",   # see test below: this one has no E2E signal yet
+        expected_signal="accepted an undeclared reviewer",
+    ),
+    Obligation(
+        obligation_id="reviewer.isolation.enforced",
+        stage_id="reviewer.assignment-enforced",
+        target="reviewer_runner.py",
+        # Removing `elif leaked:` was tried first and is a no-op IN EFFECT:
+        # with nothing leaking there is no leak to miss, so the source changed
+        # and the observable behaviour did not. run_calibration's applied-check
+        # catches no-op mutations at the source level; this is the same trap
+        # one level deeper -- an applied mutation on an unexercised path.
+        #
+        # So the mutation opens the boundary instead: a profile that allows
+        # everything makes the forbidden probes reachable, and the E2E must
+        # notice.
+        remove='    return seatbelt_profile(HERE, HERE / "results")',
+        replace_with='    return "(version 1)\\n(allow default)"',
+        expected_signal="reached",
+        mode="--release",
     ),
     Obligation(
         obligation_id="bundle.written.to.disk",
@@ -139,26 +158,17 @@ OBLIGATIONS = (
 # Obligations with no E2E signal YET. Recorded rather than dropped: an
 # obligation the E2E does not observe is a gap in the E2E, and the honest
 # place for it is a list someone reads, not silence.
-import run_pipeline as _rp  # noqa: E402
-
-UNGUARDED_STAGES = _rp.UNGUARDED_STAGES
-
-NO_SIGNAL_YET = {
-    "reviewer.assignment.frozen":
-        "the E2E always submits reviewers that ARE in the assignment, so "
-        "deleting this check changes nothing it observes. Needs an E2E stage "
-        "that submits an undeclared reviewer_id, the same way stage 6 submits "
-        "an unqualified one.",
-}
+NO_SIGNAL_YET: dict[str, str] = {}
 
 
 def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def _run_e2e_subprocess(cwd: Path | None = None) -> subprocess.CompletedProcess:
+def _run_e2e_subprocess(cwd: Path | None = None, mode: str = "--offline"
+                        ) -> subprocess.CompletedProcess:
     return subprocess.run(
-        [sys.executable, "run_pipeline.py", "e2e", "--offline"],
+        [sys.executable, "run_pipeline.py", "e2e", mode],
         cwd=cwd or HERE, capture_output=True, text=True, timeout=180)
 
 
@@ -182,11 +192,20 @@ def _mutation_workspace():
     (`docs/EXPERIMENT_METHODOLOGY.md` §4).
     """
     with tempfile.TemporaryDirectory(prefix="mut-ws-") as tmp:
-        target = Path(tmp) / "exp"
+        # Mirror the real layout: <repo>/experiments/<name>/ plus
+        # <repo>/conceptgate. run_pipeline resolves cg_obligations through
+        # HERE.parents[1], so a flat copy would make the mutant fail on an
+        # ImportError and every mutation would look "detected" for the wrong
+        # reason -- a false positive in the gate that is supposed to be the
+        # last line of defence.
+        repo = Path(tmp) / "repo"
+        target = repo / "experiments" / HERE.name
         shutil.copytree(
             HERE, target,
             ignore=shutil.ignore_patterns("__pycache__", "audit_workspace",
                                           ".pytest_cache"))
+        shutil.copytree(HERE.parents[1] / "conceptgate", repo / "conceptgate",
+                        ignore=shutil.ignore_patterns("__pycache__"))
         yield target
 
 
@@ -234,7 +253,19 @@ def test_removing_a_production_obligation_makes_the_e2e_fail(ob, tmp_path):
         # worktree behind at worst, not mutated production code.
         (work_dir / ob.target).write_text(mutated, encoding="utf-8")
         manifest["tree"] = str(work_dir)
-        proc = _run_e2e_subprocess(cwd=work_dir)
+        if ob.mode == "--release":
+            # `--release` requires a closure receipt describing the CURRENT
+            # surface, and the mutation just changed it. Re-closing inside the
+            # workspace makes the mutant a coherent tree: without this every
+            # release-mode mutation would be "detected" by the closure gate
+            # rather than by the check under test -- a false positive in the
+            # gate of last resort.
+            closed = subprocess.run(
+                [sys.executable, "run_pipeline.py", "closure"], cwd=work_dir,
+                capture_output=True, text=True, timeout=300)
+            manifest["workspace_closure_exit"] = closed.returncode
+            assert closed.returncode == 0, closed.stdout[-800:]
+        proc = _run_e2e_subprocess(cwd=work_dir, mode=ob.mode)
 
     manifest["observed_exit"] = proc.returncode
     manifest["observed_signal"] = ob.expected_signal in proc.stdout
@@ -266,38 +297,51 @@ def test_mutations_never_touch_the_active_worktree():
     assert "shutil.copytree" in source
 
 
-def test_stage_ids_match_the_registry_exactly():
-    """SET EQUALITY, not a count. Round 19, finding #3: the previous check was
-    `covered >= 5`, which cannot say WHICH stage is unprotected -- and two
-    were.
+def test_obligations_match_the_pipeline_registry_exactly():
+    """SET equality on OBLIGATIONS, not on stages.
 
-    Stages with no obligation are listed in UNGUARDED_STAGES with a reason.
-    They do not silently pass: `e2e --offline` reports PARTIAL and exits
-    BLOCKED while any exist, the same rule cg_obligations.aggregate() applies
-    (PASS only when everything is PASS).
+    Round 20, finding #1: coverage was a set difference over stages, so an
+    explicitly unverified obligation hid behind a guarded sibling on the same
+    stage. The unit of completion is the obligation.
     """
-    import run_pipeline
-    declared = set(run_pipeline.STAGE_IDS.values())
-    guarded = {o.stage_id for o in OBLIGATIONS
+    import run_pipeline as rp
+    from conceptgate.cg_obligations import Verdict
+    mutated = {o.obligation_id for o in OBLIGATIONS
                if o.obligation_id not in NO_SIGNAL_YET}
-    unguarded = declared - guarded
-    assert unguarded == set(UNGUARDED_STAGES), (
-        f"stages with no mutation guard: {sorted(unguarded)}; "
-        f"declared as unguarded: {sorted(UNGUARDED_STAGES)}")
-    assert guarded <= declared, (
-        f"obligations point at stages the E2E does not print: "
-        f"{sorted(guarded - declared)}")
-    for name, reason in {**UNGUARDED_STAGES, **NO_SIGNAL_YET}.items():
-        assert len(reason) > 40, f"{name}: reason is too thin to review"
+    declared = set(rp.OBLIGATIONS)
+    assert mutated <= declared, (
+        f"mutations for obligations the pipeline does not declare: "
+        f"{sorted(mutated - declared)}")
+    for name, verdict in rp.OBLIGATIONS.items():
+        if verdict is Verdict.PASS:
+            mechanism = rp.PROVEN_BY[name]
+            if mechanism == "mutation":
+                assert name in mutated, (
+                    f"{name} is declared PASS by mutation but no mutation "
+                    "demonstrates it")
+            else:
+                # An acceptance-test mechanism is checked in
+                # test_pipeline_gates.test_every_obligation_records_how_it_is_proven
+                assert mechanism.startswith("acceptance:"), mechanism
+        else:
+            assert name in rp.UNKNOWN_REASONS, (
+                f"{name} is not PASS and has no recorded reason")
+            assert len(rp.UNKNOWN_REASONS[name]) > 40, name
+    # Every obligation must point at a stage the E2E actually prints.
+    stages = set(rp.STAGE_IDS.values())
+    for ob in OBLIGATIONS:
+        assert ob.stage_id in stages, (
+            f"{ob.obligation_id} guards stage {ob.stage_id!r}, which the E2E "
+            "does not print")
 
 
-def test_the_e2e_reports_partial_while_any_stage_is_unguarded():
-    """An unguarded stage must not be invisible in the E2E's own result."""
-    import run_pipeline
-    if not UNGUARDED_STAGES and not NO_SIGNAL_YET:
-        pytest.skip("nothing unguarded; the PARTIAL path has nothing to report")
+def test_the_e2e_reports_partial_while_any_obligation_is_unknown():
+    import run_pipeline as rp
+    from conceptgate.cg_obligations import Verdict
+    if rp.overall_verdict() is Verdict.PASS:
+        pytest.skip("nothing unknown; the PARTIAL path has nothing to report")
     proc = _run_e2e_subprocess()
     assert "PARTIAL" in proc.stdout, (
-        "the E2E reports PASS while stages are unguarded")
+        "the E2E reports PASS while obligations are unproven")
     assert proc.returncode == 2, (
-        f"unguarded stages must exit BLOCKED (2), got {proc.returncode}")
+        f"unproven obligations must exit BLOCKED (2), got {proc.returncode}")

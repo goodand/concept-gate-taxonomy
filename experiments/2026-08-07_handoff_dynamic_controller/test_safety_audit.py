@@ -34,6 +34,7 @@ import apply_safety_audit as _asa  # noqa: E402
 import make_safety_audit_blind_input as _mkblind  # noqa: E402
 import measure_s1_recall as _measure_s1  # noqa: E402
 import _provenance  # noqa: E402
+import _receipt  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -694,7 +695,7 @@ def test_offline_e2e_runs_the_whole_pipeline(capsys):
     import run_pipeline
     # 0 (PASS) or 2 (PARTIAL -- every step ran, some stage lacks a mutation
     # guard). 1 is a real failure.
-    assert run_pipeline.e2e_offline() in (0, 2), capsys.readouterr().out
+    assert run_pipeline.run_pipeline(run_pipeline.RunSpec.for_mode("offline-smoke")) in (0, 2), capsys.readouterr().out
 
 
 # --------------------------------------------------------------------------
@@ -864,7 +865,7 @@ def test_the_key_is_bound_to_the_same_receipt_as_the_packet(tmp_path):
     key = json.loads(kp.read_text(encoding="utf-8"))
     if packet.get("provenance") is None:
         pytest.skip("miniature spec runs without provenance")
-    assert key["provenance_sha256"] == _mkblind._receipt_sha256(
+    assert key["provenance_sha256"] == _receipt.receipt_sha256(
         packet["provenance"])
 
 
@@ -895,5 +896,5 @@ def test_the_final_bundle_carries_provenance_without_the_artifacts_self_report(
     receipt = _provenance.verify_run(path, root=root, mode=_provenance.SYNTHETIC)
     built = _mkblind.build(path, receipt=receipt)
     assert built["packet"]["provenance"]["mode"] == _provenance.SYNTHETIC
-    assert built["key"]["provenance_sha256"] == _mkblind._receipt_sha256(
+    assert built["key"]["provenance_sha256"] == _receipt.receipt_sha256(
         built["packet"]["provenance"])

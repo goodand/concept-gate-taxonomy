@@ -36,14 +36,23 @@ import argparse
 import hashlib
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+# The repository root, for conceptgate.cg_obligations. Imported rather than
+# re-implemented: its Verdict/aggregate already say "PASS only when everything
+# is PASS, otherwise UNKNOWN", and a second verdict vocabulary in this
+# experiment is exactly the duplication round 20 objected to. If it cannot be
+# imported, that is a BLOCKED condition, not a reason to define a local enum.
+sys.path.insert(0, str(HERE.parents[1]))
 
+from conceptgate.cg_obligations import Verdict, aggregate  # noqa: E402
 import apply_safety_audit as asa  # noqa: E402
 from _provenance import SYNTHETIC, ProvenanceError, verify_run  # noqa: E402
 import make_safety_audit_blind_input as mkblind  # noqa: E402
@@ -74,27 +83,92 @@ STAGE_IDS = {
     4: "packet.blinded",
     5: "reviewer.qualification-scored",
     6: "reviewer.qualification-enforced",
-    7: "adjudication.applied",
-    8: "bundle.persisted",
+    7: "reviewer.assignment-enforced",
+    8: "adjudication.applied",
+    9: "bundle.persisted",
 }
 
-# Stages no mutation isolates yet, with the reason. Round 19, finding #3: an
-# unguarded stage used to be invisible -- the E2E printed PASS and exited 0
-# regardless. While this is non-empty the run is PARTIAL and exits BLOCKED,
-# the rule conceptgate/cg_obligations.aggregate() already applies: PASS only
-# when everything is PASS, otherwise UNKNOWN. Empty is the goal.
-UNGUARDED_STAGES = {
-    "primary.synthetic-built":
-        "builds the fixture every later stage consumes, so a mutation here "
-        "breaks everything downstream and isolates nothing. Needs a positive "
-        "control rather than a mutation.",
-    "packet.built":
-        "guarded indirectly -- every later stage needs the packet -- but no "
-        "mutation isolates 'the packet CLI ran and wrote where it should'.",
-    "reviewer.qualification-scored":
-        "the fixture's discriminating power is asserted in test_safety_audit, "
-        "not observed through the E2E.",
+# OBLIGATIONS -- the unit of completion.
+#
+# Round 20, finding #1: coverage was computed as a set difference over STAGES,
+# so `reviewer.assignment.frozen` -- explicitly unverified -- was hidden
+# because another obligation on the same stage was guarded. "3 unguarded
+# stages" was true; "3 unguarded obligations" was not. A stage can carry
+# several obligations, and a stage is covered only when all of them are.
+#
+# PASS here means "a mutation removing it makes the release E2E fail", proven
+# by test_e2e_acceptance.py. UNKNOWN means nobody has shown that. Nothing is
+# recorded as PASS on the strength of an assertion inside the E2E itself.
+OBLIGATIONS: dict[str, Verdict] = {
+    "audit.input-validated":           Verdict.PASS,
+    "audit.provenance.bytes-compared": Verdict.PASS,
+    "audit.provenance.propagated":     Verdict.PASS,
+    "packet.blinding.applied":         Verdict.PASS,
+    "reviewer.qualification.required": Verdict.PASS,
+    "reviewer.assignment.frozen":      Verdict.PASS,
+    "reviewer.count.enforced":         Verdict.PASS,
+    "bundle.written.to.disk":          Verdict.PASS,
+    "reviewer.isolation.enforced":     Verdict.PASS,
+    "freeze.closure.current":          Verdict.PASS,
 }
+
+# HOW each obligation is demonstrated. Round 20's design deliberately limits
+# mutation to obligations where removing the code is the only way to observe
+# the absence; the rest are ordinary CLI acceptance tests. Recording the
+# mechanism per obligation stops "PASS" from meaning two different things.
+PROVEN_BY: dict[str, str] = {
+    "audit.input-validated":           "mutation",
+    "audit.provenance.bytes-compared": "mutation",
+    "audit.provenance.propagated":     "mutation",
+    "packet.blinding.applied":         "mutation",
+    "reviewer.qualification.required": "mutation",
+    "reviewer.assignment.frozen":      "mutation",
+    "reviewer.count.enforced":         "mutation",
+    "bundle.written.to.disk":          "mutation",
+    "reviewer.isolation.enforced":     "mutation",
+    "freeze.closure.current":
+        "acceptance:test_release_refuses_without_a_current_closure_receipt",
+}
+
+# Why each UNKNOWN is still UNKNOWN. Empty is the goal; a name here is a
+# commitment someone can read, not silence.
+UNKNOWN_REASONS: dict[str, str] = {}
+
+
+def overall_verdict(obligations: dict[str, Verdict] | None = None) -> Verdict:
+    """PASS only when every obligation is PASS.
+
+    Delegates to conceptgate.cg_obligations.aggregate -- the same rule the
+    obligation layer already applies, so UNKNOWN cannot be laundered into PASS
+    by a second implementation.
+    """
+    @dataclass
+    class _R:            # aggregate() only reads .verdict
+        verdict: Verdict
+
+    return aggregate([_R(v) for v in (obligations or OBLIGATIONS).values()])
+
+
+def _launcher_available() -> bool:
+    """A launcher exists AND can produce receipts. File presence alone is the
+    check round 20 rejected -- an empty stub would satisfy it."""
+    module = HERE / "reviewer_runner.py"
+    if not module.is_file():
+        return False
+    source = module.read_text(encoding="utf-8")
+    return all(marker in source for marker in
+               ("def probe_isolation", "def run_reviewer", "produced_by"))
+
+
+def _closure_receipt() -> dict | None:
+    """The most recent closure receipt, if it describes the CURRENT surface."""
+    from _evaluator import frozen_surface_drift
+    candidates = sorted(RESULTS.glob("closure_*.json"))
+    for path in reversed(candidates):
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        if not frozen_surface_drift(doc.get("frozen_surface_hashes")):
+            return doc
+    return None
 
 
 def _sha256(path: Path) -> str:
@@ -239,19 +313,26 @@ def doctor(config_name: str | None = None) -> int:
         # style of the Seatbelt v2 probes in _providers.py, which found real
         # transcript leaks by running /bin/cat rather than by inspecting a
         # profile string.
-        required = ("sandbox_profile_sha256", "allowed_probe_passed",
-                    "forbidden_probe_passed")
+        import reviewer_runner as rr
         unproven = []
         for reviewer in agents:
-            proof = RESULTS / f"reviewer_isolation_{reviewer['reviewer_id']}.json"
+            rid = reviewer["reviewer_id"]
+            proof = RESULTS / f"reviewer_isolation_{rid}.json"
             if not proof.is_file():
-                unproven.append(f"{reviewer['reviewer_id']}: no probe artifact")
+                unproven.append(f"{rid}: no launcher receipt")
                 continue
             doc = json.loads(proof.read_text(encoding="utf-8"))
-            if doc.get("status") != "PASS" or any(not doc.get(k) for k in required):
-                unproven.append(f"{reviewer['reviewer_id']}: probes incomplete")
-            elif doc.get("answer_key_reachable") or doc.get("repository_reachable"):
-                unproven.append(f"{reviewer['reviewer_id']}: reachable")
+            # The launcher's own verifier, not a boolean read. A hand-written
+            # or edited receipt raises here.
+            try:
+                status = rr.verify_isolation_receipt(
+                    doc, packet=RESULTS / doc.get("packet_file", "missing"),
+                    assignment=HERE / SPEC["reviewer_assignment_file"])
+            except rr.ReviewerRunnerError as exc:
+                unproven.append(f"{rid}: {exc}")
+                continue
+            if status != "PASS":
+                unproven.append(f"{rid}: isolation {status}")
         rows.append(_line("BLOCKED" if unproven else "PASS",
                           "agent reviewer isolation",
                           "; ".join(unproven)[:70] if unproven
@@ -271,6 +352,88 @@ def doctor(config_name: str | None = None) -> int:
     elif blocked:
         print("  BLOCKED is not a pass -- those checks did not produce a verdict.")
     return FAIL if fails else (BLOCKED if blocked else PASS)
+
+
+# --------------------------------------------------------------- closure ----
+
+CLOSURE_STEPS = (
+    ("calibration", ["run_calibration.py"]),
+    ("red-team: Codex MCP isolation", ["redteam_codex_mcp_isolation.py"]),
+    ("red-team: provider isolation", ["redteam_provider_isolation.py"]),
+)
+
+
+def closure() -> int:
+    """Regenerate every frozen artifact, in order, and record a receipt.
+
+    Round 19, finding #1 / round 20, finding #4. The order was a developer
+    discipline: edit the documents, then regenerate. That discipline failed --
+    commit 98c604f shipped with PREREGISTRATION.md at 4d53fccb while all three
+    artifacts recorded 4eec976f, and the numbers I reported for that commit
+    described a state that no longer existed. A deterministic test already said
+    so; it was simply not the last thing run.
+
+    So the order lives here now, and `e2e --release` refuses without a receipt
+    that describes the CURRENT surface. Regenerating in the wrong order is
+    still possible by calling the scripts by hand -- what is no longer
+    possible is shipping without anything noticing.
+    """
+    from _evaluator import frozen_surface_drift, frozen_surface_hashes
+
+    print("== closure ==\n")
+    dirty = subprocess.run(["git", "status", "--porcelain", str(HERE)],
+                           capture_output=True, text=True, cwd=HERE)
+    if dirty.stdout.strip():
+        n = len(dirty.stdout.strip().splitlines())
+        print(f"  {n} uncommitted change(s) in this experiment -- that is "
+              "expected; closure runs BEFORE the commit.\n")
+
+    for label, argv in CLOSURE_STEPS:
+        proc = subprocess.run([sys.executable, *argv], cwd=HERE,
+                              capture_output=True, text=True)
+        mark = {0: "ok  ", 1: "FAIL", 2: "-- "}.get(proc.returncode, "FAIL")
+        print(f"  [{mark:>4}] {label}")
+        if proc.returncode == 1:
+            print(f"         {proc.stdout.strip().splitlines()[-1:]}")
+            print("  closure aborted: an artifact could not be regenerated.")
+            return FAIL
+        if proc.returncode == 2:
+            print("  closure aborted: BLOCKED -- that step could not reach a "
+                  "verdict, so the receipt would attest to nothing.")
+            return BLOCKED
+
+    now = frozen_surface_hashes()
+    stale = {}
+    for name in ("calibration.json", "redteam_provider_isolation.json",
+                 "redteam_codex_mcp_isolation.json"):
+        path = RESULTS / name
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        drift = frozen_surface_drift(doc.get("frozen_surface_hashes"))
+        if drift:
+            stale[name] = drift
+    if stale:
+        print(f"\n  FAIL: artifacts still stale after regeneration: {stale}")
+        print("  Something edited the surface between steps.")
+        return FAIL
+
+    digest = hashlib.sha256(
+        json.dumps(now, sort_keys=True).encode("utf-8")).hexdigest()
+    receipt = {
+        "kind": "freeze-closure-receipt-v1",
+        "frozen_surface_digest": digest,
+        "frozen_surface_hashes": now,
+        "steps": [label for label, _ in CLOSURE_STEPS],
+        "artifacts": {name: _sha256(RESULTS / name) for name in (
+            "calibration.json", "redteam_provider_isolation.json",
+            "redteam_codex_mcp_isolation.json")},
+    }
+    out = RESULTS / f"closure_{digest[:12]}.json"
+    out.write_text(json.dumps(receipt, ensure_ascii=False, indent=1),
+                   encoding="utf-8")
+    print(f"\n  receipt: {out.name}  digest={digest[:12]}")
+    print("  All frozen artifacts describe the current surface. Numbers "
+          "measured from here on describe THIS state.")
+    return PASS
 
 
 # ------------------------------------------------------------------- e2e ----
@@ -359,9 +522,44 @@ def _qualify_reviewer(reviewer_id: str, submitted: dict[str, str]) -> tuple[bool
     return (not wrong), wrong
 
 
-def e2e_offline() -> int:
+@dataclass(frozen=True)
+class RunSpec:
+    """What a run is allowed to skip and what counts as success.
+
+    Round 20, finding #2: there was one offline mode and both tests accepted
+    exit 0 OR 2, so the program could stay PARTIAL indefinitely with a green
+    suite. Three modes now differ ONLY in this object -- not in their
+    sequence of stages. Three pipelines would drift, which is what the frozen
+    canonical-builder decision (2026-07-28 §3, required test #7: smoke, real
+    run and re-run use the same builder) exists to prevent.
+    """
+    mode: str
+    allow_partial: bool
+    require_launcher: bool
+    require_closure: bool
+    matrix_cells: int
+
+    @classmethod
+    def for_mode(cls, mode: str) -> "RunSpec":
+        if mode == "offline-smoke":
+            # Fast wiring check. PARTIAL is acceptable here BECAUSE release
+            # is the gate that is not allowed to be PARTIAL.
+            return cls(mode, allow_partial=True, require_launcher=False,
+                       require_closure=False, matrix_cells=SPEC["expected_cells"])
+        if mode == "release":
+            # Real sandboxed reviewer, closure receipt required, and the only
+            # success is PASS.
+            return cls(mode, allow_partial=False, require_launcher=True,
+                       require_closure=True, matrix_cells=SPEC["expected_cells"])
+        if mode == "primary":
+            return cls(mode, allow_partial=False, require_launcher=True,
+                       require_closure=True, matrix_cells=SPEC["expected_cells"])
+        raise SystemExit(f"unknown mode {mode!r}")
+
+
+def run_pipeline(spec: RunSpec) -> int:
     started = time.time()
-    print("== e2e --offline ==")
+    print(f"== e2e --{spec.mode} ==")
     print("   COVERS   artifact provenance -> audit gate -> packet CLI ->")
     print("            blinding -> reviewer qualification -> adjudicator CLI ->")
     print("            final bundle written to disk and read back")
@@ -370,6 +568,25 @@ def e2e_offline() -> int:
     print("            provider; this command deliberately has none.")
     print("   no provider calls, no attempt consumed, temp dir only\n")
     failures: list[str] = []
+
+    # ALL unmet preconditions, not the first one. Reporting one at a time
+    # makes a caller fix it, re-run, and discover the next -- and makes the
+    # output an understatement of what is missing.
+    unmet: list[str] = []
+    if spec.require_closure and _closure_receipt() is None:
+        unmet.append("freeze.closure.current: no closure receipt describes the "
+                     "current surface. Run `run_pipeline.py closure` after the "
+                     "last edit.")
+    if spec.require_launcher and not _launcher_available():
+        unmet.append("reviewer.isolation.enforced: there is no sandboxed "
+                     "reviewer launcher, so a hand-written PASS receipt cannot "
+                     "be told from a real probe result.")
+    if unmet:
+        print(f"  refused: {spec.mode} requires {len(unmet)} thing(s) that do "
+              "not exist yet:")
+        for item in unmet:
+            print(f"    - {item}")
+        return FAIL
 
     with tempfile.TemporaryDirectory(prefix="hd-e2e-") as tmp:
         root = Path(tmp)
@@ -506,7 +723,7 @@ def e2e_offline() -> int:
             {"status": "ASSIGNED",
              "reviewers": [{"reviewer_id": "e2e-A"}, {"reviewer_id": "e2e-B"}]}),
             encoding="utf-8")
-        spec = {**SPEC, "reviewer_assignment_file": str(assignment)}
+        audit_spec = {**SPEC, "reviewer_assignment_file": str(assignment)}
         a_sha = _sha256(assignment)
         p_sha = _sha256(packet_path)
         ids = list(json.loads(key_path.read_text(encoding="utf-8"))["unblinding_key"])
@@ -540,7 +757,56 @@ def e2e_offline() -> int:
         if not refused:
             failures.append("the adjudicator accepted an unqualified reviewer")
 
-        # --- 7. adjudication -------------------------------------------
+        # --- 7. an UNDECLARED reviewer must be refused --------------------
+        # Round 20, finding #1: `reviewer.assignment.frozen` was UNKNOWN
+        # because the E2E only ever submitted reviewers that WERE in the
+        # assignment. A check nothing exercises is indistinguishable from an
+        # absent one -- same as stage 6, one field over.
+        walkin = root / "labels_walkin.json"
+        walkin.write_text(json.dumps(
+            {"reviewer_id": "e2e-Z-not-declared", "packet_sha256": p_sha,
+             "assignment_sha256": a_sha, "fixture_sha256": fixture_sha,
+             "qualification": dict(answers),
+             "labels": {i: "MENTION" for i in ids}}), encoding="utf-8")
+        try:
+            asa.main(["run_pipeline", str(primary), str(packet_path),
+                      str(key_path), str(walkin), str(labels[1]),
+                      "--out-root", str(root)])
+        except SystemExit as exc:
+            refused_walkin = "is not in" in str(exc)
+        else:
+            refused_walkin = False
+        print(f"  [7] {STAGE_IDS[7]:<32}refused={refused_walkin}")
+        if not refused_walkin:
+            failures.append("the adjudicator accepted an undeclared reviewer")
+
+        # --- reviewer isolation (release only) --------------------------
+        if spec.require_launcher:
+            import reviewer_runner as rr
+            iso_status = []
+            for rid in ("e2e-A", "e2e-B"):
+                try:
+                    bundled = rr.build_reviewer_bundle(
+                        packet_path, root / "reviewer" / rid)
+                    doc = rr.run_reviewer(bundled, rid, assignment=assignment)
+                    rr.verify_isolation_receipt(doc, packet=bundled,
+                                                assignment=assignment)
+                except rr.ReviewerRunnerError as exc:
+                    failures.append(f"reviewer isolation for {rid}: {exc}")
+                    iso_status.append("ERROR")
+                    continue
+                iso_status.append(doc["status"])
+                leaked = [x["probe"] for x in doc["forbidden_probes"]
+                          if x["reachable"]]
+                if leaked:
+                    failures.append(f"reviewer {rid} reached {leaked}")
+                elif doc["status"] != "PASS":
+                    failures.append(
+                        f"reviewer isolation for {rid} is {doc['status']}: the "
+                        "boundary was not exercised, which is not a pass")
+            print(f"  [--] reviewer.isolation-enforced      {iso_status}")
+
+        # --- 8. adjudication -------------------------------------------
         rc = asa.main(["run_pipeline", str(primary), str(packet_path),
                        str(key_path), *[str(p) for p in labels],
                        "--out-root", str(root)])
@@ -557,8 +823,8 @@ def e2e_offline() -> int:
             # exercised (round 17, finding #4).
             bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
             audit = bundle["safety_audit"]
-        print(f"  [7] {STAGE_IDS[7]:<32}{audit['cell_verdicts']}")
-        print(f"  [8] {STAGE_IDS[8]:<32}"
+        print(f"  [8] {STAGE_IDS[8]:<32}{audit['cell_verdicts']}")
+        print(f"  [9] {STAGE_IDS[9]:<32}"
               f"adjudicated_rate={audit['adjudicated_full_hard_gate_rate']}, "
               f"violations={audit['confirmed_safety_violation_count']}")
         if audit["adjudicated_full_hard_gate_rate"] is None:
@@ -579,7 +845,7 @@ def e2e_offline() -> int:
         # A single reviewer must NOT be able to produce a bundle unless the
         # frozen spec says so.
         try:
-            asa.adjudicate(primary, packet_path, key_path, labels[:1], spec=spec)
+            asa.adjudicate(primary, packet_path, key_path, labels[:1], spec=audit_spec)
         except SystemExit:
             pass
         else:
@@ -589,12 +855,14 @@ def e2e_offline() -> int:
     print(f"\n  {elapsed:.1f}s")
     # Machine-readable coverage, so a reader does not have to infer it from
     # prose that can drift from the code.
+    unknown = sorted(k for k, v in OBLIGATIONS.items() if v is not Verdict.PASS)
     coverage = {
-        "covered": sorted(set(STAGE_IDS.values()) - set(UNGUARDED_STAGES)),
-        "not_covered_by_mutation": sorted(UNGUARDED_STAGES),
+        "obligations_pass": sorted(k for k, v in OBLIGATIONS.items()
+                                   if v is Verdict.PASS),
+        "obligations_unknown": unknown,
+        "overall": overall_verdict().value,
         "not_covered_at_all": ["provider.execution", "qualification.pilot",
-                               "authorization.issuance", "attempt.claim",
-                               "reviewer.isolation"],
+                               "authorization.issuance", "attempt.claim"],
     }
     print(f"\n  coverage: {json.dumps(coverage)}")
 
@@ -603,13 +871,15 @@ def e2e_offline() -> int:
         for f in failures:
             print(f"    - {f}")
         return FAIL
-    if UNGUARDED_STAGES:
-        print(f"  PARTIAL -- {len(UNGUARDED_STAGES)} stage(s) run but no "
-              "mutation isolates them:")
-        for name in sorted(UNGUARDED_STAGES):
-            print(f"    - {name}")
-        print("  Every step executed, but PARTIAL is not a pass: an unguarded "
-              "stage could be silently weakened.")
+    if overall_verdict() is not Verdict.PASS:
+        print(f"  PARTIAL -- {len(unknown)} obligation(s) not shown to hold:")
+        for name in unknown:
+            print(f"    - {name}: {UNKNOWN_REASONS.get(name, '(no reason recorded)')}")
+        if not spec.allow_partial:
+            print(f"  {spec.mode} does not accept PARTIAL.")
+            return FAIL
+        print("  Every step executed, but PARTIAL is not a pass: an obligation "
+              "nobody has demonstrated could be silently absent.")
         return BLOCKED
     print("  PASS -- the offline downstream path is wired end to end.")
     print("  Not a claim about provider behaviour, and not a substitute for")
@@ -620,16 +890,33 @@ def e2e_offline() -> int:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
+    sub.add_parser("closure",
+                   help="regenerate every frozen artifact in order and record "
+                        "a receipt; run this after the last edit")
     doc = sub.add_parser("doctor",
                          help="report the state of every gate (read-only)")
     doc.add_argument("--config", default=None,
                      help="config to diagnose; defaults to the one the "
                           "primary authorization points at")
     e2e = sub.add_parser("e2e", help="run the whole pipeline in a temp dir")
-    e2e.add_argument("--offline", action="store_true", required=True,
-                     help="required: this command never calls a provider")
+    group = e2e.add_mutually_exclusive_group(required=True)
+    group.add_argument("--offline", "--offline-smoke", dest="offline",
+                       action="store_true",
+                       help="fast wiring check; PARTIAL (exit 2) is tolerated")
+    group.add_argument("--release", action="store_true",
+                       help="real launcher + closure receipt; only exit 0 is "
+                            "success")
+    group.add_argument("--primary", action="store_true",
+                       help="the 32-cell run; allowed only after --release "
+                            "passes")
     args = ap.parse_args()
-    return doctor(args.config) if args.cmd == "doctor" else e2e_offline()
+    if args.cmd == "closure":
+        return closure()
+    if args.cmd == "doctor":
+        return doctor(args.config)
+    mode = ("release" if args.release else
+            "primary" if args.primary else "offline-smoke")
+    return run_pipeline(RunSpec.for_mode(mode))
 
 
 if __name__ == "__main__":

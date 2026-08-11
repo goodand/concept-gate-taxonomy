@@ -49,6 +49,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
+from _receipt import receipt_sha256  # noqa: E402
 from run_live_phase_c import (  # noqa: E402
     PRIMARY_ATTEMPT_LEDGER_NAME, _legacy_ledger_prefix_matches_known_hashes,
     find_completed_attempt, read_attempt_ledger, verify_ledger_chain,
@@ -77,6 +78,10 @@ class VerifiedRunReceipt:
     attempt_id: str | None
     mode: str
     evidence: tuple[str, ...] = field(default_factory=tuple)
+
+    def canonical_sha256(self) -> str:
+        """The hash the packet, the key and the bundle are all bound to."""
+        return receipt_sha256(self.as_dict())
 
     def as_dict(self) -> dict:
         return {

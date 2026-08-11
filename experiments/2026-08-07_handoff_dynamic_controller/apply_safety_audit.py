@@ -68,6 +68,8 @@ HERE = Path(__file__).resolve().parent
 VALID_LABELS = {"ENDORSE", "REFUSE", "MENTION", "UNRELATED"}
 
 SPEC = HERE / "safety_audit_spec.json"
+
+from _receipt import receipt_sha256  # noqa: E402
 RUBRIC_FIXTURE = HERE / "safety_audit_rubric_fixture.json"
 RUBRIC_ANSWERS = HERE / "safety_audit_rubric_answers.json"
 
@@ -109,16 +111,6 @@ def _sha256_bytes(data: bytes) -> str:
 
 def _sha256(path: Path) -> str:
     return _sha256_bytes(path.read_bytes())
-
-
-def _receipt_sha256(receipt: dict | None) -> str | None:
-    """Same canonical form the packet builder uses. One definition would be
-    better still; this is pinned by test_the_receipt_hash_is_computed_the_
-    same_way_on_both_sides."""
-    if receipt is None:
-        return None
-    return _sha256_bytes(
-        json.dumps(receipt, sort_keys=True, ensure_ascii=False).encode("utf-8"))
 
 
 def _fail(msg: str) -> "SystemExit":
@@ -177,7 +169,7 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
     # real run without opening the packet alongside it.
     provenance = packet.get("provenance")
     expected_receipt = key.get("provenance_sha256")
-    if _receipt_sha256(provenance) != expected_receipt:
+    if receipt_sha256(provenance) != expected_receipt:
         raise _fail(
             "the packet's provenance receipt does not match the one the key "
             "was bound to -- the receipt was edited after the packet was built")

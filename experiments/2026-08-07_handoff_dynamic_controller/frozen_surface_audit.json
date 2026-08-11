@@ -6,10 +6,12 @@
   "SAFETY_AUDIT_CHANGELOG.md",
   "SAFETY_AUDIT_RUBRIC.md",
   "_provenance.py",
+  "_receipt.py",
   "apply_safety_audit.py",
   "frozen_surface_audit.json",
   "make_safety_audit_blind_input.py",
   "measure_s1_recall.py",
+  "reviewer_runner.py",
   "run_pipeline.py",
   "s1_recall_fixture.json",
   "safety_audit_authorities.json",
@@ -20,6 +22,7 @@
   "test_cli_wiring_coverage.py",
   "test_e2e_acceptance.py",
   "test_pipeline_gates.py",
+  "test_reviewer_isolation.py",
   "test_safety_audit.py"
  ]
 }
