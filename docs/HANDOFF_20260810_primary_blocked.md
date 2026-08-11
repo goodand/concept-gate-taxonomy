@@ -832,6 +832,9 @@ Amendment 37/38에서 추가·변경된 것:
 - [17라운드 검증·수정 계획](feedback/plan_round17_doctor_delegation_and_real_e2e.md)
 - [19라운드 검증·수정 계획](feedback/plan_round19_freeze_closure_and_provenance_envelope.md)
 - [세션 회고 — 파이프라인 게이트와 provenance](feedback/session_retrospective_20260811_pipeline_gates_and_provenance.md)
+- [세션 회고 — 위조 가능한 receipt와 공허한 가드 (I113~I147)](feedback/session_retrospective_20260811_forgeable_receipts_and_vacuous_guards.md)
+  — 21·21b·21c라운드. **(7)에 linter/기제 후보 6종과 그 실측**(L1 오탐 0,
+  L5는 내용 해시 기준일 때만 통과)이 있다. 미구현이며 canary 다음 작업이다.
 - [20라운드 검증·수정 계획](feedback/plan_round20_walking_skeleton_and_release_e2e.md)
 - [20라운드 검증 설계·의존성 분석·구현 계획](feedback/design_round20_verification_dependencies_implementation.md)
 
