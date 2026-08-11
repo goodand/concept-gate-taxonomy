@@ -169,9 +169,9 @@ receipt는 자기 자신을 담은 커밋을 가리킬 수 없어 `git_commit`�
 ### 21라운드 실측 (이 환경)
 
 ```
-closure         f9537e3ca452
+closure         322dc9e37532
 e2e --release   exit 0     current_run 3종 PASS, effective_unknown []
-                receipt release_22cb80b19ff4.json
+                receipt release_dd1aefd94e99.json
 e2e --primary   exit 2     BLOCKED: primary mode is not implemented
 doctor          exit 1     4 pass, 1 fail, 3 blocked  (qualification stale — §5)
 실험 suite      283 passed / 2 skipped
@@ -683,6 +683,10 @@ Amendment 37/38에서 추가·변경된 것:
 재개 시험이 이 블록이 `closure`로 시작하는 것을 지적했다: 위에서 아래로 따르는
 새 세션이 첫 행동으로 동결 artifact를 덮어쓴다.
 
+21라운드는 [`.gitignore`](../.gitignore)도 고쳤다 — launcher HMAC key와
+`experiments/*/audit_workspace/`를 제외한다. key를 커밋하면 모든 클론이 "reviewer가
+격리됐다"는 receipt에 서명할 수 있고, 그것이 이 key가 막으려는 위조다.
+
 ### 21라운드가 만든 receipt
 
 closure가 **3벌**인 것은 실수가 아니라 기록이다. AUDIT 표면을 고칠 때마다
@@ -691,10 +695,12 @@ closure receipt가 낡으므로, 편집이 끝날 때까지 세 번 돌았다 �
 기술하지 않으므로 `_closure_receipt()`가 건너뛴다. `results/`는 append-only라
 지우지 않는다.
 
-- [`closure_f9537e3ca452.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_f9537e3ca452.json) — **현행**
+- [`closure_322dc9e37532.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_322dc9e37532.json) — **현행**
+- [`closure_f9537e3ca452.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_f9537e3ca452.json) — 대체됨
 - [`closure_ec6a8edc59ff.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_ec6a8edc59ff.json) — 대체됨
 - [`closure_972be6f2df75.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_972be6f2df75.json) — 대체됨
-- [`release_22cb80b19ff4.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_22cb80b19ff4.json) — **현행**
+- [`release_dd1aefd94e99.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_dd1aefd94e99.json) — **현행**
+- [`release_22cb80b19ff4.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_22cb80b19ff4.json) — 대체됨
 - [`release_231f554f5cea.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_231f554f5cea.json) — 대체됨
 - [`release_1f64ed9080d8.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_1f64ed9080d8.json) — 대체됨
 
