@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -209,3 +210,131 @@ def test_seatbelt_profile_denies_repo_and_host_control():
     assert '(deny file-read* (subpath "/repo/Project_in_progress"))' in profile
     assert '(deny file-write* (subpath "/tmp/control"))' in profile
     assert "(allow default)" in profile
+
+
+# --------------------------------------------------------------- round 22 ----
+def test_the_artifact_kind_is_a_mapping_not_a_ternary():
+    """Round 22, found while planning `--canary` and NOT named by the reviewer.
+
+        "kind": "live-subject-pilot" if phase_name == "pilot" \\
+                else "live-subject-primary"
+
+    Any phase that is not "pilot" became `live-subject-primary`. So adding a new
+    phase name -- which is exactly what `--canary` is -- would have made a
+    1-cell canary DECLARE ITSELF a primary result, and
+    `make_safety_audit_blind_input` accepts that kind. That is the same
+    contamination path round 21 closed for `run_pipeline --primary`: a run that
+    is not primary being filed as one.
+
+    A mapping refuses an unregistered phase instead of guessing."""
+    import run_live_phase_c as live
+    assert hasattr(live, "PHASE_ARTIFACTS")
+    assert set(live.PHASE_ARTIFACTS) == {"pilot", "primary", "canary"}
+    assert live.PHASE_ARTIFACTS["canary"]["kind"] == "live-subject-canary"
+    assert live.PHASE_ARTIFACTS["primary"]["kind"] == "live-subject-primary"
+    assert live.PHASE_ARTIFACTS["pilot"]["kind"] == "live-subject-pilot"
+    with pytest.raises(live.LiveRunError, match="unregistered phase"):
+        live.phase_artifact_fields("smoke-ish")
+    source = (HERE / "run_live_phase_c.py").read_text(encoding="utf-8")
+    assert 'else "live-subject-primary"' not in source, (
+        "the ternary is still there; an unknown phase still becomes primary")
+
+
+def test_a_canary_artifact_is_not_estimable_and_says_so():
+    import run_live_phase_c as live
+    fields = live.phase_artifact_fields("canary")
+    assert fields["arm_effect_estimable"] is False
+    assert "canary" in fields["interpretation"]
+    assert "primary" not in fields["interpretation"]
+
+
+def _ledger_hashes():
+    """SHA-256 of both ledgers. Round 22: the reviewer asked for exactly this --
+    compare the FILES before and after, not whether a function was called or a
+    string appears in the source."""
+    import run_live_phase_c as live
+    out = {}
+    for name in (live.QUALIFICATION_LEDGER_NAME, "primary_attempt_ledger.jsonl"):
+        path = live.RESULTS_DIR / name
+        out[name] = (hashlib.sha256(path.read_bytes()).hexdigest()
+                     if path.is_file() else None)
+    return out
+
+
+@pytest.mark.parametrize("cases,arms,why", [
+    (["HD01", "HD02"], ["S_STATIC"], "two cases"),
+    (["HD01"], ["S_STATIC", "R_STATIC"], "two arms"),
+    ([], ["S_STATIC"], "no case"),
+    (["HD01"], [], "no arm"),
+])
+def test_a_canary_that_is_not_exactly_one_cell_is_refused(cases, arms, why):
+    """A canary is ONE cell. Two cells is a small pilot, and a small pilot that
+    calls itself a canary is how a measurement gets made by accident."""
+    import run_live_phase_c as live
+    before = _ledger_hashes()
+    with pytest.raises(live.LiveRunError, match="exactly one"):
+        live.run_phase(cases, arms, output_name="never_written",
+                       phase_name="canary",
+                       config_path="phase_c_claude_mcp_surface_v3_config.json")
+    # The refusal path must not touch either ledger either.
+    assert _ledger_hashes() == before, f"{why}: a refused canary changed a ledger"
+
+
+def test_a_canary_refuses_to_overwrite_an_existing_result():
+    import run_live_phase_c as live
+    existing = sorted(live.RESULTS_DIR.glob("live_pilot_*.json"))
+    if not existing:
+        pytest.skip("no prior live result to collide with")
+    before = _ledger_hashes()
+    with pytest.raises(live.LiveRunError, match="refusing to overwrite"):
+        live.run_phase(["HD01"], ["S_STATIC"],
+                       output_name=existing[0].stem, phase_name="canary",
+                       config_path="phase_c_claude_mcp_surface_v3_config.json")
+    assert _ledger_hashes() == before
+
+
+def test_the_canary_phase_calls_no_privileged_function():
+    """`run_phase` gates every privileged action on `phase_name == "primary"`
+    and `_record_qualification` on `== "pilot"`, so a new phase inherits nothing.
+    This pins that structure: if someone rewrites those conditions, a canary
+    could start claiming attempts."""
+    import ast
+    src = (HERE / "run_live_phase_c.py").read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == "run_phase")
+    privileged = {"_assert_primary_qualifications", "_assert_primary_authorization",
+                  "_claim_primary_attempt", "_record_primary_attempt_outcome"}
+    for node in ast.walk(fn):
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                and node.func.id in privileged):
+            # find the enclosing If and require it to test phase_name == "primary"
+            guarded = any(
+                isinstance(anc, ast.If) and "primary" in ast.unparse(anc.test)
+                and "phase_name" in ast.unparse(anc.test)
+                for anc in ast.walk(fn)
+                if isinstance(anc, ast.If) and node in list(ast.walk(anc)))
+            assert guarded, (
+                f"{node.func.id} is reachable without a phase_name == 'primary' "
+                "guard; a canary could claim an attempt")
+
+
+def test_the_qualification_ledger_records_what_actually_ran():
+    """Round 22, the reviewer's finding C. `_record_qualification` read
+    `out["config"]["pilot"]["arms"]` -- the CONFIG -- not the arms `run_phase`
+    was given. A 1-cell `--pilot` run therefore wrote a ledger entry declaring
+    the config's FULL matrix.
+
+    The primary gate still refuses such an artifact (`n_runs`, `per_arm`), so it
+    is not an authorization bypass -- it is a permanent false declaration in an
+    append-only ledger, which nobody can remove."""
+    import ast
+    src = (HERE / "run_live_phase_c.py").read_text(encoding="utf-8")
+    tree = ast.parse(src)
+    fn = next(n for n in ast.walk(tree)
+              if isinstance(n, ast.FunctionDef) and n.name == "_record_qualification")
+    body = ast.unparse(fn)
+    assert 'pilot["arms"]' not in body and "pilot['arms']" not in body, (
+        "the ledger still records the config's matrix instead of the run's")
+    assert "case_ids" in [a.arg for a in fn.args.args] or "case_ids" in body, (
+        "_record_qualification cannot record what ran unless it is told")

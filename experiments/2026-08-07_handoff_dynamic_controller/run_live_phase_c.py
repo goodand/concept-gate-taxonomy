@@ -1150,15 +1150,76 @@ def _claim_primary_attempt(authorization_sha256: str, max_attempts: int,
         os.fsync(handle.fileno())
 
 
-def _record_qualification(output_path: Path, out: dict[str, Any]) -> None:
-    pilot = out["config"]["pilot"]
+# What each phase's artifact SAYS ABOUT ITSELF. Round 22: this was a TERNARY on
+# `phase_name == "pilot"`, whose false branch was the primary kind -- so ANY
+# phase that was not "pilot" declared itself a primary result. Adding a
+# new phase (which `--canary` is) would have filed a 1-cell run as primary, and
+# `make_safety_audit_blind_input` accepts that kind. Round 21 closed exactly this
+# contamination path in `run_pipeline --primary`; a ternary would have reopened it
+# one file over.
+#
+# A mapping cannot guess. An unregistered phase raises.
+PHASE_ARTIFACTS: dict[str, dict[str, Any]] = {
+    "pilot": {
+        "kind": "live-subject-pilot",
+        "interpretation": ("qualification-only; this small pilot must not be used "
+                           "to estimate arm effects"),
+        "arm_effect_estimable": False,
+        "n_per_cell": 1,
+    },
+    "primary": {
+        "kind": "live-subject-primary",
+        "interpretation": ("descriptive one-replicate live-subject run; no causal "
+                           "claim"),
+    },
+    "canary": {
+        "kind": "live-subject-canary",
+        "interpretation": ("retrieval canary: ONE cell, run to prove the vertical "
+                           "path executes at all. Not a qualification and not a "
+                           "measurement -- it estimates no arm effect, records no "
+                           "qualification, and claims no attempt"),
+        "arm_effect_estimable": False,
+        "n_per_cell": 1,
+    },
+}
+
+
+def phase_artifact_fields(phase_name: str) -> dict[str, Any]:
+    """The self-description for `phase_name`, or refuse.
+
+    Refusing is the point: a phase this function does not know about must not
+    inherit another phase's identity.
+    """
+    fields = PHASE_ARTIFACTS.get(phase_name)
+    if fields is None:
+        raise LiveRunError(
+            f"unregistered phase {phase_name!r}: an artifact must not inherit "
+            f"another phase's kind. Register it in PHASE_ARTIFACTS "
+            f"(known: {sorted(PHASE_ARTIFACTS)})")
+    return dict(fields)
+
+
+def _record_qualification(output_path: Path, out: dict[str, Any], *,
+                          case_ids: list[str], arms: list[str]) -> None:
+    """Record the pilot in the qualification ledger.
+
+    Round 22, external finding C: this read `out["config"]["pilot"]["arms"]` --
+    the CONFIG's matrix -- not the arms the run was given. So
+    `--pilot --case-id HD01 --arm S_STATIC` wrote a ledger entry declaring the
+    config's FULL matrix while one cell ran.
+
+    The primary gate still refused such an artifact (it cross-checks `n_runs` and
+    `per_arm` against the artifact itself), so this was never an authorization
+    bypass. It was a PERMANENT FALSE DECLARATION in an append-only ledger --
+    `results/` cannot be edited, so the lie would outlive the run.
+    """
     _append_jsonl(RESULTS_DIR / QUALIFICATION_LEDGER_NAME, {
         "file": output_path.name,
         "sha256": _sha256_path(output_path),
         "config_file": out["config_file"],
         "config_sha256": out["config_sha256"],
-        "arms": pilot["arms"],
-        "case_ids": pilot["case_ids"],
+        "arms": arms,
+        "case_ids": case_ids,
         "qualification_passed": out["qualification"]["passed"],
         "recorded_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     })
@@ -1322,6 +1383,27 @@ def _record_primary_attempt_outcome(authorization_sha256: str | None, output_fil
 
 def run_phase(case_ids: list[str], arms: list[str], *, output_name: str,
               phase_name: str = "pilot", config_path: str | Path = CONFIG_PATH) -> int:
+    if phase_name == "canary":
+        # A canary is ONE cell. Two cells is a small pilot, and a small pilot
+        # calling itself a canary is how a measurement gets made by accident --
+        # `arm_effect_estimable` would be false while the artifact carried enough
+        # cells for someone to compare arms anyway. Checked BEFORE `_assert_ready`
+        # so a refusal cannot touch disk or a ledger.
+        if len(case_ids) != 1 or len(arms) != 1:
+            raise LiveRunError(
+                f"a retrieval canary runs exactly one cell; got "
+                f"{len(case_ids)} case(s) x {len(arms)} arm(s). Use --pilot for "
+                "a matrix, and note that --pilot RECORDS a qualification")
+        # The collision check is repeated here, ahead of `_assert_ready`, on
+        # purpose. The shared one below still guards pilot and primary; this one
+        # exists so a CALLER'S mistake is reported before the TREE's state. A
+        # test for it otherwise passes only on a frozen-clean tree -- i.e. it
+        # silently skips its own subject during development, which is when it
+        # would have caught something.
+        if (RESULTS_DIR / f"{output_name}.json").exists():
+            raise LiveRunError(
+                f"refusing to overwrite an existing live result: "
+                f"{output_name}.json")
     config = _assert_ready(config_path)
     authorization_sha256: str | None = None
     attempt_id: str | None = None
@@ -1437,10 +1519,7 @@ def _run_phase_body(case_ids: list[str], arms: list[str], output_path: Path,
     if not selected_config_path.is_absolute():
         selected_config_path = HERE / selected_config_path
     out = {
-        "kind": "live-subject-pilot" if phase_name == "pilot" else "live-subject-primary",
-        "interpretation": ("qualification-only; this small pilot must not be used to estimate "
-                           "arm effects" if phase_name == "pilot" else
-                           "descriptive one-replicate live-subject run; no causal claim"),
+        **phase_artifact_fields(phase_name),
         "config": config,
         "config_file": selected_config_path.name,
         "config_sha256": hashlib.sha256(selected_config_path.read_bytes()).hexdigest(),
@@ -1450,14 +1529,11 @@ def _run_phase_body(case_ids: list[str], arms: list[str], output_path: Path,
         "n_runs": len(results), "per_arm": by_arm, "results": results,
         "traces": [record["trace"] for record in records], "raw": raw,
     }
-    if phase_name == "pilot":
-        out["arm_effect_estimable"] = False
-        out["n_per_cell"] = 1
     RESULTS_DIR.mkdir(exist_ok=True)
     output_path.write_text(
         json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     if phase_name == "pilot":
-        _record_qualification(output_path, out)
+        _record_qualification(output_path, out, case_ids=case_ids, arms=arms)
     print(json.dumps({"output": str(output_path),
                       "n_runs": len(results), "qualification": qualification,
                       "per_arm": by_arm}, ensure_ascii=False, indent=2))
@@ -1467,8 +1543,15 @@ def _run_phase_body(case_ids: list[str], arms: list[str], output_path: Path,
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--pilot", action="store_true")
-    group.add_argument("--primary", action="store_true")
+    group.add_argument("--pilot", action="store_true",
+                       help="config's pilot matrix; RECORDS a qualification")
+    group.add_argument("--primary", action="store_true",
+                       help="the 8x4 run; needs authorization, claims an attempt")
+    group.add_argument("--canary", action="store_true",
+                       help="retrieval canary: exactly 1 case x 1 arm via "
+                            "--case-id/--arm. Real provider call. Records NO "
+                            "qualification and claims NO attempt; needs no "
+                            "authorization. kind=live-subject-canary")
     parser.add_argument("--case-id", action="append", help="override configured case ids")
     parser.add_argument("--arm", choices=ARMS, action="append", help="override configured arms")
     parser.add_argument("--output-name", help="new result artifact name; never overwrite a prior attempt")
@@ -1477,12 +1560,31 @@ def main() -> int:
     args = parser.parse_args()
     try:
         config = load_config(args.config)
-        phase = config["pilot"] if args.pilot else config["primary"]
-        phase_name = "pilot" if args.pilot else "primary"
-        default_output = config.get("result_names", {}).get(
-            phase_name, "live_pilot" if args.pilot else "live_primary")
-        return run_phase(args.case_id or phase["case_ids"], args.arm or phase["arms"],
-                         output_name=args.output_name or default_output,
+        phase_name = ("canary" if args.canary else
+                      "pilot" if args.pilot else "primary")
+        if phase_name == "canary":
+            # No config matrix to fall back on: a canary must SAY which cell.
+            # Falling back would silently run the config's matrix, which is the
+            # accidental-measurement path the 1x1 guard exists to close.
+            if not args.case_id or not args.arm:
+                raise LiveRunError(
+                    "a retrieval canary needs --case-id and --arm explicitly; "
+                    "there is no config default for one cell")
+            if not args.output_name:
+                raise LiveRunError(
+                    "a retrieval canary needs --output-name; `results/` is "
+                    "append-only and a canary must not collide with, or be "
+                    "mistaken for, a pilot or primary artifact")
+            case_ids, arms = args.case_id, args.arm
+            output_name = args.output_name
+        else:
+            phase = config["pilot"] if args.pilot else config["primary"]
+            default_output = config.get("result_names", {}).get(
+                phase_name, "live_pilot" if args.pilot else "live_primary")
+            case_ids = args.case_id or phase["case_ids"]
+            arms = args.arm or phase["arms"]
+            output_name = args.output_name or default_output
+        return run_phase(case_ids, arms, output_name=output_name,
                          phase_name=phase_name, config_path=args.config)
     except LiveRunError as exc:
         print(str(exc), file=sys.stderr)
