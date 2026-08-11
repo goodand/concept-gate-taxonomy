@@ -573,3 +573,86 @@ def test_the_suite_does_not_deposit_receipts_in_the_committed_results_dir(tmp_pa
     assert after == before, f"the suite wrote {sorted(after - before)} into results/"
     assert (tmp_path / "r" / "reviewer_isolation_guard-check.json").is_file(), (
         "the redirect disabled the mechanism instead of relocating it")
+
+
+# --------------------------------------------------------------- round 21c ---
+def test_an_unmeasured_probe_is_not_reported_as_reached(packet_bundle, tmp_path,
+                                                        monkeypatch):
+    """Round 21c. The refusal message put every probe whose status was not
+    `DENIED` into a list introduced as `it reached [...]` -- so on a host where
+    all four controls failed, the operator was told the reviewer REACHED the
+    answer key. It had reached nothing; nothing had been measured.
+
+    The refusal itself is fail-closed and therefore safe. What is not safe is a
+    diagnostic that cannot tell a real leak from an unmeasurable environment,
+    because the two call for opposite responses: one is a finding, the other is
+    a missing permission."""
+    _skip_without_sandbox()
+    # Every control probe fails -> every probe BLOCKED, none reachable.
+    monkeypatch.setattr(rr, "forbidden_targets",
+                        lambda: [("nonexistent", rr.HERE / "no-such-file.json")])
+    command = _fake_reviewer(tmp_path, _good_output(["R0000", "R0001"]))
+    with pytest.raises(rr.ReviewerRunnerError) as exc:
+        rr.run_reviewer(packet_bundle, "e2e-A", command=command,
+                        assignment=ASSIGNMENT, labels_out=tmp_path / "l.json")
+    msg = str(exc.value)
+    assert "unmeasured" in msg, f"BLOCKED probes were not named as such: {msg}"
+    assert "reached []" in msg or "reached" not in msg.split("unmeasured")[0], (
+        f"an unmeasured probe is still presented as reached: {msg}")
+
+
+def test_execution_identity_resolves_a_path_executable(tmp_path):
+    """Round 21c. `_execution_identity` hashed only argv tokens that were
+    themselves existing files, so `claude`, `codex`, `python3` -- exactly the
+    reviewers a canary would use -- contributed nothing but their name."""
+    manifest = rr.execution_manifest([sys.executable.rsplit("/", 1)[-1],
+                                      "-c", "pass"])
+    kinds = {e["kind"] for e in manifest["inputs"]}
+    assert "executable" in kinds, (
+        f"a PATH-resolved executable was not identified: {manifest['inputs']}")
+    entry = next(e for e in manifest["inputs"] if e["kind"] == "executable")
+    assert entry["sha256"] and entry["path"].startswith("/")
+
+
+def test_execution_identity_is_measured_before_the_run_and_rechecked_after(
+        packet_bundle, tmp_path):
+    """The ordering bug. Identity was computed AFTER the reviewer returned, so a
+    script that rewrote itself mid-run would be attested by its POST-run bytes --
+    the receipt would name something that never executed.
+
+    Measured before the run and re-verified after: if the inputs changed while
+    the reviewer ran, that is a refusal, not a footnote."""
+    _skip_without_sandbox()
+    script = tmp_path / "self_modifying.py"
+    script.write_text(
+        "import json, pathlib, sys\n"
+        "pathlib.Path(__file__).write_text('# rewritten\\n')\n"
+        "packet = json.loads(pathlib.Path('packet.json').read_text())\n"
+        "ids = [i['blind_id'] for i in packet['reviewer_packet']]\n"
+        "print(json.dumps({'qualification': json.loads(sys.argv[1]),\n"
+        "                  'labels': {i: 'MENTION' for i in ids}}))\n",
+        encoding="utf-8")
+    answers = json.loads(ANSWERS.read_text(encoding="utf-8"))["answers"]
+    with pytest.raises(rr.ReviewerRunnerError, match="changed while"):
+        rr.run_reviewer(packet_bundle, "e2e-A",
+                        command=[sys.executable, str(script), json.dumps(answers)],
+                        assignment=ASSIGNMENT, labels_out=tmp_path / "l.json")
+
+
+def test_the_receipt_carries_the_manifest_not_just_a_digest(packet_bundle,
+                                                           tmp_path):
+    """An opaque digest cannot be reproduced by anyone who was not there. The
+    receipt must name what went into it -- the same reason the frozen trial
+    manifest lists fixture/prompt/schema/model instead of one hash."""
+    _skip_without_sandbox()
+    command = _fake_reviewer(tmp_path, _good_output(["R0000", "R0001"]))
+    doc = rr.run_reviewer(packet_bundle, "e2e-A", command=command,
+                          assignment=ASSIGNMENT, labels_out=tmp_path / "l.json")
+    manifest = doc["reviewer_execution"]
+    assert manifest["digest"] == doc["reviewer_command_sha256"]
+    assert manifest["argv"] == command
+    paths = {e["path"] for e in manifest["inputs"]}
+    assert str(Path(command[1]).resolve()) in paths, (
+        "the script that ran is not in the manifest")
+    assert "limits" in manifest, (
+        "the manifest does not say what it cannot identify")

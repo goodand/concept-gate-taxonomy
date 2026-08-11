@@ -129,6 +129,9 @@ class IsolationReceipt:
     # like a launcher.
     reviewer_command_sha256: str | None = None
     reviewer_output_sha256: str | None = None
+    # The manifest behind `reviewer_command_sha256`. Round 21c: an opaque digest
+    # cannot be reproduced by anyone who was not there.
+    reviewer_execution: dict | None = None
 
     def as_dict(self, *, key: bytes) -> dict:
         doc = {
@@ -141,6 +144,7 @@ class IsolationReceipt:
             "forbidden_probes": [dict(p) for p in self.forbidden_probes],
             "reviewer_command_sha256": self.reviewer_command_sha256,
             "reviewer_output_sha256": self.reviewer_output_sha256,
+            "reviewer_execution": self.reviewer_execution,
         }
         # HMAC, not a hash of the document by itself. Round 21: a public hash
         # over public fields is recomputable by whoever wants the answer to be
@@ -365,6 +369,58 @@ def _label_artifact(reviewer_id: str, output: dict, *, bundle_packet: Path,
             "labels": dict(labels)}
 
 
+def execution_manifest(command: list[str]) -> dict:
+    """WHAT will run, listed, before it runs.
+
+    Round 21c fixed two things about the previous `_execution_identity`:
+
+      * it hashed only argv tokens that were ALREADY files, so `claude`,
+        `codex`, `python3` -- exactly the reviewers a canary uses -- contributed
+        nothing but their name. `shutil.which` resolves them now.
+      * it returned an opaque digest and nothing else, so nobody who was not
+        present could reproduce it. The manifest LISTS its inputs, which is what
+        the frozen trial manifest does (`DESIGN_DECISION_surface_separation.md`
+        §6: fixture/prompt/schema/builder/model recorded outside the payload,
+        by name, not folded into one hash).
+
+    `limits` is part of the record on purpose. A manifest that silently omits
+    what it cannot see invites the reader to over-read it.
+    """
+    inputs: list[dict] = []
+    seen: set[str] = set()
+
+    def add(kind: str, path: Path) -> None:
+        try:
+            resolved = path.resolve()
+            if not resolved.is_file() or str(resolved) in seen:
+                return
+            seen.add(str(resolved))
+            inputs.append({"kind": kind, "path": str(resolved),
+                           "sha256": _sha256(resolved)})
+        except OSError:
+            pass
+
+    if command:
+        found = shutil.which(command[0])
+        add("executable", Path(found) if found else Path(command[0]))
+    for token in command[1:]:
+        add("argv-file", Path(token))
+    digest = hashlib.sha256("\x00".join(
+        [f"argv:{t}" for t in command]
+        + [f'{e["kind"]}:{e["path"]}:{e["sha256"]}' for e in inputs]
+    ).encode("utf-8")).hexdigest()
+    return {
+        "argv": list(command),
+        "inputs": inputs,
+        "digest": digest,
+        "limits": ("identifies the local executable and any argv file. It does "
+                   "NOT identify a remote model behind a CLI, the CLI's own "
+                   "dependencies, or anything the reviewer reads at runtime "
+                   "from outside its bundle -- the sandbox denies the "
+                   "repository, not the network"),
+    }
+
+
 def _execution_identity(command: list[str]) -> str:
     """What actually ran, not just what was typed.
 
@@ -385,16 +441,7 @@ def _execution_identity(command: list[str]) -> str:
     the same limit and the same warning: the runner records it, it does not
     verify it.
     """
-    parts: list[str] = []
-    for token in command:
-        parts.append(f"argv:{token}")
-        path = Path(token)
-        try:
-            if path.is_file():
-                parts.append(f"file:{path.resolve()}:{_sha256(path)}")
-        except OSError:
-            pass
-    return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()
+    return execution_manifest(command)["digest"]
 
 
 def _run_reviewer_process(command: list[str], profile: str, cwd: Path) -> dict:
@@ -468,25 +515,50 @@ def run_reviewer(bundle_packet: Path, reviewer_id: str, *,
         status = "PASS"
 
     command_sha = output_sha = None
+    execution: dict | None = None
     if command:
         if status != "PASS":
             # Running a reviewer inside a boundary that was not shown to hold
             # would produce labels nobody can attribute to a blind review.
+            # Round 21c: this used to be `status != "DENIED"`, so a probe that
+            # could not be MEASURED was announced as one the reviewer had
+            # REACHED. On a host where all four controls failed the operator was
+            # told the reviewer read the answer key; it had read nothing. The
+            # refusal is fail-closed either way, but a leak and a missing
+            # permission call for opposite responses -- one is a finding, the
+            # other is a machine to fix -- so the message must not merge them.
             reached = [p["probe"] for p in probes["forbidden_probes"]
-                       if p["status"] != "DENIED"]
+                       if p["reachable"]]
+            unmeasured = [p["probe"] for p in probes["forbidden_probes"]
+                          if p["status"] == "BLOCKED"]
             raise ReviewerRunnerError(
-                f"refusing to run the reviewer: isolation is {status}; it "
-                f"reached {reached}. Labels produced inside a boundary nobody "
+                f"refusing to run the reviewer: isolation is {status}; "
+                f"reached {reached}, unmeasured {unmeasured}. "
+                "`reached` is a leak; `unmeasured` means the probe could not "
+                "run here at all (a control probe failed) and says nothing "
+                "about the boundary. Labels produced inside a boundary nobody "
                 "verified cannot be attributed to a blind review")
+        # BEFORE the run. Round 21c: identity was computed after
+        # `_run_reviewer_process` returned, so a script that rewrote itself
+        # mid-run would be attested by its POST-run bytes -- the receipt would
+        # name something that never executed.
+        manifest = execution_manifest(command)
         output = _run_reviewer_process(command, probes["profile"],
                                        bundle_packet.parent)
+        after = execution_manifest(command)
+        if after["digest"] != manifest["digest"]:
+            raise ReviewerRunnerError(
+                "the reviewer's inputs changed while it ran; the receipt would "
+                f"attest to bytes that did not execute. before="
+                f"{manifest['digest'][:12]} after={after['digest'][:12]}")
         artifact = _label_artifact(reviewer_id, output,
                                    bundle_packet=bundle_packet,
                                    assignment=assignment, fixture=fixture)
         body = json.dumps(artifact, ensure_ascii=False, indent=1)
         labels_out.parent.mkdir(parents=True, exist_ok=True)
         labels_out.write_text(body, encoding="utf-8")
-        command_sha = _execution_identity(command)
+        command_sha = manifest["digest"]
+        execution = manifest
         output_sha = hashlib.sha256(body.encode("utf-8")).hexdigest()
 
     receipt = IsolationReceipt(
@@ -500,6 +572,7 @@ def run_reviewer(bundle_packet: Path, reviewer_id: str, *,
         forbidden_probes=tuple(probes["forbidden_probes"]),
         reviewer_command_sha256=command_sha,
         reviewer_output_sha256=output_sha,
+        reviewer_execution=execution,
     )
     return receipt.as_dict(key=load_or_create_key(launcher_key_path()))
 

@@ -844,7 +844,9 @@ def release_receipt_dir() -> Path:
 
 def write_release_receipt(spec: RunSpec, verdict: int, *,
                           closure_digest: str | None,
-                          obligations: dict) -> Path:
+                          obligations: dict,
+                          isolation: list[dict] | None = None,
+                          allowed_probe_passed: bool | None = None) -> Path:
     """Record what a release run observed, IN THIS ENVIRONMENT.
 
     Round 21, finding #8. `e2e --release` returned 0 here and 1 with two BLOCKED
@@ -867,7 +869,29 @@ def write_release_receipt(spec: RunSpec, verdict: int, *,
         "mode": spec.mode,
         "exit": {PASS: "PASS", FAIL: "FAIL", BLOCKED: "BLOCKED"}[verdict],
         "closure_digest": closure_digest,
-        "obligations": obligations,
+        # Round 21c: this was `obligations: {name: "pass"}`. `demonstrated` only
+        # means a proof is DECLARED AND PRESENT -- not that the mutations passed
+        # in this run -- and a future reader seeing `12/12 pass` in a release
+        # receipt would reasonably conclude the stronger thing. The field name
+        # now carries the strength of the claim, because the field is all that
+        # reader gets.
+        "declared_proofs_present": {
+            "per_obligation": obligations,
+            "what_this_is_not":
+                "NOT a record that the mutation suite passed during this run. "
+                "It records that each obligation names a proof and that the "
+                "proof exists. The suite result for this commit is in the gate "
+                "output, and the two are not bound to each other yet",
+        },
+        # Round 21c: `sandbox_available` recorded only whether the binary exists,
+        # so it could not distinguish this host (exit 0) from a /private/tmp
+        # clean clone where four probes were BLOCKED and release exited 1 -- the
+        # exact difference the receipt exists to explain.
+        "isolation": {
+            "allowed_probe_passed": allowed_probe_passed,
+            "probe_states": {p["probe"]: p["status"]
+                             for p in (isolation or [])},
+        },
         "git_commit": _git("rev-parse", "HEAD"),
         "git_dirty": bool(_git("status", "--porcelain")),
         "python": sys.version.split()[0],
@@ -1377,10 +1401,13 @@ def run_pipeline(spec: RunSpec) -> int:
         # Release is the mode whose result other sessions quote, so it is the
         # mode that has to leave evidence of the environment it ran in.
         if spec.mode == "release":
+            first = next(iter(launcher_receipts.values()), {})
             receipt = write_release_receipt(
                 spec, code,
                 closure_digest=(closure or {}).get("frozen_surface_digest"),
-                obligations={k: r.verdict.value for k, r in effective.items()})
+                obligations={k: r.verdict.value for k, r in demonstrated.items()},
+                isolation=first.get("forbidden_probes") or [],
+                allowed_probe_passed=first.get("allowed_probe_passed"))
             print(f"  receipt: {receipt.name}")
         return code
 

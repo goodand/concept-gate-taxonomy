@@ -573,9 +573,11 @@ def test_a_release_run_records_its_environment(tmp_path, monkeypatch):
                                     obligations={"x": "pass"})
     doc = json.loads(path.read_text(encoding="utf-8"))
     assert doc["kind"] == rp.RELEASE_KIND
+    # Round 21c renamed `obligations` -> `declared_proofs_present` (the bare
+    # name read as "these were demonstrated here") and added `isolation`.
     for field in ("git_commit", "git_dirty", "python", "platform",
                   "sandbox_available", "mode", "exit", "closure_digest",
-                  "obligations"):
+                  "declared_proofs_present", "isolation"):
         assert field in doc, f"release receipt does not record {field}"
     assert doc["exit"] == "PASS" and doc["mode"] == "release"
     # Idempotent: the same state must not accumulate near-identical receipts in
@@ -693,32 +695,88 @@ def test_the_suite_does_not_add_receipts_to_the_committed_results_dir():
 
 
 # --------------------------------------------------------------- round 21b ---
-def test_the_handoff_entry_block_matches_what_the_commands_actually_print():
-    """F7. The handoff's §1 said `obligations 10/10 PASS, obligations_unknown []`
-    and the PREREGISTRATION status block said `e2e --offline exit 0`. Both were
-    false: there are 11 obligations, the coverage key is `effective_unknown`, and
-    offline exits 2 because it runs no reviewer.
+DOC_PATHS = ("docs/HANDOFF_20260810_primary_blocked.md",
+             "experiments/2026-08-07_handoff_dynamic_controller/PREREGISTRATION.md")
 
-    §3b corrected it further down, so ONE document carried TWO current states --
-    and §1 is what a zero-context agent reads first, which decides what it treats
-    as success. A cold-start test caught the same class twice in this session; an
-    external reviewer caught this one.
 
-    Compared against the DECLARED COUNT and the real coverage key, not prose
-    against prose -- a test that compares prose to prose rots with the prose."""
+def _operating_docs():
+    repo = HERE.parents[1]
+    return [(name, (repo / name).read_text(encoding="utf-8")) for name in DOC_PATHS]
+
+
+def test_the_operating_docs_state_the_real_obligation_count():
+    """F7's mechanism, rewritten. The first version was a BLACKLIST of three
+    strings, and `n = len(DECLARED_OBLIGATIONS)` was used only in the error
+    message. Measured: replacing every `의무 11/11`/`의무 12/12` in the handoff
+    with `의무 99/99` and running it gave `1 passed`.
+
+    That is the vacuous-guard pattern -- the ninth recorded instance in this
+    repository, created while fixing the eighth, inside the very finding about
+    documents that disagree with code. Its docstring claimed it compared against
+    the declared count, which the code did not do: a comment teaching a contract
+    the code does not implement, the other pattern this session keeps recording,
+    in the same function.
+
+    `HARNESS_KNOWHOW.md` B4 is both precedent and instruction: do not ask whether
+    a guard exists, ask what proposition it makes true. So this PARSES the number
+    out of the prose and compares it to the code."""
+    import re
     import run_pipeline as rp
-    docs = [HERE.parents[1] / "docs" / "HANDOFF_20260810_primary_blocked.md",
-            HERE / "PREREGISTRATION.md"]
     n = len(rp.DECLARED_OBLIGATIONS)
-    for path in docs:
-        text = path.read_text(encoding="utf-8")
-        assert "obligations 10/10 PASS" not in text, (
-            f"{path.name} still promises 10/10; there are {n}")
-        assert "obligations_unknown" not in text, (
-            f"{path.name} names the pre-round-21 coverage key")
-        assert "e2e --offline   exit 0" not in text, (
-            f"{path.name} promises offline exit 0; it exits 2 because it runs "
-            "no reviewer")
+    found_any = False
+    for name, text in _operating_docs():
+        for pattern in (r"의무\s+(\d+)/(\d+)", r"obligations\s+(\d+)/(\d+)"):
+            for match in re.finditer(pattern, text):
+                found_any = True
+                assert int(match.group(2)) == n, (
+                    f"{name} claims {match.group(0)!r}; the code declares {n}")
+    assert found_any, (
+        "no obligation count appears in the operating docs at all -- the entry "
+        "block must state what a reader should expect")
+
+
+def test_the_operating_docs_state_the_real_offline_exit_code():
+    """Parsed, then compared to the actual process. `e2e --offline` returns 2
+    because it runs no reviewer, and a document promising 0 makes a reader treat
+    an honest PARTIAL as a failure -- or a failure as success."""
+    import re
+    actual = _run("run_pipeline.py", "e2e", "--offline").returncode
+    claimed_any = False
+    for name, text in _operating_docs():
+        for match in re.finditer(r"e2e --offline\s+exit (\d+)", text):
+            claimed_any = True
+            assert int(match.group(1)) == actual, (
+                f"{name} promises offline exit {match.group(1)}; it is {actual}")
+    assert claimed_any, "no document states the offline exit code"
+
+
+def test_the_agent_reviewer_procedure_names_the_launcher_and_the_receipt():
+    """Round 21c. The handoff told a reader to submit label files by hand and
+    call the adjudicator with no `--isolation-receipt`. With `kind: agent` the
+    code REFUSES that procedure -- the entry document described a workflow the
+    program rejects.
+
+    This matters more than ordinary drift: this handoff IS the corpus a subject
+    agent reads. If it contradicts the code, a subject failure cannot be
+    attributed to retrieval rather than to the document."""
+    joined = "\n".join(text for _, text in _operating_docs())
+    for token in ("reviewer_runner.py", "--command", "--labels-out",
+                  "--isolation-receipt"):
+        assert token in joined, (
+            f"the operating docs never mention {token}; an agent reviewer "
+            "cannot be run or adjudicated by following them")
+
+
+def test_the_operating_docs_do_not_describe_the_removed_receipt_scheme():
+    """`produced_by` plus a public `receipt_sha256` was the FORGEABLE scheme
+    round 21 replaced with an HMAC. A document presenting it as current teaches
+    a reader that a hand-written receipt would be caught -- the opposite of what
+    was true."""
+    for name, text in _operating_docs():
+        assert "`produced_by`와" not in text, (
+            f"{name} still presents the removed produced_by scheme as current")
+    joined = "\n".join(text for _, text in _operating_docs())
+    assert "HMAC" in joined, "no document says how a receipt is authenticated"
 
 
 def _tree_with_agent_reviewer(tmp_path, *, receipt: dict | None,
@@ -825,3 +883,48 @@ def test_the_receipt_verifier_separates_authenticity_from_packet_binding():
     source = (HERE / "run_pipeline.py").read_text(encoding="utf-8")
     assert 'doc.get("packet_file"' not in source, (
         "doctor still guesses a packet path out of the receipt")
+
+
+def test_the_release_receipt_does_not_overclaim_its_obligation_evidence(
+        tmp_path, monkeypatch):
+    """Round 21c. The receipt recorded `obligations: {name: "pass"}`, and
+    `demonstrated` only means "a proof is declared and present" -- not that the
+    12 mutations passed in THIS run. A later session reading `12/12 pass` in a
+    release receipt would reasonably conclude the stronger thing.
+
+    The field name has to carry the strength of the claim, because the field is
+    all a future reader gets."""
+    import run_pipeline as rp
+    monkeypatch.setattr(rp, "RESULTS", tmp_path)
+    path = rp.write_release_receipt(
+        rp.RunSpec.for_mode("release"), rp.PASS, closure_digest="d" * 12,
+        obligations={"x": "pass"},
+        isolation=[{"probe": "answer_key", "status": "DENIED"}],
+        allowed_probe_passed=True)
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    assert "obligations" not in doc, (
+        "the bare name `obligations` reads as 'these were demonstrated here'")
+    assert "declared_proofs_present" in doc
+    assert "what_this_is_not" in doc["declared_proofs_present"], (
+        "the receipt does not say what the field is NOT")
+
+
+def test_the_release_receipt_records_probe_states_not_binary_presence(
+        tmp_path, monkeypatch):
+    """Round 21c. `sandbox_available` recorded only whether /usr/bin/sandbox-exec
+    exists. The reviewer ran the SAME commit in a /private/tmp clean clone and
+    got exit 1 with four BLOCKED probes -- and the receipt could not express the
+    difference between that host and this one. A field that cannot distinguish
+    the two outcomes it exists to explain is not evidence."""
+    import run_pipeline as rp
+    monkeypatch.setattr(rp, "RESULTS", tmp_path)
+    path = rp.write_release_receipt(
+        rp.RunSpec.for_mode("release"), rp.BLOCKED, closure_digest=None,
+        obligations={}, allowed_probe_passed=False,
+        isolation=[{"probe": "answer_key", "status": "BLOCKED"},
+                   {"probe": "host_transcripts", "status": "DENIED"}])
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    iso = doc["isolation"]
+    assert iso["allowed_probe_passed"] is False
+    assert iso["probe_states"] == {"answer_key": "BLOCKED",
+                                   "host_transcripts": "DENIED"}
