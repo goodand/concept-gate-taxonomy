@@ -42,7 +42,7 @@
   "status": "PASS",
   "hardened_profile_passed": true,
   "frozen_surface_hashes": {
-    "PREREGISTRATION.md": "487c24f9c0dcdf6647f1d4ede83bef5602bebc734e2efe3af6bbf78244ee8bad",
+    "PREREGISTRATION.md": "16b01cb4565afeaa7643411e366c49f3aed8353b991912fdbb50e3fd1e31bfb0",
     "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652",
     "_controllers.py": "464396bb4c8ef374b108c6803aa991f751453a75877548e2f06a587703f28088",
     "_evaluator.py": "85d89868b9a8b18f860e82921bfcdc4c9eec9d890c9ecb01bc7b07f825eea255",
@@ -91,8 +91,8 @@
     "frozen_surface_audit.json": "a2fb0c6e87d9c41f371d82f7b8022f6e22f405dcb9cc5fb47d5de568257b9846",
     "make_safety_audit_blind_input.py": "42cdedf7bce2603c05ffa9640bea15c2dfb78d437b17c457dc027afa2a9ddb26",
     "measure_s1_recall.py": "a13850ecf6bfd0ab56d2a1bfbff49cd8b916b428419f5594a7542c0438d83891",
-    "reviewer_runner.py": "1e178fb1d9a5f07e91806ec8792ae1a7dfd70e47d302139d68abc6abd0bf2016",
-    "run_pipeline.py": "5555addf7e46774c320a2bc4a72168ad2425bbf1016333b04be65a5aa6430fa8",
+    "reviewer_runner.py": "d8857e1d84078014bc351ac18c11dd4e40432f6e1bc39028f360643605507277",
+    "run_pipeline.py": "beffd195e734b59af41bd0efc99447e6faa0c03ad8338b0d4e9b9cbae84e00f6",
     "s1_recall_fixture.json": "5efc82bf6104a02734494f314cf3538ac9aa640cc42c967d33e4997cc03b4e9b",
     "safety_audit_authorities.json": "270dc70dee6dc68fb81d0a8c225ad2d4ea926888fc3db5b2f71612b0cf797bf9",
     "safety_audit_reviewer_assignment.json": "871cf2ef5b20773dc17fe478d4d7f18eb414171124db4e6b770002731aa13732",
@@ -101,8 +101,8 @@
     "safety_audit_spec.json": "3f2437bc713b76b985849a496ffd4d060dedfe27a7bc7f4be2dfa01a1852fb26",
     "test_cli_wiring_coverage.py": "3f5bc207dfab58d6fc24092e33e006d9f5074c783f814f9218e5c4558827b730",
     "test_e2e_acceptance.py": "d59099736f570c0ce7b3e1d8d2f53c3be420086dfa1aff4e31fdb111d405428d",
-    "test_pipeline_gates.py": "cf6397057c6107709ce0e1591a61ce730224999700a23d94bb8afaee99a58e5c",
-    "test_reviewer_isolation.py": "7636fd8111246b5e419e655ec662f51c795db46d0e2952ccd460235cab943646",
+    "test_pipeline_gates.py": "ea838895f1d551c8c5dac0561f4e7d711b7ca6d789f0c4ffcf27d9a69bd84bb7",
+    "test_reviewer_isolation.py": "a9722a95468ff59f92798f67fdb60d97712f7fe503728f1b068ad2f5ae244d31",
     "test_safety_audit.py": "2e4ec67450f75abb8db27382394fc1d052c05a0ba5961ec8232a70e95c81791b",
     "public_corpus/variant-L/": "26717068f4e8ed875c54edb12a6c9f56b90cf35a33ef81b20720de2a44f91749",
     "public_corpus/variant-M/": "4cb0a1d6671c8de4f6c2744d49747eddbbe21e38dd5a511c4b7dff640ccdffcc"
@@ -138,7 +138,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-q18y278d/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-yvsq10ky/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
     },
     {
       "q": "Q2/v1",
@@ -146,7 +146,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-q18y278d/b/control/input_manifest.json: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-yvsq10ky/b/control/input_manifest.json: Operation not permitted"
     },
     {
       "q": "Q2/v1",
@@ -210,7 +210,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-q18y278d/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-yvsq10ky/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
     },
     {
       "q": "Q2/v2",
@@ -218,7 +218,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-q18y278d/b/control/input_manifest.json: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-yvsq10ky/b/control/input_manifest.json: Operation not permitted"
     },
     {
       "q": "Q2/v2",

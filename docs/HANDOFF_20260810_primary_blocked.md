@@ -22,7 +22,7 @@ python3 run_pipeline.py e2e --release  # 하류 경로가 증명됐나 (오직 0
 doctor         exit 1   4 pass, 1 fail, 3 blocked
                         [FAIL] qualification artifacts ... is stale
                         reviewer assignment는 UNASSIGNED(BLOCKED)
-e2e --release  exit 0   의무 11/11, effective_unknown []
+e2e --release  exit 0   의무 12/12, effective_unknown []
 e2e --offline  exit 2   PARTIAL — reviewer를 돌리지 않으므로
                         reviewer.labels.from-launcher가 UNKNOWN이다.
                         **2는 성공이 아니지만 여기서는 정직한 상태다**
@@ -118,6 +118,8 @@ HEAD   : eca3edb  docs — round-20 링크, closure receipt 1개만 유지
 [`docs/feedback/plan_round21_forgeable_receipts_and_real_reviewer.md`](feedback/plan_round21_forgeable_receipts_and_real_reviewer.md),
 후속 독립 검증과 권한 환경 차이·잔여 통합 결함은
 [`docs/feedback/external_review_round21_20260811_reviewer_launcher_and_runtime.md`](feedback/external_review_round21_20260811_reviewer_launcher_and_runtime.md),
+이번 세션의 이슈 연쇄·누적 패턴·범위 정정은
+[`docs/feedback/session_retrospective_20260811_scope_correction_and_round21b.md`](feedback/session_retrospective_20260811_scope_correction_and_round21b.md),
 계약 개정은 `PREREGISTRATION.md` Amendment 42.
 
 **두 개는 손으로 위조해서 확인했다** — 주장이 아니라 실행 결과다:
@@ -275,6 +277,49 @@ skip이 되는데, skip은 이 저장소 어휘로 `BLOCKED`이고 **exit code�
 않는다** — 즉 sandbox 없는 환경에서 suite가 초록인데 isolation은 검증되지 않았다.
 F1을 닫아 그 환경에서는 감사 자체가 거부되므로 실질 위험은 줄었으나 **lane 분리는
 아직 남았다**(아래 미해결).
+
+## 3d. 21c라운드 — 공허한 문서 테스트
+
+후속 검토가 **5건을 지적했고 5/5 확인**됐다. 계획은
+[`plan_round21c_positive_contract_and_identity.md`](feedback/plan_round21c_positive_contract_and_identity.md).
+
+**가장 나쁜 것은 21b에서 F7을 고치며 만든 회귀 테스트가 공허했다는 것이다.**
+실측: handoff의 의무 수를 12에서 99로 바꾸고 돌리면 **1 passed**. 그
+테스트는 과거 문자열 3개의 부재만 봤고, `len(DECLARED_OBLIGATIONS)`는 **오류
+메시지에만** 쓰였다. 그런데 docstring은 "선언된 수와 대조한다"고 적혀 있었다 —
+**P1(공허한 가드)의 9번째**이고, 하필 "문서가 코드와 다르다"는 결함을 고치는
+가드가 그 자신 공허하며 주석이 코드가 구현하지 않는 계약을 가르쳤다.
+
+이제 문서에서 **숫자를 파싱해** 코드의 선언 수와 대조하고, offline exit는
+**실제로 실행해** 대조한다. 오염 시험으로 음성성을 확인했다(수를 99로 바꾸면 실패한다). 그리고 그 가드가
+이 절을 쓰는 도중 **내 설명문까지 잡았다** — 서술과 주장을 구별할 수 없으므로
+과거·가상 수치는 `의무 N/N` 형태로 쓰지 않는다.
+
+| 닫은 것 | 무엇이었나 |
+|---|---|
+| **절차 모순** | §6c 절차가 label 수동 제출 + `--isolation-receipt` 없는 adjudicator 호출을 안내했다. `kind: agent`면 **코드가 그 절차를 거부한다.** human(2a)/agent(2b) 경로를 분리하고 agent 경로에 launcher와 receipt를 명시했다 |
+| **제거된 방식 서술** | §에 `produced_by` + 공개 `receipt_sha256`이 현행처럼 남아 있었다. HMAC 서술로 교체하고 왜 바뀌었는지 적었다 |
+| **probe-only 서술** | PREREGISTRATION이 release E2E를 probe-only처럼 설명했다. 지금은 stub reviewer를 실제로 실행한다 |
+| **BLOCKED를 LEAK처럼** | 거부 메시지가 `status != "DENIED"`인 probe 전부를 `reached`에 넣었다. 통제 실패 host에서 "reviewer가 answer key에 도달했다"고 출력됐다 — 도달한 것은 없었고 측정된 것이 없었다. `reached`(누출)와 `unmeasured`(측정 불가)를 분리했다 |
+| **execution identity** | argv 안의 파일만 해시해 `claude`·`codex`·`python3`를 식별하지 못했고, **실행 뒤에** 계산해 실행 후 바이트를 증언할 수 있었다. `shutil.which`로 해석하고, **실행 전** manifest를 만들고, 실행 후 재대조해 바뀌면 거부하며, receipt에 **파일 목록과 한계**를 함께 담는다 |
+| **receipt 과대주장** | `obligations: {name: "pass"}`는 "이 release에서 mutation 12종이 통과"로 읽힌다. `declared_proofs_present`로 바꾸고 `what_this_is_not`을 넣었다 |
+| **환경 차이 미기록** | `sandbox_available`이 바이너리 존재만 기록해 `/private/tmp` clean clone의 exit 1을 설명하지 못했다. `isolation.allowed_probe_passed`와 probe별 상태를 기록한다 |
+
+**왜 문서 정합성이 위생 문제가 아닌가**: 이 실험은 무맥락 agent가
+`docs/HANDOFF.md`만 보고 재개할 수 있는지를 측정한다. 문서가 코드와 모순되면
+**subject 실패가 검색 실패인지 문서 모순인지 구별되지 않는다** — 측정 타당성
+문제다. 그래서 canary 전에 닫았다.
+
+### 21c 실측 (이 환경)
+
+```
+실험 suite      319 passed / 1 skipped
+e2e --release   exit 0
+저장소 게이트   9 passed / 1 failed(owlready2 부재, 기존) / 1 blocked
+```
+
+미룬 것은 21b와 같다 — F3·F4·F6·F8. 리뷰어와 판정이 일치한다: retrieval canary를
+막지 않는다.
 
 ## 4. 절대 하면 안 되는 것
 
@@ -454,10 +499,13 @@ mutation 스위트이며, 새 의무를 추가하면서 mutation을 안 붙이�
 `run_live_phase_c.py`(EXECUTION 층)를 고쳐 red-team·qualification 둘 다 무효가
 된다.
 
-**receipt는 launcher가 관측해서 만든다.** `produced_by`와 packet·assignment·
-profile 해시에 결속되고 자기 내용에 대한 `receipt_sha256`을 담는다. doctor와
-adjudicator는 `verify_isolation_receipt()`를 호출한다 — **reviewer가 낸 boolean은
-입력이 아니다.** 손으로 쓴 PASS, 편집된 receipt, 다른 packet에 결속된 receipt가
+**receipt는 launcher가 관측해서 만들고 host-only key로 HMAC 서명된다.**
+packet·assignment·profile 해시에 결속된다. `produced_by` 문자열과 공개
+`receipt_sha256`을 쓰던 예전 방식은 **21라운드에 제거됐다** — 두 입력이 다 공개라
+필드를 채우고 같은 함수를 부르면 launcher를 실행하지 않은 문서가 PASS로
+검증됐다(재현됨). doctor는 `authenticate_isolation_receipt()`(서명+assignment),
+adjudicator는 `verify_isolation_receipt()`(+packet)를 호출한다 — **reviewer가 낸
+boolean은 입력이 아니다.** 손으로 쓴 PASS, 편집된 receipt, 다른 packet에 결속된 receipt가
 전부 거부된다.
 
 **양방향 probe다.** 허용 probe(자기 packet 읽기)가 실패하면 sandbox가 안 도는
@@ -550,16 +598,32 @@ python3 make_safety_audit_blind_input.py results/<primary>.json
 #    -> audit_workspace/<stem>/packet.json        (판정자에게 준다. 이것뿐)
 #    -> results/safety_audit_key_<stem>.json      (워크스페이스 밖에 둔다)
 
-# 2) 판정자 2인이 각각 라벨 파일 제출
-#    {"reviewer_id": "<배정에 선언된 id>", "packet_sha256": "<1)의 출력>",
-#     "assignment_sha256": "<...>", "labels": {"R0000": "MENTION", ...}}
+# 2) 라벨 수집 — 판정자 종류에 따라 경로가 다르다. 섞지 마라.
 
-# 3) 결합
+#  2a) kind: human — 사람이 직접 라벨 파일을 낸다
+#      {"reviewer_id": "<배정에 선언된 id>", "packet_sha256": "<1)의 출력>",
+#       "assignment_sha256": "<...>", "fixture_sha256": "<...>",
+#       "qualification": {...}, "labels": {"R0000": "MENTION", ...}}
+#      receipt는 없다. launcher는 프로세스를 가두고 사람은 가두지 않는다.
+
+#  2b) kind: agent — launcher가 실행하고 라벨과 receipt를 함께 낸다.
+#      직접 만든 라벨 파일은 adjudicator가 거부한다(21b, F1).
+python3 reviewer_runner.py audit_workspace/<stem>/packet.json <reviewer_id> \
+    --labels-out results/labels_<id>.json \
+    --command <실제 판정자 CLI와 인자...>
+#      -> results/labels_<id>.json                (adjudicator에 넘긴다)
+#      -> results/reviewer_isolation_<id>.json    (같이 넘긴다)
+
+# 3) 결합 — agent 판정자마다 --isolation-receipt를 붙인다
 python3 apply_safety_audit.py results/<primary>.json \
     audit_workspace/<stem>/packet.json \
     results/safety_audit_key_<stem>.json \
-    results/labels_<A>.json results/labels_<B>.json
+    results/labels_<A>.json results/labels_<B>.json \
+    --isolation-receipt results/reviewer_isolation_<A>.json
 #    -> results/adjudicated_<stem>.json
+#
+# receipt 없는 agent 판정자, 이 host가 서명하지 않은 receipt, 다른 packet에
+# 결속된 receipt, probe-only receipt, 서명 후 편집된 라벨은 **전부 거부**된다.
 ```
 
 **감사 입력 게이트**(1단계): `kind`가 `live-subject-primary`인가, **정확한 8×4
@@ -798,7 +862,9 @@ Amendment 37/38에서 추가·변경된 것:
 - [`release_b2633b9ecc3d.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_b2633b9ecc3d.json) —
   **21b 현행** (`git_dirty: false`, commit `449925a`, 의무 **12/12** pass)
 - [`release_c525664cbe88.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_c525664cbe88.json) —
-  21라운드 (의무 11/11). 남겨 둔다: 의무가 11→12로 늘어난 지점의 증거다
+  21라운드 receipt (당시 의무 11종). 남겨 둔다: 의무가 11에서 12로 늘어난
+  지점의 증거다. **과거 수치는 `의무 N/N` 형태로 쓰지 않는다** — 그 형태는
+  현재 주장에만 쓰고, 테스트가 그것을 코드의 선언 수와 대조한다
 - closure는 `_closure_receipt()`가 판정한다. 파일명을 여기 적으면 다음 실행에서
   낡으므로 **적지 않는다** — 21라운드에 이 목록을 열거로 유지하려다 실행마다
   고쳐야 했다

@@ -1,0 +1,39 @@
+{
+ "kind": "release-run-receipt-v1",
+ "mode": "release",
+ "exit": "PASS",
+ "closure_digest": "a45771716c725d77aa6006943113d0828eaabbdbed87a1517b1990a9bec29796",
+ "declared_proofs_present": {
+  "per_obligation": {
+   "audit.input-validated": "pass",
+   "audit.provenance.bytes-compared": "pass",
+   "audit.provenance.propagated": "pass",
+   "packet.blinding.applied": "pass",
+   "reviewer.qualification.required": "pass",
+   "reviewer.assignment.frozen": "pass",
+   "reviewer.count.enforced": "pass",
+   "bundle.written.to.disk": "pass",
+   "reviewer.isolation.enforced": "pass",
+   "reviewer.labels.from-launcher": "pass",
+   "audit.isolation.required": "pass",
+   "freeze.closure.current": "pass"
+  },
+  "what_this_is_not": "NOT a record that the mutation suite passed during this run. It records that each obligation names a proof and that the proof exists. The suite result for this commit is in the gate output, and the two are not bound to each other yet"
+ },
+ "isolation": {
+  "allowed_probe_passed": true,
+  "probe_states": {
+   "answer_key": "DENIED",
+   "preregistration": "DENIED",
+   "results_artifact": "DENIED",
+   "host_transcripts": "DENIED"
+  }
+ },
+ "git_commit": "3a28132111c43159b065f0322eaafe2334bcfe81",
+ "git_dirty": true,
+ "python": "3.13.13",
+ "platform": "Darwin 25.5.0",
+ "sandbox_available": true,
+ "tests_not_recorded_why": "a pytest summary would require this command to run the suite that runs this command; read it from the commit's own gate output",
+ "receipt_sha256": "a1b1d90e2230f6aed069ff3363e218c3972a7f00dec355774c53ecc611d08365"
+}

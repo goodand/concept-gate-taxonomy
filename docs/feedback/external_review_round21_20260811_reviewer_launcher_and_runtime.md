@@ -7,6 +7,18 @@
 - Related handoff: [[../HANDOFF_20260810_primary_blocked]]
 - Related implementation plan: [[plan_round21_forgeable_receipts_and_real_reviewer]]
 
+## 0. Scope correction and supersession
+
+The factual findings in this review remain valid for commit `fb69fbb`. Round 21b subsequently
+resolved F1, F1b, F2, F5, and the current-state part of F7; see
+[[plan_round21b_audit_path_bypasses_the_launcher]].
+
+The final sentence below that treated F1-F3 as blockers for a **retrieval-only live canary**
+is superseded. Those findings could invalidate a blind safety headline, but they do not alter
+handoff-file retrieval, host-recorded reads, state reconstruction, or the static/dynamic ×
+subagent comparison. The corrected scope and blocker rule are recorded in
+[[session_retrospective_20260811_scope_correction_and_round21b]].
+
 ## 1. Verdict
 
 Round 21 materially improved the launcher. The release E2E now executes a process inside
@@ -15,11 +27,13 @@ checks the label bytes against `reviewer_output_sha256`, and passes those labels
 adjudicator before adjudication. The reported `release=0`, `offline=2`, `primary=2`, and
 `doctor=1` states were reproduced.
 
-The completion claim is nevertheless too strong. The real audit CLI can still bypass the
+At reviewed commit `fb69fbb`, the completion claim was nevertheless too strong. The real audit CLI could still bypass the
 launcher and its receipt, the documented reviewer CLI remains probe-only, and the final
 release receipt discards the launcher evidence it summarizes. Therefore "only the live
-canary remains" is false. A canonical production audit path and durable evidence binding
-remain blocking work before a live canary can produce interpretable evidence.
+canary remains" was false **for a canary intended to produce a blind safety headline**. A
+canonical production audit path was required for that claim; durable evidence binding remains
+separate audit/reproducibility debt. This paragraph is historical and must be read with the
+scope correction above.
 
 ## 2. Reproduced execution results
 
