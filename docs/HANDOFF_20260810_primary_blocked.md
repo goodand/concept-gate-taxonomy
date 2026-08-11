@@ -122,7 +122,8 @@ builder 원칙을 파이프라인 전체로 확장한 것이다.
 ```
 0. run_pipeline.py doctor          # 무엇이 막혀 있나
 1. run_pipeline.py e2e --release   # 하류 경로가 증명됐나 (0이어야 한다)
-2. live canary — 1 case × 1 arm 실제 provider 호출        ← 다음 할 일. 아직 없다
+1b. 21라운드 수정 9건                                     ← 다음 할 일
+2. live canary — 1 case × 1 arm 실제 provider 호출        ← 1b 전에는 금지
 3. 32칸으로 확장
 4. 새 config → qualification 2종 → 새 authorization      ← §1의 막힘을 푸는 곳
 5. 3검사 확인(시도 소모 없이) → primary
@@ -508,7 +509,13 @@ qualification 러너 자체는 보이므로 현재 구성으로 동작한다.
 
 ## 10. 미해결 목록
 
-- [ ] **live canary — 1 case × 1 arm 실제 provider 호출.** 다음 할 일이다
+- [ ] **21라운드 수정 9건 — 다음 할 일.**
+      [`docs/feedback/plan_round21_forgeable_receipts_and_real_reviewer.md`](feedback/plan_round21_forgeable_receipts_and_real_reviewer.md).
+      8/8 재현 + 내가 놓친 2건. **canary보다 먼저다** — isolation receipt가 위조
+      가능하고(재현됨), 프로파일이 v1이며, 금지 probe 4개 중 2개가 sandbox를
+      측정하지 않고, `--primary`가 provider를 부르지 않는다. 그 상태로 canary를
+      돌리면 관측한 것이 무엇인지 사후에 말할 수 없다
+- [ ] **live canary — 1 case × 1 arm 실제 provider 호출.** 위 9건 이후
 - [ ] 5절 절차 (canary → 32칸 → 재-qualification → primary)
 - [ ] 판정자 배정 (`safety_audit_reviewer_assignment.json`이 `UNASSIGNED`)
 - [ ] **감사 가능한 primary artifact** — 현 authorization이 가리키는 config로
