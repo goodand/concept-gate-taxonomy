@@ -321,6 +321,56 @@ e2e --release   exit 0
 미룬 것은 21b와 같다 — F3·F4·F6·F8. 리뷰어와 판정이 일치한다: retrieval canary를
 막지 않는다.
 
+## 3e. retrieval canary 1회 실행됨 — 수직 경로는 통과, 해석이 실패
+
+**실제 provider 호출 1건**(Claude CLI, HD01 × S_STATIC). 산출물:
+
+```
+results/live_canary_claude_surface_v3_HD01_S_STATIC_attempt1.json
+results/live_canary_claude_surface_v3_HD01_S_STATIC_attempt1_assessment.json
+```
+
+### 계약 검증 — 통과
+
+| 항목 | 결과 |
+|---|---|
+| `kind` | `live-subject-canary` |
+| `n_runs` / `n_per_cell` / `arm_effect_estimable` | 1 / 1 / `false` |
+| qualification ledger SHA-256 | `000ffa737792…` **실행 전후 동일** |
+| primary attempt ledger SHA-256 | `4093f2eadce0…` **실행 전후 동일** |
+| `raw` 보존 | 예 |
+
+### 3층 판정
+
+| 층 | 판정 | 근거 |
+|---|---|---|
+| **Runtime** | **PASS** | `invalid_run=false`, `failure_codes=[]`, raw 보존 |
+| **Retrieval** | **PASS** | `host_action_compliance.passed=true`, search 1 · read 3, `critical_path_recall=1.0`, `expected_path_recall=1.0`, `exact_authority_hit=true` |
+| **Reconstruction** | **FAIL** | `state_accuracy=true`, **`next_action_accuracy=false`**, `stop_condition_accuracy=true` |
+| overall | **기록하지 않는다** | 단일 판정은 세 층을 분리한 이유를 되돌린다 |
+
+**읽는 법**: provider·host 도구·검색이 전부 동작했고 authority 문서를 정확히
+맞혔다. 실패는 **오직 `next_action`** 하나다 — 즉 이것은 하네스 결함이 아니라
+**subject에 대한 결과**다. 22라운드가 canary를 이 순서로 배치한 이유가 이것이다:
+단일 PASS/FAIL이었다면 "provider인가 검색인가 해석인가"를 구별할 수 없었다.
+
+subject의 행동은 8 action(`reformulate_query` → `expand_candidates` →
+`read_candidate` → `follow_link` → `read_candidate` → `answer` →
+`read_candidate` → `answer`)이고 3개 문서를 읽었다.
+
+**왜 `next_action`이 틀렸는지는 이 문서가 말하지 않는다.** 그 비교는 hidden gold를
+읽어야 하고, 이 운영 맥락은 gold를 읽지 않는다(§4). **격리된 judge에 위임할
+항목**이며 assessment sidecar의 `not_established`에 그렇게 적혀 있다.
+
+### 다음
+
+1. **격리 judge로 `next_action` 실패 원인 규명** (gold 대조). 그 결과가
+   프롬프트·계약 문제인지 subject 능력 문제인지를 가른다
+2. **22b 큐**(위 §5의 canary 직후 목록) — 공허한 가드 2개, canary artifact의
+   `qualification` 필드, release 로그 순서. closure 1회에 묶는다
+3. 그 뒤 **1 case × 4 arms** (= 기존 `--pilot`). **여기서도 arm 효과를 주장하지
+   않는다** — 배선과 qualification 용도다
+
 ## 4. 절대 하면 안 되는 것
 
 - `hidden_gold/gold.json`을 subject/controller 맥락에서 읽거나 노출하거나
@@ -354,8 +404,8 @@ builder 원칙을 파이프라인 전체로 확장한 것이다.
 0. run_pipeline.py doctor          # 무엇이 막혀 있나
 1. run_pipeline.py e2e --release   # 하류 경로가 증명됐나 (0이어야 한다)
 1b. 21라운드 수정 9건                                     ← 완료(아래 §3b)
-2. retrieval canary — 아래 명령. kind `live-subject-canary`   ← 다음 할 일
-   ledger 기록 없음, authorization 불필요
+2. retrieval canary — **완료**(§3e). Runtime PASS / Retrieval PASS /
+   Reconstruction FAIL. ledger 두 개 바이트 불변 확인
 3. `--pilot`으로 1 case × 4 arms (= surface_v3의 pilot 행렬 그대로)
    kind `live-subject-pilot`. **여기서부터 qualification ledger에 남는다**
 4. 새 config → qualification 2종 → 새 authorization      ← §1의 막힘을 푸는 곳

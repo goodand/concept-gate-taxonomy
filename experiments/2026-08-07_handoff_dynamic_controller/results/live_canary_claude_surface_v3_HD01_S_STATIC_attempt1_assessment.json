@@ -1,0 +1,61 @@
+{
+ "kind": "live-subject-canary-assessment-v1",
+ "why_a_sidecar": "The source artifact is not edited. Round 22b: the canary artifact reuses the pilot structure, so it carries `qualification.passed=false` for EVERY canary including a healthy one -- that field is not a canary verdict and is not used here. This file records the three-layer judgement Amendment 43 pre-registered.",
+ "source_artifact": "live_canary_claude_surface_v3_HD01_S_STATIC_attempt1.json",
+ "source_sha256": "39081f3aaa87cc7fbc4d3abb20d8773f25e99ac7cf3be28e80d4c1f689806a43",
+ "config_file": "phase_c_claude_mcp_surface_v3_config.json",
+ "config_sha256": "07539a74edb5199652e13daee82492f33e84a89fdee6b63fe404e3d7d28260bc",
+ "case_id": "HD01",
+ "arm": "S_STATIC",
+ "variant": "variant-L",
+ "runtime": {
+  "verdict": "PASS",
+  "raw_preserved": true,
+  "invalid_run": false,
+  "failure_codes": []
+ },
+ "retrieval": {
+  "verdict": "PASS",
+  "host_action_compliance_passed": true,
+  "n_search": 1,
+  "n_read": 3,
+  "actions": [
+   "reformulate_query",
+   "expand_candidates",
+   "read_candidate",
+   "follow_link",
+   "read_candidate",
+   "answer",
+   "read_candidate",
+   "answer"
+  ],
+  "critical_path_recall": 1.0,
+  "expected_path_recall": 1.0,
+  "exact_authority_hit": true
+ },
+ "reconstruction": {
+  "verdict": "FAIL",
+  "state_accuracy": true,
+  "next_action_accuracy": false,
+  "stop_condition_accuracy": true
+ },
+ "overall": null,
+ "why_overall_is_null": "A single verdict re-merges what the three layers exist to separate: a provider problem, a search-workflow problem and an interpretation problem call for opposite responses. This run is Runtime PASS / Retrieval PASS / Reconstruction FAIL -- the vertical path executes and the failure is at interpretation, which is a result about the subject, not a harness defect.",
+ "not_established": [
+  "any arm effect (one cell, n_per_cell=1, arm_effect_estimable=false)",
+  "why next_action was scored wrong -- that comparison needs the hidden gold, which this operator context must not read; delegate it to an isolated judge",
+  "anything about the other three arms"
+ ],
+ "environment": {
+  "git_commit": "49fbad59dd5db4ce415a3b539278c4ffb573577f",
+  "git_dirty": true,
+  "sandbox_available": true
+ },
+ "ledger_immutability": {
+  "checked": "sha256 of both ledgers, before and after the run",
+  "qualification_ledger_unchanged": true,
+  "primary_attempt_ledger_unchanged": true,
+  "qualification_ledger_sha256": "000ffa737792ccdf8728d1b811d240e566add80c9ee4b1f5b5e88f473776ed0d",
+  "primary_attempt_ledger_sha256": "4093f2eadce0d8e2a3ace3500cf1c07b7ea27e6a67ee233ab78c82d93fed3086"
+ }
+}
