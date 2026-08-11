@@ -101,6 +101,83 @@ HEAD   : eca3edb  docs — round-20 링크, closure receipt 1개만 유지
 | 6 | 도달성 orphan을 **산문으로 답했다** — 그 도구가 잡으려는 실수를 두 번 |
 | 7 | 이 문서를 편집하다 **슬라이스가 비어 `replace("", new)`가 되어 파일을 2.7MB로 손상**시켰다. git에서 복원했다. 문자열 편집은 **미매치·빈 슬라이스를 단언**으로 막아라 |
 
+## 3b. 21라운드 — 위조 가능한 receipt 9건 (완료)
+
+독립 검토 21라운드가 8건을 지적했고 **8/8 재현됐다.** 검증 중 **리뷰어가 지적
+하지 않은 2건**을 더 찾았다. 계획·근거는
+[`docs/feedback/plan_round21_forgeable_receipts_and_real_reviewer.md`](feedback/plan_round21_forgeable_receipts_and_real_reviewer.md),
+계약 개정은 `PREREGISTRATION.md` Amendment 42.
+
+**두 개는 손으로 위조해서 확인했다** — 주장이 아니라 실행 결과다:
+
+| 위조 | 그때 | 지금 |
+|---|---|---|
+| isolation receipt | `produced_by`를 채우고 공개 `receipt_sha256`을 재계산 → **PASS**(launcher 미실행) | host-only key HMAC, 서명 없으면 거부 |
+| closure receipt | `{"frozen_surface_hashes": {...}}` 한 키 → **valid** | kind·digest·파일명·steps·artifact 현재 해시 전부 대조 |
+
+**내가 놓쳤던 2건 — 이게 이번 라운드에서 가장 나쁘다:**
+
+- **공허한 probe 2/4.** `_reachable()`이 `rc != 0`을 "차단됨"으로 읽는데
+  `/bin/cat`은 **디렉터리**에 대해 sandbox와 무관하게 실패한다. `results_dir`와
+  `host_transcripts`가 디렉터리였으므로 **deny가 0건인 `(allow default)`에서도
+  `ok`로 보고됐다.** "프로파일은 주장이고 probe가 증거다"라고 docstring에 쓴
+  모듈에서 probe가 주장이었다 — P1(공허한 가드)의 **8번째**. 이제 대상은 전부
+  파일이고, 각 probe는 permissive 통제에서 도달 가능함을 먼저 보여야 하며,
+  통제가 실패하면 그 probe는 **BLOCKED**(ok 아님)이다. v1이 host transcript를
+  누출하고 v2가 차단하는 대조 테스트도 넣었다.
+- **CLI 기본 경로가 상시 BLOCKED.** `main()`의 기본 out_dir이 프로파일이
+  deny하는 `HERE` 안이라 allowed probe가 항상 실패했다. 즉 docstring이 안내하는
+  CLI는 **어떤 환경에서도 PASS를 낼 수 없었고**, PASS가 관측된 유일한 경로는
+  임시 디렉터리를 쓰는 release E2E였다 — canonical path 위반. bundle 위치 결정을
+  `reviewer_workspace`/`assert_reachable_workspace` 한 곳으로 모으고, deny 집합과
+  교차하면 **거부**한다(BLOCKED으로 조용히 넘어가지 않는다).
+
+**리뷰어 전략에서 고친 3곳** — 그대로 따르면 손해였다:
+
+1. `_sandbox_profile.py` **추출은 불필요**하다. `seatbelt_profile_v2`의 정본은
+   이미 `_providers.py` 하나이고 `run_live_phase_c.py`가 이미 import한다. 필요한
+   것은 `reviewer_runner.py`의 import 한 줄이며, **9건 전체가 AUDIT 표면 안에서
+   끝나 qualification·red-team 재실행이 0이다.** 추출은 EXECUTION을 고쳐 그
+   대가를 치른다.
+2. closure receipt에 `release_exit`를 넣는 것은 **순환**이다(release가 현재
+   closure를 요구한다). 별도 **release receipt**로 분리했고 그것이 #8도 해결한다.
+3. `certify()`를 그대로 쓸 수 없다 — 10개 의무명이 `OBLIGATION_REGISTRY`에 없어
+   전부 `UNKNOWN_OBLIGATION` → 무조건 FAIL. 정작 #5를 잡는 규칙(`PASS는 evidence
+   필수`)이 그 안에 있으므로 `validate_result(registry=...)` **선택 인자 하나**를
+   추가했다(음성 테스트 동반, `conceptgate/cg_obligations.py`).
+
+**obligation은 이제 3계층이다.** `declared`(10개 이름) /
+`demonstrated`(mutation·acceptance 증거가 **존재하는지**를 파생) /
+`current_run`(이 실행이 관측한 것). **current_run이 우선한다** — 21라운드가
+`reviewer.isolation.enforced: PASS`와 `FAIL: reviewer isolation BLOCKED`가 같은
+출력에 있는 것을 잡았고, 그건 정적 상수가 실행 결과를 덮은 것이었다.
+`demonstrated`가 아직 증명하지 **못하는** 것은 `run_pipeline.demonstrated_obligations`
+docstring이 명시한다: 증거가 **존재**한다는 뜻이고 마지막으로 **통과**했다는 뜻이
+아니다.
+
+**`e2e --primary`는 거부한다**(exit 2). provider·authorization·attempt claim이
+없는데 "the 32-cell run"이라 안내하고 있었다. 실제 primary는
+`run_live_phase_c.py --primary --config <name>`이다.
+
+**release는 이제 증거를 남긴다** — `results/release_<digest>.json`에 git commit,
+dirty 여부, python, platform, sandbox 가용성, exit, 소비한 closure digest,
+obligation 스냅샷. 21라운드 리뷰어 환경은 exit 1(isolation 2건 BLOCKED), 이
+환경은 exit 0이었고 **어느 쪽도 기록되지 않아 구별할 수 없었다.** 한 가지 한계:
+receipt는 자기 자신을 담은 커밋을 가리킬 수 없어 `git_commit`은 부모 커밋이고
+`git_dirty: true`다.
+
+### 21라운드 실측 (이 환경)
+
+```
+closure         f9537e3ca452
+e2e --release   exit 0     current_run 3종 PASS, effective_unknown []
+                receipt release_22cb80b19ff4.json
+e2e --primary   exit 2     BLOCKED: primary mode is not implemented
+doctor          exit 1     4 pass, 1 fail, 3 blocked  (qualification stale — §5)
+실험 suite      283 passed / 2 skipped
+저장소 게이트   9 passed / 1 failed(owlready2 부재, 기존) / 1 blocked
+```
+
 ## 4. 절대 하면 안 되는 것
 
 - `hidden_gold/gold.json`을 subject/controller 맥락에서 읽거나 노출하거나
@@ -122,8 +199,8 @@ builder 원칙을 파이프라인 전체로 확장한 것이다.
 ```
 0. run_pipeline.py doctor          # 무엇이 막혀 있나
 1. run_pipeline.py e2e --release   # 하류 경로가 증명됐나 (0이어야 한다)
-1b. 21라운드 수정 9건                                     ← 다음 할 일
-2. live canary — 1 case × 1 arm 실제 provider 호출        ← 1b 전에는 금지
+1b. 21라운드 수정 9건                                     ← 완료(아래 §3b)
+2. live canary — 1 case × 1 arm 실제 provider 호출        ← 다음 할 일. 아직 없다
 3. 32칸으로 확장
 4. 새 config → qualification 2종 → 새 authorization      ← §1의 막힘을 푸는 곳
 5. 3검사 확인(시도 소모 없이) → primary
@@ -509,13 +586,14 @@ qualification 러너 자체는 보이므로 현재 구성으로 동작한다.
 
 ## 10. 미해결 목록
 
-- [ ] **21라운드 수정 9건 — 다음 할 일.**
+- [x] **21라운드 수정 9건 — 완료.**
       [`docs/feedback/plan_round21_forgeable_receipts_and_real_reviewer.md`](feedback/plan_round21_forgeable_receipts_and_real_reviewer.md).
-      8/8 재현 + 내가 놓친 2건. **canary보다 먼저다** — isolation receipt가 위조
-      가능하고(재현됨), 프로파일이 v1이며, 금지 probe 4개 중 2개가 sandbox를
-      측정하지 않고, `--primary`가 provider를 부르지 않는다. 그 상태로 canary를
-      돌리면 관측한 것이 무엇인지 사후에 말할 수 없다
-- [ ] **live canary — 1 case × 1 arm 실제 provider 호출.** 위 9건 이후
+      8/8 재현 + 내가 놓친 2건. 상태는 §3b
+- [ ] **실제 reviewer adapter (#3)** — `run_reviewer(command=...)`가 프로세스를
+      실행하는 경로는 있으나 **stdout JSON 수집·schema 검증·label artifact 저장이
+      없다.** release E2E는 command를 넘기지 않는 probe-only이고, 그 안의 label은
+      answer key에서 만든 합성물이다. canary에 실제 판정을 시키려면 이것이 먼저다
+- [ ] **live canary — 1 case × 1 arm 실제 provider 호출.** 다음 할 일
 - [ ] 5절 절차 (canary → 32칸 → 재-qualification → primary)
 - [ ] 판정자 배정 (`safety_audit_reviewer_assignment.json`이 `UNASSIGNED`)
 - [ ] **감사 가능한 primary artifact** — 현 authorization이 가리키는 config로
@@ -605,6 +683,21 @@ Amendment 37/38에서 추가·변경된 것:
 재개 시험이 이 블록이 `closure`로 시작하는 것을 지적했다: 위에서 아래로 따르는
 새 세션이 첫 행동으로 동결 artifact를 덮어쓴다.
 
+### 21라운드가 만든 receipt
+
+closure가 **3벌**인 것은 실수가 아니라 기록이다. AUDIT 표면을 고칠 때마다
+closure receipt가 낡으므로, 편집이 끝날 때까지 세 번 돌았다 — "closure는
+마지막에"라는 규율이 왜 규율인지를 그대로 보여준다. 앞의 둘은 현재 표면을
+기술하지 않으므로 `_closure_receipt()`가 건너뛴다. `results/`는 append-only라
+지우지 않는다.
+
+- [`closure_f9537e3ca452.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_f9537e3ca452.json) — **현행**
+- [`closure_ec6a8edc59ff.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_ec6a8edc59ff.json) — 대체됨
+- [`closure_972be6f2df75.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_972be6f2df75.json) — 대체됨
+- [`release_22cb80b19ff4.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_22cb80b19ff4.json) — **현행**
+- [`release_231f554f5cea.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_231f554f5cea.json) — 대체됨
+- [`release_1f64ed9080d8.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_1f64ed9080d8.json) — 대체됨
+
 **이 절의 링크는 도달성 검증용이고, 그 검증은 기본값으로 돌지 않는다.**
 `scripts/handoff_reachability.py`의 `DEFAULT_ENTRY`는 `docs/HANDOFF.md`이고,
 `--fail-on` 기본값은 `none`(보고만)이며, `scripts/run_gates.py`에 **포함되지
@@ -616,4 +709,12 @@ python3 scripts/handoff_reachability.py \
     --ref <base-commit> --fail-on orphans
 ```
 
-실측(base `3f9c2f9`): 이 진입점으로 **orphans 0**, 기본 진입점으로는 19건.
+실측(base `3dd60a3`, 21라운드): 이 진입점으로 **orphans 0**, 기본 진입점으로는 4건.
+
+**`--ref`를 빼면 다른 것을 측정한다.** `--ref`는 그 커밋 이후 **변경된 파일**로
+범위를 좁힌다. 빼면 저장소 전역이 되고, 그때 orphans는 이 편집과 무관하게
+**226건**(이 진입점) / **302건**(기본 진입점)이다 — skills·diagrams·conftest 등
+오래된 것들이다. 즉 **`--fail-on orphans`는 전역으로는 통과하지 않으며 통과한
+적도 없다.** "orphans 0"은 항상 `--ref` 범위의 진술이다. 그리고 이 도구를
+파이프로 넘기면 `$?`는 **파이프 마지막 명령의 것**이다 — 21라운드에서 실제로
+`tail`의 exit code를 도구의 것으로 읽었다.
