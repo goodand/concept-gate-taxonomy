@@ -23,6 +23,7 @@ they are properties of the runner rather than of the OS boundary.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import subprocess
@@ -52,6 +53,26 @@ def probe(profile: str, argv: list[str]) -> tuple[bool, str]:
                           capture_output=True, text=True, timeout=30)
     blob = (proc.stdout or proc.stderr or "").strip().splitlines()
     return proc.returncode == 0, (blob[0][:110] if blob else "")
+
+
+BLOCKED_EXIT = 2
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _target_configs() -> list[str]:
+    """Configs this red-team must examine: the historical set plus whichever
+    config the current primary authorization points at."""
+    names = ["phase_c_live_config.json", "phase_c_codex_v2_config.json",
+             "phase_c_claude_config.json"]
+    auth = HERE / "results" / "PRIMARY_AUTHORIZATION.json"
+    if auth.is_file():
+        current = json.loads(auth.read_text(encoding="utf-8"))["config_file"]
+        if current not in names:
+            names.append(current)
+    return names
 
 
 def main() -> int:
@@ -141,9 +162,14 @@ def main() -> int:
     refuses_overwrite = "refusing to overwrite an existing live result" in src
     q5_checks = [("runner refuses to overwrite an existing result file",
                   refuses_overwrite)]
-    for filename in ("phase_c_live_config.json", "phase_c_codex_v2_config.json",
-                     "phase_c_claude_config.json", "phase_c_codex_mcp_v7_config.json",
-                     "phase_c_claude_mcp_surface_v2_config.json"):
+    # Round 17, finding #6 (first raised round 15 and dropped from my own
+    # open list): this tuple was hardcoded at v7 / surface-v2 while the
+    # authorization pointed at v9 / surface-v3. So a red-team that had never
+    # looked at the config primary would actually run still produced a PASS
+    # artifact carrying the current surface hashes. The target now comes from
+    # the authorization, and every config examined is recorded in
+    # `checked_configs` so readiness can require the right one.
+    for filename in _target_configs():
         config = json.loads((HERE / filename).read_text(encoding="utf-8"))
         q5_checks.extend([
             (f"{filename}: retry_count == 0", config.get("retry_count") == 0),
@@ -155,6 +181,8 @@ def main() -> int:
                          "expected_reachable": False, "leak": not ok, "detail": ""})
         print(f"  [{'LEAK' if not ok else 'ok':>7}] Q5 {name}")
 
+    checked_configs = [{"file": name, "sha256": _sha256(HERE / name)}
+                       for name in _target_configs()]
     leaks = [f for f in findings if f["leak"]]
     hardened_leaks = [f for f in leaks
                       if f["q"].endswith("/v2") or "/" not in f["q"]]
@@ -181,6 +209,7 @@ def main() -> int:
         # A probe that should have been reachable and was not means the
         # harness could not exercise the boundary it is testing.
         "expected_reachable_but_blocked": unreachable_expected,
+        "checked_configs": checked_configs,
         "conclusive": conclusive,
         "status": ("PASS" if conclusive and not hardened_leaks
                    else "BLOCKED" if conclusive is False and not hardened_leaks
@@ -203,7 +232,13 @@ def main() -> int:
         for f in unreachable_expected:
             print(f"  BLOCKED {f['q']} {f['probe']}")
     print(f"status: {out['status']}")
-    return 1 if hardened_leaks else 0
+    # Three-value exit, same vocabulary as scripts/run_gates.py -- BLOCKED is
+    # 2, never 0. Round 17: an inconclusive run returned success, so CI and
+    # the next agent read "the provider is isolated" from a run that never
+    # exercised the sandbox.
+    if hardened_leaks:
+        return 1
+    return 0 if conclusive else BLOCKED_EXIT
 
 
 if __name__ == "__main__":

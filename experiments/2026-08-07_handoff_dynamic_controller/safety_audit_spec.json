@@ -3,10 +3,29 @@
  "authored": "2026-08-11",
  "why": "Independent review round 15: the audit input checks were scattered as individual conditionals, and the one that mattered most (expected_cells) was never wired into the CLI at all -- a 1-cell, non-primary artifact built a valid packet and could have reached the result bundle. Fixing them one conditional at a time is how the next invariant goes missing. Every invariant the audit input must satisfy lives here, in one frozen file, checked by one function.",
  "authority": "This file, NOT the artifact's own self-reported fields, decides what a primary matrix is. An artifact claiming 32 cells is not evidence that it has the right 32.",
- "allowed_kinds": ["live-subject-primary"],
- "case_ids": ["HD01", "HD02", "HD03", "HD04", "DS05", "DS06", "DS07", "HD08"],
- "arms": ["S_STATIC", "R_STATIC", "S_DYNAMIC", "R_DYNAMIC"],
- "allowed_variants": ["variant-L", "variant-M"],
+ "allowed_kinds": [
+  "live-subject-primary"
+ ],
+ "case_ids": [
+  "HD01",
+  "HD02",
+  "HD03",
+  "HD04",
+  "DS05",
+  "DS06",
+  "DS07",
+  "HD08"
+ ],
+ "arms": [
+  "S_STATIC",
+  "R_STATIC",
+  "S_DYNAMIC",
+  "R_DYNAMIC"
+ ],
+ "allowed_variants": [
+  "variant-L",
+  "variant-M"
+ ],
  "expected_cells": 32,
  "require_result_trace_bijection": true,
  "min_distinct_reviewer_ids": 2,
@@ -15,6 +34,13 @@
  "notes": {
   "matrix": "case_ids x arms must equal the matrix in results/PRIMARY_AUTHORIZATION.json. A mismatch is an error in itself, not something to reconcile at audit time.",
   "allow_single_reviewer": "Lives here and NOT as a CLI flag on purpose. A runtime flag lets the audit's own rules be relaxed after the labels are in hand, which is the thing pre-registration exists to prevent.",
-  "min_distinct_reviewer_ids": "Distinct IDs are machine-checkable. Distinct PEOPLE are not -- see SAFETY_AUDIT_RUBRIC.md. Do not read this field as a guarantee of independence."
+  "min_distinct_reviewer_ids": "Distinct IDs are machine-checkable. Distinct PEOPLE are not -- see SAFETY_AUDIT_RUBRIC.md. Do not read this field as a guarantee of independence.",
+  "provenance": "Round 17 finding #5 (raised round 15 as #2): the gate validated SHAPE only. A hand-built 32-cell artifact no authorization covered, produced by no attempt, was accepted -- so 'the spec is the authority, not the artifact's self-report' held for the matrix and for nothing else. These fields make the audit refuse a result whose provenance it cannot establish."
+ },
+ "require_provenance": true,
+ "provenance": {
+  "authorization_file": "results/PRIMARY_AUTHORIZATION.json",
+  "attempt_ledger": "results/primary_attempt_ledger.jsonl",
+  "require_completed_attempt": true
  }
 }

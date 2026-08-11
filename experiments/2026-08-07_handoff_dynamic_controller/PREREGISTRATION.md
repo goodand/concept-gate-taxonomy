@@ -1909,3 +1909,135 @@ provider red-team 유효: True
 surface 변경이다. calibration → red-team 2종을 이 순서로 재실행했고 전부
 통과했다(doctor 7 pass / 0 fail / 1 blocked, blocked는 판정자 미배정).
 **qualification 2종은 여전히 stale이며 그것이 다음 단계다.**
+
+## Amendment 38 — 2026-08-11, 17라운드: doctor는 판정하지 않고 위임한다
+
+**계기.** 37라운드에서 만든 `doctor`/`e2e`가 **production 판정을 복제**했다.
+17라운드 실측:
+
+```
+production _assert_primary_qualifications → REFUSED (qualification stale)
+doctor                                     → 7 pass, 0 fail, exit 0
+doctor가 부른 _assert_* 개수               → 0
+```
+
+"canonical path 원칙을 적용했다"고 썼지만 한 것은 정반대였다. 선례
+(`DESIGN_DECISION_surface_separation.md` 필수 테스트 #7)의 요구는 **동일 함수를
+쓰라**는 것이지 같은 판정을 다시 구현하라는 것이 아니다. **진단 도구가 판정을
+소유하면 진단 초록과 production 거부가 동시에 성립한다.**
+
+### #1·#3 — doctor를 위임으로 전환
+
+`_assert_ready` → `_assert_primary_qualifications` → `_assert_primary_authorization`을
+primary가 적용하는 **그 순서로** 호출하고 예외 메시지를 렌더링만 한다. doctor가
+자체 판정하는 것은 production 함수가 없는 것뿐이다(판정자 배정, CLI 존재).
+
+`_claim_primary_attempt`는 부르지 않는다 — 시도를 소모하는 것은 그 함수뿐이고
+doctor는 읽기 전용이어야 한다.
+
+**#3이 부수적으로 사라진다.** red-team의 `status`/`passed`를 doctor가 따로 읽지
+않으므로 두 곳이 어긋날 수 없다. 17라운드는 `status=FAIL` artifact를 주입해
+**`[ok  ] red-team: provider isolation   FAIL`, `0 fail`, `exit 0`**을 재현했다.
+판정의 정본을 `run_live_phase_c.py`로 옮기면서 거기에 `status` 검사를 추가했다.
+
+`--config` 기본값은 **authorization이 가리키는 config**다. 승인과 다른 config를
+진단해 안심하는 실수를 없앤다.
+
+### #2 — exit code를 3값으로
+
+```
+0 PASS   판정을 냈고 전부 통과
+1 FAIL   판정을 냈고 실패한 게이트가 있음
+2 BLOCKED 판정을 내지 못한 게이트가 있음
+```
+
+`doctor`와 red-team 2종에 적용. `run_gates.py`의 PASS/FAIL/BLOCKED 표와 같은
+어휘이며 차이는 **exit code에도 싣는다**는 것뿐이다. 이전에는
+`BLOCKED is not a pass`를 출력하면서 `exit 0`을 반환했다 — 사람은 읽고 기계는
+못 읽는다. 이 저장소는 `run_gates.py`에서 같은 문제를 만나 **문서 경고**를
+택했고, 그 선택이 여기서 반복됐다.
+
+### #6 — red-team을 실제 대상 config에 결속 (15라운드 #5 미해결분)
+
+두 red-team이 **v7/surface-v2를 하드코딩**하고 있었다. 대상은 v9/surface-v3다.
+artifact에 config identity가 없어서, **한 번도 보지 않은 config에 대해** 현재
+surface hash를 단 PASS artifact가 만들어졌다.
+
+- 검사 대상을 authorization에서 읽는다
+- `checked_configs: [{file, sha256}]`를 artifact에 기록
+- `_assert_redteam_covers_config()`가 readiness에서 **승인된 config가 검사
+  목록에 있고 해시도 일치**하는지 요구
+
+실측: provider red-team이 이제 `phase_c_claude_mcp_surface_v3_config.json`을,
+codex red-team이 `phase_c_codex_mcp_v9_config.json`을 검사한다.
+
+**이 항목은 15라운드에 제기됐는데 내 미해결 목록에서 빠졌다.** 그 누락 자체가
+17라운드에 다시 잡혔다.
+
+### #5 — 감사 입력에 출처를 결속 (15라운드 #2)
+
+`spec`은 **matrix 권위일 뿐 결과 출처 권위가 아니었다.** 손으로 만든 32칸
+artifact가 `accepted_cells=32, has_authorization=false, has_attempt_ledger=false`로
+통과했다. **모양은 출처가 아니다** — 출처를 모르는 artifact를 감사하면 아무것도
+아닌 것에 대한 안전 수치가 나온다.
+
+`require_provenance`를 spec에 추가하고 `_assert_provenance()`가 검사한다:
+artifact의 `config_file`·`config_sha256`이 authorization과 일치하는가,
+attempt ledger에 **완료된 시도**로 기록됐는가.
+
+`provenance.root`를 두어 **오프라인 E2E가 이 검사를 끄지 않고 실제로 통과**한다
+(임시 root에 authorization과 완료 원장을 만든다). **모든 테스트에서 꺼지는
+검사는 아무도 작동을 본 적 없는 검사다.**
+
+### #5(후반) — 판정자 자격을 apply gate에 연결
+
+`_qualify_reviewer`가 `run_pipeline.py`의 E2E 안에만 있었고 **판정 결합기는
+그것을 읽지 않았다.** 자격 근거가 없는 라벨이 `safe`로 수락됐다 — Amendment 34가
+S1에서 고친 것과 같은 결함이 한 층 위에서 반복됐다: **게이트가 읽지 않는 자격은
+문서다.**
+
+이제 `apply_safety_audit._qualify_reviewer()`가 정본이고, label 파일은
+`fixture_sha256`과 `qualification`을 실어야 하며 오답이면 그 판정자의 라벨 전체가
+거부된다. E2E는 이제 **그 함수를 호출한다**(사본이 아니라).
+
+**정답을 분리했다** — `safety_audit_rubric_answers.json`. 15라운드가 지적한
+"문항과 정답이 같은 파일이면 시험이 아니라 답안 공개형 교육 자료"를 닫는다.
+판정자에게는 문항만 나간다.
+
+### #4 — E2E의 주장을 낮추고 범위를 넓힌다
+
+**낮춘 것**: "production E2E"가 아니라 **offline downstream E2E**다. 출력에
+covers/does-not-cover를 명시한다 — provider 실행·qualification pilot·
+authorization 발급·attempt claim은 **우회한다.** provider가 필요하므로
+offline에서 지울 수 없는 경계이고, **지우려 하면 offline이 아니게 된다.**
+
+**넓힌 것**: adjudication을 헬퍼가 아니라 **CLI로** 호출하고, 최종 번들을
+**파일로 쓴 뒤 다시 읽어** 검증한다(메모리 종료 금지). 음성 대조가 3→6으로
+늘었다(provenance 3종 추가).
+
+### #7 — E2E에 외부 acceptance gate
+
+`assert e2e_offline() == 0` 한 줄이 전부였다. **하네스가 자기 단계와 기대값을
+함께 소유**하면 단계가 약해질 때 기대값도 같이 약해진다 — 이 세션이 계속
+쫓던 결함이 그것을 끝내려고 만든 도구 위에서 다시 난 것이다.
+
+`test_e2e_acceptance.py`는 **production을 훼손하고 E2E가 잡는지** 본다
+(하네스를 훼손하면 하네스가 깨진다는 것만 증명된다). 5종:
+
+| 훼손 | E2E가 내야 하는 것 |
+|---|---|
+| `validate_audit_input`이 아무것도 검사 안 함 | `audit gate ACCEPTED` |
+| packet CLI가 key를 워크스페이스에 복사 | `workspace leaks` |
+| `_qualify_reviewer`가 항상 통과 | `retired conditional rule still qualifies` |
+| 판정 CLI가 번들을 안 씀 | `no final bundle` |
+| 1인 판정자 허용 | `single reviewer produced a bundle` |
+
+전부 통과한다. 무훼손 대조도 함께 둔다 — 없으면 모든 mutation이 무관한 이유로
+실패해도 게이트가 의미 있어 보인다.
+
+### 이 개정이 무효화하는 것
+
+execution surface(`run_live_phase_c.py`, red-team 2종, `test_protocol.py`)가
+바뀌었다. calibration → red-team 2종을 그 순서로 재실행했다. **qualification
+2종은 여전히 stale이고 그것이 다음 단계다** — 이제 `doctor`가 그 사실을
+`exit 1`로 말한다.

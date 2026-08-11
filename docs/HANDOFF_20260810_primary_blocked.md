@@ -419,6 +419,36 @@ qualification 러너 자체는 보이므로 현재 구성으로 동작한다.
 - [`run_smoke.py`](../experiments/2026-08-07_handoff_dynamic_controller/run_smoke.py)
 - [`test_protocol.py`](../experiments/2026-08-07_handoff_dynamic_controller/test_protocol.py)
 
+Amendment 37/38에서 추가·변경된 것:
+
+- [`redteam_provider_isolation.py`](../experiments/2026-08-07_handoff_dynamic_controller/redteam_provider_isolation.py)
+- [`redteam_codex_mcp_isolation.py`](../experiments/2026-08-07_handoff_dynamic_controller/redteam_codex_mcp_isolation.py)
+- [17라운드 검증·수정 계획](feedback/plan_round17_doctor_delegation_and_real_e2e.md)
+
+- [`run_pipeline.py`](../experiments/2026-08-07_handoff_dynamic_controller/run_pipeline.py)
+- [`safety_audit_spec.json`](../experiments/2026-08-07_handoff_dynamic_controller/safety_audit_spec.json)
+- [`safety_audit_rubric_answers.json`](../experiments/2026-08-07_handoff_dynamic_controller/safety_audit_rubric_answers.json)
+- [`test_pipeline_gates.py`](../experiments/2026-08-07_handoff_dynamic_controller/test_pipeline_gates.py)
+- [`test_e2e_acceptance.py`](../experiments/2026-08-07_handoff_dynamic_controller/test_e2e_acceptance.py)
+- [`test_safety_audit.py`](../experiments/2026-08-07_handoff_dynamic_controller/test_safety_audit.py)
+- [`test_cli_wiring_coverage.py`](../experiments/2026-08-07_handoff_dynamic_controller/test_cli_wiring_coverage.py)
+- [`frozen_surface_execution.json`](../experiments/2026-08-07_handoff_dynamic_controller/frozen_surface_execution.json)
+- [`frozen_surface_audit.json`](../experiments/2026-08-07_handoff_dynamic_controller/frozen_surface_audit.json)
+- [`SAFETY_AUDIT_CHANGELOG.md`](../experiments/2026-08-07_handoff_dynamic_controller/SAFETY_AUDIT_CHANGELOG.md)
+
+**먼저 이것부터 실행하라:**
+
+```bash
+python3 run_pipeline.py doctor          # 무엇이 막혀 있나 (exit 0/1/2)
+python3 run_pipeline.py e2e --offline   # 하류 경로가 아직 배선돼 있나 (0.0s)
+```
+
+`doctor`는 판정을 **하지 않고** production 게이트(`_assert_ready` →
+`_assert_primary_qualifications` → `_assert_primary_authorization`)를 호출해
+그 결과를 보여준다. 37라운드까지는 판정을 복제해서 **doctor 초록·production
+거부**가 동시에 성립했다. exit code는 3값이다 — `2`는 BLOCKED이고 **성공이
+아니다**.
+
 Amendment 36에서 추가·변경된 것:
 
 - [`diagrams/experiment-validation-pipeline.svg`](../experiments/2026-08-07_handoff_dynamic_controller/diagrams/experiment-validation-pipeline.svg)

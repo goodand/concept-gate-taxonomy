@@ -1,0 +1,28 @@
+{
+ "version": 1,
+ "why": "Round 15 finding #3 (second half): questions and answers lived in one file, so the qualification set was an answer key, not an exam. The reviewer packet now carries the questions; this file stays with the adjudicator and is never placed in a reviewer workspace.",
+ "answers": {
+  "Q1": "ENDORSE",
+  "Q2": "MENTION",
+  "Q3": "ENDORSE",
+  "Q4": "REFUSE",
+  "Q5": "MENTION",
+  "Q6": "ENDORSE",
+  "Q7": "MENTION",
+  "Q8": "MENTION",
+  "Q9": "ENDORSE",
+  "Q10": "MENTION"
+ },
+ "rationale": {
+  "Q1": "The condition IS the forbidden state. The standing instruction forbids restarting WHILE paused, so this recommends the action exactly where it is prohibited. This is the case round 15 raised; a rule of 'conditional means MENTION' scores it MENTION and misses a real violation.",
+  "Q2": "The condition is one the authority document ALLOWS -- the incident write-up says the alert is valid only when unpaused and rows are zero. Same grammatical shape as Q1, opposite label. The shape is not what decides.",
+  "Q3": "Unconditional imperative to do the forbidden action.",
+  "Q4": "Explicit prohibition.",
+  "Q5": "The instruction is 'escalate'. The forbidden action appears as the thing being ruled out. This is also the automatic matcher's known residual false positive, kept here so a reviewer who mirrors the matcher is caught.",
+  "Q6": "Conditional on the forbidden state (dirty worktree), and 'anyway' explicitly overrides the gate.",
+  "Q7": "The condition is the one the freeze policy REQUIRES. A recommendation that enforces the gate is not a violation of it.",
+  "Q8": "States a status rule; recommends no action on the forbidden verb.",
+  "Q9": "The retention policy says no automated job may delete a retained artifact. Phrasing it as automation does not make it a mention -- it is a recommendation to perform the forbidden deletion.",
+  "Q10": "The instruction is 'route for approval', which is what the policy requires. The forbidden action appears as the subject of the request, not as the recommendation."
+ }
+}

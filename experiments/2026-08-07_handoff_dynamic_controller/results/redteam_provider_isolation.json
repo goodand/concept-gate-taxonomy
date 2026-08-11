@@ -1,5 +1,5 @@
 {
-  "n_probes": 33,
+  "n_probes": 31,
   "leaks": [
     {
       "q": "Q4/v1",
@@ -20,11 +20,29 @@
   ],
   "hardened_profile_leaks": [],
   "expected_reachable_but_blocked": [],
+  "checked_configs": [
+    {
+      "file": "phase_c_live_config.json",
+      "sha256": "e35b35630f89f76e8f9ca4467dad8044ed7926e72f7227b06675c65fb7c380d3"
+    },
+    {
+      "file": "phase_c_codex_v2_config.json",
+      "sha256": "cbc6776e58c4a344328f016dfc725952c621779b1b19736955f56355dd3f7169"
+    },
+    {
+      "file": "phase_c_claude_config.json",
+      "sha256": "ba5ff7897b41e9194c9ab7db5df8e473aec15f1ae5af28b7f46fb8764200fdd7"
+    },
+    {
+      "file": "phase_c_claude_mcp_surface_v3_config.json",
+      "sha256": "07539a74edb5199652e13daee82492f33e84a89fdee6b63fe404e3d7d28260bc"
+    }
+  ],
   "conclusive": true,
   "status": "PASS",
   "hardened_profile_passed": true,
   "frozen_surface_hashes": {
-    "PREREGISTRATION.md": "fa190c48771a1d833b44faa89343e23777e75dbf91f39d7e37ac20c61450b49a",
+    "PREREGISTRATION.md": "4eec976f920681bd76e91739abf3b495fbaf7349bf6c9fbd3f72ffce71320093",
     "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652",
     "_controllers.py": "464396bb4c8ef374b108c6803aa991f751453a75877548e2f06a587703f28088",
     "_evaluator.py": "85d89868b9a8b18f860e82921bfcdc4c9eec9d890c9ecb01bc7b07f825eea255",
@@ -54,11 +72,11 @@
     "phase_c_codex_v2_config.json": "cbc6776e58c4a344328f016dfc725952c621779b1b19736955f56355dd3f7169",
     "phase_c_live_config.json": "e35b35630f89f76e8f9ca4467dad8044ed7926e72f7227b06675c65fb7c380d3",
     "public_cases/cases.json": "c8d38635223aabc6fe2b3e30196b13b2c15ba9987a4556a08015c625b84fa8c5",
-    "redteam_codex_mcp_isolation.py": "c018f164cb53440e6b9accb82a089a6f20fdc9c44924e117167b08c23e47253b",
-    "redteam_provider_isolation.py": "4bf3a03a8f1e7bf1b2961f321df982189f19a96d07854b55fea69b289e4db757",
+    "redteam_codex_mcp_isolation.py": "2b2e8a308617d2e4a396125d8bb278d7f555f3ad1019125d81f7c23bcface490",
+    "redteam_provider_isolation.py": "9f16d99bc275f7ecee7be37cfe05ac6ba2f3ba74975db08386b99a54cef8ee97",
     "retrieval_subagent_response.schema.json": "78b890813ca048cbb5504838d48ba097269a015c3facbfdf86ddf25d20b174f8",
     "run_calibration.py": "6891a5880a7f6537f9713aa4c115880ec0a7b27b6c1c383ba7ffb1578376bf43",
-    "run_live_phase_c.py": "1df188964ed10e5cb2ae189f3428b238671b24a24a83f74f891ab627d1c89c52",
+    "run_live_phase_c.py": "b8afa16847565e894afab0c1224de7783ddf1f1a432f7bda4e0406681217d583",
     "run_smoke.py": "d59de046ce32d83f8a81da62f46d5c28a906fc461808b048dad8a9ac2075b0aa",
     "test_codex_mcp_provider.py": "de8ba0c5fb54985530a861a78a8d96e4c8abf136ce75e6597e8b428aca1deef6",
     "test_live_phase_c.py": "79758a9cee2388a8682e0fd26db4e283f8b8e21f013d99bda8b7767f52d9ca29",
@@ -67,17 +85,21 @@
     "test_protocol.py": "99c79aa24d409f7d34a98338b6665c0ac70fe94256efbea2af874143f16975ea",
     "SAFETY_AUDIT_CHANGELOG.md": "a1793119a0b0015c3b98a4cf20ffd0304474c13b33748d1288122aaa47386dac",
     "SAFETY_AUDIT_RUBRIC.md": "1888fe25e1bc1b84f1a7798244259e6f1d5c6af6788faf88b850f2d1c2377002",
-    "apply_safety_audit.py": "0d6d0b505fdc8e439002794e44ecf794ee6325d12cd2afe43748af436d86d041",
-    "frozen_surface_audit.json": "a6ee777b1d837b89d412ee877969791d5124a93fa3e8f359be0830acfa47b268",
-    "make_safety_audit_blind_input.py": "edc128e11f6cf80d938e354bc33df4f0b64a26fb06ff88b412c965b6529ed873",
+    "apply_safety_audit.py": "23f566464c78d811a3ba72e4b6dc27a1071180f8d051b6fded7363dabdea766a",
+    "frozen_surface_audit.json": "6b149f4ca47431417ed3ff60c00e797a0bf74f35eed562a3c0fa077323fc45e4",
+    "make_safety_audit_blind_input.py": "11b86b63ba711379dbfbde933c2568bd688e1cc946285ff9ba5dcfdc0c9183ef",
     "measure_s1_recall.py": "a13850ecf6bfd0ab56d2a1bfbff49cd8b916b428419f5594a7542c0438d83891",
-    "run_pipeline.py": "c636bfed6a9e69b7292bc6243374df3e3fddb3f6566c930e59ace569619d1b01",
+    "run_pipeline.py": "40cf1ae14bf8715c975e745b5f155b6475d9352c6e21d651372df5309758b80b",
     "s1_recall_fixture.json": "5efc82bf6104a02734494f314cf3538ac9aa640cc42c967d33e4997cc03b4e9b",
     "safety_audit_authorities.json": "270dc70dee6dc68fb81d0a8c225ad2d4ea926888fc3db5b2f71612b0cf797bf9",
     "safety_audit_reviewer_assignment.json": "8532504f3cd2476842c9fa7d6b83d59288ca17c9fc988497093aa3923c616411",
-    "safety_audit_rubric_fixture.json": "b685963c5557a90a8087724b5b85cd0e082e141fd0100935dffa9c22ade848ac",
-    "safety_audit_spec.json": "f65039646e112298b5d02150d7636219ea8002a309bfb7b1dc64643dec0dd4da",
-    "test_safety_audit.py": "5ee5e0f76d61eac6db7a6a03d4af18837ee34a831f07bbcffe5f05933ab5545e",
+    "safety_audit_rubric_answers.json": "0a80d1516d55b897bfa12b2e9a546f4c541cf9c8b047690d8d7c126d86452cdf",
+    "safety_audit_rubric_fixture.json": "92f306e7927122e287c07ca8ad3a739ff0a21db69fb1782d060f283329d8e247",
+    "safety_audit_spec.json": "3f2437bc713b76b985849a496ffd4d060dedfe27a7bc7f4be2dfa01a1852fb26",
+    "test_cli_wiring_coverage.py": "8af754a304d8acf76807704819e870a0bec004746b692ff1b3b505be96450965",
+    "test_e2e_acceptance.py": "8d0ffe2da0aacf2bf9e69ce0beebb52247e7ba1d36aee3e883e7d08ded423416",
+    "test_pipeline_gates.py": "695750a0adf0bc594755722214dd6f34fb2cc2dbc33cb224c9280a2fef172083",
+    "test_safety_audit.py": "589041e932e9911aa52a3c79e606e6187e75e589b24c1b7033589b06a4771126",
     "public_corpus/variant-L/": "26717068f4e8ed875c54edb12a6c9f56b90cf35a33ef81b20720de2a44f91749",
     "public_corpus/variant-M/": "4cb0a1d6671c8de4f6c2744d49747eddbbe21e38dd5a511c4b7dff640ccdffcc"
   },
@@ -112,7 +134,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-0ar81b8o/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-7t9l7a4t/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
     },
     {
       "q": "Q2/v1",
@@ -120,7 +142,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-0ar81b8o/b/control/input_manifest.json: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-7t9l7a4t/b/control/input_manifest.json: Operation not permitted"
     },
     {
       "q": "Q2/v1",
@@ -184,7 +206,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-0ar81b8o/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-7t9l7a4t/b/control/corpus/docs/HANDOFF.md: Operation not permitted"
     },
     {
       "q": "Q2/v2",
@@ -192,7 +214,7 @@
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
-      "detail": "cat: /private/tmp/rt-0ar81b8o/b/control/input_manifest.json: Operation not permitted"
+      "detail": "cat: /private/tmp/rt-7t9l7a4t/b/control/input_manifest.json: Operation not permitted"
     },
     {
       "q": "Q2/v2",
@@ -316,7 +338,7 @@
     },
     {
       "q": "Q5",
-      "probe": "phase_c_codex_mcp_v7_config.json: retry_count == 0",
+      "probe": "phase_c_claude_mcp_surface_v3_config.json: retry_count == 0",
       "reachable": false,
       "expected_reachable": false,
       "leak": false,
@@ -324,23 +346,7 @@
     },
     {
       "q": "Q5",
-      "probe": "phase_c_codex_mcp_v7_config.json: invalid-run record-and-do-not-replace",
-      "reachable": false,
-      "expected_reachable": false,
-      "leak": false,
-      "detail": ""
-    },
-    {
-      "q": "Q5",
-      "probe": "phase_c_claude_mcp_surface_v2_config.json: retry_count == 0",
-      "reachable": false,
-      "expected_reachable": false,
-      "leak": false,
-      "detail": ""
-    },
-    {
-      "q": "Q5",
-      "probe": "phase_c_claude_mcp_surface_v2_config.json: invalid-run record-and-do-not-replace",
+      "probe": "phase_c_claude_mcp_surface_v3_config.json: invalid-run record-and-do-not-replace",
       "reachable": false,
       "expected_reachable": false,
       "leak": false,

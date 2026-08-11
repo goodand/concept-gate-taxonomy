@@ -66,7 +66,7 @@ def _audit_setup(tmp_path, reviewers, recommendations, *, case_id="HD02",
         {"status": "ASSIGNED",
          "reviewers": [{"reviewer_id": rid} for rid, _ in reviewers]}),
         encoding="utf-8")
-    spec = {**_SPEC, "case_ids": [case_id], "arms": ["S_STATIC"],
+    spec = {**_SPEC_NO_PROV, "case_ids": [case_id], "arms": ["S_STATIC"],
             "expected_cells": 1,
             "reviewer_assignment_file": str(assignment_path)}
     assignment_sha = hashlib.sha256(assignment_path.read_bytes()).hexdigest()
@@ -93,6 +93,8 @@ def _audit_setup(tmp_path, reviewers, recommendations, *, case_id="HD02",
         lp.write_text(json.dumps(
             {"reviewer_id": rid, "packet_sha256": packet_sha,
              "assignment_sha256": assignment_sha,
+             "fixture_sha256": _FIXTURE_SHA,
+             "qualification": dict(_ANSWERS),
              "labels": {bid: fn(k) for k, bid in enumerate(ids)}}),
             encoding="utf-8")
         lps.append(lp)
@@ -319,7 +321,7 @@ def test_blind_packet_hides_every_automatic_score(tmp_path):
                                "retrieval_hard_gate": False})
     data["traces"][0]["recommended_actions"] = ["do not move it"]
     rp = _write(tmp_path, data)
-    exposed = json.dumps(_mkblind.build(rp)["packet"]["reviewer_packet"])
+    exposed = json.dumps(_mkblind.build(rp, spec=_SPEC_NO_PROV)["packet"]["reviewer_packet"])
     for leak in ("R_DYNAMIC", "s1_candidate_flagged", "failure_codes",
                  "retrieval_hard_gate", "S1"):
         assert leak not in exposed, f"blind packet leaks {leak}"
@@ -343,7 +345,7 @@ def test_every_case_gets_a_nonempty_authority_document(data):
 
 def test_packet_build_fails_closed_on_a_case_missing_from_the_manifest(tmp_path):
     """A case whose safety rule is undeclared cannot be judged."""
-    spec = {**_SPEC, "case_ids": ["NOPE"], "arms": ["S_STATIC"],
+    spec = {**_SPEC_NO_PROV, "case_ids": ["NOPE"], "arms": ["S_STATIC"],
             "expected_cells": 1}
     rp = _write(tmp_path, {
         "kind": "live-subject-primary",
@@ -363,7 +365,7 @@ def test_packet_build_fails_closed_on_a_row_with_no_trace(tmp_path):
     data["traces"] = data["traces"][1:]
     rp = _write(tmp_path, data)
     with pytest.raises(_mkblind.AuditInputError, match="not a bijection"):
-        _mkblind.build(rp)
+        _mkblind.build(rp, spec=_SPEC_NO_PROV)
 
 
 def test_packet_build_fails_closed_on_duplicate_cell_keys(tmp_path):
@@ -372,7 +374,7 @@ def test_packet_build_fails_closed_on_duplicate_cell_keys(tmp_path):
     rp = _write(tmp_path, data)
     with pytest.raises(_mkblind.AuditInputError,
                        match="duplicate result cell keys"):
-        _mkblind.build(rp)
+        _mkblind.build(rp, spec=_SPEC_NO_PROV)
 
 
 # --------------------------------------------------------------------------
@@ -381,8 +383,18 @@ def test_packet_build_fails_closed_on_duplicate_cell_keys(tmp_path):
 # --------------------------------------------------------------------------
 _SPEC = json.loads((HERE / "safety_audit_spec.json").read_text(encoding="utf-8"))
 
+# Most tests below exercise ONE invariant on a hand-built artifact, which by
+# definition has no authorization and no completed attempt. They opt out of
+# the provenance check explicitly rather than by omission -- the three
+# `test_an_artifact_*` tests use the real spec and are the coverage for it.
+_SPEC_NO_PROV = {**_SPEC, "require_provenance": False}
+_FIXTURE_SHA = hashlib.sha256(
+    (HERE / "safety_audit_rubric_fixture.json").read_bytes()).hexdigest()
+_ANSWERS = json.loads(
+    (HERE / "safety_audit_rubric_answers.json").read_text(encoding="utf-8"))["answers"]
 
-def _primary_shaped(**overrides):
+
+def _primary_shaped(**overrides):  # noqa: D401
     """A minimal artifact that satisfies the frozen spec, so each test can
     break exactly one invariant."""
     rows, traces = [], []
@@ -395,6 +407,28 @@ def _primary_shaped(**overrides):
     data = {"kind": "live-subject-primary", "results": rows, "traces": traces}
     data.update(overrides)
     return data
+
+
+def _synthetic_primary_with_provenance(root):
+    """A spec-shaped artifact plus the authorization and completed attempt the
+    provenance check requires, all inside `root`."""
+    auth_src = HERE / "results" / "PRIMARY_AUTHORIZATION.json"
+    auth = json.loads(auth_src.read_text(encoding="utf-8"))
+    data = _primary_shaped(
+        config_file=auth["config_file"],
+        config_sha256=hashlib.sha256(
+            (HERE / auth["config_file"]).read_bytes()).hexdigest(),
+        output_file="r.json")
+    path = _write(root, data)
+    (root / "results").mkdir(exist_ok=True)
+    auth_copy = root / "results" / "PRIMARY_AUTHORIZATION.json"
+    auth_copy.write_text(json.dumps(auth), encoding="utf-8")
+    (root / "results" / "primary_attempt_ledger.jsonl").write_text(
+        json.dumps({"authorization_sha256": hashlib.sha256(
+            auth_copy.read_bytes()).hexdigest(),
+            "status": "completed", "output_file": "r.json"}) + "\n",
+        encoding="utf-8")
+    return path
 
 
 def _write(tmp_path, data, name="r.json"):
@@ -419,7 +453,7 @@ def test_a_non_primary_artifact_cannot_be_audited(tmp_path):
     packet."""
     rp = _write(tmp_path, _primary_shaped(kind="live-subject-pilot"))
     with pytest.raises(_mkblind.AuditInputError, match="not one of"):
-        _mkblind.build(rp)
+        _mkblind.build(rp, spec=_SPEC_NO_PROV)
 
 
 def test_a_short_matrix_cannot_be_audited(tmp_path):
@@ -428,7 +462,7 @@ def test_a_short_matrix_cannot_be_audited(tmp_path):
     data["traces"] = data["traces"][:1]
     rp = _write(tmp_path, data)
     with pytest.raises(_mkblind.AuditInputError, match="expected 32 cells"):
-        _mkblind.build(rp)
+        _mkblind.build(rp, spec=_SPEC_NO_PROV)
 
 
 def test_the_cli_itself_enforces_the_matrix_not_just_the_helper(tmp_path, capsys):
@@ -455,7 +489,7 @@ def test_a_wrong_arm_cannot_be_audited(tmp_path):
     data["traces"][0]["arm"] = "X_UNKNOWN"
     rp = _write(tmp_path, data)
     with pytest.raises(_mkblind.AuditInputError, match="matrix does not match"):
-        _mkblind.build(rp)
+        _mkblind.build(rp, spec=_SPEC_NO_PROV)
 
 
 def test_an_extra_trace_cannot_be_audited(tmp_path):
@@ -467,7 +501,7 @@ def test_an_extra_trace_cannot_be_audited(tmp_path):
                            "recommended_actions": ["ghost"]})
     rp = _write(tmp_path, data)
     with pytest.raises(_mkblind.AuditInputError, match="not a bijection"):
-        _mkblind.build(rp)
+        _mkblind.build(rp, spec=_SPEC_NO_PROV)
 
 
 def test_a_variant_outside_the_spec_cannot_be_audited(tmp_path):
@@ -476,7 +510,7 @@ def test_a_variant_outside_the_spec_cannot_be_audited(tmp_path):
     data["traces"][0]["variant"] = "variant-Z"
     rp = _write(tmp_path, data)
     with pytest.raises(_mkblind.AuditInputError, match="variants outside"):
-        _mkblind.build(rp)
+        _mkblind.build(rp, spec=_SPEC_NO_PROV)
 
 
 def test_the_reviewer_workspace_contains_the_packet_and_nothing_else(tmp_path,
@@ -486,9 +520,15 @@ def test_the_reviewer_workspace_contains_the_packet_and_nothing_else(tmp_path,
     not blinded, whatever the procedure says. Drives the CLI, not the helper.
     """
     for name in ("public_cases", "public_corpus", "SAFETY_AUDIT_RUBRIC.md",
-                 "safety_audit_authorities.json", "safety_audit_spec.json",
+                 "safety_audit_authorities.json",
                  "safety_audit_reviewer_assignment.json"):
         (tmp_path / name).symlink_to(HERE / name)
+    # A hand-built artifact has no provenance by construction; the CLI reads
+    # the frozen spec, so this run gets a spec with that one check off. Every
+    # other invariant still applies.
+    spec = {**_SPEC_NO_PROV}
+    (tmp_path / "safety_audit_spec.json").write_text(
+        json.dumps(spec), encoding="utf-8")
     (tmp_path / "results").mkdir()
     monkeypatch.setattr(_mkblind, "HERE", tmp_path)
     monkeypatch.setattr(_mkblind, "RUBRIC", tmp_path / "SAFETY_AUDIT_RUBRIC.md")
@@ -526,14 +566,20 @@ def test_rubric_fixture_discriminates_the_conditional_rule():
     fx = json.loads((HERE / "safety_audit_rubric_fixture.json").read_text(
         encoding="utf-8"))
     by_id = {i["id"]: i for i in fx["items"]}
-    assert by_id["Q1"]["expected"] == "ENDORSE"
-    assert by_id["Q2"]["expected"] == "MENTION"
-    assert by_id["Q6"]["expected"] == "ENDORSE"
-    assert by_id["Q7"]["expected"] == "MENTION"
-    assert all(i["expected"] in _asa.VALID_LABELS for i in fx["items"])
+    # Answers live in a SEPARATE file the reviewer never receives (round 15
+    # finding #3, second half: questions and answers together make an answer
+    # key, not an exam). This pins that separation as well as the labels.
+    assert not any("expected" in i for i in fx["items"]), (
+        "the qualification fixture leaks its own answers")
+    assert _ANSWERS["Q1"] == "ENDORSE"
+    assert _ANSWERS["Q2"] == "MENTION"
+    assert _ANSWERS["Q6"] == "ENDORSE"
+    assert _ANSWERS["Q7"] == "MENTION"
+    assert all(v in _asa.VALID_LABELS for v in _ANSWERS.values())
+    assert set(_ANSWERS) == set(by_id)
     # Someone applying "conditional -> MENTION" gets exactly Q1 and Q6 wrong.
     conditional_wrong = [i["id"] for i in fx["items"]
-                         if i["expected"] == "ENDORSE"
+                         if _ANSWERS[i["id"]] == "ENDORSE"
                          and i["sentence"].lower().startswith(("if ", "once "))]
     assert conditional_wrong == ["Q1", "Q6"]
 
@@ -642,3 +688,98 @@ def test_offline_e2e_runs_the_whole_pipeline(capsys):
     """
     import run_pipeline
     assert run_pipeline.e2e_offline() == 0, capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------
+# CLI-level coverage (Amendment 38). Required by test_cli_wiring_coverage.py,
+# which found that NOTHING in the suite called these entry points -- including
+# the adjudicator, the step that produces the safety headline.
+#
+# These drive main() on REFUSAL paths on purpose. A happy-path run of the
+# adjudicator needs the frozen reviewer assignment to be ASSIGNED, and the way
+# to get there is not a `--spec` flag: a runtime override would reopen exactly
+# the door round 15 closed (relaxing the audit's own rules after the labels
+# are in hand). Refusal paths need no such override and are the paths that
+# must not silently stop working.
+# --------------------------------------------------------------------------
+
+def test_adjudicator_cli_refuses_a_mismatched_key(tmp_path, capsys):
+    case = _audit_setup(tmp_path, _TWO_MENTION, ["do a thing"])
+    rp, pp, kp, lps = case
+    # Break the chain: the key now claims a different packet.
+    key = json.loads(kp.read_text(encoding="utf-8"))
+    key["packet_sha256"] = "0" * 64
+    kp.write_text(json.dumps(key), encoding="utf-8")
+    with pytest.raises(SystemExit) as exc:
+        _asa.main(["apply_safety_audit.py", str(rp), str(pp), str(kp),
+                   str(lps[0]), "--out-root", str(tmp_path)])
+    assert "key is bound to packet" in str(exc.value)
+
+
+def test_adjudicator_cli_prints_usage_when_underfed(capsys):
+    assert _asa.main(["apply_safety_audit.py", "only", "three", "args"]) == 2
+    assert "Usage" in capsys.readouterr().err
+
+
+def test_packet_cli_refuses_to_overwrite_an_existing_workspace(tmp_path, capsys):
+    """results/ and the reviewer workspace are append-only; a second run must
+    not silently replace what reviewers already saw.
+
+    Driven through main() with an --out-root, which also means the run
+    satisfies the provenance check for real rather than switching it off: the
+    authorization and a completed attempt are written into the same root.
+    """
+    (tmp_path / "results").mkdir()
+    rp = _synthetic_primary_with_provenance(tmp_path)
+    assert _mkblind.main(["prog", str(rp), str(tmp_path)]) == 0
+    assert _mkblind.main(["prog", str(rp), str(tmp_path)]) == 2
+    assert "refusing to overwrite" in capsys.readouterr().err
+
+
+def test_measure_s1_recall_cli_runs_and_refuses_to_overwrite(tmp_path, capsys):
+    assert _measure_s1.main(["measure_s1_recall.py"]) == 0
+    printed = json.loads(capsys.readouterr().out)
+    assert printed["total_positives"] == 6
+    out = tmp_path / "m.json"
+    assert _measure_s1.main(["measure_s1_recall.py", str(out)]) == 0
+    assert out.is_file()
+    assert _measure_s1.main(["measure_s1_recall.py", str(out)]) == 2
+
+
+# --------------------------------------------------------------------------
+# Provenance (Amendment 38, round 17 finding #5 / round 15 finding #2).
+# Written before the implementation: a shape-correct artifact that no
+# authorization covers and no completed attempt produced was accepted as a
+# primary result. `accepted_cells=32, has_authorization=false,
+# has_attempt_ledger=false` -- reproduced by the reviewer and here.
+#
+# The spec was the authority for the MATRIX and for nothing else. An artifact
+# claiming to be a primary run is not evidence that it is one.
+# --------------------------------------------------------------------------
+
+def test_an_artifact_no_authorization_covers_is_rejected(tmp_path):
+    rp = _write(tmp_path, _primary_shaped())
+    with pytest.raises(_mkblind.AuditInputError, match="authorization"):
+        _mkblind.build(rp)
+
+
+def test_an_artifact_with_the_wrong_config_hash_is_rejected(tmp_path):
+    auth = json.loads((HERE / "results" / "PRIMARY_AUTHORIZATION.json").read_text(
+        encoding="utf-8"))
+    data = _primary_shaped(config_file=auth["config_file"],
+                           config_sha256="0" * 64)
+    rp = _write(tmp_path, data)
+    with pytest.raises(_mkblind.AuditInputError, match="config"):
+        _mkblind.build(rp)
+
+
+def test_an_artifact_with_no_completed_attempt_is_rejected(tmp_path):
+    auth_path = HERE / "results" / "PRIMARY_AUTHORIZATION.json"
+    auth = json.loads(auth_path.read_text(encoding="utf-8"))
+    data = _primary_shaped(
+        config_file=auth["config_file"],
+        config_sha256=hashlib.sha256(
+            (HERE / auth["config_file"]).read_bytes()).hexdigest())
+    rp = _write(tmp_path, data)
+    with pytest.raises(_mkblind.AuditInputError, match="attempt"):
+        _mkblind.build(rp)

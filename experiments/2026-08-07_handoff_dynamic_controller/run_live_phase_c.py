@@ -684,7 +684,8 @@ def run_cell(case: dict, gold: dict, arm: str, variant: str, config: dict[str, A
         return trace, {**_provider_error_details(exc), "subagent": subagent_meta}
 
 
-def _assert_provider_preflight(config: dict[str, Any]) -> None:
+def _assert_provider_preflight(config: dict[str, Any],
+                               config_path: str | Path = CONFIG_PATH) -> None:
     if config.get("provider") == "codex-mcp-cli":
         path = RESULTS_DIR / "redteam_codex_mcp_isolation.json"
         if not path.is_file():
@@ -703,6 +704,7 @@ def _assert_provider_preflight(config: dict[str, Any]) -> None:
         if drift:
             raise LiveRunError(
                 f"refusing Codex MCP run: MCP-isolation red-team is stale: {drift}")
+        _assert_redteam_covers_config(report, config_path, "Codex MCP run")
         return
     if "seatbelt-v2" not in config.get("sandbox_policy", ""):
         return
@@ -717,6 +719,40 @@ def _assert_provider_preflight(config: dict[str, Any]) -> None:
     if drift:
         raise LiveRunError(
             f"refusing v2 run: provider-isolation red-team is stale: {drift}")
+    _assert_redteam_covers_config(report, config_path, "v2 run")
+
+
+def _assert_redteam_covers_config(report: dict, config_path: str | Path,
+                                  label: str) -> None:
+    """The red-team must have examined the config this run will use.
+
+    Round 17, finding #6: the red-teams hardcoded v7 / surface-v2 while the
+    authorization pointed at v9 / surface-v3, and their artifacts recorded no
+    config identity at all -- only whole-surface hashes. So a red-team that
+    had never looked at the config being run still produced a PASS artifact
+    that matched the current surface, and nothing downstream could tell.
+    """
+    if report.get("status") not in (None, "PASS"):
+        raise LiveRunError(
+            f"refusing {label}: red-team status is {report['status']}"
+            + (" (BLOCKED -- it did not reach a verdict)"
+               if report.get("status") == "BLOCKED" else ""))
+    checked = report.get("checked_configs")
+    if checked is None:
+        raise LiveRunError(
+            f"refusing {label}: red-team artifact predates config binding; "
+            "re-run it so it records which configs it examined")
+    name = Path(config_path).name
+    files = {entry["file"] for entry in checked}
+    if name not in files:
+        raise LiveRunError(
+            f"refusing {label}: red-team never examined {name} "
+            f"(it examined {sorted(files)})")
+    expected = {entry["file"]: entry["sha256"] for entry in checked}[name]
+    actual = _sha256_path(HERE / name)
+    if expected != actual:
+        raise LiveRunError(
+            f"refusing {label}: {name} changed since the red-team examined it")
 
 
 def _assert_ready(config_path: str | Path = CONFIG_PATH) -> dict[str, Any]:
@@ -730,7 +766,7 @@ def _assert_ready(config_path: str | Path = CONFIG_PATH) -> dict[str, Any]:
     drift = frozen_surface_drift(calibration.get("frozen_surface_hashes"))
     if drift:
         raise LiveRunError(f"refusing live run: frozen surface drifted: {drift}")
-    _assert_provider_preflight(config)
+    _assert_provider_preflight(config, config_path)
     return config
 
 

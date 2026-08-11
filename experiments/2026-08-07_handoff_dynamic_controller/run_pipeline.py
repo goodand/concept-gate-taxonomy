@@ -46,13 +46,21 @@ sys.path.insert(0, str(HERE))
 
 import apply_safety_audit as asa  # noqa: E402
 import make_safety_audit_blind_input as mkblind  # noqa: E402
-from _evaluator import (evaluate, frozen_surface_hashes,  # noqa: E402
-                        surface_drift_by_layer)
+from _evaluator import evaluate  # noqa: E402
+import run_live_phase_c as live  # noqa: E402
 from run_calibration import load, reference_trace  # noqa: E402
 from _runner import Corpus  # noqa: E402
 
 RESULTS = HERE / "results"
 SPEC = json.loads((HERE / "safety_audit_spec.json").read_text(encoding="utf-8"))
+
+# Three-value exit vocabulary, matching scripts/run_gates.py's PASS/FAIL/
+# BLOCKED table -- but carried in the EXIT CODE, not only in the printed text.
+# Round 17: `doctor` printed "BLOCKED is not a pass" and returned 0, so every
+# machine reading it (CI, a shell harness, the next agent) saw success. The
+# repository had already met this in run_gates.py and answered it with a
+# warning in prose; a warning is not a mechanism.
+PASS, FAIL, BLOCKED = 0, 1, 2
 
 
 def _sha256(path: Path) -> str:
@@ -67,78 +75,117 @@ def _line(status: str, name: str, detail: str = "") -> dict:
     return {"check": name, "status": status, "detail": detail}
 
 
-def doctor() -> int:
-    """Report the state of every gate. Read-only: makes no provider call,
-    writes nothing, and consumes no attempt."""
-    print("== doctor ==\n")
-    rows = []
+def _authorized_config_name() -> str:
+    """Default to the config the authorization actually points at.
 
-    calib_path = RESULTS / "calibration.json"
-    if not calib_path.is_file():
-        rows.append(_line("FAIL", "calibration", "missing -- run run_calibration.py"))
+    Diagnosing a different config than the one primary would run is a way to
+    be reassured about the wrong thing.
+    """
+    auth = RESULTS / "PRIMARY_AUTHORIZATION.json"
+    if auth.is_file():
+        return json.loads(auth.read_text(encoding="utf-8"))["config_file"]
+    return "phase_c_claude_mcp_surface_v3_config.json"
+
+
+def _delegate(name: str, fn) -> tuple[dict, object]:
+    """Run a PRODUCTION gate and render its verdict. Never re-derive one.
+
+    Round 17, findings #1 and #3: `doctor` recomputed readiness itself and
+    left the qualification gate out, so it reported `0 fail, exit 0` while
+    `_assert_primary_qualifications` refused the same config as stale; and it
+    read a red-team artifact's `conclusive` flag while ignoring its `status`,
+    so a FAILED red-team rendered as `[ok  ] ... FAIL`.
+
+    Both are the same defect: a diagnostic that owns its own verdict can
+    disagree with the thing it is diagnosing. Here doctor owns no verdict --
+    it calls the gate and prints what the gate said.
+    """
+    try:
+        value = fn()
+    except live.LiveRunError as exc:
+        msg = str(exc)
+        # A gate that could not reach a verdict is BLOCKED, not FAIL. The
+        # red-teams say so explicitly; anything else that refuses has failed.
+        status = "BLOCKED" if "BLOCKED" in msg or "inconclusive" in msg else "FAIL"
+        return _line(status, name, msg[:96]), None
+    except Exception as exc:  # noqa: BLE001 -- a broken gate is not a pass
+        return _line("FAIL", name, f"{type(exc).__name__}: {exc}"[:96]), None
+    return _line("PASS", name, ""), value
+
+
+def doctor(config_name: str | None = None) -> int:
+    """Report the state of every gate by CALLING it. Read-only: no provider
+    call, nothing written, no attempt consumed."""
+    config_name = config_name or _authorized_config_name()
+    print(f"== doctor ({config_name}) ==\n")
+    rows: list[dict] = []
+
+    # --- production gates, in the order primary itself applies them -------
+    row, config = _delegate(
+        "readiness (calibration + red-teams + preflight)",
+        lambda: live._assert_ready(config_name))
+    rows.append(row)
+
+    if config is None:
+        # Everything downstream reads `config`; without it those gates were
+        # not evaluated. Recording them as BLOCKED rather than skipping keeps
+        # the count honest.
+        for name in ("qualification artifacts", "primary authorization"):
+            rows.append(_line("BLOCKED", name, "readiness did not yield a config"))
+        quals = None
     else:
-        calib = json.loads(calib_path.read_text(encoding="utf-8"))
-        drift = surface_drift_by_layer(calib.get("frozen_surface_hashes"))
-        stale = drift["execution"] + drift["audit"]
-        if calib.get("failures"):
-            rows.append(_line("FAIL", "calibration", str(calib["failures"])[:60]))
-        elif stale:
-            rows.append(_line("FAIL", "calibration",
-                              f"stale on {len(stale)} file(s): {stale[:3]}"))
-        else:
-            rows.append(_line("PASS", "calibration",
-                              f"{calib.get('positive_controls', '?')} positive, "
-                              f"{calib.get('negative_detected', '?')}/"
-                              f"{calib.get('negative_total', '?')} negative"))
+        row, quals = _delegate("qualification artifacts",
+                               lambda: live._assert_primary_qualifications(config))
+        rows.append(row)
 
-    for name, path in (("red-team: provider isolation",
-                        RESULTS / "redteam_provider_isolation.json"),
-                       ("red-team: codex MCP isolation",
-                        RESULTS / "redteam_codex_mcp_isolation.json")):
-        if not path.is_file():
-            rows.append(_line("FAIL", name, "missing"))
-            continue
-        rep = json.loads(path.read_text(encoding="utf-8"))
-        drift = surface_drift_by_layer(rep.get("frozen_surface_hashes"))["execution"]
-        # `conclusive` is absent from artifacts written before the fail-open
-        # was closed; treat that as unknown rather than as a pass.
-        if rep.get("conclusive") is None:
-            rows.append(_line("BLOCKED", name,
-                              "predates the fail-open fix; re-run it"))
-        elif not rep["conclusive"]:
-            rows.append(_line("BLOCKED", name,
-                              "could not exercise the sandbox here"))
-        elif drift:
-            rows.append(_line("FAIL", name, f"stale on {drift[:3]}"))
-        else:
-            rows.append(_line("PASS", name, rep.get("status", "")))
+    if config is not None and quals is None:
+        # Recorded, not skipped: a gate that was never evaluated is BLOCKED.
+        # Silently omitting it would make the pass/fail/blocked counts
+        # describe a smaller pipeline than the one being diagnosed.
+        rows.append(_line("BLOCKED", "primary authorization",
+                          "qualification did not pass; not evaluated"))
+        rows.append(_line("BLOCKED", "primary attempts remaining",
+                          "authorization not evaluated"))
 
-    auth_path = RESULTS / "PRIMARY_AUTHORIZATION.json"
-    if not auth_path.is_file():
-        rows.append(_line("FAIL", "primary authorization", "missing"))
-    else:
-        auth = json.loads(auth_path.read_text(encoding="utf-8"))
-        auth_sha = _sha256(auth_path)
-        ledger = RESULTS / "primary_attempt_ledger.jsonl"
-        used = 0
-        if ledger.is_file():
-            for raw in ledger.read_text(encoding="utf-8").splitlines():
-                if not raw.strip():
-                    continue
-                entry = json.loads(raw)
-                if (entry.get("authorization_sha256") == auth_sha
-                        and entry.get("status") == "started"):
-                    used += 1
-        rows.append(_line("PASS", "primary authorization",
-                          f"{auth['config_file']}, attempts {used}/"
-                          f"{auth['max_attempts']}"))
-        if auth["matrix"]["case_ids"] != SPEC["case_ids"] or \
-                auth["matrix"]["arms"] != SPEC["arms"]:
-            rows.append(_line("FAIL", "audit spec vs authorization matrix",
-                              "they disagree"))
-        else:
-            rows.append(_line("PASS", "audit spec vs authorization matrix",
-                              f"{SPEC['expected_cells']} cells"))
+    if config is not None and quals is not None:
+        primary = config.get("primary", {})
+
+        def _auth():
+            # Verifies the authorization WITHOUT claiming an attempt --
+            # `_claim_primary_attempt` is what consumes one, and doctor must
+            # never call it.
+            return live._assert_primary_authorization(
+                config, config_name, quals,
+                primary.get("case_ids", []), primary.get("arms", []))
+
+        row, auth = _delegate("primary authorization", _auth)
+        rows.append(row)
+        if auth is not None:
+            auth_sha, max_attempts = auth
+            used = 0
+            ledger = RESULTS / "primary_attempt_ledger.jsonl"
+            if ledger.is_file():
+                for raw in ledger.read_text(encoding="utf-8").splitlines():
+                    if raw.strip():
+                        entry = json.loads(raw)
+                        if (entry.get("authorization_sha256") == auth_sha
+                                and entry.get("status") == "started"):
+                            used += 1
+            rows.append(_line("PASS" if used < max_attempts else "FAIL",
+                              "primary attempts remaining",
+                              f"{max_attempts - used} of {max_attempts}"))
+
+    # --- doctor-owned: only what no production gate covers ----------------
+    if config is not None:
+        auth_matrix = json.loads(
+            (RESULTS / "PRIMARY_AUTHORIZATION.json").read_text(encoding="utf-8")
+        )["matrix"] if (RESULTS / "PRIMARY_AUTHORIZATION.json").is_file() else {}
+        agree = (auth_matrix.get("case_ids") == SPEC["case_ids"]
+                 and auth_matrix.get("arms") == SPEC["arms"])
+        rows.append(_line("PASS" if agree else "FAIL",
+                          "audit spec vs authorization matrix",
+                          f"{SPEC['expected_cells']} cells" if agree
+                          else "they disagree"))
 
     assign = json.loads((HERE / SPEC["reviewer_assignment_file"]).read_text(
         encoding="utf-8"))
@@ -146,8 +193,8 @@ def doctor() -> int:
         rows.append(_line("BLOCKED", "reviewer assignment",
                           f"{assign.get('status')} -- audit cannot run"))
     else:
-        ids = [r["reviewer_id"] for r in assign.get("reviewers", [])]
-        rows.append(_line("PASS", "reviewer assignment", f"{len(ids)} declared"))
+        rows.append(_line("PASS", "reviewer assignment",
+                          f"{len(assign.get('reviewers', []))} declared"))
 
     for tool in ("claude", "codex"):
         found = shutil.which(tool)
@@ -158,9 +205,11 @@ def doctor() -> int:
     blocked = [r for r in rows if r["status"] == "BLOCKED"]
     print(f"\n  {len(rows) - len(fails) - len(blocked)} pass, {len(fails)} fail, "
           f"{len(blocked)} blocked")
-    if blocked:
+    if fails:
+        print("  primary is refused. Fix the failing gates, in the order shown.")
+    elif blocked:
         print("  BLOCKED is not a pass -- those checks did not produce a verdict.")
-    return 1 if fails else 0
+    return FAIL if fails else (BLOCKED if blocked else PASS)
 
 
 # ------------------------------------------------------------------- e2e ----
@@ -198,26 +247,53 @@ def _synthetic_primary(out: Path) -> Path:
             row["host_action_compliance"] = {"passed": True}
             rows.append(row)
             traces.append(trace)
+    auth = json.loads((RESULTS / "PRIMARY_AUTHORIZATION.json").read_text(
+        encoding="utf-8"))
     path = out / "e2e_primary.json"
     path.write_text(json.dumps(
         {"kind": "live-subject-primary", "synthetic": True,
+         "config_file": auth["config_file"],
+         "config_sha256": _sha256(HERE / auth["config_file"]),
+         "output_file": path.name,
          "results": rows, "traces": traces}, ensure_ascii=False), encoding="utf-8")
+
+    # Provenance the audit gate will actually check, built in the temp root.
+    # Round 17, finding #5: the gate validated shape only, so a hand-built
+    # artifact was accepted as a primary result. The E2E does NOT switch that
+    # check off -- it satisfies it with a temp authorization and a completed
+    # attempt, so the provenance path is exercised rather than skipped.
+    (out / "results").mkdir(exist_ok=True)
+    auth_copy = out / "results" / "PRIMARY_AUTHORIZATION.json"
+    auth_copy.write_text(json.dumps(auth, ensure_ascii=False), encoding="utf-8")
+    (out / "results" / "primary_attempt_ledger.jsonl").write_text(
+        json.dumps({"authorization_sha256": _sha256(auth_copy),
+                    "status": "completed", "output_file": path.name}) + "\n",
+        encoding="utf-8")
     return path
 
 
-def _qualify_reviewer(reviewer_id: str, answers: dict[str, str]) -> tuple[bool, list]:
-    """Score a reviewer against the frozen rubric fixture. Returns (passed,
-    wrong ids). The fixture is the same one the rubric points reviewers at."""
-    fixture = json.loads((HERE / "safety_audit_rubric_fixture.json").read_text(
-        encoding="utf-8"))
-    wrong = [i["id"] for i in fixture["items"]
-             if answers.get(i["id"]) != i["expected"]]
+def _qualify_reviewer(reviewer_id: str, submitted: dict[str, str]) -> tuple[bool, list]:
+    """Thin wrapper over the ADJUDICATOR's scoring.
+
+    Round 17, finding #5: this used to be a private copy inside the E2E, and
+    the real adjudicator never scored anyone -- so the E2E could report
+    "reviewer qualification: rejected" about a check that did not exist in
+    production. It now calls the same function `apply_safety_audit` uses.
+    """
+    wrong = asa._qualify_reviewer(
+        {"reviewer_id": reviewer_id, "qualification": submitted})
     return (not wrong), wrong
 
 
 def e2e_offline() -> int:
     started = time.time()
     print("== e2e --offline ==")
+    print("   COVERS   artifact provenance -> audit gate -> packet CLI ->")
+    print("            blinding -> reviewer qualification -> adjudicator CLI ->")
+    print("            final bundle written to disk and read back")
+    print("   DOES NOT COVER  provider execution, qualification pilots,")
+    print("            authorization issuance, attempt claim. Those need a")
+    print("            provider; this command deliberately has none.")
     print("   no provider calls, no attempt consumed, temp dir only\n")
     failures: list[str] = []
 
@@ -240,11 +316,16 @@ def e2e_offline() -> int:
             "non-primary kind": {"kind": "live-subject-pilot"},
             "short matrix": {"truncate": 1},
             "extra trace": {"extra_trace": True},
+            "unauthorized config": {"config_file": "phase_c_live_config.json"},
+            "wrong config hash": {"config_sha256": "0" * 64},
+            "no completed attempt": {"output_file": "never_ran.json"},
         }
         rejected = 0
         for label, mutation in bad.items():
             data = json.loads(primary.read_text(encoding="utf-8"))
-            data.update({k: v for k, v in mutation.items() if k == "kind"})
+            data.update({k: v for k, v in mutation.items()
+                         if k in ("kind", "config_file", "config_sha256",
+                                  "output_file")})
             if mutation.get("truncate"):
                 data["results"] = data["results"][:1]
                 data["traces"] = data["traces"][:1]
@@ -254,8 +335,10 @@ def e2e_offline() -> int:
                 data["traces"].append(ghost)
             p = root / "bad.json"
             p.write_text(json.dumps(data), encoding="utf-8")
+            spec = {**SPEC, "provenance": {**SPEC["provenance"],
+                                           "root": str(root)}}
             try:
-                mkblind.build(p)
+                mkblind.build(p, spec=spec)
             except mkblind.AuditInputError:
                 rejected += 1
             else:
@@ -288,12 +371,13 @@ def e2e_offline() -> int:
         # --- 5. reviewer qualification ----------------------------------
         fixture = json.loads((HERE / "safety_audit_rubric_fixture.json").read_text(
             encoding="utf-8"))
-        good = {i["id"]: i["expected"] for i in fixture["items"]}
+        good = json.loads((HERE / "safety_audit_rubric_answers.json").read_text(
+            encoding="utf-8"))["answers"]
         # A reviewer applying the rule round 15 retired ("a conditional is
         # never an ENDORSE") must FAIL qualification -- otherwise the fixture
         # is decoration.
         naive = {i["id"]: ("MENTION" if i["sentence"].lower().startswith(
-            ("if ", "once ")) else i["expected"]) for i in fixture["items"]}
+            ("if ", "once ")) else good[i["id"]]) for i in fixture["items"]}
         ok_good, _ = _qualify_reviewer("A", good)
         ok_naive, wrong = _qualify_reviewer("naive", naive)
         print(f"  [5] reviewer qualification   correct={ok_good}, "
@@ -304,7 +388,7 @@ def e2e_offline() -> int:
             failures.append("the retired conditional rule still qualifies")
 
         # --- 6. adjudication -------------------------------------------
-        assignment = root / "assignment.json"
+        assignment = root / "safety_audit_reviewer_assignment.json"
         assignment.write_text(json.dumps(
             {"status": "ASSIGNED",
              "reviewers": [{"reviewer_id": "e2e-A"}, {"reviewer_id": "e2e-B"}]}),
@@ -313,16 +397,34 @@ def e2e_offline() -> int:
         a_sha = _sha256(assignment)
         p_sha = _sha256(packet_path)
         ids = list(json.loads(key_path.read_text(encoding="utf-8"))["unblinding_key"])
+        fixture_sha = _sha256(HERE / "safety_audit_rubric_fixture.json")
+        answers = json.loads((HERE / "safety_audit_rubric_answers.json").read_text(
+            encoding="utf-8"))["answers"]
         labels = []
         for rid in ("e2e-A", "e2e-B"):
             lp = root / f"labels_{rid}.json"
             lp.write_text(json.dumps(
                 {"reviewer_id": rid, "packet_sha256": p_sha,
-                 "assignment_sha256": a_sha,
+                 "assignment_sha256": a_sha, "fixture_sha256": fixture_sha,
+                 "qualification": dict(answers),
                  "labels": {i: "MENTION" for i in ids}}), encoding="utf-8")
             labels.append(lp)
-        bundle = asa.adjudicate(primary, packet_path, key_path, labels, spec=spec)
-        audit = bundle["safety_audit"]
+        rc = asa.main(["run_pipeline", str(primary), str(packet_path),
+                       str(key_path), *[str(p) for p in labels],
+                       "--out-root", str(root)])
+        if rc != 0:
+            failures.append("adjudicator CLI returned non-zero")
+        bundle_path = root / "results" / f"adjudicated_{primary.stem}.json"
+        if not bundle_path.is_file():
+            failures.append("no final bundle was written to disk")
+            audit = {"cell_verdicts": {}, "adjudicated_full_hard_gate_rate": None,
+                     "confirmed_safety_violation_count": None,
+                     "independence": ""}
+        else:
+            # Read it BACK -- an in-memory dict proves the writer was never
+            # exercised (round 17, finding #4).
+            bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
+            audit = bundle["safety_audit"]
         print(f"  [6] adjudication             {audit['cell_verdicts']}")
         print(f"  [7] final bundle             "
               f"adjudicated_rate={audit['adjudicated_full_hard_gate_rate']}, "
@@ -348,20 +450,25 @@ def e2e_offline() -> int:
         for f in failures:
             print(f"    - {f}")
         return 1
-    print("  PASS -- the whole offline path is wired end to end.")
-    print("  This says nothing about provider behaviour; run qualification for that.")
+    print("  PASS -- the offline downstream path is wired end to end.")
+    print("  Not a claim about provider behaviour, and not a substitute for")
+    print("  qualification: run `doctor` for what is still refused.")
     return 0
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("doctor", help="report the state of every gate (read-only)")
+    doc = sub.add_parser("doctor",
+                         help="report the state of every gate (read-only)")
+    doc.add_argument("--config", default=None,
+                     help="config to diagnose; defaults to the one the "
+                          "primary authorization points at")
     e2e = sub.add_parser("e2e", help="run the whole pipeline in a temp dir")
     e2e.add_argument("--offline", action="store_true", required=True,
                      help="required: this command never calls a provider")
     args = ap.parse_args()
-    return doctor() if args.cmd == "doctor" else e2e_offline()
+    return doctor(args.config) if args.cmd == "doctor" else e2e_offline()
 
 
 if __name__ == "__main__":

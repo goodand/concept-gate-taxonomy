@@ -13,8 +13,12 @@ Inputs
   <key.json>      safety_audit_key_<stem>.json (unblinding key)
   <labels...>     one labels file PER REVIEWER:
                     {"reviewer_id": "...", "packet_sha256": "...",
-                     "assignment_sha256": "...",
+                     "assignment_sha256": "...", "fixture_sha256": "...",
+                     "qualification": {"Q1": "ENDORSE", ...},
                      "labels": {"R0000": "ENDORSE", ...}}
+                  `qualification` must answer every item in
+                  safety_audit_rubric_fixture.json correctly, or the whole
+                  label file is rejected.
                   The reviewer_id must appear in the frozen
                   safety_audit_reviewer_assignment.json.
 
@@ -64,6 +68,39 @@ HERE = Path(__file__).resolve().parent
 VALID_LABELS = {"ENDORSE", "REFUSE", "MENTION", "UNRELATED"}
 
 SPEC = HERE / "safety_audit_spec.json"
+RUBRIC_FIXTURE = HERE / "safety_audit_rubric_fixture.json"
+RUBRIC_ANSWERS = HERE / "safety_audit_rubric_answers.json"
+
+
+def _qualify_reviewer(doc: dict) -> list[str]:
+    """Score a reviewer against the frozen qualification fixture.
+
+    Returns the ids they got wrong; empty means qualified.
+
+    Round 17, finding #5: this scoring lived inside run_pipeline.py's E2E and
+    was never passed to the adjudicator, so labels with no qualification
+    evidence at all were accepted as `safe`. A qualification the gate does not
+    read is a document, not a gate -- the same defect as Amendment 34's S1,
+    one layer up.
+
+    The answers are in a SEPARATE file the reviewer never receives. Round 15
+    noted that questions and answers in one file make an answer key, not an
+    exam.
+    """
+    answers = json.loads(RUBRIC_ANSWERS.read_text(encoding="utf-8"))["answers"]
+    submitted = doc.get("qualification")
+    if not isinstance(submitted, dict):
+        raise _fail(
+            f"{doc.get('reviewer_id')!r} submitted no qualification; the "
+            f"rubric requires answering {RUBRIC_FIXTURE.name} first")
+    if set(submitted) != set(answers):
+        raise _fail(
+            f"{doc.get('reviewer_id')!r} answered {len(submitted)} of "
+            f"{len(answers)} qualification items")
+    bad = {k: v for k, v in submitted.items() if v not in VALID_LABELS}
+    if bad:
+        raise _fail(f"qualification labels outside the rubric: {bad}")
+    return sorted(k for k, v in answers.items() if submitted[k] != v)
 
 
 def _sha256_bytes(data: bytes) -> str:
@@ -183,9 +220,23 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
                 f"{path.name}: label ids do not match the packet "
                 f"(extra={extra[:5]}, missing={missing[:5]}) -- an incomplete "
                 "set lets the denominator be decided by who got tired")
+        if doc.get("fixture_sha256") != _sha256(RUBRIC_FIXTURE):
+            raise _fail(
+                f"{path.name}: labels are not bound to the frozen "
+                f"qualification fixture ({RUBRIC_FIXTURE.name})")
+        wrong = _qualify_reviewer(doc)
+        if wrong:
+            raise _fail(
+                f"{path.name}: reviewer {doc['reviewer_id']!r} failed "
+                f"qualification on {wrong}. Q1/Q2 and Q6/Q7 are the "
+                "discriminating pairs -- failing exactly Q1 and Q6 means the "
+                "retired rule 'a conditional is never an ENDORSE' was applied, "
+                "which produces confident false negatives that agreement "
+                "between two such reviewers cannot catch.")
         reviewers.append(doc)
         label_records.append({"file": path.name, "sha256": _sha256(path),
-                              "reviewer_id": doc["reviewer_id"]})
+                              "reviewer_id": doc["reviewer_id"],
+                              "qualified": True})
 
     ids = [r["reviewer_id"] for r in reviewers]
     if len(set(ids)) != len(ids):
@@ -264,6 +315,9 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
                         "independence is procedural and NOT machine-verified",
         "reviewer_assignment": {"file": assignment_path.name,
                                 "sha256": assignment_sha},
+        "reviewer_qualification": {"fixture": RUBRIC_FIXTURE.name,
+                                   "fixture_sha256": _sha256(RUBRIC_FIXTURE),
+                                   "all_reviewers_qualified": True},
         "n_recommendations": len(unblind),
         "n_disagreements": len(disagreements),
         "disagreements": disagreements,
@@ -284,16 +338,37 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
 
 
 def main(argv: list[str]) -> int:
-    args = argv[1:]
+    # `--out-root <dir>` exists so the offline E2E and the suite can drive
+    # THIS function -- the production entry point -- without writing into
+    # results/. Added when test_cli_wiring_coverage.py found that nothing in
+    # the suite called this main() at all: the adjudicator CLI, the step that
+    # produces the safety headline, had never been executed by a test.
+    out_root = HERE
+    args = list(argv[1:])
+    if "--out-root" in args:
+        i = args.index("--out-root")
+        out_root = Path(args[i + 1])
+        del args[i:i + 2]
     if len(args) < 4:
         print(__doc__, file=sys.stderr)
         return 2
     result_path, packet_path, key_path = (Path(args[0]), Path(args[1]),
                                           Path(args[2]))
     label_paths = [Path(a) for a in args[3:]]
-    data = adjudicate(result_path, packet_path, key_path, label_paths)
+    spec = json.loads(SPEC.read_text(encoding="utf-8"))
+    if out_root != HERE:
+        # Running against a different root: the frozen reviewer assignment
+        # lives there too. Same shape as the packet builder's --out-root, and
+        # the reason is the same -- the offline E2E must exercise these checks
+        # for real rather than switch them off.
+        local = out_root / "safety_audit_reviewer_assignment.json"
+        if local.is_file():
+            spec["reviewer_assignment_file"] = str(local)
+    data = adjudicate(result_path, packet_path, key_path, label_paths,
+                      spec=spec)
 
-    out = HERE / "results" / f"adjudicated_{result_path.stem}.json"
+    out = out_root / "results" / f"adjudicated_{result_path.stem}.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
     if out.exists():
         print(f"refusing to overwrite {out.name} (results/ is append-only)",
               file=sys.stderr)

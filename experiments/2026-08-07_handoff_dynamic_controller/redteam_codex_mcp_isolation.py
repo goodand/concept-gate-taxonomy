@@ -8,6 +8,7 @@ and the bridge source before a paid qualification is permitted.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sys
 import tempfile
@@ -26,8 +27,34 @@ def check(name: str, passed: bool, detail: str = "") -> dict:
     return {"check": name, "passed": passed, "detail": detail}
 
 
+BLOCKED_EXIT = 2
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _target_config() -> str:
+    """The Codex config primary would actually run, not a hardcoded v7.
+
+    Round 17, finding #6: this read `phase_c_codex_mcp_v7_config.json` while
+    the current target was v9, so the red-team certified a config nobody was
+    going to use -- and the artifact carried no config identity at all, so
+    nothing downstream could tell.
+    """
+    auth = HERE / "results" / "PRIMARY_AUTHORIZATION.json"
+    if auth.is_file():
+        name = json.loads(auth.read_text(encoding="utf-8"))["config_file"]
+        if "codex" in name and (HERE / name).is_file():
+            return name
+    candidates = sorted(HERE.glob("phase_c_codex_mcp_v*_config.json"),
+                        key=lambda p: int(p.stem.split("_v")[-1].split("_")[0]))
+    return candidates[-1].name
+
+
 def main() -> int:
-    config = json.loads((HERE / "phase_c_codex_mcp_v7_config.json").read_text(encoding="utf-8"))
+    config_name = _target_config()
+    config = json.loads((HERE / config_name).read_text(encoding="utf-8"))
     findings: list[dict] = []
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
@@ -75,13 +102,17 @@ def main() -> int:
     conclusive = bool(findings)
     out = {"kind": "codex-mcp-provider-isolation-redteam-v1", "passed": passed,
            "conclusive": conclusive,
+           "checked_configs": [{"file": config_name,
+                                "sha256": _sha256(HERE / config_name)}],
            "status": "PASS" if conclusive and passed else (
                "BLOCKED" if not conclusive else "FAIL"),
            "findings": findings, "frozen_surface_hashes": frozen_surface_hashes()}
     (HERE / "results" / "redteam_codex_mcp_isolation.json").write_text(
         json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"{sum(item['passed'] for item in findings)}/{len(findings)} passed")
-    return 0 if passed else 1
+    if not passed:
+        return 1
+    return 0 if conclusive else BLOCKED_EXIT
 
 
 if __name__ == "__main__":

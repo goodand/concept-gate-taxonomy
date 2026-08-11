@@ -167,7 +167,65 @@ def validate_audit_input(data: dict, spec: dict, *, source: str) -> dict:
             f"traces without row={orphan_traces[:6]}) -- the artifact is "
             "malformed; an unjudgeable cell must not become a passing one")
 
+    if spec.get("require_provenance"):
+        _assert_provenance(data, spec, source=source)
+
     return dict(zip(trace_keys, traces))
+
+
+def _assert_provenance(data: dict, spec: dict, *, source: str) -> None:
+    """The audited result must be one an authorization covers and an attempt
+    actually produced.
+
+    Round 17, finding #5. Everything above this checks SHAPE: kind, matrix,
+    variants, bijection. A hand-built artifact satisfies all of it. Measured:
+    `accepted_cells=32, has_authorization=false, has_attempt_ledger=false`.
+    Shape is not provenance, and an audit of an artifact of unknown origin
+    produces a safety number about nothing.
+    """
+    prov = spec["provenance"]
+    # `root` lets the offline E2E and the suite run this check for real
+    # against a temp tree, instead of switching it off. A check that is
+    # skipped in every test is a check nobody has ever seen work.
+    root = Path(prov.get("root") or HERE)
+    auth_path = root / prov["authorization_file"]
+    if not auth_path.is_file():
+        raise AuditInputError(
+            f"{source}: no primary authorization exists at "
+            f"{prov['authorization_file']}")
+    auth = json.loads(auth_path.read_text(encoding="utf-8"))
+
+    claimed = data.get("config_file")
+    if claimed != auth["config_file"]:
+        raise AuditInputError(
+            f"{source}: no authorization covers this result -- it names config "
+            f"{claimed!r}, the authorization covers {auth['config_file']!r}")
+    expected = auth.get("config_sha256")
+    if expected and data.get("config_sha256") != expected:
+        raise AuditInputError(
+            f"{source}: config sha256 does not match the authorization -- the "
+            "result was produced under a different config than the one "
+            "authorized")
+
+    if not prov.get("require_completed_attempt"):
+        return
+    ledger = root / prov["attempt_ledger"]
+    auth_sha = _sha256(auth_path)
+    output = data.get("output_file") or f"{source}"
+    completed = []
+    if ledger.is_file():
+        for raw in ledger.read_text(encoding="utf-8").splitlines():
+            if not raw.strip():
+                continue
+            entry = json.loads(raw)
+            if (entry.get("authorization_sha256") == auth_sha
+                    and entry.get("status") == "completed"):
+                completed.append(entry.get("output_file"))
+    if output not in completed:
+        raise AuditInputError(
+            f"{source}: no completed primary attempt in "
+            f"{prov['attempt_ledger']} produced this file "
+            f"(completed under this authorization: {completed})")
 
 
 def build(result_path: Path, *, spec: dict | None = None) -> dict:
@@ -280,8 +338,13 @@ def main(argv: list[str]) -> int:
     if not result_path.is_file():
         print(f"no such result file: {result_path}", file=sys.stderr)
         return 2
+    spec = json.loads(SPEC.read_text(encoding="utf-8"))
+    if out_root != HERE and spec.get("require_provenance"):
+        # Running against a different root means the authorization and the
+        # attempt ledger live there too.
+        spec["provenance"] = {**spec["provenance"], "root": str(out_root)}
     try:
-        out = build(result_path)
+        out = build(result_path, spec=spec)
     except AuditInputError as exc:
         print(f"refusing to build a packet: {exc}", file=sys.stderr)
         return 2
