@@ -286,6 +286,35 @@ def test_smoke_entrypoint_refuses_a_stale_calibration(monkeypatch, tmp_path):
 # --------------------------------------------------------------------------
 # calibration must have run and passed before any smoke result is meaningful
 # --------------------------------------------------------------------------
+def test_every_frozen_artifact_is_current():
+    """Round 19, finding #1: calibration was the ONLY artifact whose freshness
+    a test checked, so both red-team artifacts sat stale in a commit while the
+    suite reported green. Measured on 98c604f -- PREREGISTRATION.md was
+    4d53fcc while all three artifacts recorded 4eec976.
+
+    The gate existed and would have caught it; it was not run last. That is a
+    discipline failure, and this repository moves those into mechanisms:
+    covering all three here means a stale red-team is as loud as a stale
+    calibration.
+    """
+    stale = {}
+    for name in ("calibration.json", "redteam_provider_isolation.json",
+                 "redteam_codex_mcp_isolation.json"):
+        path = HERE / "results" / name
+        if not path.is_file():
+            stale[name] = "missing"
+            continue
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        drift = frozen_surface_drift(doc.get("frozen_surface_hashes"))
+        if drift:
+            stale[name] = drift
+    assert not stale, (
+        f"artifacts recorded against a different surface than the one in the "
+        f"tree: {stale}. Regenerate in order -- calibration, then the Codex "
+        "red-team, then the provider red-team -- as the LAST step before "
+        "committing, and re-measure anything you are about to report.")
+
+
 def test_calibration_artifact_exists_and_is_clean():
     path = HERE / "results" / "calibration.json"
     assert path.is_file(), "run_calibration.py has not been executed"

@@ -63,6 +63,39 @@ SPEC = json.loads((HERE / "safety_audit_spec.json").read_text(encoding="utf-8"))
 # warning in prose; a warning is not a mechanism.
 PASS, FAIL, BLOCKED = 0, 1, 2
 
+# Stage ids, printed by the E2E and required to match the acceptance gate's
+# registry EXACTLY. Round 19, finding #3: "obligation mapping" was still a
+# count (`covered >= 5`), so two unprotected stages passed. A count cannot
+# say WHICH stage is unprotected.
+STAGE_IDS = {
+    1: "primary.synthetic-built",
+    2: "audit.input-validated",
+    3: "packet.built",
+    4: "packet.blinded",
+    5: "reviewer.qualification-scored",
+    6: "reviewer.qualification-enforced",
+    7: "adjudication.applied",
+    8: "bundle.persisted",
+}
+
+# Stages no mutation isolates yet, with the reason. Round 19, finding #3: an
+# unguarded stage used to be invisible -- the E2E printed PASS and exited 0
+# regardless. While this is non-empty the run is PARTIAL and exits BLOCKED,
+# the rule conceptgate/cg_obligations.aggregate() already applies: PASS only
+# when everything is PASS, otherwise UNKNOWN. Empty is the goal.
+UNGUARDED_STAGES = {
+    "primary.synthetic-built":
+        "builds the fixture every later stage consumes, so a mutation here "
+        "breaks everything downstream and isolates nothing. Needs a positive "
+        "control rather than a mutation.",
+    "packet.built":
+        "guarded indirectly -- every later stage needs the packet -- but no "
+        "mutation isolates 'the packet CLI ran and wrote where it should'.",
+    "reviewer.qualification-scored":
+        "the fixture's discriminating power is asserted in test_safety_audit, "
+        "not observed through the E2E.",
+}
+
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -198,16 +231,31 @@ def doctor(config_name: str | None = None) -> int:
     # the minimum the rubric's own rule requires; it is not a substitute for
     # the launcher.
     agents = [r for r in assign.get("reviewers", []) if r.get("kind") == "agent"]
-    if agents and not (HERE / "reviewer_runner.py").is_file():
-        rows.append(_line("BLOCKED", "agent reviewer isolation",
-                          f"{len(agents)} agent reviewer(s) declared, no "
-                          "sandboxed launcher exists"))
-    elif agents:
-        missing = [r["reviewer_id"] for r in agents if not r.get("isolation")]
-        rows.append(_line("BLOCKED" if missing else "PASS",
+    if agents:
+        # PASS requires EVIDENCE, not a file. Round 19: checking that
+        # a launcher module exists would let an empty stub pass -- the same
+        # shape as a vacuous guard. Each agent reviewer needs a probe artifact
+        # showing the sandbox actually blocked what it must block, in the
+        # style of the Seatbelt v2 probes in _providers.py, which found real
+        # transcript leaks by running /bin/cat rather than by inspecting a
+        # profile string.
+        required = ("sandbox_profile_sha256", "allowed_probe_passed",
+                    "forbidden_probe_passed")
+        unproven = []
+        for reviewer in agents:
+            proof = RESULTS / f"reviewer_isolation_{reviewer['reviewer_id']}.json"
+            if not proof.is_file():
+                unproven.append(f"{reviewer['reviewer_id']}: no probe artifact")
+                continue
+            doc = json.loads(proof.read_text(encoding="utf-8"))
+            if doc.get("status") != "PASS" or any(not doc.get(k) for k in required):
+                unproven.append(f"{reviewer['reviewer_id']}: probes incomplete")
+            elif doc.get("answer_key_reachable") or doc.get("repository_reachable"):
+                unproven.append(f"{reviewer['reviewer_id']}: reachable")
+        rows.append(_line("BLOCKED" if unproven else "PASS",
                           "agent reviewer isolation",
-                          f"no isolation declared for {missing}" if missing
-                          else f"{len(agents)} agent reviewer(s)"))
+                          "; ".join(unproven)[:70] if unproven
+                          else f"{len(agents)} probed"))
 
     for tool in ("claude", "codex"):
         found = shutil.which(tool)
@@ -262,9 +310,10 @@ def _synthetic_primary(out: Path) -> Path:
             traces.append(trace)
     auth = json.loads((RESULTS / "PRIMARY_AUTHORIZATION.json").read_text(
         encoding="utf-8"))
-    path = out / "e2e_primary.json"
+    (out / "results").mkdir(exist_ok=True)
+    path = out / "results" / "e2e_primary.json"
     path.write_text(json.dumps(
-        {"kind": "live-subject-primary", "synthetic": True,
+        {"kind": "live-subject-primary",
          "config_file": auth["config_file"],
          "config_sha256": _sha256(HERE / auth["config_file"]),
          "output_file": path.name,
@@ -275,7 +324,6 @@ def _synthetic_primary(out: Path) -> Path:
     # artifact was accepted as a primary result. The E2E does NOT switch that
     # check off -- it satisfies it with a temp authorization and a completed
     # attempt, so the provenance path is exercised rather than skipped.
-    (out / "results").mkdir(exist_ok=True)
     auth_copy = out / "results" / "PRIMARY_AUTHORIZATION.json"
     auth_copy.write_text(json.dumps(auth, ensure_ascii=False), encoding="utf-8")
     _record_completed(out, auth_copy, path, attempt_id="e2e-0001")
@@ -330,7 +378,7 @@ def e2e_offline() -> int:
         # --- 1. a well-formed primary artifact -------------------------
         primary = _synthetic_primary(root)
         n = len(json.loads(primary.read_text(encoding="utf-8"))["results"])
-        print(f"  [1] primary artifact         {n} cells")
+        print(f"  [1] {STAGE_IDS[1]:<32}{n} cells")
         if n != SPEC["expected_cells"]:
             failures.append(f"synthetic primary has {n} cells")
 
@@ -358,7 +406,7 @@ def e2e_offline() -> int:
                 ghost = dict(data["traces"][0])
                 ghost["variant"] = "variant-M"
                 data["traces"].append(ghost)
-            p = root / "bad.json"
+            p = root / "results" / "bad.json"
             p.write_text(json.dumps(data), encoding="utf-8")
             # Record THESE bytes as completed, so provenance passes and the
             # mutation-specific check is the one that fires. Otherwise every
@@ -375,7 +423,7 @@ def e2e_offline() -> int:
 
         # And the one that motivated the shared verifier: bytes edited AFTER
         # the attempt completed, with the ledger left alone.
-        tampered = root / "tampered.json"
+        tampered = root / "results" / "tampered.json"
         data = json.loads(primary.read_text(encoding="utf-8"))
         _record_completed(root, auth_copy, primary, attempt_id="e2e-0001")
         tampered.write_bytes(primary.read_bytes())
@@ -400,7 +448,7 @@ def e2e_offline() -> int:
         else:
             rejected += 1
         total_bad = len(bad) + 2
-        print(f"  [2] audit gate negatives     {rejected}/{total_bad} rejected "
+        print(f"  [2] {STAGE_IDS[2]:<32}{rejected}/{total_bad} rejected "
               f"(direct + CLI)")
 
         # Restore the ledger to describe the real artifact.
@@ -414,7 +462,7 @@ def e2e_offline() -> int:
         key_path = root / "results" / "safety_audit_key_e2e_primary.json"
         packet_path = workspace / "packet.json"
         contents = sorted(p.name for p in workspace.iterdir())
-        print(f"  [3] packet (production CLI)  workspace={contents}")
+        print(f"  [3] {STAGE_IDS[3]:<32}workspace={contents}")
         if contents != ["packet.json"]:
             failures.append(f"reviewer workspace leaks {contents}")
         if not key_path.is_file():
@@ -426,7 +474,7 @@ def e2e_offline() -> int:
                      "S_STATIC", "R_DYNAMIC"):
             if leak in blob:
                 failures.append(f"packet leaks {leak}")
-        print(f"  [4] blinding                 {packet['n_items']} items, "
+        print(f"  [4] {STAGE_IDS[4]:<32}{packet['n_items']} items, "
               f"0 automatic scores exposed")
 
         # --- 5. reviewer qualification ----------------------------------
@@ -441,7 +489,7 @@ def e2e_offline() -> int:
             ("if ", "once ")) else good[i["id"]]) for i in fixture["items"]}
         ok_good, _ = _qualify_reviewer("A", good)
         ok_naive, wrong = _qualify_reviewer("naive", naive)
-        print(f"  [5] reviewer qualification   correct={ok_good}, "
+        print(f"  [5] {STAGE_IDS[5]:<32}correct={ok_good}, "
               f"conditional-rule reviewer rejected={not ok_naive} {wrong}")
         if not ok_good:
             failures.append("a correct reviewer failed qualification")
@@ -488,7 +536,7 @@ def e2e_offline() -> int:
             refused = "failed qualification" in str(exc)
         else:
             refused = False
-        print(f"  [6] unqualified reviewer     refused={refused}")
+        print(f"  [6] {STAGE_IDS[6]:<32}refused={refused}")
         if not refused:
             failures.append("the adjudicator accepted an unqualified reviewer")
 
@@ -509,12 +557,22 @@ def e2e_offline() -> int:
             # exercised (round 17, finding #4).
             bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
             audit = bundle["safety_audit"]
-        print(f"  [7] adjudication             {audit['cell_verdicts']}")
-        print(f"  [8] final bundle             "
+        print(f"  [7] {STAGE_IDS[7]:<32}{audit['cell_verdicts']}")
+        print(f"  [8] {STAGE_IDS[8]:<32}"
               f"adjudicated_rate={audit['adjudicated_full_hard_gate_rate']}, "
               f"violations={audit['confirmed_safety_violation_count']}")
         if audit["adjudicated_full_hard_gate_rate"] is None:
             failures.append("final bundle carries no adjudicated rate")
+        # Round 19, finding #2: the receipt reached the packet and stopped.
+        # The synthetic artifact no longer carries a `synthetic: true` field,
+        # so this can only pass if the AUDIT states the mode itself.
+        prov = audit.get("provenance")
+        if not prov or prov.get("mode") != SYNTHETIC:
+            failures.append(
+                "final bundle does not state its provenance mode; a reader of "
+                "this file alone cannot tell a synthetic run from an audit")
+        elif prov.get("receipt_sha256") is None:
+            failures.append("final bundle provenance carries no receipt hash")
         if "NOT machine-verified" not in audit["independence"]:
             failures.append("independence claim is overstated in the bundle")
 
@@ -529,11 +587,30 @@ def e2e_offline() -> int:
 
     elapsed = time.time() - started
     print(f"\n  {elapsed:.1f}s")
+    # Machine-readable coverage, so a reader does not have to infer it from
+    # prose that can drift from the code.
+    coverage = {
+        "covered": sorted(set(STAGE_IDS.values()) - set(UNGUARDED_STAGES)),
+        "not_covered_by_mutation": sorted(UNGUARDED_STAGES),
+        "not_covered_at_all": ["provider.execution", "qualification.pilot",
+                               "authorization.issuance", "attempt.claim",
+                               "reviewer.isolation"],
+    }
+    print(f"\n  coverage: {json.dumps(coverage)}")
+
     if failures:
         print(f"  FAIL ({len(failures)}):")
         for f in failures:
             print(f"    - {f}")
-        return 1
+        return FAIL
+    if UNGUARDED_STAGES:
+        print(f"  PARTIAL -- {len(UNGUARDED_STAGES)} stage(s) run but no "
+              "mutation isolates them:")
+        for name in sorted(UNGUARDED_STAGES):
+            print(f"    - {name}")
+        print("  Every step executed, but PARTIAL is not a pass: an unguarded "
+              "stage could be silently weakened.")
+        return BLOCKED
     print("  PASS -- the offline downstream path is wired end to end.")
     print("  Not a claim about provider behaviour, and not a substitute for")
     print("  qualification: run `doctor` for what is still refused.")

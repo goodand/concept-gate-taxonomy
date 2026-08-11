@@ -424,6 +424,7 @@ Amendment 37/38에서 추가·변경된 것:
 - [`redteam_provider_isolation.py`](../experiments/2026-08-07_handoff_dynamic_controller/redteam_provider_isolation.py)
 - [`redteam_codex_mcp_isolation.py`](../experiments/2026-08-07_handoff_dynamic_controller/redteam_codex_mcp_isolation.py)
 - [17라운드 검증·수정 계획](feedback/plan_round17_doctor_delegation_and_real_e2e.md)
+- [19라운드 검증·수정 계획](feedback/plan_round19_freeze_closure_and_provenance_envelope.md)
 
 - [`run_pipeline.py`](../experiments/2026-08-07_handoff_dynamic_controller/run_pipeline.py)
 - [`safety_audit_spec.json`](../experiments/2026-08-07_handoff_dynamic_controller/safety_audit_spec.json)
@@ -446,8 +447,11 @@ python3 run_pipeline.py e2e --offline   # 하류 경로가 아직 배선돼 있�
 `doctor`는 판정을 **하지 않고** production 게이트(`_assert_ready` →
 `_assert_primary_qualifications` → `_assert_primary_authorization`)를 호출해
 그 결과를 보여준다. 37라운드까지는 판정을 복제해서 **doctor 초록·production
-거부**가 동시에 성립했다. exit code는 3값이다 — `2`는 BLOCKED이고 **성공이
-아니다**.
+거부**가 동시에 성립했다. exit code는 3값이다 — `2`는 BLOCKED이고 **성공이 아니다**.
+`e2e --offline`도 같다: mutation이 격리하지 못하는 stage가 남아 있으면
+**PARTIAL / exit 2**이며, 모든 단계가 실행됐다는 뜻이지 통과가 아니다.
+출력의 `coverage` JSON이 무엇이 덮이고 무엇이 안 덮였는지 기계가 읽을 수 있게
+말한다.
 
 Amendment 36에서 추가·변경된 것:
 

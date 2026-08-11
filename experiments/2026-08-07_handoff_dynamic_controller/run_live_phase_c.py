@@ -754,11 +754,19 @@ def _assert_redteam_covers_config(report: dict, config_path: str | Path,
     that matched the current surface, and nothing downstream could tell.
     """
     status = report.get("status")
+    if status is None:
+        # Round 19, finding #5: `status not in (None, "PASS")` sent a missing
+        # verdict through the same door as a PASS. An artifact that predates
+        # the typed contract has not passed; it has not been asked. Absence
+        # of a verdict is BLOCKED, and the fix is to re-run it.
+        raise LiveRunBlocked(
+            f"refusing {label}: red-team artifact carries no typed verdict "
+            "(status); it predates the contract -- re-run it")
     if status == "BLOCKED":
         raise LiveRunBlocked(
             f"refusing {label}: red-team did not reach a verdict "
             "(it could not exercise the sandbox)")
-    if status not in (None, "PASS"):
+    if status != "PASS":
         raise LiveRunError(f"refusing {label}: red-team status is {status}")
     checked = report.get("checked_configs")
     if checked is None:
@@ -1040,7 +1048,9 @@ def verify_ledger_chain(rows: list[dict[str, Any]]) -> bool:
 
 
 def verify_primary_attempt_artifacts(attempts: list[dict[str, Any]],
-                                     authorization_sha256: str) -> list[dict[str, str]]:
+                                     authorization_sha256: str,
+                                     results_dir: Path | None = None
+                                     ) -> list[dict[str, str]]:
     """Tamper-DETECTION, not just tamper-evidence: returns one entry per
     "completed" attempt (under this authorization) whose recorded artifact
     can no longer be verified -- either its hash no longer matches
@@ -1064,6 +1074,11 @@ def verify_primary_attempt_artifacts(attempts: list[dict[str, Any]],
     `verify_primary_attempt_artifacts() == []`, so the next claim proceeded
     as if nothing had happened. Both failure modes now fail closed.
     """
+    # `results_dir` defaults to the canonical tree. It is a STORAGE
+    # parameter, not a trust parameter: round 19 -- the audit's provenance
+    # verifier could not point this at a synthetic tree, so it fell back to
+    # re-implementing the hash comparison, which is the second-copy defect
+    # that round 18 was supposed to end. Same algorithm, different storage.
     problems = []
     for entry in attempts:
         if (entry.get("authorization_sha256") != authorization_sha256
@@ -1073,7 +1088,7 @@ def verify_primary_attempt_artifacts(attempts: list[dict[str, Any]],
         output_file = entry.get("output_file")
         if not recorded_hash or not output_file:
             continue
-        path = RESULTS_DIR / output_file
+        path = (results_dir or RESULTS_DIR) / output_file
         if not path.is_file():
             problems.append({"output_file": output_file, "reason": "artifact_missing"})
             continue
@@ -1214,6 +1229,35 @@ def _locked_append_jsonl(path: Path, record: dict[str, Any]) -> None:
         os.fsync(handle.fileno())
 
 
+def find_completed_attempt(attempts: list[dict[str, Any]],
+                           authorization_sha256: str,
+                           output_sha256: str) -> dict[str, Any] | None:
+    """The completed row that testifies to exactly these bytes, or None.
+
+    A completed row with no `output_sha256` cannot testify to anything; it is
+    an absence of evidence, and absence does not pass. Lives here, next to
+    the code that writes those rows, so the audit does not need its own
+    notion of what a completed attempt is (round 19).
+    """
+    for entry in attempts:
+        if (entry.get("authorization_sha256") != authorization_sha256
+                or entry.get("status") != "completed"):
+            continue
+        if entry.get("output_sha256") == output_sha256:
+            return entry
+    return None
+
+
+def read_attempt_ledger(results_dir: Path | None = None) -> list[dict[str, Any]]:
+    """Parse the attempt ledger. ONE parser -- `rg "_parse_ledger_lines"`
+    should find exactly one implementation."""
+    path = (results_dir or RESULTS_DIR) / PRIMARY_ATTEMPT_LEDGER_NAME
+    if not path.is_file():
+        return []
+    with path.open(encoding="utf-8") as handle:
+        return _parse_ledger_lines(handle, path)
+
+
 def remaining_primary_attempts(authorization_sha256: str,
                                max_attempts: int) -> tuple[int, int]:
     """(used, remaining) under this authorization.
@@ -1224,11 +1268,26 @@ def remaining_primary_attempts(authorization_sha256: str,
     an attempt, not `"completed"`, and a diagnostic that re-derives it can
     drift from the runner without either side noticing.
     """
+    # The SAME checks the claim gate applies. Round 19, finding #6: this
+    # counted `started` rows and nothing else, so on a corrupted ledger doctor
+    # showed capacity remaining while the real claim refused. A diagnostic
+    # that is weaker than the gate it reports on is a false reassurance.
+    rows = read_attempt_ledger()
+    if not verify_ledger_chain(rows):
+        raise LiveRunError(
+            "refusing: attempt ledger hash chain does not verify")
     path = RESULTS_DIR / PRIMARY_ATTEMPT_LEDGER_NAME
-    rows: list[dict[str, Any]] = []
     if path.is_file():
         with path.open(encoding="utf-8") as handle:
-            rows = _parse_ledger_lines(handle, path)
+            if not _legacy_ledger_prefix_matches_known_hashes(handle, path):
+                raise LiveRunError(
+                    "refusing: the pre-chain legacy rows no longer match "
+                    "their git-committed pin")
+    unverifiable = verify_primary_attempt_artifacts(rows, authorization_sha256)
+    if unverifiable:
+        raise LiveRunError(
+            f"refusing: completed attempts whose artifacts no longer verify: "
+            f"{unverifiable}")
     used = 0
     for entry in rows:
         if (entry.get("authorization_sha256") == authorization_sha256

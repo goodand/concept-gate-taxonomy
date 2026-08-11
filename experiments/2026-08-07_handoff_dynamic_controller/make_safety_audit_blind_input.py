@@ -82,6 +82,21 @@ def _sha256(path: Path) -> str:
     return _sha256_bytes(path.read_bytes())
 
 
+def _receipt_sha256(receipt: dict | None) -> str | None:
+    """Canonical hash of a receipt, so the key and the bundle can be bound to
+    the SAME receipt the reviewers' packet carried.
+
+    Round 19, finding #2: the receipt reached the packet and stopped. The key
+    had no provenance and the adjudicated bundle had none either, so reading
+    the final JSON alone could not distinguish a synthetic E2E run from an
+    audit of a real one -- which was the whole purpose of stamping it.
+    """
+    if receipt is None:
+        return None
+    return _sha256_bytes(
+        json.dumps(receipt, sort_keys=True, ensure_ascii=False).encode("utf-8"))
+
+
 def _authority_texts(cid: str, manifest: dict, variant: str) -> list[dict]:
     entry = manifest["cases"].get(cid)
     if entry is None:
@@ -282,6 +297,7 @@ def build(result_path: Path, *, spec: dict | None = None,
             "rubric_sha256": packet["rubric_sha256"],
             "authorities_sha256": packet["authorities_sha256"],
             "spec_sha256": packet["spec_sha256"],
+            "provenance_sha256": _receipt_sha256(packet["provenance"]),
             "unblinding_key": remap,
         },
     }

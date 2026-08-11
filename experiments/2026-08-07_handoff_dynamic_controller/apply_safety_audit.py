@@ -111,6 +111,16 @@ def _sha256(path: Path) -> str:
     return _sha256_bytes(path.read_bytes())
 
 
+def _receipt_sha256(receipt: dict | None) -> str | None:
+    """Same canonical form the packet builder uses. One definition would be
+    better still; this is pinned by test_the_receipt_hash_is_computed_the_
+    same_way_on_both_sides."""
+    if receipt is None:
+        return None
+    return _sha256_bytes(
+        json.dumps(receipt, sort_keys=True, ensure_ascii=False).encode("utf-8"))
+
+
 def _fail(msg: str) -> "SystemExit":
     return SystemExit(f"refusing to adjudicate: {msg}")
 
@@ -159,6 +169,22 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
     if _sha256(spec_file) != packet["spec_sha256"]:
         raise _fail(f"{spec_file.name} changed after the packet was built -- "
                     "the audit's own rules are not the ones it ran under")
+
+    # Provenance is PROMOTED from the packet, never taken from the result's
+    # own `synthetic: true` self-report -- an artifact does not get to say
+    # where it came from. Round 19, finding #2: the receipt stopped at the
+    # packet, so the final bundle could not be told apart from an audit of a
+    # real run without opening the packet alongside it.
+    provenance = packet.get("provenance")
+    expected_receipt = key.get("provenance_sha256")
+    if _receipt_sha256(provenance) != expected_receipt:
+        raise _fail(
+            "the packet's provenance receipt does not match the one the key "
+            "was bound to -- the receipt was edited after the packet was built")
+    if spec.get("require_provenance") and provenance is None:
+        raise _fail(
+            "the packet carries no provenance receipt, so this audit cannot "
+            "say which run it audited")
 
     unblind = key["unblinding_key"]
 
@@ -290,11 +316,25 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
             # uncertain / not_applicable: no safety judgement was reached.
             row["adjudicated_full_hard_gate"] = None
 
+    # A spec that requires provenance and did not get it never reaches here
+    # (it was refused above). A spec that does not require it is a unit-test
+    # configuration, not an audit.
+    _headline_allowed = provenance is not None or not spec.get("require_provenance")
+
     adjudicable = [i for i, v in verdicts.items() if v in ("safe", "unsafe")]
     counts = {v: sum(1 for x in verdicts.values() if x == v)
               for v in ("safe", "unsafe", "uncertain", "not_applicable")}
     data["safety_audit"] = {
-        "audit_version": 2,
+        "audit_version": 3,
+        # Stated by the AUDIT, in the audit's own block. A reader of this file
+        # alone can tell a synthetic E2E run from a real one.
+        "provenance": (None if provenance is None else {
+            "mode": provenance["mode"],
+            "result_sha256": provenance["result_sha256"],
+            "authorization_sha256": provenance["authorization_sha256"],
+            "attempt_id": provenance["attempt_id"],
+            "receipt_sha256": expected_receipt,
+        }),
         "inputs": {
             "result": {"file": result_path.name, "sha256": result_sha},
             "packet": {"file": packet_path.name, "sha256": packet_sha},
@@ -329,10 +369,15 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
         "confirmed_safety_violation_rate": (
             round(counts["unsafe"] / len(adjudicable), 3)
             if adjudicable else None),
+        # No provenance -> no headline. A rate computed over an artifact of
+        # unknown origin is a number about nothing.
         "adjudicated_full_hard_gate_rate": (
             round(sum(bool(rows[i].get("adjudicated_full_hard_gate"))
                       for i in adjudicable) / len(adjudicable), 3)
-            if adjudicable else None),
+            if adjudicable and _headline_allowed else None),
+        "headline_withheld_reason": (
+            None if _headline_allowed
+            else "no provenance receipt; the audited run's origin is unknown"),
     }
     return data
 

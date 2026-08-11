@@ -124,3 +124,77 @@ def test_doctor_does_not_recount_the_attempt_ledger_itself():
     assert "remaining_primary_attempts" in source
     assert 'entry.get("status") == "started"' not in source, (
         "doctor re-derives the attempt-counting contract")
+
+
+# --------------------------------------------------------------------------
+# Round 19, step 2 -- ONE provenance verifier.
+#
+# The criterion is not "a shared module exists"; it is that no second reader
+# of the ledger exists anywhere. Round 18 removed one weak copy and round 19
+# found `_provenance.py` had grown another, because the shared verifier could
+# not be pointed at a synthetic tree.
+# --------------------------------------------------------------------------
+
+def test_the_ledger_has_exactly_one_parser():
+    impls = [p for p in HERE.glob("*.py")
+             if not p.name.startswith("test_")
+             and "def _parse_ledger_lines" in p.read_text(encoding="utf-8")]
+    assert [p.name for p in impls] == ["run_live_phase_c.py"], impls
+
+
+def test_audit_code_never_reads_the_ledger_directly():
+    """The audit takes a receipt. It does not open the ledger, the
+    authorization, or the config."""
+    for name in ("make_safety_audit_blind_input.py", "apply_safety_audit.py"):
+        source = (HERE / name).read_text(encoding="utf-8")
+        assert "primary_attempt_ledger" not in source, name
+        assert "attempt_ledger" not in source, name
+
+
+def test_provenance_applies_the_legacy_prefix_pin():
+    """The claim gate checks the git-committed pin on the pre-chain rows; the
+    audit's verifier must apply the SAME checks, or a ledger the runner would
+    refuse still yields a receipt (round 19, finding #6, same class)."""
+    source = (HERE / "_provenance.py").read_text(encoding="utf-8")
+    for check in ("verify_ledger_chain",
+                  "_legacy_ledger_prefix_matches_known_hashes",
+                  "verify_primary_attempt_artifacts"):
+        assert check in source, f"_provenance does not apply {check}"
+
+
+def test_a_redteam_artifact_without_a_typed_status_is_blocked(tmp_path):
+    """Round 19, finding #5: `if status not in (None, "PASS")` let an artifact
+    with no typed verdict through the same door as a PASS. A missing verdict
+    is not a pass -- it is an artifact that predates the contract, and the
+    fix for that is to re-run it, not to grandfather it."""
+    import run_live_phase_c as live
+    report = {"checked_configs": [{"file": "x.json", "sha256": "0" * 64}],
+              "frozen_surface_hashes": {}}
+    with pytest.raises(live.LiveRunBlocked, match="no typed verdict"):
+        live._assert_redteam_covers_config(report, "x.json", "test run")
+
+
+def test_doctor_attempt_capacity_applies_the_same_checks_as_the_claim(tmp_path):
+    """Round 19, finding #6: `remaining_primary_attempts` parsed rows and
+    counted `started`, while the real claim additionally verified the chain,
+    the legacy pin and prior artifacts. On a corrupted ledger doctor could
+    show capacity remaining and the claim refuse."""
+    import run_live_phase_c as live
+    import inspect
+    src = inspect.getsource(live.remaining_primary_attempts)
+    for check in ("verify_ledger_chain", "_legacy_ledger_prefix_matches_known_hashes",
+                  "verify_primary_attempt_artifacts"):
+        assert check in src, f"attempt capacity does not apply {check}"
+
+
+def test_agent_reviewer_isolation_needs_probe_evidence_not_a_file(tmp_path):
+    """Round 19: 'the launcher file exists' would let an empty stub PASS --
+    a vacuous guard by another name. PASS requires an artifact showing the
+    sandbox blocked what it must block, the way _providers.py's Seatbelt v2
+    probes ran /bin/cat instead of reading a profile string."""
+    source = (HERE / "run_pipeline.py").read_text(encoding="utf-8")
+    assert "reviewer_runner.py" not in source, (
+        "isolation still passes on file existence")
+    for field in ("forbidden_probe_passed", "answer_key_reachable",
+                  "repository_reachable", "sandbox_profile_sha256"):
+        assert field in source, f"probe artifact does not require {field}"

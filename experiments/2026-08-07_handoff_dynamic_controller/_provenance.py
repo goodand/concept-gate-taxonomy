@@ -50,7 +50,9 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 from run_live_phase_c import (  # noqa: E402
-    verify_ledger_chain, verify_primary_attempt_artifacts)
+    PRIMARY_ATTEMPT_LEDGER_NAME, _legacy_ledger_prefix_matches_known_hashes,
+    find_completed_attempt, read_attempt_ledger, verify_ledger_chain,
+    verify_primary_attempt_artifacts)
 
 VERIFIED = "verified"
 SYNTHETIC = "synthetic-e2e"
@@ -93,13 +95,6 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _read_ledger(path: Path) -> list[dict]:
-    if not path.is_file():
-        return []
-    return [json.loads(raw) for raw in path.read_text(encoding="utf-8").splitlines()
-            if raw.strip()]
-
-
 def verify_run(result_path: Path, *, root: Path = HERE,
                mode: str = VERIFIED) -> VerifiedRunReceipt:
     """Establish that `result_path` is the artifact a recorded, completed
@@ -139,45 +134,48 @@ def verify_run(result_path: Path, *, root: Path = HERE,
             "produced under a different config than the one authorized")
     evidence.append(f"config={auth['config_file']}")
 
-    ledger_path = root / "results" / "primary_attempt_ledger.jsonl"
-    rows = _read_ledger(ledger_path)
+    results_dir = root / "results"
+    rows = read_attempt_ledger(results_dir)
     if not rows:
-        raise ProvenanceError(f"attempt ledger is empty or missing: {ledger_path}")
+        raise ProvenanceError(
+            f"attempt ledger is empty or missing: {results_dir}")
     if not verify_ledger_chain(rows):
         raise ProvenanceError(
             "attempt ledger hash chain does not verify -- the record of which "
             "attempts ran cannot be trusted")
+
+    # The SAME pin the claim gate applies. Round 19, finding #6: the audit's
+    # verifier checked the chain but not the git-committed anchor on the
+    # pre-chain rows, so a ledger the runner would refuse still produced a
+    # receipt. A self-hash chain has no anchor outside itself; the pin is
+    # that anchor, and applying one without the other is applying neither.
+    ledger_path = results_dir / PRIMARY_ATTEMPT_LEDGER_NAME
+    with ledger_path.open(encoding="utf-8") as handle:
+        if not _legacy_ledger_prefix_matches_known_hashes(handle, ledger_path):
+            raise ProvenanceError(
+                "the pre-chain legacy rows in this ledger no longer match "
+                "their git-committed pin -- a recorded primary attempt was "
+                "deleted or edited")
     evidence.append(f"ledger_rows={len(rows)}")
 
     # The same tamper-detection the runner applies before granting a NEW
     # attempt. Reused, not reimplemented: this is the check the audit gate
     # was missing while it sat one import away.
-    unverifiable = verify_primary_attempt_artifacts(rows, auth_sha)
-    if unverifiable and mode == VERIFIED:
+    # Storage differs between canonical and synthetic; the ALGORITHM does
+    # not. Round 19: this function could not point the shared verifier at a
+    # synthetic tree, so it re-implemented the hash comparison -- the second
+    # copy that round 18 had just finished removing one layer down.
+    unverifiable = verify_primary_attempt_artifacts(rows, auth_sha, results_dir)
+    if unverifiable:
         raise ProvenanceError(
             f"completed attempts whose artifacts no longer verify: "
             f"{unverifiable}")
 
-    completed = [r for r in rows
-                 if r.get("authorization_sha256") == auth_sha
-                 and r.get("status") == "completed"]
-    if not completed:
-        raise ProvenanceError(
-            "no completed primary attempt under this authorization produced "
-            "any artifact")
-
-    match = None
-    for row in completed:
-        recorded = row.get("output_sha256")
-        if recorded is None:
-            # A completed row that never recorded a hash cannot testify to
-            # these bytes. It is not evidence of tampering; it is an absence
-            # of evidence, and absence does not pass.
-            continue
-        if recorded == result_sha:
-            match = row
-            break
+    match = find_completed_attempt(rows, auth_sha, result_sha)
     if match is None:
+        completed = [r for r in rows
+                     if r.get("authorization_sha256") == auth_sha
+                     and r.get("status") == "completed"]
         raise ProvenanceError(
             f"no completed attempt recorded output_sha256={result_sha[:12]}; "
             "the file was edited after the run, or it is not the artifact the "

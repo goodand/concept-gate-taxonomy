@@ -32,8 +32,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import contextlib
+import shutil
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -46,6 +49,7 @@ sys.path.insert(0, str(HERE))
 @dataclass(frozen=True)
 class Obligation:
     obligation_id: str
+    stage_id: str          # which printed E2E stage this obligation guards
     target: str            # production file the obligation lives in
     remove: str            # exact source fragment whose deletion disables it
     replace_with: str      # what to put in its place (keeps syntax valid)
@@ -55,6 +59,7 @@ class Obligation:
 OBLIGATIONS = (
     Obligation(
         obligation_id="audit.input.validated",
+        stage_id="audit.input-validated",
         target="make_safety_audit_blind_input.py",
         remove="    traces_by_key = validate_audit_input(data, spec, source=result_path.name)",
         replace_with="    traces_by_key = {_cell_key(t): t for t in (data.get('traces') or [])}",
@@ -62,7 +67,8 @@ OBLIGATIONS = (
     ),
     Obligation(
         obligation_id="audit.provenance.bytes-compared",
-        target="_provenance.py",
+        stage_id="audit.input-validated",
+        target="run_live_phase_c.py",
         # The round-18 defect itself: the completed row was matched by
         # `output_file` NAME and the artifact's bytes were never compared, so
         # a result edited after its attempt completed was accepted. Disabling
@@ -70,12 +76,35 @@ OBLIGATIONS = (
         # and `build()` both call the verifier, so removing either call site
         # alone leaves the other enforcing (defence in depth, which is why
         # neither of those is the obligation).
-        remove="        if recorded == result_sha:",
-        replace_with="        if recorded is not None:",
+        remove='        if entry.get("output_sha256") == output_sha256:',
+        replace_with='        if entry.get("output_sha256") is not None:',
         expected_signal="ACCEPTED a result edited after its attempt completed",
     ),
     Obligation(
+        obligation_id="audit.provenance.propagated",
+        stage_id="bundle.persisted",
+        target="apply_safety_audit.py",
+        # The receipt must be PROMOTED into the bundle. Round 19: it reached
+        # the packet and stopped, so the final JSON could not be told apart
+        # from an audit of a real run.
+        remove='        "provenance": (None if provenance is None else {',
+        replace_with='        "provenance": (None if True else {',
+        expected_signal="does not state its provenance mode",
+    ),
+    Obligation(
+        obligation_id="packet.blinding.applied",
+        stage_id="packet.blinded",
+        target="make_safety_audit_blind_input.py",
+        # Blinding is a property of what the packet CONTAINS. Re-adding the
+        # arm is the smallest regression that breaks it, and the E2E's leak
+        # scan must see it.
+        remove='                "case_id": cid,\n                "case_query"',
+        replace_with='                "case_id": cid, "arm": row.get("arm"),\n                "case_query"',
+        expected_signal="packet leaks",
+    ),
+    Obligation(
         obligation_id="reviewer.qualification.required",
+        stage_id="reviewer.qualification-enforced",
         target="apply_safety_audit.py",
         remove="        wrong = _qualify_reviewer(doc)",
         replace_with="        wrong = []",
@@ -83,6 +112,7 @@ OBLIGATIONS = (
     ),
     Obligation(
         obligation_id="reviewer.assignment.frozen",
+        stage_id="reviewer.qualification-enforced",
         target="apply_safety_audit.py",
         remove='        if doc["reviewer_id"] not in declared_ids:',
         replace_with="        if False:",
@@ -90,6 +120,7 @@ OBLIGATIONS = (
     ),
     Obligation(
         obligation_id="bundle.written.to.disk",
+        stage_id="bundle.persisted",
         target="apply_safety_audit.py",
         remove="    out.write_text(json.dumps(data, ensure_ascii=False, indent=1),",
         replace_with="    _ = (lambda *a, **k: None)(json.dumps(data, ensure_ascii=False, indent=1),",
@@ -97,6 +128,7 @@ OBLIGATIONS = (
     ),
     Obligation(
         obligation_id="reviewer.count.enforced",
+        stage_id="adjudication.applied",
         target="apply_safety_audit.py",
         remove='    if len(ids) < min_reviewers and not spec["allow_single_reviewer"]:',
         replace_with="    if False:",
@@ -107,6 +139,10 @@ OBLIGATIONS = (
 # Obligations with no E2E signal YET. Recorded rather than dropped: an
 # obligation the E2E does not observe is a gap in the E2E, and the honest
 # place for it is a list someone reads, not silence.
+import run_pipeline as _rp  # noqa: E402
+
+UNGUARDED_STAGES = _rp.UNGUARDED_STAGES
+
 NO_SIGNAL_YET = {
     "reviewer.assignment.frozen":
         "the E2E always submits reviewers that ARE in the assignment, so "
@@ -120,25 +156,58 @@ def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def _run_e2e_subprocess() -> subprocess.CompletedProcess:
+def _run_e2e_subprocess(cwd: Path | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, "run_pipeline.py", "e2e", "--offline"],
-        cwd=HERE, capture_output=True, text=True, timeout=120)
+        cwd=cwd or HERE, capture_output=True, text=True, timeout=180)
 
 
-def test_the_unmutated_e2e_passes():
+@contextlib.contextmanager
+def _mutation_workspace():
+    """A throwaway COPY of the experiment directory. Mutations happen there.
+
+    Round 19, finding #4: mutations edited the active worktree's production
+    files and restored them in `finally`. That is safe only on a clean exit --
+    a SIGKILL, a parallel pytest run, or another session reading the tree at
+    the wrong moment observes or keeps mutated production code. "Fresh
+    subprocess" solves Python's module cache, not the filesystem.
+
+    A copy rather than `git worktree add HEAD`: the mutation must be applied
+    to the CURRENT working state, and a worktree at HEAD silently tests the
+    last commit instead -- which would make this gate report on code nobody
+    is running.
+
+    The workspace precedent is the same idea one level up: experiment lines
+    live in separate worktrees so one cannot affect another or main
+    (`docs/EXPERIMENT_METHODOLOGY.md` §4).
+    """
+    with tempfile.TemporaryDirectory(prefix="mut-ws-") as tmp:
+        target = Path(tmp) / "exp"
+        shutil.copytree(
+            HERE, target,
+            ignore=shutil.ignore_patterns("__pycache__", "audit_workspace",
+                                          ".pytest_cache"))
+        yield target
+
+
+def test_the_unmutated_e2e_does_not_fail():
     """Control. Without it, a mutation could be 'detected' because the E2E is
-    broken for an unrelated reason."""
+    broken for an unrelated reason.
+
+    PASS (0) or PARTIAL (2) are both acceptable here; FAIL (1) is not. PARTIAL
+    means every step ran but some stage has no mutation guarding it -- which
+    is exactly what this file is for."""
     proc = _run_e2e_subprocess()
-    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert proc.returncode in (0, 2), proc.stdout + proc.stderr
+    assert "FAIL" not in proc.stdout, proc.stdout
 
 
 @pytest.mark.parametrize("ob", [o for o in OBLIGATIONS
                                 if o.obligation_id not in NO_SIGNAL_YET],
                          ids=lambda o: o.obligation_id)
 def test_removing_a_production_obligation_makes_the_e2e_fail(ob, tmp_path):
-    path = HERE / ob.target
-    original = path.read_text(encoding="utf-8")
+    source_path = HERE / ob.target
+    original = source_path.read_text(encoding="utf-8")
     assert ob.remove in original, (
         f"{ob.obligation_id}: the source this mutation deletes is no longer in "
         f"{ob.target}. Either it moved -- update the obligation -- or it was "
@@ -160,19 +229,22 @@ def test_removing_a_production_obligation_makes_the_e2e_fail(ob, tmp_path):
         "expected_signal": ob.expected_signal,
         "fresh_subprocess": True,
     }
-    try:
-        path.write_text(mutated, encoding="utf-8")
-        proc = _run_e2e_subprocess()
-    finally:
-        path.write_text(original, encoding="utf-8")
+    with _mutation_workspace() as work_dir:
+        # The active tree is never written to. A crash here leaves a temp
+        # worktree behind at worst, not mutated production code.
+        (work_dir / ob.target).write_text(mutated, encoding="utf-8")
+        manifest["tree"] = str(work_dir)
+        proc = _run_e2e_subprocess(cwd=work_dir)
 
     manifest["observed_exit"] = proc.returncode
     manifest["observed_signal"] = ob.expected_signal in proc.stdout
     (tmp_path / "mutation.json").write_text(json.dumps(manifest, indent=1),
                                             encoding="utf-8")
 
-    assert proc.returncode != 0, (
-        f"{ob.obligation_id}: the E2E passed with this obligation removed, so "
+    assert proc.returncode == 1, (
+        f"{ob.obligation_id}: the E2E did not FAIL with this obligation "
+        f"removed (exit {proc.returncode}; 2 = PARTIAL, which is not "
+        f"detection), so "
         f"it does not actually cover it.\n{json.dumps(manifest, indent=1)}\n"
         f"{proc.stdout[-2000:]}")
     assert ob.expected_signal in proc.stdout, (
@@ -181,25 +253,51 @@ def test_removing_a_production_obligation_makes_the_e2e_fail(ob, tmp_path):
         f"reason.\n{proc.stdout[-2000:]}")
 
 
-def test_the_source_was_restored_after_every_mutation():
-    """The mutations edit real production files. If a `finally` ever fails to
-    restore one, this is the check that says so instead of the next fifty
-    tests failing mysteriously."""
+def test_mutations_never_touch_the_active_worktree():
+    """Round 19, finding #4. The obligations still have to be FINDABLE in the
+    active source -- that is how a moved check is caught -- but nothing here
+    may write to it."""
     for ob in OBLIGATIONS:
         assert ob.remove in (HERE / ob.target).read_text(encoding="utf-8"), (
-            f"{ob.target} was not restored after mutating {ob.obligation_id}")
+            f"{ob.obligation_id}: its source fragment is not in {ob.target}")
+    source = (HERE / "test_e2e_acceptance.py").read_text(encoding="utf-8")
+    assert "_mutation_workspace" in source, (
+        "mutations must run in a throwaway copy, not the active tree")
+    assert "shutil.copytree" in source
 
 
-def test_every_e2e_stage_maps_to_an_obligation_or_a_recorded_gap():
-    """Round 18: the previous version compared COUNTS -- `>= 7 stages` and
-    `>= 5 mutations` -- so two unprotected stages passed. This maps them."""
-    source = (HERE / "run_pipeline.py").read_text(encoding="utf-8")
-    stages = sorted(set(int(n) for n in
-                        __import__("re").findall(r'print\(f?"  \[(\d)\]', source)))
-    covered = len(OBLIGATIONS) - len(NO_SIGNAL_YET)
-    assert stages == list(range(1, len(stages) + 1)), (
-        f"stage numbering has a gap: {stages}")
-    assert covered >= 5, f"only {covered} obligations carry an E2E signal"
-    for name, reason in NO_SIGNAL_YET.items():
-        assert any(o.obligation_id == name for o in OBLIGATIONS), name
+def test_stage_ids_match_the_registry_exactly():
+    """SET EQUALITY, not a count. Round 19, finding #3: the previous check was
+    `covered >= 5`, which cannot say WHICH stage is unprotected -- and two
+    were.
+
+    Stages with no obligation are listed in UNGUARDED_STAGES with a reason.
+    They do not silently pass: `e2e --offline` reports PARTIAL and exits
+    BLOCKED while any exist, the same rule cg_obligations.aggregate() applies
+    (PASS only when everything is PASS).
+    """
+    import run_pipeline
+    declared = set(run_pipeline.STAGE_IDS.values())
+    guarded = {o.stage_id for o in OBLIGATIONS
+               if o.obligation_id not in NO_SIGNAL_YET}
+    unguarded = declared - guarded
+    assert unguarded == set(UNGUARDED_STAGES), (
+        f"stages with no mutation guard: {sorted(unguarded)}; "
+        f"declared as unguarded: {sorted(UNGUARDED_STAGES)}")
+    assert guarded <= declared, (
+        f"obligations point at stages the E2E does not print: "
+        f"{sorted(guarded - declared)}")
+    for name, reason in {**UNGUARDED_STAGES, **NO_SIGNAL_YET}.items():
         assert len(reason) > 40, f"{name}: reason is too thin to review"
+
+
+def test_the_e2e_reports_partial_while_any_stage_is_unguarded():
+    """An unguarded stage must not be invisible in the E2E's own result."""
+    import run_pipeline
+    if not UNGUARDED_STAGES and not NO_SIGNAL_YET:
+        pytest.skip("nothing unguarded; the PARTIAL path has nothing to report")
+    proc = _run_e2e_subprocess()
+    assert "PARTIAL" in proc.stdout, (
+        "the E2E reports PASS while stages are unguarded")
+    assert proc.returncode == 2, (
+        f"unguarded stages must exit BLOCKED (2), got {proc.returncode}")

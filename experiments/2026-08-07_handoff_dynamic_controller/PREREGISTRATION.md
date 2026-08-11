@@ -2138,3 +2138,116 @@ Seatbelt 6건이 실패하는 동안 이 환경에서는 통과한다. **다음 
 execution surface(`run_live_phase_c.py`, red-team 2종)가 바뀌었다.
 calibration → red-team 2종을 그 순서로 재실행했다. **qualification 2종은 여전히
 stale이고 doctor가 `exit 1`로 그렇게 말한다.**
+
+## Amendment 40 — 2026-08-11, 19라운드: 정본을 하나로. 그리고 closure를 마지막에
+
+**계기 — 보고 무결성 실패.** 18라운드 커밋(`98c604f`)에서 나는
+"220 tests, calibration 8/8·60/60, red-team 2종 PASS"라고 보고했다. **그 수치는
+그 커밋의 상태가 아니다.** Amendment 39를 `PREREGISTRATION.md`에 덧붙인 뒤
+artifact를 다시 만들지 않았다. 실측:
+
+```
+PREREGISTRATION.md   4d53fccb
+calibration          4eec976f
+redteam × 2          4eec976f
+```
+
+doctor의 FAIL 원인도 내가 보고한 qualification이 아니라 **`PREREGISTRATION.md`
+drift**였고, 결정론적 테스트 실패 1건이 이미 그것을 말하고 있었다.
+
+**게이트는 있었고 정확히 이걸 잡는다. 나는 마지막에 돌리지 않았다.**
+
+### #1 — closure를 규율에서 기제로
+
+- `test_every_frozen_artifact_is_current` — calibration **과 red-team 2종**
+  전부. 지금까지는 calibration만 검사해서, stale red-team은 조용했다.
+- 재생성 순서를 실패 메시지가 말한다: calibration → codex red-team →
+  provider red-team → 최종 drift 검사.
+- **보고 규칙**: 수치를 인용하기 전에 그 수치를 낸 상태가 커밋 상태와 같은지
+  확인한다. 이번에 그걸 하지 않았다.
+
+### #2 — Provenance Envelope: receipt가 packet에서 멈췄다
+
+실측: `{"packet_mode": "synthetic-e2e", "key_mode": null,
+"bundle_audit_mode": null}`. artifact의 `synthetic: true` 자기신고까지 지우면
+`{"final_has_synthetic_marker": false, "final_has_provenance": false}` —
+**최종 JSON만 읽어서는 합성 실행과 실제 감사를 구별할 수 없었다.** 표식을 찍은
+목적 자체가 미달이었다.
+
+이제 receipt가 packet → key(`provenance_sha256`) → 번들
+(`safety_audit.provenance`)까지 간다. adjudicator는 packet의 receipt를
+**승격**하며 artifact의 자기신고를 쓰지 않는다 — **artifact가 자기 출처를 말할
+자격은 없다.** receipt가 packet 이후에 수정되면 key 대조에서 거부된다.
+**provenance 없는 번들은 headline을 못 낸다**(`adjudicated_full_hard_gate_rate`
+= `None` + `headline_withheld_reason`).
+
+합성 artifact에서 `synthetic: true` 필드를 **제거**했다. E2E가 그 필드에 기대지
+않고 통과해야만 전파가 증명되기 때문이다.
+
+### #3 — obligation 매핑을 개수에서 집합 일치로
+
+`assert covered >= 5`가 남아 있었다. **개수는 어느 stage가 미보호인지 말하지
+못한다** — 실제로 둘이 미보호였다.
+
+- E2E의 8단계 전부에 문자열 ID를 주고 출력에 찍는다
+  (`[4] packet.blinded ...`)
+- obligation이 `stage_id`를 참조하고, 검사는
+  `declared - guarded == UNGUARDED_STAGES` **집합 일치**
+- 미보호 stage가 하나라도 있으면 **E2E 전체가 `PARTIAL`이고 exit 2(BLOCKED)**.
+  `cg_obligations.aggregate()`가 "전부 PASS일 때만 PASS"인 것과 같은 규칙이다.
+- machine-readable coverage manifest를 출력한다(covered /
+  not_covered_by_mutation / not_covered_at_all)
+
+`packet.blinded`에 mutation을 추가해 미보호가 4 → **3**이 됐다. 남은 셋은
+사유와 함께 `UNGUARDED_STAGES`에 있다.
+
+### #4 — mutation이 active worktree를 변조했다
+
+`path.write_text(mutated)` 후 `finally` 복원은 **정상 종료에서만** 안전하다.
+SIGKILL·병렬 pytest·다른 세션이 그 순간 트리를 읽으면 변이된 production 코드를
+보거나 남긴다. "fresh subprocess"는 Python 모듈 캐시를 풀 뿐 파일시스템 격리가
+아니다.
+
+이제 실험 디렉터리를 **임시 복사**하고 거기서 변이한다. `git worktree add HEAD`가
+아니라 복사인 이유: 변이는 **현재 작업 상태**에 적용돼야 하고, HEAD worktree는
+아무도 실행하지 않는 마지막 커밋을 조용히 검사하게 된다.
+
+### #5 — typed verdict가 artifact 계약에는 없었다
+
+`if status not in (None, "PASS")`가 **typed verdict 없는 구형 artifact를 PASS와
+같은 문으로** 통과시켰다. 판정이 없는 것은 통과가 아니라 **묻지 않은 것**이다 —
+이제 `status`가 없으면 `LiveRunBlocked`이고, 고치는 방법은 grandfathering이
+아니라 재실행이다.
+
+### #6 — doctor의 attempt 판정이 claim보다 약했다
+
+`remaining_primary_attempts`가 `started` 행만 셌다. 실제 claim은 체인 검증,
+legacy prefix pin, 이전 completed artifact 무결성까지 본다. **손상된 원장에서
+doctor가 "여유 있음"을 표시하고 claim이 거부**할 수 있었다 — 게이트보다 약한
+진단은 거짓 안심이다. 이제 같은 셋을 적용한다.
+
+### #7 — "검증을 구현하지 않는다"도 부정확했다
+
+`_provenance.py`가 원장을 직접 읽고 hash를 다시 비교했다. 원인은 공유 검증기가
+`RESULTS_DIR`를 하드코딩해 synthetic root를 볼 수 없었던 것이다.
+
+`verify_primary_attempt_artifacts(..., results_dir)`를 **storage 파라미터**로
+열고, `find_completed_attempt`·`read_attempt_ledger`를 추출했다. canonical과
+synthetic의 차이는 **알고리즘이 아니라 storage와 trust_mode뿐**이다. 검증:
+`_parse_ledger_lines` 구현 **1개**, 감사 코드의 원장 직접 읽기 **0건**.
+legacy prefix pin도 이제 감사 경로가 적용한다.
+
+### 하지 않은 것 — reviewer launcher
+
+여전히 없다. 다만 "파일이 존재하면 PASS"는 **빈 stub도 통과**시키므로 —
+공허한 가드와 같은 형태 — PASS 조건을 **probe artifact**로 바꿨다:
+`sandbox_profile_sha256`, `allowed_probe_passed`, `forbidden_probe_passed`,
+`answer_key_reachable == false`, `repository_reachable == false`. 없으면
+**BLOCKED**. launcher 구현은 다음 라운드이며 `_providers.py`의 Seatbelt v2
+프로브 방식을 재사용한다.
+
+### 이 개정이 무효화하는 것
+
+execution surface(`run_live_phase_c.py`, `test_protocol.py`)가 바뀌었다.
+**closure를 이 문단 다음에 실행한다** — calibration → codex red-team →
+provider red-team 순으로. 이번 라운드의 결함이 정확히 이 순서를 어긴 것이다.
