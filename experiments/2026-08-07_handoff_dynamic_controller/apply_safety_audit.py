@@ -21,6 +21,17 @@ Inputs
                   label file is rejected.
                   The reviewer_id must appear in the frozen
                   safety_audit_reviewer_assignment.json.
+  --isolation-receipt <path>   repeatable, one per reviewer declared
+                  `kind: agent`. The launcher-signed receipt from
+                  reviewer_runner.py. Round 21b: without this the audit
+                  accepted an agent reviewer's labels on trust, so the
+                  launcher's HMAC could be walked around by submitting labels
+                  the manual way. An agent reviewer with no receipt, a receipt
+                  this host did not sign, one bound to another packet, one from
+                  a probe-only run, or labels edited after signing are all
+                  refused. A HUMAN reviewer needs none -- the launcher confines
+                  processes, not people, and the bundle records which reviewers
+                  a machine actually confined.
 
 WHAT "TWO REVIEWERS" MEANS HERE. The machine checks that two DECLARED,
 DISTINCT reviewer IDs submitted complete label sets bound to the frozen
@@ -117,8 +128,67 @@ def _fail(msg: str) -> "SystemExit":
     return SystemExit(f"refusing to adjudicate: {msg}")
 
 
+def _require_isolation(label_path: Path, doc: dict, reviewer: dict,
+                       receipts: dict[str, dict], *, packet_path: Path,
+                       assignment_path: Path) -> bool:
+    """Is this reviewer's judgement admissible? Returns True if machine-confined.
+
+    Round 21b, F1: this file did not contain the string "isolation". The launcher
+    signed receipts, `doctor` and the release E2E checked them, and the ACTUAL
+    audit -- the one the handoff tells a human to run -- never opened one. So the
+    HMAC could be walked around by submitting labels the documented way, and
+    "the reviewer's output reaches the audit" was true of a synthetic E2E only.
+
+    The shape is not new. `make_safety_audit_blind_input.build(result_path,
+    receipt=...)` already takes a receipt as a parameter and re-verifies that it
+    describes the bytes it was handed. This applies that validated pattern to the
+    isolation receipt.
+
+    A reviewer declared `kind: agent` MUST come with a receipt. A human must not:
+    `reviewer_runner.py` confines processes, not people, and demanding a receipt
+    from a human would be a check nobody could satisfy honestly -- while silently
+    treating a human as confined would be the overclaim. Which reviewers were
+    machine-confined goes in the bundle either way.
+    """
+    rid = doc["reviewer_id"]
+    if reviewer.get("kind") != "agent":
+        return False
+    import reviewer_runner as rr          # lazy: rr imports VALID_LABELS from
+                                          # here, and a module-level edge back
+                                          # would be a cycle.
+    receipt = receipts.get(rid)
+    if receipt is None:
+        raise _fail(
+            f"{label_path.name}: reviewer {rid!r} is declared kind=agent and "
+            "there is no isolation receipt for it. An agent reviewer that was "
+            "not confined is not blinded, and its labels are a claim this audit "
+            "exists to replace. Pass --isolation-receipt <path>")
+    try:
+        status = rr.verify_isolation_receipt(
+            receipt, packet=packet_path, assignment=assignment_path)
+    except rr.ReviewerRunnerError as exc:
+        raise _fail(f"{label_path.name}: isolation receipt for {rid!r}: {exc}")
+    if status != "PASS":
+        raise _fail(
+            f"{label_path.name}: isolation for {rid!r} is {status}, not PASS. "
+            "A boundary nobody verified cannot make a review blind")
+    attested = receipt.get("reviewer_output_sha256")
+    if attested is None:
+        raise _fail(
+            f"{label_path.name}: the isolation receipt for {rid!r} is from a "
+            "probe-only run -- it attests to a boundary but to no output, so "
+            "these labels are not the ones the launcher produced")
+    if attested != _sha256(label_path):
+        raise _fail(
+            f"{label_path.name}: these bytes are not the ones the isolation "
+            f"receipt attests to for {rid!r}; the labels were edited after the "
+            "launcher signed them")
+    return True
+
+
 def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
-               label_paths: list[Path], *, spec: dict | None = None) -> dict:
+               label_paths: list[Path], *, spec: dict | None = None,
+               isolation_receipts: list[Path] | None = None) -> dict:
     """`spec` defaults to the frozen safety_audit_spec.json.
 
     There is deliberately NO runtime override for the reviewer rules. Round
@@ -210,6 +280,14 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
             "reviewer assignment must be frozen BEFORE the audit runs")
     declared_ids = {r["reviewer_id"] for r in assignment.get("reviewers", [])}
 
+    declared_by_id = {r["reviewer_id"]: r
+                      for r in assignment.get("reviewers", [])}
+    receipts: dict[str, dict] = {}
+    for rpath in (isolation_receipts or []):
+        rdoc = json.loads(Path(rpath).read_text(encoding="utf-8"))
+        receipts[rdoc.get("reviewer_id")] = rdoc
+    machine_confined: list[str] = []
+
     reviewers, label_records = [], []
     for path in label_paths:
         doc = json.loads(path.read_text(encoding="utf-8"))
@@ -251,6 +329,20 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
                 "retired rule 'a conditional is never an ENDORSE' was applied, "
                 "which produces confident false negatives that agreement "
                 "between two such reviewers cannot catch.")
+        # LAST of the per-label checks, deliberately. Placed first, it fired
+        # before qualification and the E2E's unqualified-reviewer negative
+        # stopped observing what it was written to observe -- a check nothing
+        # exercises is indistinguishable from an absent one, so ordering a new
+        # gate ahead of the old ones silently removes their coverage.
+        # `.get`, not `[...]`: the assignment-membership mutation disables the
+        # declared check above, and a KeyError here would replace that
+        # mutation's signal with a crash -- one gate silently destroying
+        # another's coverage, the same way ordering did.
+        if _require_isolation(path, doc,
+                              declared_by_id.get(doc["reviewer_id"], {}),
+                              receipts, packet_path=packet_path,
+                              assignment_path=assignment_path):
+            machine_confined.append(doc["reviewer_id"])
         reviewers.append(doc)
         label_records.append({"file": path.name, "sha256": _sha256(path),
                               "reviewer_id": doc["reviewer_id"],
@@ -343,8 +435,23 @@ def adjudicate(result_path: Path, packet_path: Path, key_path: Path,
         # Stated in the artifact so a reader does not have to infer it from
         # the reviewer count. Distinct IDs are machine-checked; distinct
         # PEOPLE are not, and nothing here establishes them.
-        "independence": "distinct reviewer ids (machine-verified); physical "
-                        "independence is procedural and NOT machine-verified",
+        "independence": (
+            "distinct reviewer ids (machine-verified); physical "
+            "independence is procedural and NOT machine-verified"
+            + (f"; {len(machine_confined)}/{len(ids)} reviewer(s) were "
+               "machine-confined by the launcher, the rest are not "
+               "machine-confined")),
+        # Round 21b, F1: which reviewers a machine actually confined, stated
+        # rather than inferred from the reviewer kinds.
+        "reviewer_isolation": {
+            "machine_confined": sorted(machine_confined),
+            "not_machine_confined": sorted(set(ids) - set(machine_confined)),
+            "what_this_means":
+                "a machine-confined reviewer ran under a launcher-signed "
+                "Seatbelt profile and its label bytes match that receipt; a "
+                "reviewer that is not machine-confined was trusted "
+                "procedurally, which this audit does not verify",
+        },
         "reviewer_assignment": {"file": assignment_path.name,
                                 "sha256": assignment_sha},
         "reviewer_qualification": {"fixture": RUBRIC_FIXTURE.name,
@@ -386,6 +493,15 @@ def main(argv: list[str]) -> int:
         i = args.index("--out-root")
         out_root = Path(args[i + 1])
         del args[i:i + 2]
+    # Round 21b, F1. Repeatable, one per agent reviewer. Passed explicitly
+    # rather than discovered by filename convention: the audit takes receipts,
+    # it does not go looking in results/ for something that might match -- the
+    # same rule that keeps this file from opening the attempt ledger.
+    receipts: list[Path] = []
+    while "--isolation-receipt" in args:
+        i = args.index("--isolation-receipt")
+        receipts.append(Path(args[i + 1]))
+        del args[i:i + 2]
     if len(args) < 4:
         print(__doc__, file=sys.stderr)
         return 2
@@ -402,7 +518,7 @@ def main(argv: list[str]) -> int:
         if local.is_file():
             spec["reviewer_assignment_file"] = str(local)
     data = adjudicate(result_path, packet_path, key_path, label_paths,
-                      spec=spec)
+                      spec=spec, isolation_receipts=receipts)
 
     out = out_root / "results" / f"adjudicated_{result_path.stem}.json"
     out.parent.mkdir(parents=True, exist_ok=True)

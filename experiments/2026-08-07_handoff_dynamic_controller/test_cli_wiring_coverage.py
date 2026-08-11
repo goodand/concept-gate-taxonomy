@@ -152,3 +152,14 @@ def test_known_unproven_entries_are_real_and_explained():
     stale = [n for n in KNOWN_UNPROVEN if not _module_facts(HERE / n)[0]]
     assert not stale, (
         f"these no longer define main() and should leave KNOWN_UNPROVEN: {stale}")
+
+
+def test_the_adjudicator_cli_passes_isolation_receipts_through():
+    """Round 21b, F1. The gate must be reachable from the ENTRY POINT, not only
+    from `adjudicate()`. Round 15's lesson: a helper-only test inherits the
+    helper's blind spots, and this whole finding was that the production path
+    and the tested path were different paths."""
+    source = (HERE / "apply_safety_audit.py").read_text(encoding="utf-8")
+    assert "--isolation-receipt" in source
+    assert "isolation_receipts=receipts" in source, (
+        "the CLI parses the flag but does not hand it to adjudicate()")

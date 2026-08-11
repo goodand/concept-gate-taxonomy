@@ -493,3 +493,83 @@ def test_a_probe_only_run_says_so_rather_than_implying_a_reviewer_ran():
     doc = rr.run_reviewer(bundled, "probe-only", assignment=ASSIGNMENT)
     assert doc["reviewer_command_sha256"] is None
     assert doc["reviewer_output_sha256"] is None
+
+
+# ---- F5: the receipt must identify WHAT ran, not just the argv -------------
+def test_execution_identity_changes_when_the_script_contents_change(
+        packet_bundle, tmp_path):
+    """Round 21b, F5. `sha256("\\x00".join(command))` hashes the ARGV. Swap the
+    script at that path -- a different reviewer, a different prompt, a different
+    model wrapper -- and the receipt is byte-identical. A receipt that cannot
+    say what ran cannot support a claim about what a reviewer did."""
+    _skip_without_sandbox()
+    command = _fake_reviewer(tmp_path, _good_output(["R0000", "R0001"]))
+    first = rr.run_reviewer(packet_bundle, "e2e-A", command=command,
+                            assignment=ASSIGNMENT,
+                            labels_out=tmp_path / "l1.json")
+    # Same argv, different script. Only the CONTENTS changed.
+    Path(command[1]).write_text(
+        "import json, sys\n"
+        f"sys.stdout.write({_good_output(['R0000', 'R0001'])!r})\n",
+        encoding="utf-8")
+    second = rr.run_reviewer(packet_bundle, "e2e-B", command=command,
+                             assignment=ASSIGNMENT,
+                             labels_out=tmp_path / "l2.json")
+    assert first["reviewer_command_sha256"] != second["reviewer_command_sha256"], (
+        "the same argv with different script contents produced the same "
+        "execution identity")
+
+
+def test_execution_identity_records_the_files_it_hashed():
+    """A hash nobody can reproduce is not evidence. The receipt must name what
+    went into it."""
+    import inspect
+    src = inspect.getsource(rr._execution_identity)
+    assert "resolved" in src or "files" in src
+
+
+def test_the_public_cli_can_actually_run_a_reviewer(tmp_path, capsys, monkeypatch):
+    """F1b. The documented entry point was probe-only: it called
+    `run_reviewer(bundled, reviewer_id)` with no command, so a human following
+    the handoff could not produce labels through the launcher at all. Every run
+    that ever produced any lived inside the release E2E."""
+    _skip_without_sandbox()
+    packet = tmp_path / "packet.json"
+    packet.write_text(json.dumps(
+        {"reviewer_packet": [{"blind_id": "R0000"}, {"blind_id": "R0001"}]}),
+        encoding="utf-8")
+    out = tmp_path / "labels.json"
+    # Redirect the receipt away from the committed results/. Without this the
+    # test deposits a file there on every run -- which it did, and the
+    # reachability check found it.
+    monkeypatch.setenv("CG_ISOLATION_RECEIPT_DIR", str(tmp_path / "receipts"))
+    command = _fake_reviewer(tmp_path, _good_output(["R0000", "R0001"]))
+    rc = rr.main(["reviewer_runner.py", str(packet), "cli-reviewer",
+                  str(tmp_path / "ws"), "--labels-out", str(out),
+                  "--command", *command])
+    printed = capsys.readouterr()
+    assert rc in (0, 2), printed.err[-400:]
+    if rc == 0:
+        assert out.is_file(), "the CLI ran a reviewer but wrote no labels"
+        assert "--isolation-receipt" in printed.out, (
+            "the CLI does not tell the operator to pass the receipt on")
+
+
+def test_the_suite_does_not_deposit_receipts_in_the_committed_results_dir(tmp_path,
+                                                                          monkeypatch):
+    """The regression guard. This is the second time a round-21 mechanism wrote
+    into `results/` from a test -- release receipts first, isolation receipts
+    second. Both were found by something other than a test, so now there is a
+    test."""
+    _skip_without_sandbox()
+    before = {p.name for p in (rr.HERE / "results").glob("reviewer_isolation_*.json")}
+    monkeypatch.setenv("CG_ISOLATION_RECEIPT_DIR", str(tmp_path / "r"))
+    packet = tmp_path / "packet.json"
+    packet.write_text(json.dumps({"reviewer_packet": [{"blind_id": "R0000"}]}),
+                      encoding="utf-8")
+    rr.main(["reviewer_runner.py", str(packet), "guard-check",
+             str(tmp_path / "ws")])
+    after = {p.name for p in (rr.HERE / "results").glob("reviewer_isolation_*.json")}
+    assert after == before, f"the suite wrote {sorted(after - before)} into results/"
+    assert (tmp_path / "r" / "reviewer_isolation_guard-check.json").is_file(), (
+        "the redirect disabled the mechanism instead of relocating it")

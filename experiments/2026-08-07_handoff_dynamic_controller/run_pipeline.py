@@ -99,6 +99,7 @@ STAGE_IDS = {
     # Round 21, finding #3. Not an integer: it sits between 7 and 8 and
     # renumbering the others would break every mutation's expected_signal.
     "7b": "reviewer.labels-from-launcher",
+    "7c": "audit.isolation-required",
 }
 
 # OBLIGATIONS -- the unit of completion.
@@ -137,6 +138,7 @@ DECLARED_OBLIGATIONS: tuple[str, ...] = (
     "bundle.written.to.disk",
     "reviewer.isolation.enforced",
     "reviewer.labels.from-launcher",
+    "audit.isolation.required",
     "freeze.closure.current",
 )
 
@@ -155,6 +157,7 @@ PROVEN_BY: dict[str, str] = {
     "bundle.written.to.disk":          "mutation",
     "reviewer.isolation.enforced":     "mutation",
     "reviewer.labels.from-launcher":   "mutation",
+    "audit.isolation.required":        "mutation",
     "freeze.closure.current":
         "acceptance:test_release_refuses_without_a_current_closure_receipt",
 }
@@ -536,10 +539,15 @@ def doctor(config_name: str | None = None) -> int:
             doc = json.loads(proof.read_text(encoding="utf-8"))
             # The launcher's own verifier, not a boolean read. A hand-written
             # or edited receipt raises here.
+            #
+            # `authenticate_...`, not `verify_...`: doctor has no packet to
+            # compare against. It used to invent one out of a `packet_file`
+            # field the receipt does not have, which crashed this branch with
+            # FileNotFoundError on the happy path (round 21b, F2). The packet
+            # binding is the adjudicator's question, and the row below says so.
             try:
-                status = rr.verify_isolation_receipt(
-                    doc, packet=RESULTS / doc.get("packet_file", "missing"),
-                    assignment=HERE / SPEC["reviewer_assignment_file"])
+                status = rr.authenticate_isolation_receipt(
+                    doc, assignment=HERE / SPEC["reviewer_assignment_file"])
             except rr.ReviewerRunnerError as exc:
                 unproven.append(f"{rid}: {exc}")
                 continue
@@ -548,7 +556,8 @@ def doctor(config_name: str | None = None) -> int:
         rows.append(_line("BLOCKED" if unproven else "PASS",
                           "agent reviewer isolation",
                           "; ".join(unproven)[:70] if unproven
-                          else f"{len(agents)} probed"))
+                          else f"{len(agents)} authentic; packet binding is "
+                               "checked by the adjudicator"))
 
     for tool in ("claude", "codex"):
         found = shutil.which(tool)
@@ -1080,9 +1089,15 @@ def run_pipeline(spec: RunSpec) -> int:
         # nothing here and the mutation gate could not see it. The only way
         # to observe a call site is to send something it must reject.
         assignment = root / "safety_audit_reviewer_assignment.json"
+        # Round 21b, F1: declared `kind: agent` in release mode so the
+        # adjudicator's isolation gate is on the path this command exercises.
+        # Without it the E2E would run the launcher and then adjudicate as
+        # though no launcher existed -- which is the finding itself.
+        kind = "agent" if spec.require_launcher else "human"
         assignment.write_text(json.dumps(
             {"status": "ASSIGNED",
-             "reviewers": [{"reviewer_id": "e2e-A"}, {"reviewer_id": "e2e-B"}]}),
+             "reviewers": [{"reviewer_id": "e2e-A", "kind": kind},
+                           {"reviewer_id": "e2e-B", "kind": kind}]}),
             encoding="utf-8")
         audit_spec = {**SPEC, "reviewer_assignment_file": str(assignment)}
         a_sha = _sha256(assignment)
@@ -1098,6 +1113,7 @@ def run_pipeline(spec: RunSpec) -> int:
         # from -- one pipeline, one RunSpec field, per the round-20 rule that
         # modes may differ only in that object.
         labels: list[Path] = []
+        receipt_paths: list[Path] = []
         launcher_receipts: dict[str, dict] = {}
         if spec.require_launcher:
             import reviewer_runner as rr
@@ -1132,6 +1148,10 @@ def run_pipeline(spec: RunSpec) -> int:
                 # THE binding for finding #3: the bytes the adjudicator is about
                 # to read must be the bytes the signed receipt attests to. A
                 # label file assembled anywhere else fails here.
+                rec = root / f"isolation_{rid}.json"
+                rec.write_text(json.dumps(doc, ensure_ascii=False, indent=1),
+                               encoding="utf-8")
+                receipt_paths.append(rec)
                 if lp.is_file():
                     if _sha256(lp) != doc.get("reviewer_output_sha256"):
                         failures.append(
@@ -1238,6 +1258,37 @@ def run_pipeline(spec: RunSpec) -> int:
                     Verdict.UNKNOWN,
                     f"the boundary was not exercised on this host: {iso_status}")
 
+        # --- 7c. an agent reviewer with NO receipt must be refused ------
+        # Round 21b, F1. Stages 6 and 7 exist because a check the E2E never
+        # violates is invisible to the mutation gate. The same applies here:
+        # the run above always supplies receipts, so removing the requirement
+        # would change nothing observable without this negative.
+        if spec.require_launcher and len(labels) == 2:
+            try:
+                asa.main(["run_pipeline", str(primary), str(packet_path),
+                          str(key_path), *[str(p) for p in labels],
+                          "--out-root", str(root)])   # no --isolation-receipt
+            except SystemExit as exc:
+                refused_iso = "no isolation receipt" in str(exc)
+            else:
+                refused_iso = False
+            print(f"  [7c] {STAGE_IDS['7c']:<31}refused={refused_iso}")
+            if not refused_iso:
+                failures.append(
+                    "the adjudicator accepted an agent reviewer with no "
+                    "isolation receipt")
+            current_run["audit.isolation.required"] = (
+                RunVerdict(Verdict.PASS,
+                           "an agent reviewer with no receipt was refused by "
+                           "the adjudicator CLI")
+                if refused_iso else
+                RunVerdict(Verdict.FAIL, "the receipt requirement did not fire"))
+        else:
+            current_run["audit.isolation.required"] = RunVerdict(
+                Verdict.UNKNOWN,
+                "offline-smoke declares human reviewers; no agent reviewer to "
+                "require a receipt from")
+
         # --- 8. adjudication -------------------------------------------
         # `asa.main` raises SystemExit on a refusal, and an uncaught one kills
         # this process before the FAIL list is printed -- so a run that failed
@@ -1250,6 +1301,8 @@ def run_pipeline(spec: RunSpec) -> int:
         try:
             rc = asa.main(["run_pipeline", str(primary), str(packet_path),
                            str(key_path), *[str(p) for p in labels],
+                           *sum((["--isolation-receipt", str(r)]
+                                 for r in receipt_paths), []),
                            "--out-root", str(root)])
         except SystemExit as exc:
             rc = 1

@@ -898,3 +898,150 @@ def test_the_final_bundle_carries_provenance_without_the_artifacts_self_report(
     assert built["packet"]["provenance"]["mode"] == _provenance.SYNTHETIC
     assert built["key"]["provenance_sha256"] == _receipt.receipt_sha256(
         built["packet"]["provenance"])
+
+
+# --------------------------------------------------------------- round 21b ---
+# F1: the production audit path bypassed the launcher entirely. `apply_safety_
+# audit.py` did not contain the string "isolation". Only the release E2E and
+# `doctor` verified receipts, so the HMAC could be walked around by submitting
+# labels the documented manual way -- which is what the handoff tells a human to
+# do. "the reviewer's output reaches the audit" was true of a synthetic E2E and
+# of nothing else.
+
+def _agent_audit(tmp_path, *, agent_ids=("A",), human_ids=("B",),
+                 tamper_labels=False, recommendation="check the logs"):
+    """A miniature audit where the named reviewers are declared `kind: agent`
+    and their labels are produced BY THE LAUNCHER, inside the sandbox."""
+    import reviewer_runner as rr
+    assignment_path = tmp_path / "assignment.json"
+    reviewers = ([{"reviewer_id": r, "kind": "agent",
+                   "isolation": "reviewer_runner.py packet-only bundle"}
+                  for r in agent_ids]
+                 + [{"reviewer_id": r, "kind": "human"} for r in human_ids])
+    assignment_path.write_text(json.dumps(
+        {"status": "ASSIGNED", "reviewers": reviewers}), encoding="utf-8")
+    spec = {**_SPEC_NO_PROV, "case_ids": ["HD02"], "arms": ["S_STATIC"],
+            "expected_cells": 1,
+            "reviewer_assignment_file": str(assignment_path)}
+    assignment_sha = hashlib.sha256(assignment_path.read_bytes()).hexdigest()
+    result = {"kind": "live-subject-primary",
+              "results": [{"case_id": "HD02", "arm": "S_STATIC",
+                           "variant": "variant-L", "retrieval_hard_gate": True}],
+              "traces": [{"case_id": "HD02", "arm": "S_STATIC",
+                          "variant": "variant-L",
+                          "recommended_actions": [recommendation]}]}
+    rp = tmp_path / "r.json"; rp.write_text(json.dumps(result), encoding="utf-8")
+    built = _mkblind.build(rp, spec=spec)
+    pp = tmp_path / "packet.json"; pp.write_bytes(built["packet_bytes"])
+    kp = tmp_path / "k.json"; kp.write_text(json.dumps(built["key"]),
+                                            encoding="utf-8")
+    ids = list(built["key"]["unblinding_key"])
+
+    stub = tmp_path / "stub.py"
+    stub.write_text(
+        "import json, pathlib, sys\n"
+        "packet = json.loads(pathlib.Path('packet.json').read_text())\n"
+        "ids = [i['blind_id'] for i in packet['reviewer_packet']]\n"
+        "print(json.dumps({'qualification': json.loads(sys.argv[1]),\n"
+        "                  'labels': {i: 'MENTION' for i in ids}}))\n",
+        encoding="utf-8")
+
+    label_paths, receipts = [], []
+    for rid in agent_ids:
+        lp = tmp_path / f"labels_{rid}.json"
+        bundled = rr.build_reviewer_bundle(pp, tmp_path / "b" / rid)
+        doc = rr.run_reviewer(
+            bundled, rid, assignment=assignment_path, labels_out=lp,
+            command=[sys.executable, str(stub), json.dumps(dict(_ANSWERS))])
+        if tamper_labels:
+            lp.write_text(lp.read_text(encoding="utf-8") + " ", encoding="utf-8")
+        rec = tmp_path / f"receipt_{rid}.json"
+        rec.write_text(json.dumps(doc, ensure_ascii=False), encoding="utf-8")
+        label_paths.append(lp); receipts.append(rec)
+    for rid in human_ids:
+        lp = tmp_path / f"labels_{rid}.json"
+        lp.write_text(json.dumps(
+            {"reviewer_id": rid, "packet_sha256": built["key"]["packet_sha256"],
+             "assignment_sha256": assignment_sha, "fixture_sha256": _FIXTURE_SHA,
+             "qualification": dict(_ANSWERS),
+             "labels": {b: "MENTION" for b in ids}}), encoding="utf-8")
+        label_paths.append(lp)
+    return rp, pp, kp, label_paths, receipts, spec
+
+
+def _skip_without_sandbox():
+    import reviewer_runner as rr
+    if not rr.SANDBOX.is_file():
+        pytest.skip("sandbox-exec unavailable; the launcher cannot run here")
+
+
+def test_an_agent_reviewer_without_an_isolation_receipt_is_refused(tmp_path):
+    """THE F1 test. An agent reviewer is only blinded if something confined it.
+    Accepting its labels on trust is accepting a claim the audit exists to
+    replace."""
+    _skip_without_sandbox()
+    rp, pp, kp, lps, receipts, spec = _agent_audit(tmp_path)
+    with pytest.raises(SystemExit, match="no isolation receipt"):
+        _asa.adjudicate(rp, pp, kp, lps, spec=spec, isolation_receipts=[])
+
+
+def test_a_forged_isolation_receipt_does_not_admit_an_agent_reviewer(tmp_path):
+    _skip_without_sandbox()
+    rp, pp, kp, lps, receipts, spec = _agent_audit(tmp_path)
+    forged = tmp_path / "forged.json"
+    doc = json.loads(receipts[0].read_text(encoding="utf-8"))
+    forged.write_text(json.dumps({**doc, "signature": "0" * 64}),
+                      encoding="utf-8")
+    with pytest.raises(SystemExit, match="signature"):
+        _asa.adjudicate(rp, pp, kp, lps, spec=spec, isolation_receipts=[forged])
+
+
+def test_an_isolation_receipt_for_another_packet_is_refused(tmp_path):
+    """A receipt from some other audit run must not admit a reviewer here."""
+    _skip_without_sandbox()
+    rp, pp, kp, lps, receipts, spec = _agent_audit(tmp_path)
+    other = tmp_path / "other"
+    other.mkdir()
+    # A DIFFERENT packet: packets are content-addressed, so an identical
+    # miniature run would produce an identical packet hash and the receipt would
+    # legitimately match. Found by this test failing for that reason.
+    _rp2, _pp2, _kp2, _lps2, receipts2, _spec2 = _agent_audit(
+        other, agent_ids=("A",), human_ids=("B",),
+        recommendation="restart the nightly job")
+    with pytest.raises(SystemExit, match="another packet"):
+        _asa.adjudicate(rp, pp, kp, lps, spec=spec,
+                        isolation_receipts=[receipts2[0]])
+
+
+def test_labels_edited_after_the_receipt_was_signed_are_refused(tmp_path):
+    """The binding that makes the receipt worth having: the bytes the audit
+    reads must be the bytes the launcher attested to."""
+    _skip_without_sandbox()
+    rp, pp, kp, lps, receipts, spec = _agent_audit(tmp_path, tamper_labels=True)
+    with pytest.raises(SystemExit, match="attest"):
+        _asa.adjudicate(rp, pp, kp, lps, spec=spec, isolation_receipts=receipts)
+
+
+def test_a_launcher_confined_agent_reviewer_is_accepted_and_recorded(tmp_path):
+    """The positive path. Refusing everything would satisfy every test above."""
+    _skip_without_sandbox()
+    rp, pp, kp, lps, receipts, spec = _agent_audit(tmp_path)
+    bundle = _asa.adjudicate(rp, pp, kp, lps, spec=spec,
+                             isolation_receipts=receipts)
+    conf = bundle["safety_audit"]["reviewer_isolation"]
+    assert conf["machine_confined"] == ["A"]
+    assert conf["not_machine_confined"] == ["B"]
+
+
+def test_a_human_reviewer_needs_no_receipt_and_the_bundle_says_so(tmp_path):
+    """`reviewer_runner.py` confines processes, not people. Demanding a receipt
+    from a human would be a check that cannot be satisfied honestly -- and
+    silently treating a human as confined would be the overclaim."""
+    _skip_without_sandbox()
+    rp, pp, kp, lps, receipts, spec = _agent_audit(
+        tmp_path, agent_ids=(), human_ids=("A", "B"))
+    bundle = _asa.adjudicate(rp, pp, kp, lps, spec=spec, isolation_receipts=[])
+    conf = bundle["safety_audit"]["reviewer_isolation"]
+    assert conf["machine_confined"] == []
+    assert sorted(conf["not_machine_confined"]) == ["A", "B"]
+    assert "not machine-confined" in bundle["safety_audit"]["independence"]

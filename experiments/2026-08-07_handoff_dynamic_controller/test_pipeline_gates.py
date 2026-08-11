@@ -690,3 +690,138 @@ def test_the_suite_does_not_add_receipts_to_the_committed_results_dir():
     # test would pass by the receipt never being written at all.
     assert "receipt: release_" in proc.stdout or proc.returncode != PASS, (
         "no receipt was written anywhere; the redirect disabled the mechanism")
+
+
+# --------------------------------------------------------------- round 21b ---
+def test_the_handoff_entry_block_matches_what_the_commands_actually_print():
+    """F7. The handoff's §1 said `obligations 10/10 PASS, obligations_unknown []`
+    and the PREREGISTRATION status block said `e2e --offline exit 0`. Both were
+    false: there are 11 obligations, the coverage key is `effective_unknown`, and
+    offline exits 2 because it runs no reviewer.
+
+    §3b corrected it further down, so ONE document carried TWO current states --
+    and §1 is what a zero-context agent reads first, which decides what it treats
+    as success. A cold-start test caught the same class twice in this session; an
+    external reviewer caught this one.
+
+    Compared against the DECLARED COUNT and the real coverage key, not prose
+    against prose -- a test that compares prose to prose rots with the prose."""
+    import run_pipeline as rp
+    docs = [HERE.parents[1] / "docs" / "HANDOFF_20260810_primary_blocked.md",
+            HERE / "PREREGISTRATION.md"]
+    n = len(rp.DECLARED_OBLIGATIONS)
+    for path in docs:
+        text = path.read_text(encoding="utf-8")
+        assert "obligations 10/10 PASS" not in text, (
+            f"{path.name} still promises 10/10; there are {n}")
+        assert "obligations_unknown" not in text, (
+            f"{path.name} names the pre-round-21 coverage key")
+        assert "e2e --offline   exit 0" not in text, (
+            f"{path.name} promises offline exit 0; it exits 2 because it runs "
+            "no reviewer")
+
+
+def _tree_with_agent_reviewer(tmp_path, *, receipt: dict | None,
+                              write_receipt: bool = True) -> Path:
+    """A COPY of the experiment whose assignment declares an agent reviewer.
+
+    F2's lesson, and why this helper exists: doctor's agent branch had never
+    executed. The assignment ships `UNASSIGNED`, so nothing reached the code --
+    and code that referenced a field the receipt does not have survived four
+    rounds. Calling the function directly would have reproduced neither. A test
+    for a guarded branch has to MAKE THE STATE that reaches it.
+    """
+    import shutil
+    repo = HERE.parents[1]
+    target = tmp_path / "experiments" / HERE.name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(repo / "conceptgate", tmp_path / "conceptgate")
+    shutil.copytree(HERE, target)
+    path = target / "safety_audit_reviewer_assignment.json"
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    doc["status"] = "ASSIGNED"
+    doc["reviewers"] = [{"reviewer_id": "agent-A", "kind": "agent",
+                         "isolation": "reviewer_runner.py packet-only bundle"}]
+    path.write_text(json.dumps(doc, ensure_ascii=False, indent=1),
+                    encoding="utf-8")
+    if write_receipt and receipt is not None:
+        (target / "results" / "reviewer_isolation_agent-A.json").write_text(
+            json.dumps(receipt, ensure_ascii=False, indent=1), encoding="utf-8")
+    return target
+
+
+def _launcher_receipt(target: Path) -> dict:
+    """A REAL receipt, produced by the launcher inside `target`."""
+    code = (
+        "import json, sys, tempfile\n"
+        "from pathlib import Path\n"
+        "sys.path.insert(0, '.')\n"
+        "import reviewer_runner as rr\n"
+        "d = Path(tempfile.mkdtemp()); p = d / 'packet.json'\n"
+        "p.write_text(json.dumps({'reviewer_packet': [{'blind_id': 'R0000'}]}))\n"
+        "b = rr.build_reviewer_bundle(p, d / 'bundle')\n"
+        "print(json.dumps(rr.run_reviewer(b, 'agent-A')))\n")
+    proc = subprocess.run([sys.executable, "-c", code], cwd=target,
+                          capture_output=True, text=True)
+    if proc.returncode != 0:
+        pytest.skip(f"launcher unavailable here: {proc.stderr[-200:]}")
+    return json.loads(proc.stdout.strip().splitlines()[-1])
+
+
+def test_doctor_does_not_crash_when_an_agent_reviewer_is_assigned(tmp_path):
+    """F2, reproduced before the fix.
+
+        FileNotFoundError: .../results/missing
+
+    `doctor` verified the receipt with `packet=RESULTS / doc.get("packet_file",
+    "missing")`, and `IsolationReceipt.as_dict()` has no `packet_file`. So the
+    HAPPY path -- a correctly signed, passing receipt -- crashed the diagnostic
+    with a traceback. Reported as "may conflict"; measured as a crash."""
+    target = _tree_with_agent_reviewer(tmp_path,
+                                       receipt=None, write_receipt=False)
+    receipt = _launcher_receipt(target)
+    (target / "results" / "reviewer_isolation_agent-A.json").write_text(
+        json.dumps(receipt, ensure_ascii=False, indent=1), encoding="utf-8")
+    proc = subprocess.run([sys.executable, "run_pipeline.py", "doctor"],
+                          cwd=target, capture_output=True, text=True, timeout=300)
+    assert "Traceback" not in proc.stderr, (
+        f"doctor crashed instead of reporting:\n{proc.stderr[-600:]}")
+    line = next((l for l in proc.stdout.splitlines()
+                 if "agent reviewer isolation" in l), "")
+    assert line, f"doctor printed no agent-reviewer row:\n{proc.stdout[-800:]}"
+    assert "[ok" in line, f"a valid passing receipt was not accepted: {line!r}"
+
+
+def test_doctor_reports_blocked_for_a_forged_agent_receipt(tmp_path):
+    """The other direction: a receipt this host cannot have signed must not be
+    accepted, and must not crash either."""
+    forged = {"reviewer_id": "agent-A", "status": "PASS",
+              "packet_sha256": "0" * 64, "assignment_sha256": "0" * 64,
+              "sandbox_profile_sha256": "0" * 64, "allowed_probe_passed": True,
+              "forbidden_probes": [], "reviewer_command_sha256": None,
+              "reviewer_output_sha256": None, "signature": "0" * 64}
+    target = _tree_with_agent_reviewer(tmp_path, receipt=forged)
+    proc = subprocess.run([sys.executable, "run_pipeline.py", "doctor"],
+                          cwd=target, capture_output=True, text=True, timeout=300)
+    assert "Traceback" not in proc.stderr, proc.stderr[-400:]
+    line = next((l for l in proc.stdout.splitlines()
+                 if "agent reviewer isolation" in l), "")
+    assert "[ --" in line or "BLOCKED" in line, (
+        f"a forged receipt was not reported as BLOCKED: {line!r}")
+
+
+def test_the_receipt_verifier_separates_authenticity_from_packet_binding():
+    """Why the fix is a SPLIT and not a new `packet_file` field.
+
+    A path inside a signed receipt is host-specific and would have to be
+    re-resolved by every reader. What `doctor` actually needs is: is this
+    receipt authentic, is it bound to the frozen assignment, and what does it
+    say. It has no packet to compare against -- the packet belongs to an audit
+    run. Making the packet comparison optional inside one function would be the
+    fail-open shape this repository keeps removing, so there are two functions
+    and the caller states which question it is asking."""
+    import reviewer_runner as rr
+    assert hasattr(rr, "authenticate_isolation_receipt")
+    source = (HERE / "run_pipeline.py").read_text(encoding="utf-8")
+    assert 'doc.get("packet_file"' not in source, (
+        "doctor still guesses a packet path out of the receipt")

@@ -160,6 +160,20 @@ OBLIGATIONS = (
         mode="--release",
     ),
     Obligation(
+        obligation_id="audit.isolation.required",
+        stage_id="audit.isolation-required",
+        target="apply_safety_audit.py",
+        # Round 21b, F1: this file did not contain the string "isolation". The
+        # launcher signed receipts and the REAL adjudicator never opened one,
+        # so the HMAC could be walked around by submitting labels the way the
+        # handoff documents. Disabling the agent test is the mutation that
+        # isolates the requirement itself.
+        remove='    if reviewer.get("kind") != "agent":',
+        replace_with='    if True:',
+        expected_signal="accepted an agent reviewer with no isolation receipt",
+        mode="--release",
+    ),
+    Obligation(
         obligation_id="bundle.written.to.disk",
         stage_id="bundle.persisted",
         target="apply_safety_audit.py",

@@ -55,6 +55,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -364,6 +365,38 @@ def _label_artifact(reviewer_id: str, output: dict, *, bundle_packet: Path,
             "labels": dict(labels)}
 
 
+def _execution_identity(command: list[str]) -> str:
+    """What actually ran, not just what was typed.
+
+    Round 21b, F5: this was `sha256("\x00".join(command))` -- the ARGV. Swap
+    the script at that path for a different reviewer, a different prompt, a
+    different model wrapper, and the receipt stayed byte-identical. A receipt
+    that cannot say what ran cannot support a claim about what a reviewer did,
+    and the canary's whole value is that it can.
+
+    So the identity covers, in order: every argv token, and for each token that
+    names an existing FILE, its resolved path and its sha256. That is the
+    smallest thing that distinguishes two reviewers behind one command line.
+
+    WHAT IT STILL DOES NOT COVER, said plainly rather than implied: a remote
+    model behind a CLI, the CLI's own dependencies, and anything the reviewer
+    reads at runtime from outside the bundle -- the sandbox denies the
+    repository, not the network. `cli_version` in the qualification configs has
+    the same limit and the same warning: the runner records it, it does not
+    verify it.
+    """
+    parts: list[str] = []
+    for token in command:
+        parts.append(f"argv:{token}")
+        path = Path(token)
+        try:
+            if path.is_file():
+                parts.append(f"file:{path.resolve()}:{_sha256(path)}")
+        except OSError:
+            pass
+    return hashlib.sha256("\x00".join(parts).encode("utf-8")).hexdigest()
+
+
 def _run_reviewer_process(command: list[str], profile: str, cwd: Path) -> dict:
     """Execute the reviewer inside the sandbox and parse its stdout.
 
@@ -453,8 +486,7 @@ def run_reviewer(bundle_packet: Path, reviewer_id: str, *,
         body = json.dumps(artifact, ensure_ascii=False, indent=1)
         labels_out.parent.mkdir(parents=True, exist_ok=True)
         labels_out.write_text(body, encoding="utf-8")
-        command_sha = hashlib.sha256(
-            "\x00".join(command).encode("utf-8")).hexdigest()
+        command_sha = _execution_identity(command)
         output_sha = hashlib.sha256(body.encode("utf-8")).hexdigest()
 
     receipt = IsolationReceipt(
@@ -472,13 +504,23 @@ def run_reviewer(bundle_packet: Path, reviewer_id: str, *,
     return receipt.as_dict(key=load_or_create_key(launcher_key_path()))
 
 
-def verify_isolation_receipt(doc: dict, *, packet: Path, assignment: Path,
-                             key_path: Path | None = None) -> str:
-    """Return PASS/FAIL/BLOCKED for a receipt, or raise if it is not ours.
+def authenticate_isolation_receipt(doc: dict, *, assignment: Path,
+                                   key_path: Path | None = None) -> str:
+    """Is this receipt ours, and bound to the frozen assignment? Returns status.
 
-    The adjudicator calls this instead of reading booleans. A document fails
-    here unless it carries an HMAC this host can reproduce, and unless it is
-    bound to THIS packet and THIS assignment.
+    Round 21b, F2: `doctor` needs exactly this question and no more. It has no
+    packet to compare against -- a packet belongs to an audit RUN, not to a
+    diagnostic -- and it used to invent one with
+    `RESULTS / doc.get("packet_file", "missing")`. That field does not exist, so
+    the branch raised FileNotFoundError on the HAPPY path: a correctly signed,
+    passing receipt crashed the diagnostic. The branch had never executed
+    because the shipped assignment is UNASSIGNED.
+
+    The fix is a SPLIT, not a new `packet_file` field. A path inside a signed
+    receipt is host-specific and every reader would have to re-resolve it.
+    Making the packet comparison optional inside one function would be the
+    fail-open shape this repository keeps removing -- so there are two
+    functions and the caller states which question it is asking.
 
     `key_path` exists so a test can present a different key; production callers
     leave it alone.
@@ -490,33 +532,68 @@ def verify_isolation_receipt(doc: dict, *, packet: Path, assignment: Path,
             "It was either not produced by the launcher or edited afterwards; "
             "a claim about what a reviewer could reach is not evidence unless "
             "the host observed it")
-    if doc.get("packet_sha256") != _sha256(packet):
-        raise ReviewerRunnerError("isolation receipt is bound to another packet")
     if doc.get("assignment_sha256") != _sha256(assignment):
         raise ReviewerRunnerError(
             "isolation receipt is bound to another reviewer assignment")
     return doc["status"]
 
 
+def verify_isolation_receipt(doc: dict, *, packet: Path, assignment: Path,
+                             key_path: Path | None = None) -> str:
+    """Authenticity AND binding to THIS packet. What an audit run must ask.
+
+    The adjudicator and the release E2E call this; `doctor` calls
+    `authenticate_isolation_receipt` because it has no packet.
+    """
+    status = authenticate_isolation_receipt(doc, assignment=assignment,
+                                            key_path=key_path)
+    if doc.get("packet_sha256") != _sha256(packet):
+        raise ReviewerRunnerError("isolation receipt is bound to another packet")
+    return status
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) < 3:
+    args = list(argv[1:])
+    # Round 21b, F1b: the public CLI was probe-only -- it called
+    # `run_reviewer(bundled, reviewer_id)` with no command, so the entry point
+    # a human is told to use could not run a reviewer at all. Everything that
+    # ever ran one was inside the release E2E.
+    labels_out = None
+    if "--labels-out" in args:
+        i = args.index("--labels-out")
+        labels_out = Path(args[i + 1])
+        del args[i:i + 2]
+    command = None
+    if "--command" in args:
+        i = args.index("--command")
+        command = args[i + 1:]          # everything after it is the command
+        del args[i:]
+    if len(args) < 2:
         print(__doc__, file=sys.stderr)
         print("usage: reviewer_runner.py <packet.json> <reviewer_id> "
-              "[out_dir]", file=sys.stderr)
+              "[workspace_root] [--labels-out <path>] [--command <argv...>]",
+              file=sys.stderr)
         return 2
-    packet, reviewer_id = Path(argv[1]), argv[2]
+    packet, reviewer_id = Path(args[0]), args[1]
     # ONE decision about where a bundle may live, shared with the E2E. The old
     # default was inside HERE, which the profile denies in full (finding #9).
-    root = Path(argv[3]) if len(argv) > 3 else None
+    root = Path(args[2]) if len(args) > 2 else None
     try:
         dest = reviewer_workspace(reviewer_id, root=root)
         print(f"   workspace: {dest}")
         bundled = build_reviewer_bundle(packet, dest)
-        doc = run_reviewer(bundled, reviewer_id)
+        doc = run_reviewer(bundled, reviewer_id, command=command,
+                           labels_out=labels_out)
     except ReviewerRunnerError as exc:
         print(f"refusing: {exc}", file=sys.stderr)
         return 2
-    out = HERE / "results" / f"reviewer_isolation_{reviewer_id}.json"
+    # Round 21b: my own CLI test called main() and deposited a receipt in the
+    # committed, append-only results/ -- the SAME defect the release receipt had
+    # one round earlier. Same fix: the directory is overridable and only a
+    # harness overrides it.
+    out_dir = Path(os.environ.get("CG_ISOLATION_RECEIPT_DIR") or (HERE / "results"))
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"reviewer_isolation_{reviewer_id}.json"
     if out.exists():
         print(f"refusing to overwrite {out.name} (results/ is append-only)",
               file=sys.stderr)
@@ -524,6 +601,11 @@ def main(argv: list[str]) -> int:
     out.write_text(json.dumps(doc, ensure_ascii=False, indent=1),
                    encoding="utf-8")
     print(f"-> {out.name}  status={doc['status']}")
+    if labels_out is not None and labels_out.is_file():
+        print(f"   labels: {labels_out}")
+        print("   pass BOTH to the adjudicator:")
+        print(f"     apply_safety_audit.py ... {labels_out} "
+              f"--isolation-receipt {out}")
     for probe in doc["forbidden_probes"]:
         mark = "LEAK" if probe["reachable"] else "ok"
         print(f"   [{mark:>4}] {probe['probe']}")
