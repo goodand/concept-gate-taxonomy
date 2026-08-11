@@ -419,6 +419,20 @@ qualification 러너 자체는 보이므로 현재 구성으로 동작한다.
 - [`run_smoke.py`](../experiments/2026-08-07_handoff_dynamic_controller/run_smoke.py)
 - [`test_protocol.py`](../experiments/2026-08-07_handoff_dynamic_controller/test_protocol.py)
 
+Amendment 41에서 추가된 것:
+
+- [`_receipt.py`](../experiments/2026-08-07_handoff_dynamic_controller/_receipt.py)
+- [`reviewer_runner.py`](../experiments/2026-08-07_handoff_dynamic_controller/reviewer_runner.py)
+- [`test_reviewer_isolation.py`](../experiments/2026-08-07_handoff_dynamic_controller/test_reviewer_isolation.py)
+
+- [`results/closure_0a15c17c610b.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_0a15c17c610b.json)
+
+`run_pipeline.py closure`가 만드는 receipt이며 **커밋된 동결면을 서술하는
+것 하나만 남긴다.** `--release`는 현재 표면과 일치하는 receipt만 인정한다.
+개발 중 생긴 중간 receipt들은 **커밋되지 않은 표면**을 증언하므로 증거가 아니라
+잡음이고, 4건을 제거했다 — `results/`의 append-only는 **실행 기록**을 지키는
+규칙이고 receipt는 실행 기록이 아니다.
+
 Amendment 37/38에서 추가·변경된 것:
 
 - [`redteam_provider_isolation.py`](../experiments/2026-08-07_handoff_dynamic_controller/redteam_provider_isolation.py)
