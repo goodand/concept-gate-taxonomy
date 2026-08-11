@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import platform
 import shutil
 import subprocess
 import sys
@@ -52,7 +53,9 @@ sys.path.insert(0, str(HERE))
 # imported, that is a BLOCKED condition, not a reason to define a local enum.
 sys.path.insert(0, str(HERE.parents[1]))
 
-from conceptgate.cg_obligations import Verdict, aggregate  # noqa: E402
+from conceptgate.cg_obligations import (  # noqa: E402
+    Assurance, DeciderKind, ObligationResult, ObligationSpec, Verdict,
+    certify)
 import apply_safety_audit as asa  # noqa: E402
 from _provenance import SYNTHETIC, ProvenanceError, verify_run  # noqa: E402
 import make_safety_audit_blind_input as mkblind  # noqa: E402
@@ -71,6 +74,12 @@ SPEC = json.loads((HERE / "safety_audit_spec.json").read_text(encoding="utf-8"))
 # repository had already met this in run_gates.py and answered it with a
 # warning in prose; a warning is not a mechanism.
 PASS, FAIL, BLOCKED = 0, 1, 2
+
+# One sentence, one place. `RunSpec.for_mode` raises it and `refuse_primary`
+# prints it, so the CLI and the library cannot disagree about why primary is
+# unavailable. Round 21, finding #4.
+PRIMARY_REFUSAL = ("primary mode is not implemented in run_pipeline.py; it has "
+                   "no provider, no authorization check and claims no attempt")
 
 # Stage ids, printed by the E2E and required to match the acceptance gate's
 # registry EXACTLY. Round 19, finding #3: "obligation mapping" was still a
@@ -96,21 +105,35 @@ STAGE_IDS = {
 # stages" was true; "3 unguarded obligations" was not. A stage can carry
 # several obligations, and a stage is covered only when all of them are.
 #
-# PASS here means "a mutation removing it makes the release E2E fail", proven
-# by test_e2e_acceptance.py. UNKNOWN means nobody has shown that. Nothing is
-# recorded as PASS on the strength of an assertion inside the E2E itself.
-OBLIGATIONS: dict[str, Verdict] = {
-    "audit.input-validated":           Verdict.PASS,
-    "audit.provenance.bytes-compared": Verdict.PASS,
-    "audit.provenance.propagated":     Verdict.PASS,
-    "packet.blinding.applied":         Verdict.PASS,
-    "reviewer.qualification.required": Verdict.PASS,
-    "reviewer.assignment.frozen":      Verdict.PASS,
-    "reviewer.count.enforced":         Verdict.PASS,
-    "bundle.written.to.disk":          Verdict.PASS,
-    "reviewer.isolation.enforced":     Verdict.PASS,
-    "freeze.closure.current":          Verdict.PASS,
-}
+# THREE LAYERS, round 21 finding #5. Until now there was one: a dict with
+# `Verdict.PASS` typed into it ten times, plus `PROVEN_BY` strings beside it.
+# Nothing connected either to a mutation result, so the pipeline certified its
+# own coverage -- and one observed run printed
+#
+#     reviewer.isolation.enforced: PASS        <- the constant
+#     overall: pass
+#     FAIL: reviewer isolation BLOCKED         <- what actually happened
+#
+# at the same time. A static claim that the code CAN enforce something is not a
+# claim that it DID on this run, and the run has to win.
+#
+#   DECLARED      what this pipeline is responsible for   (this tuple)
+#   DEMONSTRATED  whether a proof for it exists           (derived, see below)
+#   CURRENT-RUN   what THIS execution observed            (recorded as it goes)
+#
+# `effective_obligations` combines them with current-run dominating.
+DECLARED_OBLIGATIONS: tuple[str, ...] = (
+    "audit.input-validated",
+    "audit.provenance.bytes-compared",
+    "audit.provenance.propagated",
+    "packet.blinding.applied",
+    "reviewer.qualification.required",
+    "reviewer.assignment.frozen",
+    "reviewer.count.enforced",
+    "bundle.written.to.disk",
+    "reviewer.isolation.enforced",
+    "freeze.closure.current",
+)
 
 # HOW each obligation is demonstrated. Round 20's design deliberately limits
 # mutation to obligations where removing the code is the only way to observe
@@ -134,19 +157,135 @@ PROVEN_BY: dict[str, str] = {
 # commitment someone can read, not silence.
 UNKNOWN_REASONS: dict[str, str] = {}
 
+# The obligation layer's invariants, applied to THIS experiment's names through
+# the registry seam added in round 21 (correction C3). `certify()` could not be
+# used as-is: none of these names are in the global OBLIGATION_REGISTRY, so
+# every result came back UNKNOWN_OBLIGATION and the verdict was an
+# unconditional FAIL. Registering experiment obligations in the shared domain
+# registry would pollute it; reimplementing the rules here would make a
+# validated mechanism exist twice. The seam avoids both -- and it brings the one
+# rule that catches finding #5: PASS requires non-empty evidence.
+OBLIGATION_REGISTRY: dict[str, ObligationSpec] = {
+    name: ObligationSpec(DeciderKind.GATE, Assurance.RULE_CHECKED,
+                         "run_pipeline.run_pipeline", Verdict.UNKNOWN)
+    for name in DECLARED_OBLIGATIONS
+}
 
-def overall_verdict(obligations: dict[str, Verdict] | None = None) -> Verdict:
-    """PASS only when every obligation is PASS.
 
-    Delegates to conceptgate.cg_obligations.aggregate -- the same rule the
-    obligation layer already applies, so UNKNOWN cannot be laundered into PASS
-    by a second implementation.
+@dataclass(frozen=True)
+class RunVerdict:
+    """A verdict WITH the observation behind it. `evidence` is not decoration:
+    the shared validator rejects a PASS that carries none."""
+    verdict: Verdict
+    evidence: str = ""
+
+
+def _mutation_registry() -> set[str]:
+    """Obligation ids that have a mutation case in the acceptance gate.
+
+    Read from the SOURCE with `ast`, not by importing: importing a test module
+    from production code inverts the layering, and this needs data, not
+    execution. If the file is unreadable the set is empty, which degrades every
+    mutation-proven obligation to UNKNOWN -- the fail-closed direction.
     """
-    @dataclass
-    class _R:            # aggregate() only reads .verdict
-        verdict: Verdict
+    import ast
+    try:
+        tree = ast.parse((HERE / "test_e2e_acceptance.py").read_text(
+            encoding="utf-8"))
+    except (OSError, SyntaxError):
+        return set()
+    return {node.value.value for node in ast.walk(tree)
+            if isinstance(node, ast.keyword) and node.arg == "obligation_id"
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)}
 
-    return aggregate([_R(v) for v in (obligations or OBLIGATIONS).values()])
+
+def _acceptance_test_exists(test_name: str) -> Path | None:
+    for path in sorted(HERE.glob("test_*.py")):
+        if f"def {test_name}" in path.read_text(encoding="utf-8"):
+            return path
+    return None
+
+
+def demonstrated_obligations() -> dict[str, RunVerdict]:
+    """Whether a PROOF exists for each declared obligation, derived.
+
+    Round 21, finding #5: this used to be ten `Verdict.PASS` literals. Deleting
+    the mutation case that justified one would not have changed the reported
+    verdict, which makes the verdict unfalsifiable. Now the mechanism named in
+    PROVEN_BY has to be findable, so deleting the proof degrades the obligation
+    with nobody editing anything.
+
+    WHAT THIS STILL DOES NOT ESTABLISH. PASS here means the proof EXISTS, not
+    that it last PASSED. Binding it to a stored mutation result was considered
+    and rejected for now: the mutation harness re-runs `closure` and the release
+    E2E inside its own workspace, so having `closure` produce the proof artifact
+    would recurse, and a run inside a mutated workspace would read an absent
+    proof and report PARTIAL -- making every mutation look detected for the
+    wrong reason. Until that is untangled, the honest reading of `demonstrated`
+    is "a proof is declared and present", and the layer that speaks about THIS
+    execution is `current_run`.
+    """
+    mutations = _mutation_registry()
+    out: dict[str, RunVerdict] = {}
+    for name in DECLARED_OBLIGATIONS:
+        mechanism = PROVEN_BY.get(name, "")
+        if mechanism == "mutation":
+            if name in mutations:
+                out[name] = RunVerdict(
+                    Verdict.PASS,
+                    f"mutation case {name} in test_e2e_acceptance.py")
+            else:
+                out[name] = RunVerdict(
+                    Verdict.UNKNOWN, "no mutation case declares this obligation")
+        elif mechanism.startswith("acceptance:"):
+            test_name = mechanism.split(":", 1)[1]
+            found = _acceptance_test_exists(test_name)
+            out[name] = (RunVerdict(Verdict.PASS, f"{found.name}::{test_name}")
+                         if found else
+                         RunVerdict(Verdict.UNKNOWN,
+                                    f"cites {test_name}, which does not exist"))
+        else:
+            out[name] = RunVerdict(Verdict.UNKNOWN,
+                                   f"unrecognised mechanism {mechanism!r}")
+    return out
+
+
+def effective_obligations(
+        current_run: dict[str, RunVerdict] | None = None
+) -> dict[str, RunVerdict]:
+    """Demonstrated, overridden by what THIS run observed.
+
+    Current-run dominates whenever it has an entry. That is the whole point:
+    a mutation proving the isolation check cannot be removed says nothing about
+    a run in which the sandbox was unavailable, and reporting the static PASS
+    alongside `FAIL: reviewer isolation BLOCKED` is what round 21 caught.
+
+    An obligation with no current-run entry keeps its demonstrated verdict --
+    this run did not observe it either way, and inventing a verdict for it would
+    be the same overclaim in the other direction.
+    """
+    effective = demonstrated_obligations()
+    for name, record in (current_run or {}).items():
+        if name not in effective:
+            raise KeyError(f"{name} is not a declared obligation")
+        effective[name] = record
+    return effective
+
+
+def overall_verdict(obligations: dict[str, RunVerdict] | None = None) -> Verdict:
+    """PASS only when every obligation is PASS, and only with evidence.
+
+    Delegates to `conceptgate.cg_obligations.certify` -- validation AND
+    aggregation, so an invariant violation (a PASS with no evidence, an
+    assurance above the decider's cap) is a FAIL rather than something this
+    module decides for itself.
+    """
+    records = (effective_obligations() if obligations is None else obligations)
+    report = certify([ObligationResult(name, r.verdict, Assurance.RULE_CHECKED,
+                                       DeciderKind.GATE, evidence=r.evidence)
+                      for name, r in records.items()], OBLIGATION_REGISTRY)
+    return Verdict(report["verdict"])
 
 
 def _launcher_available() -> bool:
@@ -157,16 +296,83 @@ def _launcher_available() -> bool:
         return False
     source = module.read_text(encoding="utf-8")
     return all(marker in source for marker in
-               ("def probe_isolation", "def run_reviewer", "produced_by"))
+               ("def probe_isolation", "def run_reviewer", "RECEIPT_DOMAIN"))
+
+
+CLOSURE_KIND = "freeze-closure-receipt-v1"
+CLOSURE_ARTIFACTS = ("calibration.json", "redteam_provider_isolation.json",
+                     "redteam_codex_mcp_isolation.json")
+
+
+def _surface_digest(hashes: dict) -> str:
+    """The one way a surface map becomes a digest. Generator and verifier both
+    call this; two implementations of "the digest of this map" can disagree."""
+    return hashlib.sha256(
+        json.dumps(hashes, sort_keys=True).encode("utf-8")).hexdigest()
+
+
+def closure_receipt_defects(doc: dict, path: Path) -> list[str]:
+    """Every way `doc` fails to be a closure receipt for the CURRENT state.
+
+    Round 21, finding #6. The old check read ONE field -- `frozen_surface_hashes`
+    -- so `{"frozen_surface_hashes": {...current...}}` was accepted as a valid
+    freeze closure. Everything else the generator writes (`kind`, the digest,
+    the digest in the FILENAME, `steps`, and the artifact hashes) was recorded
+    and read by nobody.
+
+    That is the `output_sha256` pattern this experiment already paid for once: a
+    field written to look rigorous and never compared. The rule taken from it is
+    that a verifier is symmetric with its generator, and the way to hold that is
+    a test per written field -- see test_every_recorded_closure_field_is_verified.
+
+    Returns a LIST, not a bool: a caller fixing one defect at a time and
+    re-running is a caller who discovers the next one an hour later.
+    """
+    from _evaluator import frozen_surface_drift
+    defects: list[str] = []
+    if doc.get("kind") != CLOSURE_KIND:
+        defects.append(f"kind is {doc.get('kind')!r}, expected {CLOSURE_KIND!r}")
+    hashes = doc.get("frozen_surface_hashes")
+    if not isinstance(hashes, dict) or not hashes:
+        return defects + ["no frozen_surface_hashes map"]
+    drift = frozen_surface_drift(hashes)
+    if drift:
+        defects.append(f"describes a different surface: {sorted(drift)[:4]}")
+    digest = _surface_digest(hashes)
+    if doc.get("frozen_surface_digest") != digest:
+        defects.append("frozen_surface_digest does not match its own hash map")
+    # The filename is part of the claim: `closure_<digest12>.json`. A receipt
+    # copied to another name would otherwise attest to a surface it does not
+    # describe, and `sorted(glob)` picks by name.
+    if path.name != f"closure_{digest[:12]}.json":
+        defects.append(f"filename {path.name} does not carry digest {digest[:12]}")
+    steps = [label for label, _ in CLOSURE_STEPS]
+    if doc.get("steps") != steps:
+        defects.append(f"steps are {doc.get('steps')}, expected {steps}")
+    artifacts = doc.get("artifacts")
+    if not isinstance(artifacts, dict) or set(artifacts) != set(CLOSURE_ARTIFACTS):
+        defects.append(f"artifacts set is {sorted(artifacts or [])}, expected "
+                       f"{sorted(CLOSURE_ARTIFACTS)}")
+    else:
+        for name, recorded in sorted(artifacts.items()):
+            path_ = RESULTS / name
+            if not path_.is_file():
+                defects.append(f"{name} is recorded but missing from results/")
+            elif _sha256(path_) != recorded:
+                defects.append(f"{name} on disk differs from the receipt")
+    return defects
 
 
 def _closure_receipt() -> dict | None:
-    """The most recent closure receipt, if it describes the CURRENT surface."""
-    from _evaluator import frozen_surface_drift
-    candidates = sorted(RESULTS.glob("closure_*.json"))
-    for path in reversed(candidates):
-        doc = json.loads(path.read_text(encoding="utf-8"))
-        if not frozen_surface_drift(doc.get("frozen_surface_hashes")):
+    """The most recent closure receipt that fully verifies, or None."""
+    for path in reversed(sorted(RESULTS.glob("closure_*.json"))):
+        try:
+            doc = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(doc, dict):
+            continue
+        if not closure_receipt_defects(doc, path):
             return doc
     return None
 
@@ -416,20 +622,25 @@ def closure() -> int:
         print("  Something edited the surface between steps.")
         return FAIL
 
-    digest = hashlib.sha256(
-        json.dumps(now, sort_keys=True).encode("utf-8")).hexdigest()
+    digest = _surface_digest(now)
     receipt = {
-        "kind": "freeze-closure-receipt-v1",
+        "kind": CLOSURE_KIND,
         "frozen_surface_digest": digest,
         "frozen_surface_hashes": now,
         "steps": [label for label, _ in CLOSURE_STEPS],
-        "artifacts": {name: _sha256(RESULTS / name) for name in (
-            "calibration.json", "redteam_provider_isolation.json",
-            "redteam_codex_mcp_isolation.json")},
+        "artifacts": {name: _sha256(RESULTS / name)
+                      for name in CLOSURE_ARTIFACTS},
     }
     out = RESULTS / f"closure_{digest[:12]}.json"
     out.write_text(json.dumps(receipt, ensure_ascii=False, indent=1),
                    encoding="utf-8")
+    # Verify what was just written, with the SAME function the consumer uses.
+    # A generator that cannot satisfy its own verifier is the failure mode this
+    # round found in the other direction, and it costs one call to rule out.
+    defects = closure_receipt_defects(receipt, out)
+    if defects:
+        print(f"\n  FAIL: the receipt just written does not verify: {defects}")
+        return FAIL
     print(f"\n  receipt: {out.name}  digest={digest[:12]}")
     print("  All frozen artifacts describe the current surface. Numbers "
           "measured from here on describe THIS state.")
@@ -552,9 +763,93 @@ class RunSpec:
             return cls(mode, allow_partial=False, require_launcher=True,
                        require_closure=True, matrix_cells=SPEC["expected_cells"])
         if mode == "primary":
-            return cls(mode, allow_partial=False, require_launcher=True,
-                       require_closure=True, matrix_cells=SPEC["expected_cells"])
+            raise SystemExit(PRIMARY_REFUSAL)
         raise SystemExit(f"unknown mode {mode!r}")
+
+
+RELEASE_KIND = "release-run-receipt-v1"
+
+
+def _git(*args: str) -> str:
+    try:
+        proc = subprocess.run(["git", *args], cwd=HERE, capture_output=True,
+                              text=True, timeout=15)
+        return proc.stdout.strip() if proc.returncode == 0 else ""
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
+def write_release_receipt(spec: RunSpec, verdict: int, *,
+                          closure_digest: str | None,
+                          obligations: dict) -> Path:
+    """Record what a release run observed, IN THIS ENVIRONMENT.
+
+    Round 21, finding #8. `e2e --release` returned 0 here and 1 with two BLOCKED
+    isolation probes on the reviewer's host, and neither run left anything
+    behind. So "release passes" was a claim about a terminal session, and the
+    two results could not be told apart afterwards -- exactly the kind of
+    environment-dependent number this experiment records for red-teams and
+    calibration but had not recorded for its own gate.
+
+    NOT part of the closure receipt. Release requires a current closure receipt,
+    so a closure receipt carrying release's outcome would be circular. The
+    dependency runs one way: closure attests to the surface, release attests to
+    a run and names the closure digest it consumed.
+
+    Idempotent by content hash: the same state re-run does not accumulate
+    near-identical files in an append-only directory.
+    """
+    body = {
+        "kind": RELEASE_KIND,
+        "mode": spec.mode,
+        "exit": {PASS: "PASS", FAIL: "FAIL", BLOCKED: "BLOCKED"}[verdict],
+        "closure_digest": closure_digest,
+        "obligations": obligations,
+        "git_commit": _git("rev-parse", "HEAD"),
+        "git_dirty": bool(_git("status", "--porcelain")),
+        "python": sys.version.split()[0],
+        "platform": f"{platform.system()} {platform.release()}",
+        "sandbox_available": Path("/usr/bin/sandbox-exec").is_file(),
+        "tests_not_recorded_why":
+            "a pytest summary would require this command to run the suite that "
+            "runs this command; read it from the commit's own gate output",
+    }
+    digest = hashlib.sha256(
+        json.dumps(body, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+    out = RESULTS / f"release_{digest[:12]}.json"
+    if not out.exists():
+        out.write_text(json.dumps({**body, "receipt_sha256": digest},
+                                  ensure_ascii=False, indent=1),
+                       encoding="utf-8")
+    return out
+
+
+def refuse_primary() -> int:
+    """`--primary` names a run this program cannot perform. Say so, exit 2.
+
+    Round 21, finding #4. `RunSpec.for_mode("primary")` used to return fields
+    IDENTICAL to release, and `run_pipeline` then built `_synthetic_primary()`
+    -- reference traces scored by the real evaluator. No provider, no
+    authorization check, no attempt claimed. The help text said "the 32-cell
+    run". A caller who believed it would file a synthetic artifact as the
+    primary result, and nothing downstream would contradict them.
+
+    BLOCKED, not FAIL: nothing failed. The mode is not implemented, and
+    "cannot be verified" is the third value this repository keeps distinct
+    from both pass and failure.
+    """
+    print("BLOCKED: primary mode is not implemented; no attempt was claimed.")
+    print()
+    print("  A primary run needs four things this command does not have:")
+    print("    - a provider (the 32 cells are live model calls)")
+    print("    - a config whose qualification artifacts are current")
+    print("    - PRIMARY_AUTHORIZATION.json covering that config")
+    print("    - an attempt claimed in primary_attempt_ledger.jsonl")
+    print()
+    print("  Use `run_live_phase_c.py --primary --config <name>`, which does")
+    print("  all four. Run `run_pipeline.py doctor` first for what is refused.")
+    return BLOCKED
 
 
 def run_pipeline(spec: RunSpec) -> int:
@@ -568,12 +863,17 @@ def run_pipeline(spec: RunSpec) -> int:
     print("            provider; this command deliberately has none.")
     print("   no provider calls, no attempt consumed, temp dir only\n")
     failures: list[str] = []
+    # What THIS run observed, filled in as it goes. Only obligations this run
+    # actually watches get an entry -- an invented verdict for an unobserved
+    # obligation is the same overclaim in the other direction (finding #5).
+    current_run: dict[str, RunVerdict] = {}
 
     # ALL unmet preconditions, not the first one. Reporting one at a time
     # makes a caller fix it, re-run, and discover the next -- and makes the
     # output an understatement of what is missing.
     unmet: list[str] = []
-    if spec.require_closure and _closure_receipt() is None:
+    closure = _closure_receipt()
+    if spec.require_closure and closure is None:
         unmet.append("freeze.closure.current: no closure receipt describes the "
                      "current surface. Run `run_pipeline.py closure` after the "
                      "last edit.")
@@ -587,6 +887,11 @@ def run_pipeline(spec: RunSpec) -> int:
         for item in unmet:
             print(f"    - {item}")
         return FAIL
+
+    if spec.require_closure:
+        current_run["freeze.closure.current"] = RunVerdict(
+            Verdict.PASS, f"closure receipt {closure['frozen_surface_digest'][:12]} "
+            "verified against the current surface")
 
     with tempfile.TemporaryDirectory(prefix="hd-e2e-") as tmp:
         root = Path(tmp)
@@ -805,6 +1110,20 @@ def run_pipeline(spec: RunSpec) -> int:
                         f"reviewer isolation for {rid} is {doc['status']}: the "
                         "boundary was not exercised, which is not a pass")
             print(f"  [--] reviewer.isolation-enforced      {iso_status}")
+            # Round 21, finding #5: this list used to be printed while the
+            # coverage block reported `reviewer.isolation.enforced: PASS` from a
+            # constant. The run's own observation now decides.
+            if iso_status and all(s == "PASS" for s in iso_status):
+                current_run["reviewer.isolation.enforced"] = RunVerdict(
+                    Verdict.PASS,
+                    f"launcher-signed receipts, all probes denied: {iso_status}")
+            elif "FAIL" in iso_status or "ERROR" in iso_status:
+                current_run["reviewer.isolation.enforced"] = RunVerdict(
+                    Verdict.FAIL, f"isolation did not hold: {iso_status}")
+            else:
+                current_run["reviewer.isolation.enforced"] = RunVerdict(
+                    Verdict.UNKNOWN,
+                    f"the boundary was not exercised on this host: {iso_status}")
 
         # --- 8. adjudication -------------------------------------------
         rc = asa.main(["run_pipeline", str(primary), str(packet_path),
@@ -813,6 +1132,10 @@ def run_pipeline(spec: RunSpec) -> int:
         if rc != 0:
             failures.append("adjudicator CLI returned non-zero")
         bundle_path = root / "results" / f"adjudicated_{primary.stem}.json"
+        current_run["bundle.written.to.disk"] = RunVerdict(
+            Verdict.PASS, f"read back from {bundle_path.name}"
+        ) if bundle_path.is_file() else RunVerdict(
+            Verdict.FAIL, "the adjudicator wrote no bundle")
         if not bundle_path.is_file():
             failures.append("no final bundle was written to disk")
             audit = {"cell_verdicts": {}, "adjudicated_full_hard_gate_rate": None,
@@ -853,38 +1176,58 @@ def run_pipeline(spec: RunSpec) -> int:
 
     elapsed = time.time() - started
     print(f"\n  {elapsed:.1f}s")
-    # Machine-readable coverage, so a reader does not have to infer it from
-    # prose that can drift from the code.
-    unknown = sorted(k for k, v in OBLIGATIONS.items() if v is not Verdict.PASS)
+    # Machine-readable coverage in THREE layers, so a reader does not have to
+    # infer it from prose -- and so a static PASS can no longer sit beside a
+    # contradicting run result (round 21, finding #5).
+    demonstrated = demonstrated_obligations()
+    effective = effective_obligations(current_run)
+    unknown = sorted(k for k, r in effective.items()
+                     if r.verdict is not Verdict.PASS)
+    verdict = overall_verdict(effective)
     coverage = {
-        "obligations_pass": sorted(k for k, v in OBLIGATIONS.items()
-                                   if v is Verdict.PASS),
-        "obligations_unknown": unknown,
-        "overall": overall_verdict().value,
+        "declared": list(DECLARED_OBLIGATIONS),
+        "demonstrated": {k: r.verdict.value for k, r in demonstrated.items()},
+        "current_run": {k: r.verdict.value for k, r in current_run.items()},
+        "effective_unknown": unknown,
+        "overall": verdict.value,
         "not_covered_at_all": ["provider.execution", "qualification.pilot",
                                "authorization.issuance", "attempt.claim"],
     }
     print(f"\n  coverage: {json.dumps(coverage)}")
 
+    def _finish(code: int) -> int:
+        # Release is the mode whose result other sessions quote, so it is the
+        # mode that has to leave evidence of the environment it ran in.
+        if spec.mode == "release":
+            receipt = write_release_receipt(
+                spec, code,
+                closure_digest=(closure or {}).get("frozen_surface_digest"),
+                obligations={k: r.verdict.value for k, r in effective.items()})
+            print(f"  receipt: {receipt.name}")
+        return code
+
     if failures:
         print(f"  FAIL ({len(failures)}):")
         for f in failures:
             print(f"    - {f}")
-        return FAIL
-    if overall_verdict() is not Verdict.PASS:
+        return _finish(FAIL)
+    if verdict is not Verdict.PASS:
         print(f"  PARTIAL -- {len(unknown)} obligation(s) not shown to hold:")
         for name in unknown:
-            print(f"    - {name}: {UNKNOWN_REASONS.get(name, '(no reason recorded)')}")
+            reason = (current_run[name].evidence if name in current_run
+                      else effective[name].evidence
+                      or UNKNOWN_REASONS.get(name, "(no reason recorded)"))
+            print(f"    - {name}: {reason}")
         if not spec.allow_partial:
             print(f"  {spec.mode} does not accept PARTIAL.")
-            return FAIL
+            return _finish(FAIL)
         print("  Every step executed, but PARTIAL is not a pass: an obligation "
               "nobody has demonstrated could be silently absent.")
-        return BLOCKED
+        return _finish(BLOCKED)
     print("  PASS -- the offline downstream path is wired end to end.")
     print("  Not a claim about provider behaviour, and not a substitute for")
     print("  qualification: run `doctor` for what is still refused.")
-    return 0
+    return _finish(PASS)
 
 
 def main() -> int:
@@ -907,15 +1250,19 @@ def main() -> int:
                        help="real launcher + closure receipt; only exit 0 is "
                             "success")
     group.add_argument("--primary", action="store_true",
-                       help="the 32-cell run; allowed only after --release "
-                            "passes")
+                       help="REFUSED: this command has no provider. Kept so "
+                            "the refusal is explicit rather than an unknown "
+                            "flag; use run_live_phase_c.py --primary")
     args = ap.parse_args()
     if args.cmd == "closure":
         return closure()
     if args.cmd == "doctor":
         return doctor(args.config)
-    mode = ("release" if args.release else
-            "primary" if args.primary else "offline-smoke")
+    if args.primary:
+        # Before RunSpec, before _synthetic_primary. Refusing after doing the
+        # work still teaches a reader that the work IS the primary run.
+        return refuse_primary()
+    mode = "release" if args.release else "offline-smoke"
     return run_pipeline(RunSpec.for_mode(mode))
 
 

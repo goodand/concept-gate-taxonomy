@@ -109,9 +109,20 @@ class ObligationResult:
     depends_on: Tuple[str, ...] = ()  # provenance만 — invalidation은 로드맵 트리거 대기
 
 
-def validate_result(result: ObligationResult) -> List[Dict[str, Any]]:
-    """단일 결과의 권한·보증 불변조건 검사. 위반 목록 반환 (빈 목록 = 유효)."""
-    spec = OBLIGATION_REGISTRY.get(result.obligation)
+def validate_result(result: ObligationResult,
+                    registry: Dict[str, ObligationSpec] | None = None
+                    ) -> List[Dict[str, Any]]:
+    """단일 결과의 권한·보증 불변조건 검사. 위반 목록 반환 (빈 목록 = 유효).
+
+    `registry`는 이 저장소 밖의 의무 집합을 위한 seam이다(기본값은 전역
+    OBLIGATION_REGISTRY). 여기 있는 불변조건 — 특히 `PASS는 evidence 필수` —
+    는 도메인과 무관하게 유효한데, 그것을 쓰려면 의무 이름이 전역 레지스트리에
+    있어야 했다. 실험용 의무 10개를 이 도메인 레지스트리에 등록하면 개념 게이트
+    레지스트리가 오염되고, 규칙을 실험 쪽에 다시 구현하면 검증된 기제가 두 벌이
+    된다. 인자 하나가 둘 다 피한다.
+    """
+    registry = OBLIGATION_REGISTRY if registry is None else registry
+    spec = registry.get(result.obligation)
     if spec is None:
         return [{"code": "UNKNOWN_OBLIGATION", "detail": result.obligation}]
     errors: List[Dict[str, Any]] = []
@@ -307,11 +318,16 @@ def results_from_classification(resp: Dict[str, Any]) -> List[ObligationResult]:
         DeciderKind.REASONER, evidence="HermiT: unsatisfiable 0건")]
 
 
-def certify(results: List[ObligationResult]) -> Dict[str, Any]:
-    """검증 + 집계 단일 진입점. 불변조건 위반이 하나라도 있으면 FAIL."""
+def certify(results: List[ObligationResult],
+            registry: Dict[str, ObligationSpec] | None = None) -> Dict[str, Any]:
+    """검증 + 집계 단일 진입점. 불변조건 위반이 하나라도 있으면 FAIL.
+
+    `registry`는 validate_result와 같은 seam이다 — 전달하지 않으면 전역
+    레지스트리를 쓴다.
+    """
     errors: List[Dict[str, Any]] = []
     for r in results:
-        for e in validate_result(r):
+        for e in validate_result(r, registry):
             errors.append({"obligation": r.obligation, **e})
     verdict = Verdict.FAIL if errors else aggregate(results)
     return {

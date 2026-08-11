@@ -32,7 +32,11 @@ A leaf keeps one definition without creating that edge:
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
+import os
+import secrets
+from pathlib import Path
 
 
 def receipt_sha256(receipt: dict | None) -> str | None:
@@ -50,6 +54,73 @@ def receipt_sha256(receipt: dict | None) -> str | None:
     """
     if receipt is None:
         return None
-    return hashlib.sha256(
-        json.dumps(receipt, sort_keys=True, ensure_ascii=False).encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(canonical_bytes(receipt)).hexdigest()
+
+
+def canonical_bytes(doc: dict) -> bytes:
+    """The one byte-form both a writer and a reader derive from a document."""
+    return json.dumps(doc, sort_keys=True, ensure_ascii=False).encode("utf-8")
+
+
+# ------------------------------------------------------ authentication ----
+# Round 21, finding #1. A receipt whose integrity field is a PUBLIC hash of
+# its own PUBLIC contents authenticates nothing: fill the fields in, call the
+# same function, and the document verifies. That was measured -- a receipt
+# claiming a passing sandbox probe was accepted with the launcher never having
+# run. `produced_by: "reviewer_runner"` was a string anyone could type.
+#
+# WHAT SIGNING HERE DOES AND DOES NOT DEFEND AGAINST
+# --------------------------------------------------
+# Defends against:
+#   * the reviewer -- an agent confined to a packet-only directory whose
+#     Seatbelt profile denies the subtree holding the key. It cannot read the
+#     key, so it cannot manufacture a receipt about its own confinement.
+#   * a hand-authored document -- the failure this round actually found.
+# Does NOT defend against:
+#   * anyone with read access to this host's filesystem. The key is a file.
+# That limit is stated in safety_audit_reviewer_assignment.json under
+# NOT_machine_verified, and it must not be described as more than this.
+
+KEY_BYTES = 32
+
+
+def load_or_create_key(path: Path) -> bytes:
+    """The host-only signing key, created on first use with mode 0600.
+
+    O_EXCL, not `if not path.exists()`: two launchers starting together would
+    otherwise both pass the check and the second would overwrite the key the
+    first had already signed with, invalidating a receipt nobody edited.
+    """
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        key = path.read_bytes()
+        if len(key) != KEY_BYTES:
+            raise ValueError(
+                f"{path.name} is {len(key)} bytes, expected {KEY_BYTES}; "
+                "refusing to sign with a truncated key") from None
+        return key
+    with os.fdopen(fd, "wb") as fh:
+        key = secrets.token_bytes(KEY_BYTES)
+        fh.write(key)
+    return key
+
+
+def sign(body: dict, key: bytes, *, domain: str) -> str:
+    """HMAC-SHA256 over the canonical body, namespaced by `domain`.
+
+    `domain` keeps an isolation receipt from ever validating as some other
+    kind of receipt signed with the same key -- the two have different
+    meanings and must not be substitutable.
+    """
+    msg = domain.encode("utf-8") + b"\x00" + canonical_bytes(body)
+    return hmac.new(key, msg, hashlib.sha256).hexdigest()
+
+
+def verify(doc: dict, key: bytes, *, domain: str, field: str = "signature") -> bool:
+    """True when `doc[field]` is this key's signature over the rest of `doc`."""
+    presented = doc.get(field)
+    if not isinstance(presented, str):
+        return False
+    body = {k: v for k, v in doc.items() if k != field}
+    return hmac.compare_digest(sign(body, key, domain=domain), presented)

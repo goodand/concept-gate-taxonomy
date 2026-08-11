@@ -196,7 +196,15 @@ def test_agent_reviewer_isolation_needs_probe_evidence_not_a_file(tmp_path):
     # `_launcher_available()` may name the module, but PASS must still rest on
     # probe fields -- not on the file being there.
     assert "def _launcher_available" in source
-    assert "produced_by" in source, "launcher receipts are not authenticated"
+    # Round 21: `produced_by` was the marker, and it was also the forgery --
+    # a string the caller types. Authentication is now an HMAC, and it lives in
+    # the LAUNCHER, so that is where the marker is checked. Asserting it in
+    # run_pipeline.py only proved run_pipeline mentions a word.
+    launcher = (HERE / "reviewer_runner.py").read_text(encoding="utf-8")
+    assert "RECEIPT_DOMAIN" in launcher and "sign(doc, key" in launcher, (
+        "launcher receipts are not authenticated")
+    assert "produced_by" not in launcher.split('"""')[2], (
+        "the forgeable produced_by marker is still live code")
     # doctor no longer reads booleans at all: it calls the launcher's own
     # verifier, which rejects a receipt that was not produced by the launcher
     # or whose contents no longer match its hash.
@@ -269,7 +277,7 @@ def test_the_receipt_module_is_a_leaf():
 
 def test_the_completion_unit_is_the_obligation():
     import run_pipeline
-    assert hasattr(run_pipeline, "OBLIGATIONS"), (
+    assert hasattr(run_pipeline, "DECLARED_OBLIGATIONS"), (
         "coverage is still computed from stages")
     source = (HERE / "run_pipeline.py").read_text(encoding="utf-8")
     assert "set(STAGE_IDS.values()) - set(UNGUARDED_STAGES)" not in source, (
@@ -279,18 +287,24 @@ def test_the_completion_unit_is_the_obligation():
 def test_overall_is_pass_only_when_every_obligation_is_pass():
     import run_pipeline as rp
     from conceptgate.cg_obligations import Verdict
-    obligations = dict(rp.OBLIGATIONS)
-    assert rp.overall_verdict(obligations) in (Verdict.PASS, Verdict.UNKNOWN,
-                                               Verdict.FAIL)
+    names = rp.DECLARED_OBLIGATIONS
+    allpass = {k: rp.RunVerdict(Verdict.PASS, "observed") for k in names}
+    assert rp.overall_verdict(allpass) is Verdict.PASS
     # One UNKNOWN is enough to deny PASS -- the rule cg_obligations already
     # applies, reused rather than re-derived.
-    poisoned = {**{k: Verdict.PASS for k in obligations},
-                "reviewer.isolation.enforced": Verdict.UNKNOWN}
+    poisoned = {**allpass,
+                "reviewer.isolation.enforced": rp.RunVerdict(
+                    Verdict.UNKNOWN, "sandbox unavailable")}
     assert rp.overall_verdict(poisoned) is Verdict.UNKNOWN
-    allpass = {k: Verdict.PASS for k in obligations}
-    assert rp.overall_verdict(allpass) is Verdict.PASS
-    poisoned2 = {**allpass, "audit.input-validated": Verdict.FAIL}
+    poisoned2 = {**allpass,
+                 "audit.input-validated": rp.RunVerdict(Verdict.FAIL, "gate off")}
     assert rp.overall_verdict(poisoned2) is Verdict.FAIL
+    # Round 21: and a PASS with no evidence is not a PASS. The invariant comes
+    # from the obligation layer, applied through the registry seam.
+    hollow = {**allpass,
+              "packet.blinding.applied": rp.RunVerdict(Verdict.PASS, "")}
+    assert rp.overall_verdict(hollow) is Verdict.FAIL, (
+        "an obligation asserted PASS with no observation behind it")
 
 
 def test_every_mutation_obligation_appears_in_the_pipeline_registry():
@@ -301,17 +315,18 @@ def test_every_mutation_obligation_appears_in_the_pipeline_registry():
     import test_e2e_acceptance as ac
     mutated = {o.obligation_id for o in ac.OBLIGATIONS
                if o.obligation_id not in ac.NO_SIGNAL_YET}
-    declared = set(rp.OBLIGATIONS)
+    declared = set(rp.DECLARED_OBLIGATIONS)
     assert mutated <= declared, f"mutations for undeclared obligations: {mutated - declared}"
     from conceptgate.cg_obligations import Verdict
-    for name, verdict in rp.OBLIGATIONS.items():
+    for name, record in rp.demonstrated_obligations().items():
         mechanism = rp.PROVEN_BY[name]
-        if verdict is Verdict.PASS and mechanism == "mutation":
+        if record.verdict is Verdict.PASS and mechanism == "mutation":
             assert name in mutated, (
                 f"{name} claims PASS by mutation but none demonstrates it")
-        if verdict is not Verdict.PASS:
-            assert name in rp.UNKNOWN_REASONS, (
-                f"{name} is not PASS and records no reason")
+        # Round 21: a non-PASS obligation carries its reason in the record
+        # itself, so there is no separate table to forget to update.
+        if record.verdict is not Verdict.PASS:
+            assert record.evidence, f"{name} is not PASS and records no reason"
 
 
 # --------------------------------------------------------------------------
@@ -363,7 +378,7 @@ def test_release_mode_passes_and_every_obligation_is_demonstrated():
     proc = _run("run_pipeline.py", "e2e", "--release")
     assert proc.returncode == PASS, proc.stdout[-2000:] + proc.stderr[-500:]
     assert rp.overall_verdict() is Verdict.PASS
-    assert '"obligations_unknown": []' in proc.stdout
+    assert '"effective_unknown": []' in proc.stdout
 
 
 def test_release_names_the_obligation_when_a_precondition_is_missing():
@@ -408,9 +423,9 @@ def test_release_refuses_without_a_current_closure_receipt(tmp_path):
 def test_every_obligation_records_how_it_is_proven():
     import run_pipeline as rp
     from conceptgate.cg_obligations import Verdict
-    assert set(rp.PROVEN_BY) == set(rp.OBLIGATIONS)
-    for name, verdict in rp.OBLIGATIONS.items():
-        if verdict is not Verdict.PASS:
+    assert set(rp.PROVEN_BY) == set(rp.DECLARED_OBLIGATIONS)
+    for name, record in rp.demonstrated_obligations().items():
+        if record.verdict is not Verdict.PASS:
             continue
         mechanism = rp.PROVEN_BY[name]
         assert mechanism == "mutation" or mechanism.startswith("acceptance:"), (
@@ -420,3 +435,222 @@ def test_every_obligation_records_how_it_is_proven():
             found = any(f"def {test_name}" in p.read_text(encoding="utf-8")
                         for p in HERE.glob("test_*.py"))
             assert found, f"{name} cites {test_name}, which does not exist"
+
+
+# --------------------------------------------------------------- round 21 ----
+# Finding #4: `e2e --primary` advertised "the 32-cell run" and then executed
+# `_synthetic_primary()` -- no provider, no authorization, no attempt claim.
+# release and primary had IDENTICAL RunSpec fields, so the two modes were the
+# same program under two names. A caller who trusted the help text would
+# record a synthetic result as a primary one.
+
+def test_primary_mode_refuses_until_a_real_runner_is_connected():
+    """A mode that cannot do what it is named must not exit 0."""
+    proc = subprocess.run([sys.executable, "run_pipeline.py", "e2e", "--primary"],
+                          cwd=HERE, capture_output=True, text=True, timeout=180)
+    assert proc.returncode == BLOCKED, (
+        f"--primary returned {proc.returncode}; a mode with no provider behind "
+        f"it must not report success\n{proc.stdout[-1500:]}")
+    out = proc.stdout + proc.stderr
+    assert "not implemented" in out and "no attempt was claimed" in out, out[-800:]
+    # It must not have built the synthetic artifact either -- refusing after
+    # doing the work still teaches a reader that the work is the primary run.
+    assert "primary.synthetic-built" not in out, (
+        "--primary ran the synthetic pipeline before refusing")
+
+
+def test_primary_mode_has_no_runnable_spec():
+    """The refusal lives in one place. `for_mode` must not hand out a spec
+    that `run_pipeline` would happily execute."""
+    import run_pipeline as rp
+    with pytest.raises(SystemExit, match="not implemented"):
+        rp.RunSpec.for_mode("primary")
+
+
+# ---- #6: the closure verifier must check everything the generator writes ----
+def _current_closure_fields(rp):
+    from _evaluator import frozen_surface_hashes
+    now = frozen_surface_hashes()
+    digest = __import__("hashlib").sha256(
+        json.dumps(now, sort_keys=True).encode("utf-8")).hexdigest()
+    return now, digest
+
+
+def test_a_minimal_json_is_not_a_closure_receipt(tmp_path, monkeypatch):
+    """Reproduced before the fix: `_closure_receipt()` read exactly one field.
+
+        {"frozen_surface_hashes": {...current...}}   -> accepted as valid
+
+    kind, frozen_surface_digest, the digest in the filename, steps, and the
+    artifact hashes were all WRITTEN by the generator and read by nobody. That
+    is the `output_sha256` pattern again -- a field recorded to look rigorous
+    and never compared.
+    """
+    import run_pipeline as rp
+    now, _digest = _current_closure_fields(rp)
+    monkeypatch.setattr(rp, "RESULTS", tmp_path)
+    (tmp_path / "closure_deadbeefcafe.json").write_text(
+        json.dumps({"frozen_surface_hashes": now}), encoding="utf-8")
+    assert rp._closure_receipt() is None, (
+        "a one-key document was accepted as a freeze-closure receipt")
+
+
+@pytest.mark.parametrize("break_field", [
+    "kind", "frozen_surface_digest", "steps", "artifacts", "filename"])
+def test_every_recorded_closure_field_is_verified(break_field, tmp_path, monkeypatch):
+    """One parametrised case per field the generator writes. A field nobody
+    reads is indistinguishable from a field nobody writes."""
+    import run_pipeline as rp
+    real = sorted(rp.RESULTS.glob("closure_*.json"))
+    if not real:
+        pytest.skip("no closure receipt to derive a case from")
+    doc = json.loads(real[-1].read_text(encoding="utf-8"))
+    now, digest = _current_closure_fields(rp)
+    doc["frozen_surface_hashes"] = now
+    doc["frozen_surface_digest"] = digest
+    name = f"closure_{digest[:12]}.json"
+    if break_field == "kind":
+        doc["kind"] = "something-else"
+    elif break_field == "frozen_surface_digest":
+        doc["frozen_surface_digest"] = "0" * 64
+    elif break_field == "steps":
+        doc["steps"] = doc["steps"][:1]
+    elif break_field == "artifacts":
+        doc["artifacts"] = {k: "0" * 64 for k in doc["artifacts"]}
+    elif break_field == "filename":
+        name = "closure_000000000000.json"
+    monkeypatch.setattr(rp, "RESULTS", tmp_path)
+    (tmp_path / name).write_text(json.dumps(doc), encoding="utf-8")
+    assert rp._closure_receipt() is None, (
+        f"a receipt with a broken {break_field} was accepted")
+
+
+def test_the_real_closure_receipt_still_verifies(monkeypatch):
+    """The other direction. A verifier that rejects everything would pass every
+    test above and make `closure` unusable."""
+    import run_pipeline as rp
+    from _evaluator import frozen_surface_drift
+    real = [p for p in sorted(rp.RESULTS.glob("closure_*.json"))
+            if not frozen_surface_drift(
+                json.loads(p.read_text(encoding="utf-8")).get(
+                    "frozen_surface_hashes"))]
+    if not real:
+        pytest.skip("no current closure receipt; run `run_pipeline.py closure`")
+    assert rp._closure_receipt() is not None, (
+        "the generator's own output does not pass the verifier")
+
+
+# ---- #8: a release run must leave evidence of what it observed -------------
+def test_a_release_run_records_its_environment(tmp_path, monkeypatch):
+    """Finding #8. `e2e --release` reported exit 0 on one host and exit 1 with
+    two BLOCKED isolation probes on another, and NOTHING was written down. The
+    exit code was a property of the environment presented as a property of the
+    commit -- and the next session had no way to tell which it had been told.
+
+    The reviewer proposed folding this into the closure receipt. It cannot go
+    there: release REQUIRES a current closure receipt, so a closure receipt
+    that recorded release's outcome would need release to have run first.
+    Separate receipt, one direction: release records the closure digest it
+    consumed.
+    """
+    import run_pipeline as rp
+    monkeypatch.setattr(rp, "RESULTS", tmp_path)
+    path = rp.write_release_receipt(rp.RunSpec.for_mode("release"), rp.PASS,
+                                    closure_digest="deadbeefcafe",
+                                    obligations={"x": "pass"})
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    assert doc["kind"] == rp.RELEASE_KIND
+    for field in ("git_commit", "git_dirty", "python", "platform",
+                  "sandbox_available", "mode", "exit", "closure_digest",
+                  "obligations"):
+        assert field in doc, f"release receipt does not record {field}"
+    assert doc["exit"] == "PASS" and doc["mode"] == "release"
+    # Idempotent: the same state must not accumulate near-identical receipts in
+    # an append-only directory.
+    again = rp.write_release_receipt(rp.RunSpec.for_mode("release"), rp.PASS,
+                                    closure_digest="deadbeefcafe",
+                                    obligations={"x": "pass"})
+    assert again == path
+    assert len(list(tmp_path.glob("release_*.json"))) == 1
+
+
+def test_a_blocked_release_is_recorded_too(tmp_path, monkeypatch):
+    """The receipt exists to explain a DISAGREEMENT between hosts. Writing it
+    only on success would keep exactly the case that needs explaining out of
+    the record."""
+    import run_pipeline as rp
+    monkeypatch.setattr(rp, "RESULTS", tmp_path)
+    path = rp.write_release_receipt(rp.RunSpec.for_mode("release"), rp.BLOCKED,
+                                    closure_digest=None, obligations={})
+    assert json.loads(path.read_text(encoding="utf-8"))["exit"] == "BLOCKED"
+
+
+# ---- #5: declared / demonstrated / current-run ------------------------------
+def test_obligation_verdicts_are_not_source_constants():
+    """Finding #5. Every obligation was `Verdict.PASS` written into a dict, and
+    `PROVEN_BY` was a string beside it. Nothing connected either to a mutation
+    result, so the pipeline asserted its own coverage.
+
+    Now `demonstrated` is DERIVED: an obligation is demonstrated only while its
+    mutation case (or the acceptance test it names) exists. Delete the case and
+    the obligation degrades to UNKNOWN with nobody editing a verdict."""
+    import run_pipeline as rp
+    from conceptgate.cg_obligations import Verdict
+    source = (HERE / "run_pipeline.py").read_text(encoding="utf-8")
+    assert "OBLIGATIONS: dict[str, Verdict] = {" not in source, (
+        "the hand-maintained PASS dict is still the source of truth")
+    demonstrated = rp.demonstrated_obligations()
+    assert set(demonstrated) == set(rp.DECLARED_OBLIGATIONS)
+    for name, record in demonstrated.items():
+        if record.verdict is Verdict.PASS:
+            assert record.evidence, f"{name} is PASS with no evidence"
+
+
+def test_deleting_a_mutation_case_degrades_its_obligation(monkeypatch):
+    """The property that makes `demonstrated` a measurement rather than a
+    claim."""
+    import run_pipeline as rp
+    from conceptgate.cg_obligations import Verdict
+    full = rp.demonstrated_obligations()
+    victim = "packet.blinding.applied"
+    assert full[victim].verdict is Verdict.PASS
+    original = rp._mutation_registry()      # capture BEFORE patching, or the
+    monkeypatch.setattr(rp, "_mutation_registry",   # lambda calls itself
+                        lambda: original - {victim})
+    degraded = rp.demonstrated_obligations()
+    assert degraded[victim].verdict is not Verdict.PASS, (
+        "removing the only proof left the obligation reported as PASS")
+
+
+def test_a_blocked_current_run_dominates_a_demonstrated_pass():
+    """THE contradiction round 21 observed in one output:
+
+        reviewer.isolation.enforced: PASS      <- static capability
+        overall: pass
+        FAIL: reviewer isolation BLOCKED       <- what actually happened
+
+    A static proof that the code CAN enforce something says nothing about
+    whether it DID on this run. The run's verdict has to win."""
+    import run_pipeline as rp
+    from conceptgate.cg_obligations import Verdict
+    effective = rp.effective_obligations(
+        {"reviewer.isolation.enforced": rp.RunVerdict(
+            Verdict.UNKNOWN, "sandbox-exec unavailable")})
+    assert effective["reviewer.isolation.enforced"].verdict is Verdict.UNKNOWN
+    assert rp.overall_verdict(effective) is not Verdict.PASS, (
+        "a BLOCKED current run was laundered into an overall pass")
+
+
+def test_a_pass_without_evidence_is_rejected_by_the_shared_validator():
+    """The invariant that catches this class already exists in the obligation
+    layer (`PASS는 evidence 필수`). Round 21 reuses it through a registry seam
+    instead of reimplementing the rule here."""
+    import run_pipeline as rp
+    from conceptgate.cg_obligations import (Assurance, DeciderKind,
+                                            ObligationResult, Verdict,
+                                            validate_result)
+    bogus = ObligationResult("packet.blinding.applied", Verdict.PASS,
+                             Assurance.RULE_CHECKED, DeciderKind.GATE,
+                             evidence="")
+    errors = validate_result(bogus, registry=rp.OBLIGATION_REGISTRY)
+    assert any(e["code"] == "MISSING_EVIDENCE" for e in errors), errors

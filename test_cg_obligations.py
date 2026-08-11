@@ -248,3 +248,47 @@ def test_normalizer_adapter_unverified_span_is_unknown_not_pass():
 def test_normalizer_adapter_failure_emits_nothing():
     # 실패 응답은 stage 오류가 원인을 이미 표면화 — certificate 불요
     assert results_from_normalizer({"ok": False, "stage": "snapshot"}) == []
+
+
+# ---- registry seam (handoff_dynamic_controller round 21, correction C3) -----
+def test_a_custom_registry_validates_names_the_global_one_lacks():
+    """`certify()` was proposed as the canonical aggregator for another
+    experiment's 10 obligations. It could not be: none of those names are in
+    OBLIGATION_REGISTRY, so every result came back UNKNOWN_OBLIGATION and the
+    verdict was an unconditional FAIL. The seam lets a caller supply its own
+    registry without registering experiment-specific names here."""
+    from conceptgate.cg_obligations import ObligationSpec
+    local = {"x.custom": ObligationSpec(
+        DeciderKind.GATE, Assurance.RULE_CHECKED, "somewhere.else",
+        Verdict.UNKNOWN)}
+    ok = ObligationResult("x.custom", Verdict.PASS, Assurance.RULE_CHECKED,
+                          DeciderKind.GATE, evidence="a probe ran")
+    assert validate_result(ok, local) == []
+    # Without the registry it is an unknown obligation -- the seam is doing the
+    # work, not a widened global.
+    assert validate_result(ok)[0]["code"] == "UNKNOWN_OBLIGATION"
+
+
+def test_a_custom_registry_still_enforces_every_invariant():
+    """NEGATIVE coverage for the new parameter. A seam that skipped the
+    invariants would make the reuse worthless while looking like reuse."""
+    from conceptgate.cg_obligations import ObligationSpec, certify
+    local = {"x.custom": ObligationSpec(
+        DeciderKind.GATE, Assurance.RULE_CHECKED, "somewhere.else",
+        Verdict.UNKNOWN)}
+    no_evidence = ObligationResult("x.custom", Verdict.PASS,
+                                   Assurance.RULE_CHECKED, DeciderKind.GATE)
+    assert {e["code"] for e in validate_result(no_evidence, local)} == {
+        "MISSING_EVIDENCE"}
+    over_cap = ObligationResult("x.custom", Verdict.PASS,
+                                Assurance.HUMAN_APPROVED, DeciderKind.GATE,
+                                evidence="claimed")
+    assert "ASSURANCE_EXCEEDS_DECIDER_CAP" in {
+        e["code"] for e in validate_result(over_cap, local)}
+    wrong_decider = ObligationResult("x.custom", Verdict.PASS,
+                                     Assurance.SOURCE_ANCHORED, DeciderKind.LLM,
+                                     evidence="claimed")
+    assert "DECIDER_MISMATCH" in {
+        e["code"] for e in validate_result(wrong_decider, local)}
+    # And certify() must refuse, not aggregate around the violation.
+    assert certify([no_evidence], local)["verdict"] == Verdict.FAIL.value

@@ -132,7 +132,9 @@ OBLIGATIONS = (
         # So the mutation opens the boundary instead: a profile that allows
         # everything makes the forbidden probes reachable, and the E2E must
         # notice.
-        remove='    return seatbelt_profile(HERE, HERE / "results")',
+        # Round 21 replaced v1 with v2 here (finding #2), so the fragment moved.
+        # The mutation is unchanged in kind: open the boundary completely.
+        remove='    return seatbelt_profile_v2(HERE, HERE / "results")',
         replace_with='    return "(version 1)\\n(allow default)"',
         expected_signal="reached",
         mode="--release",
@@ -308,12 +310,12 @@ def test_obligations_match_the_pipeline_registry_exactly():
     from conceptgate.cg_obligations import Verdict
     mutated = {o.obligation_id for o in OBLIGATIONS
                if o.obligation_id not in NO_SIGNAL_YET}
-    declared = set(rp.OBLIGATIONS)
+    declared = set(rp.DECLARED_OBLIGATIONS)
     assert mutated <= declared, (
         f"mutations for obligations the pipeline does not declare: "
         f"{sorted(mutated - declared)}")
-    for name, verdict in rp.OBLIGATIONS.items():
-        if verdict is Verdict.PASS:
+    for name, record in rp.demonstrated_obligations().items():
+        if record.verdict is Verdict.PASS:
             mechanism = rp.PROVEN_BY[name]
             if mechanism == "mutation":
                 assert name in mutated, (
@@ -324,9 +326,9 @@ def test_obligations_match_the_pipeline_registry_exactly():
                 # test_pipeline_gates.test_every_obligation_records_how_it_is_proven
                 assert mechanism.startswith("acceptance:"), mechanism
         else:
-            assert name in rp.UNKNOWN_REASONS, (
-                f"{name} is not PASS and has no recorded reason")
-            assert len(rp.UNKNOWN_REASONS[name]) > 40, name
+            # Round 21: the reason travels with the verdict. A separate
+            # UNKNOWN_REASONS table was one more thing to keep in step.
+            assert record.evidence, f"{name} is not PASS and records no reason"
     # Every obligation must point at a stage the E2E actually prints.
     stages = set(rp.STAGE_IDS.values())
     for ob in OBLIGATIONS:

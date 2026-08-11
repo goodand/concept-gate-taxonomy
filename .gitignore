@@ -17,3 +17,13 @@ uv.lock
 dist/
 build/
 *.egg-info/
+
+# Host-only HMAC key for reviewer isolation receipts (round 21, finding #1).
+# Committing it would make every clone able to sign a receipt claiming a
+# reviewer was confined, which is exactly the forgery the key exists to stop.
+.launcher_hmac_key
+
+# Scratch workspace the reviewer launcher writes bundles into. Round 21 left a
+# red-phase artifact here (a bundle created before the deny-subtree guard
+# existed) and it showed up as a repo file.
+experiments/*/audit_workspace/
