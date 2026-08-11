@@ -791,15 +791,17 @@ Amendment 37/38에서 추가·변경된 것:
 `experiments/*/audit_workspace/`를 제외한다. key를 커밋하면 모든 클론이 "reviewer가
 격리됐다"는 receipt에 서명할 수 있고, 그것이 이 key가 막으려는 위조다.
 
-### 21라운드가 만든 receipt
+### 21·21b라운드가 만든 receipt
 
-현행 두 개만 링크한다:
+현행만 링크한다. 어느 것이 현행인지는 이 목록이 아니라 코드가 답한다(아래 명령).
 
-- [`closure_5f5f37c4e53e.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/closure_5f5f37c4e53e.json)
+- [`release_b2633b9ecc3d.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_b2633b9ecc3d.json) —
+  **21b 현행** (`git_dirty: false`, commit `449925a`, 의무 **12/12** pass)
 - [`release_c525664cbe88.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/release_c525664cbe88.json) —
-  **clean 트리에서 나온 첫 receipt** (`git_dirty: false`, commit `20c54cc`,
-  의무 11/11 pass, closure `5f5f37c4e53e`). 앞선 것들은 커밋 전에 돌아
-  `git_dirty: true`이고 부모 커밋을 가리킨다
+  21라운드 (의무 11/11). 남겨 둔다: 의무가 11→12로 늘어난 지점의 증거다
+- closure는 `_closure_receipt()`가 판정한다. 파일명을 여기 적으면 다음 실행에서
+  낡으므로 **적지 않는다** — 21라운드에 이 목록을 열거로 유지하려다 실행마다
+  고쳐야 했다
 
 **release receipt는 자기 자신을 담은 커밋을 가리킬 수 없다.** clean 트리에서
 release를 돌리면 트리에 없던 파일이 하나 생기고, 그것을 커밋하면 commit 해시가
