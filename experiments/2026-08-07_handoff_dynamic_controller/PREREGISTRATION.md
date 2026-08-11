@@ -2355,10 +2355,12 @@ fail-open과 같은 논리다.
 >   증언하는 바이트와 같은지** 대조한다. 그 결속에 mutation 케이스가 붙어 있다
 >   (`reviewer.labels.from-launcher`).
 >
->   probe-only 실행(`command=None`)은 여전히 정당하다 — release E2E가 묻는 것은
->   경계가 성립하는지다. 다만 두 receipt가 **구별된다**: probe-only는 두 해시가
->   `null`이다. 이전에는 구별되지 않았고, 그래서 "launcher가 reviewer를 돌렸다"가
->   반증 불가능했다.
+>   probe-only 실행(`command=None`)은 여전히 정당한 모드이지만 **release E2E는
+>   이제 그것을 쓰지 않는다** — stub reviewer 프로세스를 실제로 실행하고 그
+>   출력으로 label artifact를 만들며, adjudicator에 넘기는 바이트가 서명된
+>   receipt가 증언하는 바이트와 같은지 대조한다. 두 receipt는 **구별된다**:
+>   probe-only는 두 해시가 `null`이다. 이전에는 구별되지 않았고, 그래서
+>   "launcher가 reviewer를 돌렸다"가 반증 불가능했다.
 
 ### D. `closure` 명령
 
@@ -2408,7 +2410,7 @@ import _provenance          19,292 us   (run_live_phase_c를 끌어옴)
 ### 완료 상태 (closure 이후 측정)
 
 ```
-e2e --release   exit 0     의무 11/11, effective_unknown []
+e2e --release   exit 0     의무 12/12, effective_unknown []
 e2e --offline   exit 2     PARTIAL (reviewer 미실행 — 정직한 상태)
 doctor          exit 1     qualification 2종 stale — 실제 남은 상태
 tests           256 passed / 2 skipped (이 환경)
