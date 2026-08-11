@@ -313,7 +313,9 @@ F1을 닫아 그 환경에서는 감사 자체가 거부되므로 실질 위험�
 ### 21c 실측 (이 환경)
 
 ```
-실험 suite      319 passed / 1 skipped
+실험 suite      319 passed / 1 skipped   ← **Claude host-capable lane 한정**
+                (Seatbelt 권한 없는 관리형 sandbox는 ~30건 실패로 보고되며
+                 그것은 회귀가 아니라 BLOCKED다)
 e2e --release   exit 0
 저장소 게이트   9 passed / 1 failed(owlready2 부재, 기존) / 1 blocked
 ```
@@ -321,55 +323,89 @@ e2e --release   exit 0
 미룬 것은 21b와 같다 — F3·F4·F6·F8. 리뷰어와 판정이 일치한다: retrieval canary를
 막지 않는다.
 
-## 3e. retrieval canary 1회 실행됨 — 수직 경로는 통과, 해석이 실패
+## 3e. retrieval canary 1회 실행됨 — 수직 경로 통과, 해석은 **미판정**
 
-**실제 provider 호출 1건**(Claude CLI, HD01 × S_STATIC). 산출물:
+**실제 provider 호출 1건**(Claude CLI, HD01 × S_STATIC). 이 실험에서 처음으로
+`provider → host search/read → answer → clean judge`가 끝까지 돌았다.
 
 ```
-results/live_canary_claude_surface_v3_HD01_S_STATIC_attempt1.json
-results/live_canary_claude_surface_v3_HD01_S_STATIC_attempt1_assessment.json
+results/live_canary_claude_surface_v3_HD01_S_STATIC_attempt1.json           원본
+results/…_assessment.json                                                  판정 v1 (오류, 보존)
+results/…_assessment_v2.json                                               판정 v2 (현행)
 ```
 
 ### 계약 검증 — 통과
 
 | 항목 | 결과 |
 |---|---|
-| `kind` | `live-subject-canary` |
+| `kind` | `live-subject-canary` (삼항식이었다면 `live-subject-primary`였다) |
 | `n_runs` / `n_per_cell` / `arm_effect_estimable` | 1 / 1 / `false` |
 | qualification ledger SHA-256 | `000ffa737792…` **실행 전후 동일** |
 | primary attempt ledger SHA-256 | `4093f2eadce0…` **실행 전후 동일** |
 | `raw` 보존 | 예 |
 
-### 3층 판정
+### 3층 판정 (v2)
 
 | 층 | 판정 | 근거 |
 |---|---|---|
 | **Runtime** | **PASS** | `invalid_run=false`, `failure_codes=[]`, raw 보존 |
-| **Retrieval** | **PASS** | `host_action_compliance.passed=true`, search 1 · read 3, `critical_path_recall=1.0`, `expected_path_recall=1.0`, `exact_authority_hit=true` |
-| **Reconstruction** | **FAIL** | `state_accuracy=true`, **`next_action_accuracy=false`**, `stop_condition_accuracy=true` |
-| overall | **기록하지 않는다** | 단일 판정은 세 층을 분리한 이유를 되돌린다 |
+| **Retrieval** | **PASS (gold-defined)** | `host_action_compliance=true`, search 1 · read 3, `critical_path_recall=1.0`, `exact_authority_hit=true`. **"현 gold가 요구한 파일을 읽었다"는 뜻이고 그 이상이 아니다** |
+| **Reconstruction** | **UNRESOLVED_PENDING_ADJUDICATION** | 보조 신호 `next_action_lexical_match=false` (state·stop_condition은 true) |
+| overall | **기록하지 않는다** | 세 층을 분리한 이유를 되돌리고, 한 층은 판정조차 안 됐다 |
 
-**읽는 법**: provider·host 도구·검색이 전부 동작했고 authority 문서를 정확히
-맞혔다. 실패는 **오직 `next_action`** 하나다 — 즉 이것은 하네스 결함이 아니라
-**subject에 대한 결과**다. 22라운드가 canary를 이 순서로 배치한 이유가 이것이다:
-단일 PASS/FAIL이었다면 "provider인가 검색인가 해석인가"를 구별할 수 없었다.
+**`FAIL`이라고 쓰지 않는 이유**: `next_action_accuracy`는 `_evaluator._terms_hit`
+— gold 항 그룹의 **부분문자열 포함** 검사다. 확립된 것은 **lexical 조건 불일치**이고
+"subject가 잘못 이해했다"가 아니다. 이 저장소 어휘에서 `FAIL`은 "돌았고 실패했다"이며
+판정을 얻지 못한 것은 `FAIL`이 아니다.
 
-subject의 행동은 8 action(`reformulate_query` → `expand_candidates` →
-`read_candidate` → `follow_link` → `read_candidate` → `answer` →
-`read_candidate` → `answer`)이고 3개 문서를 읽었다.
+**v1은 그 구별을 놓쳤다.** "하네스 결함이 아니라 subject에 대한 결과다"라고 쓰고
+세 단락 뒤에 "원인은 not_established"라고 썼다 — **한 문서 안의 자기모순**이다.
+v1을 지우지 않는 이유는 `invalid_run_policy: record-V1-and-do-not-replace`가 잘못된
+해석에도 적용되기 때문이다.
 
-**왜 `next_action`이 틀렸는지는 이 문서가 말하지 않는다.** 그 비교는 hidden gold를
-읽어야 하고, 이 운영 맥락은 gold를 읽지 않는다(§4). **격리된 judge에 위임할
-항목**이며 assessment sidecar의 `not_established`에 그렇게 적혀 있다.
+### gold 없이 말할 수 있는 가장 그럴듯한 기제 — 그리고 그것이 결론이 아닌 이유
 
-### 다음
+subject의 `uncertainties[0]`:
 
-1. **격리 judge로 `next_action` 실패 원인 규명** (gold 대조). 그 결과가
-   프롬프트·계약 문제인지 subject 능력 문제인지를 가른다
-2. **22b 큐**(위 §5의 canary 직후 목록) — 공허한 가드 2개, canary artifact의
-   `qualification` 필드, release 로그 순서. closure 1회에 묶는다
-3. 그 뒤 **1 case × 4 arms** (= 기존 `--pilot`). **여기서도 arm 효과를 주장하지
-   않는다** — 배선과 qualification 용도다
+> "the chosen retired-fixtures destination **is not established**: the **fixed
+> sequence ended** before `notes/audits/two-shapes-2026-06-11.md` could be read"
+
+그리고 `S_STATIC` 프롬프트가 실제로 고정 시퀀스를 처방한다 —
+*"use this fixed sequence … then finish. Do not issue another follow or finish
+before that exact read. … Do not change the sequence in any other way."*
+관측된 8 action이 그 처방과 일치한다.
+
+**즉 후보 원인 4개 중 `WORKFLOW_EVIDENCE_INSUFFICIENT`가 가장 그럴듯하다.** 그러나
+그것은 **arm의 성질**이고 이 실험이 조작하는 변수다 — **1칸 1 arm으로는 확립할 수
+없다.** 1×4 pilot의 가설이지 결과가 아니다.
+
+그리고 결정을 담은 audit을 읽지 않았는데 `critical_path_recall=1.0`인 것은,
+**현 gold가 그 read를 next action의 필수 근거로 연결하지 않았다**는 뜻이다.
+`required_support_read_recall`은 `not_measured`로 기록했다.
+
+### 위임 — 내가 하지 않는 것
+
+**격리 judge가 4후보 중 하나를 판정해야 한다**: `SUBJECT_SEMANTIC_MISS` /
+`LEXICAL_MATCHER_FALSE_NEGATIVE` / `GOLD_AMBIGUOUS` /
+`WORKFLOW_EVIDENCE_INSUFFICIENT`. 그 판정은 **gold 대조가 필요**하고, 이 운영
+맥락은 gold를 읽지 않는다(§4) — 이 세션이 subject가 읽는 corpus·handoff를 저술해
+왔으므로 gold를 읽으면 이후 저술이 오염된다.
+
+**gold v2**(`support_paths`·`required_reads`)도 위임 항목이다. schema를 새로
+설계할 필요는 없다 — `.vault-harness/…/HANDOFF_REUSE_VALIDATION.md` §175에
+claim↔support_path↔required_action 연결이 **이식 가능한 표준으로 이미 있다**.
+**기존 canary를 새 gold로 소급 채점하지 않는다.**
+
+### 다음 (계획: [22c](feedback/plan_round22c_reconstruction_unresolved.md))
+
+1. **22b + 22c를 closure 1회에 묶는다** — 공허한 가드 2개, canary artifact의
+   `qualification` 필드, release 로그 순서, **`follow_link` trace provenance**
+   (`from_path`·`result_paths`가 응답에는 있고 trace에는 없어 graph trajectory를
+   재현할 수 없다), assessment sidecar의 schema + 위반 입력 테스트
+2. 격리 judge 판정 + gold v2 (위임)
+3. **1 case × 4 arms** (= 기존 `--pilot`). 네 값을 따로 보고한다 — Runtime
+   validity / candidate recall / required-support-read recall / reconstruction
+   adjudication. **arm 효과는 여기서도 주장하지 않는다**
 
 ## 4. 절대 하면 안 되는 것
 

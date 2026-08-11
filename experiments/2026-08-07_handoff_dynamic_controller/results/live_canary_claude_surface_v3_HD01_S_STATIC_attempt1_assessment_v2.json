@@ -1,0 +1,89 @@
+{
+ "kind": "live-subject-canary-assessment-v2",
+ "supersedes": "live_canary_claude_surface_v3_HD01_S_STATIC_attempt1_assessment.json",
+ "supersedes_sha256": "9a87879fa8304be3bb89c5691bd91d1ab800bc329b000e6262aa19009ae35775",
+ "why_superseded": "v1 recorded `reconstruction: FAIL` and asserted the failure was 'a result about the subject, not a harness defect' -- while ALSO recording that the cause was not established. Both cannot hold. `next_action_accuracy` comes from `_terms_hit`, a substring match of gold term groups against the answer text, so what was measured is a LEXICAL condition, not comprehension. v1 is kept, not deleted: `invalid_run_policy: record-V1-and-do-not-replace` applies to a wrong interpretation too.",
+ "source_artifact": "live_canary_claude_surface_v3_HD01_S_STATIC_attempt1.json",
+ "source_sha256": "39081f3aaa87cc7fbc4d3abb20d8773f25e99ac7cf3be28e80d4c1f689806a43",
+ "config_file": "phase_c_claude_mcp_surface_v3_config.json",
+ "config_sha256": "07539a74edb5199652e13daee82492f33e84a89fdee6b63fe404e3d7d28260bc",
+ "case_id": "HD01",
+ "arm": "S_STATIC",
+ "variant": "variant-L",
+ "runtime": {
+  "verdict": "PASS",
+  "raw_preserved": true,
+  "invalid_run": false,
+  "failure_codes": []
+ },
+ "retrieval": {
+  "verdict": "PASS (gold-defined)",
+  "what_this_means": "the files the CURRENT gold requires were read. It does NOT mean the evidence needed to complete the next action was read -- see required_support_read_recall.",
+  "host_action_compliance_passed": true,
+  "n_search": 1,
+  "n_read": 3,
+  "actions": [
+   "reformulate_query",
+   "expand_candidates",
+   "read_candidate",
+   "follow_link",
+   "read_candidate",
+   "answer",
+   "read_candidate",
+   "answer"
+  ],
+  "reads": [
+   "docs/HANDOFF.md",
+   "docs/DECISION_freeze_policy.md",
+   "docs/directory-cleanup-plan.md"
+  ],
+  "critical_path_recall": 1.0,
+  "expected_path_recall": 1.0,
+  "exact_authority_hit": true,
+  "required_support_read_recall": "not_measured",
+  "why_not_measured": "the current gold does not link the document that DECIDES the next action to the next action as a required read. gold v2 (support_paths/required_reads) would measure it; this run must not be rescored against it."
+ },
+ "reconstruction": {
+  "verdict": "UNRESOLVED_PENDING_ADJUDICATION",
+  "why_not_FAIL": "in this repository's three-value vocabulary FAIL means 'it ran and it failed'; a verdict nobody has established is not FAIL. The lexical signal below is a signal, not a verdict.",
+  "signals": {
+   "state_accuracy_lexical_match": true,
+   "next_action_lexical_match": false,
+   "stop_condition_lexical_match": true
+  },
+  "matcher": "_evaluator._terms_hit -- gold term groups OR'd, terms within a group AND'd, plain lowercase substring containment",
+  "candidate_causes_to_adjudicate": [
+   "SUBJECT_SEMANTIC_MISS",
+   "LEXICAL_MATCHER_FALSE_NEGATIVE",
+   "GOLD_AMBIGUOUS",
+   "WORKFLOW_EVIDENCE_INSUFFICIENT"
+  ],
+  "most_plausible_cause_from_gold_free_evidence": "WORKFLOW_EVIDENCE_INSUFFICIENT",
+  "evidence_for_that_reading": {
+   "subject_said": "The specific chosen retired-fixtures destination is not established: the fixed sequence ended before notes/audits/two-shapes-2026-06-11.md could be read, so only the existence of the decision is verified, not its content.",
+   "arm_prescribes_a_fixed_sequence": "run_live_phase_c.py's S_STATIC prompt: 'use this fixed sequence … then finish. Do not issue another follow or finish before that exact read. … Do not change the sequence in any other way.'",
+   "deciding_document_was_a_candidate_but_unread": true,
+   "why_this_is_not_a_conclusion": "it is a property of the ARM -- the variable this experiment manipulates -- and one cell of one arm cannot establish it. It is a hypothesis for the 1x4 pilot, not a result."
+  },
+  "adjudication_requires": "comparing the answer to hidden gold. The operator context that produced this file does not read gold: this session authored corpus and handoff text that subjects read, so reading gold here would contaminate later authoring. Delegate to an isolated judge."
+ },
+ "overall": null,
+ "why_overall_is_null": "a single verdict re-merges what the layers exist to separate, and one of the three is not adjudicated at all.",
+ "not_established": [
+  "any arm effect (one cell, n_per_cell=1, arm_effect_estimable=false)",
+  "that the subject misunderstood the next action",
+  "that the lexical matcher is wrong",
+  "anything about the other three arms"
+ ],
+ "environment": {
+  "git_commit": "57a164c46cd5969772bae685bc86f47b8a644764",
+  "git_dirty": true,
+  "sandbox_available": true,
+  "test_lane": "Claude host-capable lane. A managed sandbox without Seatbelt permission reports ~30 isolation failures that are BLOCKED, not regressions."
+ },
+ "ledger_immutability": {
+  "qualification_ledger_sha256": "000ffa737792ccdf8728d1b811d240e566add80c9ee4b1f5b5e88f473776ed0d",
+  "primary_attempt_ledger_sha256": "4093f2eadce0d8e2a3ace3500cf1c07b7ea27e6a67ee233ab78c82d93fed3086",
+  "unchanged_across_the_canary_run": true
+ }
+}
