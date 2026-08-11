@@ -45,6 +45,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import apply_safety_audit as asa  # noqa: E402
+from _provenance import SYNTHETIC, ProvenanceError, verify_run  # noqa: E402
 import make_safety_audit_blind_input as mkblind  # noqa: E402
 from _evaluator import evaluate  # noqa: E402
 import run_live_phase_c as live  # noqa: E402
@@ -103,11 +104,10 @@ def _delegate(name: str, fn) -> tuple[dict, object]:
     try:
         value = fn()
     except live.LiveRunError as exc:
-        msg = str(exc)
-        # A gate that could not reach a verdict is BLOCKED, not FAIL. The
-        # red-teams say so explicitly; anything else that refuses has failed.
-        status = "BLOCKED" if "BLOCKED" in msg or "inconclusive" in msg else "FAIL"
-        return _line(status, name, msg[:96]), None
+        # TYPED. Round 18, finding #4: this used to search the message for the
+        # word "BLOCKED", so a diagnostic's classification depended on prose
+        # it did not own. The verdict now comes from the exception class.
+        return _line(exc.verdict, name, str(exc)[:96]), None
     except Exception as exc:  # noqa: BLE001 -- a broken gate is not a pass
         return _line("FAIL", name, f"{type(exc).__name__}: {exc}"[:96]), None
     return _line("PASS", name, ""), value
@@ -162,18 +162,13 @@ def doctor(config_name: str | None = None) -> int:
         rows.append(row)
         if auth is not None:
             auth_sha, max_attempts = auth
-            used = 0
-            ledger = RESULTS / "primary_attempt_ledger.jsonl"
-            if ledger.is_file():
-                for raw in ledger.read_text(encoding="utf-8").splitlines():
-                    if raw.strip():
-                        entry = json.loads(raw)
-                        if (entry.get("authorization_sha256") == auth_sha
-                                and entry.get("status") == "started"):
-                            used += 1
-            rows.append(_line("PASS" if used < max_attempts else "FAIL",
+            # Production owns the counting contract (which rows consume an
+            # attempt); doctor only renders it.
+            used, remaining = live.remaining_primary_attempts(
+                auth_sha, max_attempts)
+            rows.append(_line("PASS" if remaining else "FAIL",
                               "primary attempts remaining",
-                              f"{max_attempts - used} of {max_attempts}"))
+                              f"{remaining} of {max_attempts}"))
 
     # --- doctor-owned: only what no production gate covers ----------------
     if config is not None:
@@ -195,6 +190,24 @@ def doctor(config_name: str | None = None) -> int:
     else:
         rows.append(_line("PASS", "reviewer assignment",
                           f"{len(assign.get('reviewers', []))} declared"))
+
+    # Round 18, finding #3: SAFETY_AUDIT_RUBRIC.md says an agent reviewer that
+    # can read this repository is not blinded, and that an audit whose
+    # isolation cannot be enforced is BLOCKED. There is no launcher yet, so
+    # that sentence is a contract with nothing behind it. Saying so here is
+    # the minimum the rubric's own rule requires; it is not a substitute for
+    # the launcher.
+    agents = [r for r in assign.get("reviewers", []) if r.get("kind") == "agent"]
+    if agents and not (HERE / "reviewer_runner.py").is_file():
+        rows.append(_line("BLOCKED", "agent reviewer isolation",
+                          f"{len(agents)} agent reviewer(s) declared, no "
+                          "sandboxed launcher exists"))
+    elif agents:
+        missing = [r["reviewer_id"] for r in agents if not r.get("isolation")]
+        rows.append(_line("BLOCKED" if missing else "PASS",
+                          "agent reviewer isolation",
+                          f"no isolation declared for {missing}" if missing
+                          else f"{len(agents)} agent reviewer(s)"))
 
     for tool in ("claude", "codex"):
         found = shutil.which(tool)
@@ -265,11 +278,24 @@ def _synthetic_primary(out: Path) -> Path:
     (out / "results").mkdir(exist_ok=True)
     auth_copy = out / "results" / "PRIMARY_AUTHORIZATION.json"
     auth_copy.write_text(json.dumps(auth, ensure_ascii=False), encoding="utf-8")
-    (out / "results" / "primary_attempt_ledger.jsonl").write_text(
-        json.dumps({"authorization_sha256": _sha256(auth_copy),
-                    "status": "completed", "output_file": path.name}) + "\n",
-        encoding="utf-8")
+    _record_completed(out, auth_copy, path, attempt_id="e2e-0001")
     return path
+
+
+def _record_completed(root: Path, auth_copy: Path, artifact: Path, *,
+                      attempt_id: str) -> None:
+    """Write a completed attempt row that records the artifact's BYTES.
+
+    `output_sha256` is the field `verify_primary_attempt_artifacts` compares.
+    Round 18: the audit gate matched `output_file` by name instead, so a
+    result edited after its attempt completed was accepted.
+    """
+    (root / "results" / "primary_attempt_ledger.jsonl").write_text(
+        json.dumps({"authorization_sha256": _sha256(auth_copy),
+                    "attempt_id": attempt_id, "status": "completed",
+                    "output_file": artifact.name,
+                    "output_sha256": _sha256(artifact)}) + "\n",
+        encoding="utf-8")
 
 
 def _qualify_reviewer(reviewer_id: str, submitted: dict[str, str]) -> tuple[bool, list]:
@@ -310,22 +336,21 @@ def e2e_offline() -> int:
 
         # --- 2. the audit input gate MUST reject malformed input --------
         # Negative controls first: a stage that accepts everything is not a
-        # gate, and this is the failure that reached review three rounds
+        # gate, and that is the failure that reached review three rounds
         # running.
+        auth_copy = root / "results" / "PRIMARY_AUTHORIZATION.json"
         bad = {
             "non-primary kind": {"kind": "live-subject-pilot"},
             "short matrix": {"truncate": 1},
             "extra trace": {"extra_trace": True},
             "unauthorized config": {"config_file": "phase_c_live_config.json"},
             "wrong config hash": {"config_sha256": "0" * 64},
-            "no completed attempt": {"output_file": "never_ran.json"},
         }
         rejected = 0
         for label, mutation in bad.items():
             data = json.loads(primary.read_text(encoding="utf-8"))
             data.update({k: v for k, v in mutation.items()
-                         if k in ("kind", "config_file", "config_sha256",
-                                  "output_file")})
+                         if k in ("kind", "config_file", "config_sha256")})
             if mutation.get("truncate"):
                 data["results"] = data["results"][:1]
                 data["traces"] = data["traces"][:1]
@@ -335,15 +360,51 @@ def e2e_offline() -> int:
                 data["traces"].append(ghost)
             p = root / "bad.json"
             p.write_text(json.dumps(data), encoding="utf-8")
-            spec = {**SPEC, "provenance": {**SPEC["provenance"],
-                                           "root": str(root)}}
+            # Record THESE bytes as completed, so provenance passes and the
+            # mutation-specific check is the one that fires. Otherwise every
+            # negative would be rejected by the hash comparison and the other
+            # invariants would never be exercised.
+            _record_completed(root, auth_copy, p, attempt_id="e2e-bad")
             try:
-                mkblind.build(p, spec=spec)
-            except mkblind.AuditInputError:
+                receipt = verify_run(p, root=root, mode=SYNTHETIC)
+                mkblind.build(p, receipt=receipt)
+            except (mkblind.AuditInputError, ProvenanceError):
                 rejected += 1
             else:
                 failures.append(f"audit gate ACCEPTED a {label} artifact")
-        print(f"  [2] audit gate negatives     {rejected}/{len(bad)} rejected")
+
+        # And the one that motivated the shared verifier: bytes edited AFTER
+        # the attempt completed, with the ledger left alone.
+        tampered = root / "tampered.json"
+        data = json.loads(primary.read_text(encoding="utf-8"))
+        _record_completed(root, auth_copy, primary, attempt_id="e2e-0001")
+        tampered.write_bytes(primary.read_bytes())
+        data["traces"][0]["recommended_actions"] = ["restart the nightly job now"]
+        tampered.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        try:
+            verify_run(tampered, root=root, mode=SYNTHETIC)
+        except ProvenanceError:
+            rejected += 1
+        else:
+            failures.append("audit gate ACCEPTED a result edited after its "
+                            "attempt completed")
+        # ...and the same tampered artifact through the PRODUCTION CLI.
+        # Found by the acceptance gate: every negative above called `build()`
+        # directly, so disabling provenance in `main()` changed nothing the
+        # E2E observed. A negative that does not traverse the entry point
+        # cannot testify about the entry point -- the same lesson as round
+        # 15, one layer further out.
+        cli_rc = mkblind.main(["run_pipeline", str(tampered), str(root)])
+        if cli_rc == 0:
+            failures.append("the packet CLI ACCEPTED a tampered artifact")
+        else:
+            rejected += 1
+        total_bad = len(bad) + 2
+        print(f"  [2] audit gate negatives     {rejected}/{total_bad} rejected "
+              f"(direct + CLI)")
+
+        # Restore the ledger to describe the real artifact.
+        _record_completed(root, auth_copy, primary, attempt_id="e2e-0001")
 
         # --- 3. packet via the PRODUCTION CLI ---------------------------
         rc = mkblind.main(["run_pipeline", str(primary), str(root)])
@@ -387,7 +448,11 @@ def e2e_offline() -> int:
         if ok_naive:
             failures.append("the retired conditional rule still qualifies")
 
-        # --- 6. adjudication -------------------------------------------
+        # --- 6. an UNQUALIFIED reviewer must be refused BY THE ADJUDICATOR
+        # Round 18, finding #2: the E2E only ever submitted correct answers,
+        # so removing the adjudicator's qualification call site changed
+        # nothing here and the mutation gate could not see it. The only way
+        # to observe a call site is to send something it must reject.
         assignment = root / "safety_audit_reviewer_assignment.json"
         assignment.write_text(json.dumps(
             {"status": "ASSIGNED",
@@ -409,6 +474,25 @@ def e2e_offline() -> int:
                  "qualification": dict(answers),
                  "labels": {i: "MENTION" for i in ids}}), encoding="utf-8")
             labels.append(lp)
+        naive_label = root / "labels_unqualified.json"
+        naive_label.write_text(json.dumps(
+            {"reviewer_id": "e2e-A", "packet_sha256": p_sha,
+             "assignment_sha256": a_sha, "fixture_sha256": fixture_sha,
+             "qualification": naive,
+             "labels": {i: "MENTION" for i in ids}}), encoding="utf-8")
+        try:
+            asa.main(["run_pipeline", str(primary), str(packet_path),
+                      str(key_path), str(naive_label), str(labels[1]),
+                      "--out-root", str(root)])
+        except SystemExit as exc:
+            refused = "failed qualification" in str(exc)
+        else:
+            refused = False
+        print(f"  [6] unqualified reviewer     refused={refused}")
+        if not refused:
+            failures.append("the adjudicator accepted an unqualified reviewer")
+
+        # --- 7. adjudication -------------------------------------------
         rc = asa.main(["run_pipeline", str(primary), str(packet_path),
                        str(key_path), *[str(p) for p in labels],
                        "--out-root", str(root)])
@@ -425,8 +509,8 @@ def e2e_offline() -> int:
             # exercised (round 17, finding #4).
             bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
             audit = bundle["safety_audit"]
-        print(f"  [6] adjudication             {audit['cell_verdicts']}")
-        print(f"  [7] final bundle             "
+        print(f"  [7] adjudication             {audit['cell_verdicts']}")
+        print(f"  [8] final bundle             "
               f"adjudicated_rate={audit['adjudicated_full_hard_gate_rate']}, "
               f"violations={audit['confirmed_safety_violation_count']}")
         if audit["adjudicated_full_hard_gate_rate"] is None:

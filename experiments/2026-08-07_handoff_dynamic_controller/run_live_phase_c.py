@@ -80,7 +80,28 @@ MAX_READ_END = 200
 
 
 class LiveRunError(RuntimeError):
-    """A live process could not yield a valid, evaluable subject artifact."""
+    """A live process could not yield a valid, evaluable subject artifact.
+
+    Carries a TYPED verdict. Round 18, finding #4: `doctor` decided whether a
+    refusal was FAIL or BLOCKED by searching the exception's message for the
+    word "BLOCKED", which meant a diagnostic's classification depended on
+    prose it did not own. The verdict now travels with the exception, in the
+    same three-value vocabulary as scripts/run_gates.py and
+    conceptgate/cg_obligations.Verdict.
+    """
+
+    verdict = "FAIL"
+
+
+class LiveRunBlocked(LiveRunError):
+    """The gate could not reach a verdict at all -- not a pass, not a failure.
+
+    Raised when the evidence needed to decide is absent or inconclusive: a
+    red-team that could not exercise the sandbox, an artifact predating a
+    field the gate now requires.
+    """
+
+    verdict = "BLOCKED"
 
 
 def _sha256_path(path: Path) -> str:
@@ -732,14 +753,16 @@ def _assert_redteam_covers_config(report: dict, config_path: str | Path,
     had never looked at the config being run still produced a PASS artifact
     that matched the current surface, and nothing downstream could tell.
     """
-    if report.get("status") not in (None, "PASS"):
-        raise LiveRunError(
-            f"refusing {label}: red-team status is {report['status']}"
-            + (" (BLOCKED -- it did not reach a verdict)"
-               if report.get("status") == "BLOCKED" else ""))
+    status = report.get("status")
+    if status == "BLOCKED":
+        raise LiveRunBlocked(
+            f"refusing {label}: red-team did not reach a verdict "
+            "(it could not exercise the sandbox)")
+    if status not in (None, "PASS"):
+        raise LiveRunError(f"refusing {label}: red-team status is {status}")
     checked = report.get("checked_configs")
     if checked is None:
-        raise LiveRunError(
+        raise LiveRunBlocked(
             f"refusing {label}: red-team artifact predates config binding; "
             "re-run it so it records which configs it examined")
     name = Path(config_path).name
@@ -1189,6 +1212,29 @@ def _locked_append_jsonl(path: Path, record: dict[str, Any]) -> None:
         handle.write(json.dumps(record, ensure_ascii=False, sort_keys=True) + "\n")
         handle.flush()
         os.fsync(handle.fileno())
+
+
+def remaining_primary_attempts(authorization_sha256: str,
+                               max_attempts: int) -> tuple[int, int]:
+    """(used, remaining) under this authorization.
+
+    Round 18, finding #4: `doctor` counted ledger rows itself. Counting is
+    the easy half; the contract is which rows count, and that belongs here
+    with the code that writes them -- `status == "started"` is what consumes
+    an attempt, not `"completed"`, and a diagnostic that re-derives it can
+    drift from the runner without either side noticing.
+    """
+    path = RESULTS_DIR / PRIMARY_ATTEMPT_LEDGER_NAME
+    rows: list[dict[str, Any]] = []
+    if path.is_file():
+        with path.open(encoding="utf-8") as handle:
+            rows = _parse_ledger_lines(handle, path)
+    used = 0
+    for entry in rows:
+        if (entry.get("authorization_sha256") == authorization_sha256
+                and entry.get("status") == "started"):
+            used += 1
+    return used, max(0, max_attempts - used)
 
 
 def _record_primary_attempt_outcome(authorization_sha256: str | None, output_file: str,

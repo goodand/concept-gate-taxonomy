@@ -5,6 +5,7 @@
  "files": [
   "SAFETY_AUDIT_CHANGELOG.md",
   "SAFETY_AUDIT_RUBRIC.md",
+  "_provenance.py",
   "apply_safety_audit.py",
   "frozen_surface_audit.json",
   "make_safety_audit_blind_input.py",

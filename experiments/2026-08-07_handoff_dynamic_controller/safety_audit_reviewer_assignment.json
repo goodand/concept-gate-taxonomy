@@ -12,7 +12,8 @@
   "NOT_machine_verified": [
    "that two declared ids are two different PEOPLE",
    "that the reviewers did not confer",
-   "that a reviewer did not see the automatic scores by other means"
+   "that a reviewer did not see the automatic scores by other means",
+   "that an AGENT reviewer could not read the repository (no sandboxed launcher exists yet -- doctor reports this as BLOCKED once an agent reviewer is declared; see SAFETY_AUDIT_RUBRIC.md)"
   ],
   "consequence": "Report this audit as 'two distinct reviewer IDs, independence procedural'. Do NOT report it as 'two independent reviewers' -- that is a claim about people, and nothing here establishes it."
  },

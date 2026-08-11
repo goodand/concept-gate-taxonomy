@@ -33,6 +33,7 @@ from _runner import Corpus  # noqa: E402
 import apply_safety_audit as _asa  # noqa: E402
 import make_safety_audit_blind_input as _mkblind  # noqa: E402
 import measure_s1_recall as _measure_s1  # noqa: E402
+import _provenance  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -423,10 +424,14 @@ def _synthetic_primary_with_provenance(root):
     (root / "results").mkdir(exist_ok=True)
     auth_copy = root / "results" / "PRIMARY_AUTHORIZATION.json"
     auth_copy.write_text(json.dumps(auth), encoding="utf-8")
+    # `output_sha256`, not just the name -- that is the field the shared
+    # verifier compares (round 18).
     (root / "results" / "primary_attempt_ledger.jsonl").write_text(
         json.dumps({"authorization_sha256": hashlib.sha256(
             auth_copy.read_bytes()).hexdigest(),
-            "status": "completed", "output_file": "r.json"}) + "\n",
+            "attempt_id": "t-1", "status": "completed",
+            "output_file": path.name,
+            "output_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}) + "\n",
         encoding="utf-8")
     return path
 
@@ -759,7 +764,7 @@ def test_measure_s1_recall_cli_runs_and_refuses_to_overwrite(tmp_path, capsys):
 
 def test_an_artifact_no_authorization_covers_is_rejected(tmp_path):
     rp = _write(tmp_path, _primary_shaped())
-    with pytest.raises(_mkblind.AuditInputError, match="authorization"):
+    with pytest.raises(_provenance.ProvenanceError, match="authorization"):
         _mkblind.build(rp)
 
 
@@ -769,7 +774,7 @@ def test_an_artifact_with_the_wrong_config_hash_is_rejected(tmp_path):
     data = _primary_shaped(config_file=auth["config_file"],
                            config_sha256="0" * 64)
     rp = _write(tmp_path, data)
-    with pytest.raises(_mkblind.AuditInputError, match="config"):
+    with pytest.raises(_provenance.ProvenanceError, match="config"):
         _mkblind.build(rp)
 
 
@@ -781,5 +786,56 @@ def test_an_artifact_with_no_completed_attempt_is_rejected(tmp_path):
         config_sha256=hashlib.sha256(
             (HERE / auth["config_file"]).read_bytes()).hexdigest())
     rp = _write(tmp_path, data)
-    with pytest.raises(_mkblind.AuditInputError, match="attempt"):
+    with pytest.raises(_provenance.ProvenanceError, match="attempt"):
         _mkblind.build(rp)
+
+
+def test_a_result_edited_after_its_attempt_completed_is_rejected(tmp_path):
+    """Round 18's High finding, pinned. The audit gate matched the completed
+    row by `output_file` NAME, so editing the result after the attempt
+    completed changed nothing it looked at:
+
+        accepted_after_mutation: true
+        ledger_has_output_sha256: false
+
+    The runner's own `verify_primary_attempt_artifacts` had compared
+    `output_sha256` for a month. The defect was a second, weaker copy of a
+    check that already existed one import away.
+    """
+    root = tmp_path
+    (root / "results").mkdir()
+    auth_src = HERE / "results" / "PRIMARY_AUTHORIZATION.json"
+    auth = json.loads(auth_src.read_text(encoding="utf-8"))
+    data = _primary_shaped(
+        config_file=auth["config_file"],
+        config_sha256=hashlib.sha256(
+            (HERE / auth["config_file"]).read_bytes()).hexdigest())
+    path = _write(root, data)
+    auth_copy = root / "results" / "PRIMARY_AUTHORIZATION.json"
+    auth_copy.write_text(json.dumps(auth), encoding="utf-8")
+    (root / "results" / "primary_attempt_ledger.jsonl").write_text(
+        json.dumps({"authorization_sha256": hashlib.sha256(
+            auth_copy.read_bytes()).hexdigest(),
+            "attempt_id": "t-1", "status": "completed",
+            "output_file": path.name,
+            "output_sha256": hashlib.sha256(path.read_bytes()).hexdigest()}) + "\n",
+        encoding="utf-8")
+
+    # Unedited: verifies.
+    receipt = _provenance.verify_run(path, root=root, mode=_provenance.SYNTHETIC)
+    assert receipt.mode == _provenance.SYNTHETIC
+
+    # Edited after the fact: refused.
+    data["traces"][0]["recommended_actions"] = ["restart the nightly job now"]
+    path.write_text(json.dumps(data), encoding="utf-8")
+    with pytest.raises(_provenance.ProvenanceError, match="output_sha256"):
+        _provenance.verify_run(path, root=root, mode=_provenance.SYNTHETIC)
+
+
+def test_a_verified_receipt_cannot_come_from_an_arbitrary_root(tmp_path):
+    """`--out-root` is an output location. Round 18: letting it relocate the
+    authorization and ledger made a copied authorization and a hand-written
+    ledger indistinguishable from the canonical ones."""
+    with pytest.raises(_provenance.ProvenanceError, match="not an authority"):
+        _provenance.verify_run(tmp_path / "x.json", root=tmp_path,
+                               mode=_provenance.VERIFIED)

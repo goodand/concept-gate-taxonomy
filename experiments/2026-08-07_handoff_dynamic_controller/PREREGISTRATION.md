@@ -2041,3 +2041,100 @@ execution surface(`run_live_phase_c.py`, red-team 2종, `test_protocol.py`)가
 바뀌었다. calibration → red-team 2종을 그 순서로 재실행했다. **qualification
 2종은 여전히 stale이고 그것이 다음 단계다** — 이제 `doctor`가 그 사실을
 `exit 1`로 말한다.
+
+## Amendment 39 — 2026-08-11, 18라운드: provenance를 다시 만들지 말고 이미 있는 검증기를 쓴다
+
+**계기 정정 먼저**: 이 문서와 handoff가 qualification 재실행을 반복해서 "유료"로
+적었다. **오해였다** — 사용자 정정: workflows로 대체 가능하다. 비용 문제가
+아니라 **시간·순서** 문제이며, 승인 필요 사유처럼 쓴 것은 부정확했다.
+
+### #1 — 완료 후 변조된 결과가 통과했다 (High)
+
+감사 게이트가 완료 원장에서 `output_file`을 **이름으로** 대조하고 끝냈다. 실측:
+
+```
+accepted_after_mutation: true
+ledger_has_output_sha256: false
+```
+
+완료 원장을 쓴 뒤 `recommended_actions`를 고쳤는데 packet이 만들어졌다.
+
+**그동안 `run_live_phase_c.verify_primary_attempt_artifacts()`는 한 달 전부터
+`output_sha256`을 대조하고 있었다.** 결함은 기능 부재가 아니라 **한 import
+거리에 있는 검사의 두 번째, 더 약한 구현**이었다 — 이 실험이 이제 네 개 층에서
+반복한 "헬퍼는 있는데 호출부가 없다"와 같은 형태다.
+
+`_provenance.py`를 만들되 **검증을 구현하지 않는다.** 기존 원장 기제를 조합해
+`VerifiedRunReceipt`를 반환하고, 감사 코드는 그 receipt만 받으며 원장을 직접
+읽지 않는다. 선례를 그대로 재사용한 것이다 — E2.2.3 evaluator가 결과의
+자기신고가 동결 manifest와 다르면 `PROVENANCE_FAIL`로 **채점 자체를 중단**하는
+계약, 그리고 E2.4의 canonical single path.
+
+**`--out-root`가 provenance 권위가 되던 것도 닫았다.** 임의 디렉터리에 복사한
+authorization과 손으로 쓴 원장이 정본과 구별되지 않았다. 이제 비정본 root는
+**출력 위치일 뿐**이고, 그 트리로 검증하면 receipt에 `mode="synthetic-e2e"`가
+찍혀 packet·key·최종 번들까지 따라간다. **검사를 끄지 않고 실행하되, 합성 실행을
+감사로 오인할 수 없게 한다** — 모든 테스트에서 꺼지는 검사는 아무도 작동을 본
+적 없는 검사다.
+
+### #2 — mutation gate가 배선 제거를 못 잡았다 (High)
+
+이전 판은 `_qualify_reviewer`를 항상 성공하게 monkeypatch했고, E2E가 **자기
+별도 대조로** 그것을 잡았다. 실제 위험인 **adjudicator가 호출부를 생략하는
+경우**는 통과했다:
+
+```
+e2e_passed_with_adjudicator_qualification_disabled: True
+```
+
+원인은 E2E가 **정답 qualification만 제출**했다는 것이다. 호출부를 관측하려면
+**거부해야 하는 것을 보내야 한다.** E2E에 단계 6(자격 미달 판정자를 CLI로 제출)을
+추가했다.
+
+acceptance gate도 다시 만들었다:
+
+- production **소스**를 변이하고 **별도 프로세스**에서 실제 CLI를 돌린다
+  (in-process monkeypatch는 함수가 교체 가능하다는 것만 증명한다)
+- `run_calibration.py`의 **applied-check** 재사용 — 변이 전후 sha256이 같으면
+  HARNESS DEFECT
+- obligation manifest(`obligation_id`, before/after sha, expected/observed
+  signal, fresh_subprocess)
+- "7단계 ≥ 5 mutation" 같은 **개수 비교를 폐기**하고 obligation 매핑으로 교체.
+  신호가 없는 obligation은 `NO_SIGNAL_YET`에 사유와 함께 남긴다 — 현재 1건
+  (`reviewer.assignment.frozen`)
+
+**이 게이트가 즉시 공백을 하나 찾았다**: E2E가 provenance를 직접 호출로만
+검사하고 **CLI 경로로는 한 번도 검사하지 않았다.** CLI 음성 대조를 추가해
+음성 대조가 6 → 7이 됐다.
+
+### #4 — doctor가 예외 **문자열**로 판정하고 있었다
+
+`"BLOCKED" in msg`로 FAIL/BLOCKED를 갈랐다 — 진단의 분류가 자기가 소유하지 않은
+산문에 의존했고, 메시지를 고치면 조용히 재분류됐다. `LiveRunError.verdict`와
+`LiveRunBlocked`를 두어 **타입이 판정을 나른다**(`cg_obligations.Verdict`와 같은
+3값 어휘). 시도 잔여량도 doctor가 원장을 다시 세지 않고
+`remaining_primary_attempts()`를 호출한다 — **어떤 행이 시도를 소모하는가**라는
+계약은 그 행을 쓰는 코드와 함께 있어야 한다.
+
+### #3 — agent 판정자 격리는 여전히 문서 계약이다 (미완, 명시)
+
+rubric은 "저장소를 읽을 수 있는 agent 판정자는 blinded가 아니며, 격리를 강제하지
+못하면 BLOCKED"라고 쓰는데 **launcher가 없다.** 이번에 한 것은 그 문장이 요구하는
+최소치뿐이다: agent 판정자가 선언됐는데 `reviewer_runner.py`가 없으면 doctor가
+**BLOCKED**로 보고하고, 배정 파일의 `NOT_machine_verified` 목록에 그 사실을
+적었다. **이것은 launcher의 대체물이 아니다.** 다음 라운드 작업이며, 그때는
+`_providers.py`의 Seatbelt v2 생성기와 `.vault-harness`의 public-only bundle
+패턴을 재사용한다(둘 다 이 워크스페이스에 검증된 채로 있다).
+
+### #5 — red-team 증거가 실행 환경에 결속되지 않았다 (미완, 명시)
+
+red-team artifact는 config 파일과 해시는 결속하지만 sandbox capability는 아니다.
+따라서 현재의 readiness PASS는 **"이 source/config 조합이 어떤 환경에서
+통과했다"**이지 "지금 이 세션에서 boundary가 검증됐다"가 아니다. 리뷰어 환경에서
+Seatbelt 6건이 실패하는 동안 이 환경에서는 통과한다. **다음 라운드.**
+
+### 이 개정이 무효화하는 것
+
+execution surface(`run_live_phase_c.py`, red-team 2종)가 바뀌었다.
+calibration → red-team 2종을 그 순서로 재실행했다. **qualification 2종은 여전히
+stale이고 doctor가 `exit 1`로 그렇게 말한다.**

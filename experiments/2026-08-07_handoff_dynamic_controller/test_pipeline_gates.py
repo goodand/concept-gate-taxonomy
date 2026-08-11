@@ -94,3 +94,33 @@ def test_redteam_exit_codes_are_three_valued(script):
     assert "BLOCKED_EXIT" in source or "return 2" in source, (
         f"{script} has no BLOCKED exit path; an inconclusive run still "
         "returns success")
+
+
+def test_doctor_reads_a_typed_verdict_not_the_exception_text():
+    """Round 18, finding #4: doctor decided FAIL vs BLOCKED by searching the
+    exception message for the word "BLOCKED", so a diagnostic's
+    classification depended on prose it did not own. Rewording a message
+    would have silently reclassified a gate."""
+    import run_live_phase_c as live
+    import run_pipeline
+    assert live.LiveRunError.verdict == "FAIL"
+    assert live.LiveRunBlocked.verdict == "BLOCKED"
+    assert issubclass(live.LiveRunBlocked, live.LiveRunError)
+    source = (HERE / "run_pipeline.py").read_text(encoding="utf-8")
+    assert '"BLOCKED" in msg' not in source
+    # And the classification actually comes from the type.
+    row, value = run_pipeline._delegate(
+        "synthetic", lambda: (_ for _ in ()).throw(
+            live.LiveRunBlocked("refusing: nothing to see")))
+    assert row["status"] == "BLOCKED" and value is None
+
+
+def test_doctor_does_not_recount_the_attempt_ledger_itself():
+    """The contract for which rows consume an attempt belongs with the code
+    that writes them."""
+    import run_live_phase_c as live
+    assert hasattr(live, "remaining_primary_attempts")
+    source = (HERE / "run_pipeline.py").read_text(encoding="utf-8")
+    assert "remaining_primary_attempts" in source
+    assert 'entry.get("status") == "started"' not in source, (
+        "doctor re-derives the attempt-counting contract")
