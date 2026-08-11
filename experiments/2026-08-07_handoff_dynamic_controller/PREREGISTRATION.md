@@ -2339,6 +2339,26 @@ fail-open과 같은 논리다.
 > - 위 §의 "Seatbelt v2" 인용도 **문장만 옮겨왔고 코드는 v1을 불렀다.**
 >   `_providers.seatbelt_profile_v2`로 교체했고, v1이 host transcript를 누출하고
 >   v2가 차단하는 **대조 테스트**를 넣어 "v2를 쓴다"를 반증 가능하게 만들었다.
+> - **launcher는 reviewer를 실행하지 않았다.** `run_reviewer(command=...)`가
+>   `subprocess.run`을 부르고 **결과를 버렸고**, release E2E는 command를 아예
+>   넘기지 않았으며, 그 안의 "reviewer label"은 E2E가 **답안 파일에서** 만든
+>   것이었다. 즉 sandbox 안의 프로세스에서 감사로 판정이 옮겨간 적이 한 번도
+>   없었다.
+>
+>   이제 launcher가 stdout을 받아 schema(`_providers.validate_against_schema`,
+>   provider 어댑터와 같은 검사기)로 검증하고, blind_id 집합과 rubric 어휘를
+>   대조한 뒤 label artifact를 쓴다. **파싱 실패·schema 불일치·id 불일치·rubric
+>   외 label·비영 종료는 전부 거부**이며 기본 label로 대체되지 않는다 — 아무도
+>   내리지 않은 판정이 그럴듯한 artifact로 서는 것이 이 감사에서 가장 나쁜
+>   실패다. receipt는 `reviewer_command_sha256`·`reviewer_output_sha256`을
+>   담고, release E2E가 **adjudicator에게 넘기는 파일의 바이트가 서명된 receipt가
+>   증언하는 바이트와 같은지** 대조한다. 그 결속에 mutation 케이스가 붙어 있다
+>   (`reviewer.labels.from-launcher`).
+>
+>   probe-only 실행(`command=None`)은 여전히 정당하다 — release E2E가 묻는 것은
+>   경계가 성립하는지다. 다만 두 receipt가 **구별된다**: probe-only는 두 해시가
+>   `null`이다. 이전에는 구별되지 않았고, 그래서 "launcher가 reviewer를 돌렸다"가
+>   반증 불가능했다.
 
 ### D. `closure` 명령
 

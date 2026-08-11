@@ -8,6 +8,7 @@
    "no id appears twice",
    "at least min_distinct_reviewer_ids (from safety_audit_spec.json) submitted",
    "the labels are bound to this assignment by its sha256",
+   "that the labels the adjudicator read were produced by a process reviewer_runner.py launched inside the sandbox: its stdout was schema-validated, its label ids matched the packet exactly, and the artifact's bytes match the reviewer_output_sha256 in the HMAC-signed isolation receipt",
    "that an AGENT reviewer launched by reviewer_runner.py ran under a Seatbelt v2 profile, that four forbidden FILES were probed with /bin/cat and denied, that each of those probes was first shown to succeed under a permissive control profile (a probe that cannot reach its target under (allow default) measures nothing), and that the resulting receipt is HMAC-signed with a host-only key the reviewer's profile denies"
   ],
   "NOT_machine_verified": [
