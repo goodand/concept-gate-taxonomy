@@ -426,6 +426,8 @@ Amendment 37/38에서 추가·변경된 것:
 - [17라운드 검증·수정 계획](feedback/plan_round17_doctor_delegation_and_real_e2e.md)
 - [19라운드 검증·수정 계획](feedback/plan_round19_freeze_closure_and_provenance_envelope.md)
 - [세션 회고 — 파이프라인 게이트와 provenance](feedback/session_retrospective_20260811_pipeline_gates_and_provenance.md)
+- [20라운드 검증·수정 계획](feedback/plan_round20_walking_skeleton_and_release_e2e.md)
+- [20라운드 검증 설계·의존성 분석·구현 계획](feedback/design_round20_verification_dependencies_implementation.md)
 
 - [`run_pipeline.py`](../experiments/2026-08-07_handoff_dynamic_controller/run_pipeline.py)
 - [`safety_audit_spec.json`](../experiments/2026-08-07_handoff_dynamic_controller/safety_audit_spec.json)
@@ -441,18 +443,22 @@ Amendment 37/38에서 추가·변경된 것:
 **먼저 이것부터 실행하라:**
 
 ```bash
-python3 run_pipeline.py doctor          # 무엇이 막혀 있나 (exit 0/1/2)
-python3 run_pipeline.py e2e --offline   # 하류 경로가 아직 배선돼 있나 (0.0s)
+python3 run_pipeline.py closure        # 편집 뒤 동결 artifact 재생성 (마지막에)
+python3 run_pipeline.py doctor         # 무엇이 막혀 있나 (exit 0/1/2)
+python3 run_pipeline.py e2e --offline  # 빠른 배선 확인 (PARTIAL 허용)
+python3 run_pipeline.py e2e --release  # launcher+closure 포함, 오직 exit 0만 성공
 ```
 
 `doctor`는 판정을 **하지 않고** production 게이트(`_assert_ready` →
 `_assert_primary_qualifications` → `_assert_primary_authorization`)를 호출해
 그 결과를 보여준다. 37라운드까지는 판정을 복제해서 **doctor 초록·production
 거부**가 동시에 성립했다. exit code는 3값이다 — `2`는 BLOCKED이고 **성공이 아니다**.
-`e2e --offline`도 같다: mutation이 격리하지 못하는 stage가 남아 있으면
+`e2e --offline`도 같다: 증명되지 않은 **obligation**이 남아 있으면
 **PARTIAL / exit 2**이며, 모든 단계가 실행됐다는 뜻이지 통과가 아니다.
-출력의 `coverage` JSON이 무엇이 덮이고 무엇이 안 덮였는지 기계가 읽을 수 있게
-말한다.
+`--release`는 PARTIAL을 받지 않는다 — 그것이 PARTIAL을 영구화하지 않는 장치다.
+출력의 `coverage` JSON이 obligation 단위로 무엇이 증명됐는지 말한다.
+완료 단위는 **stage가 아니라 obligation**이다(20라운드: stage 차집합은 같은
+stage의 형제가 보호되면 미증명 의무를 숨겼다).
 
 Amendment 36에서 추가·변경된 것:
 
