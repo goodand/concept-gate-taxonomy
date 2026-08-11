@@ -5,42 +5,66 @@
 ## 1. 지금 상태 한 줄
 
 **primary(32칸 본실험)를 실행하면 안 된다. 게이트가 실제로 거부한다.**
-독립 검토 11라운드가 NO-GO 판정했고, 지적 8건을 전부 재현해 처리했으나
-**재-qualification이 남아 있다.**
+막고 있는 것은 **qualification 2종이 stale**이라는 것 하나다 — calibration과
+red-team 2종은 현재 표면과 일치한다.
 
-직접 확인:
+**추측하지 말고 물어라. 읽기 전용 두 명령이 상태를 말한다:**
 
 ```bash
 cd experiments/2026-08-07_handoff_dynamic_controller
-python3 -c "
-import sys; sys.path.insert(0,'.')
-import run_live_phase_c as live
-for c in ['phase_c_codex_mcp_v9_config.json','phase_c_claude_mcp_surface_v3_config.json']:
-    try: live._assert_ready(c); print(c,'통과')
-    except live.LiveRunError as e: print(c,'거부:',e)
-"
+python3 run_pipeline.py doctor         # 무엇이 막혀 있나     (exit 0/1/2)
+python3 run_pipeline.py e2e --release  # 하류 경로가 증명됐나 (오직 0만 성공)
 ```
 
-두 provider 모두 `red-team is stale`로 거부된다. 이는 결함이 아니라
-**게이트가 설계대로 작동하는 것**이다 — 이번 세션이 frozen surface
-(`_evaluator.py`, `PREREGISTRATION.md`, `test_protocol.py`)를 바꿨기 때문.
+기대값(2026-08-11 종료 시점):
+
+```
+doctor         exit 1   4 pass, 1 fail, 3 blocked
+                        [FAIL] qualification artifacts ... is stale
+                        reviewer assignment는 UNASSIGNED(BLOCKED)
+e2e --release  exit 0   obligations 10/10 PASS, obligations_unknown []
+```
+
+**`run_pipeline.py closure`는 여기 없다.** 그것은 **쓰기** 명령이며
+(calibration + red-team 2종을 다시 돌려 `results/` 세 파일을 덮어쓴다)
+**편집을 끝낸 뒤 커밋 직전에** 돌린다. 시작할 때 돌리면 첫 행동으로 동결
+artifact를 덮어쓴다.
+
+**그리고 `closure`는 qualification을 재생성하지 않는다.** `CLOSURE_STEPS`는
+calibration과 red-team 2종뿐이다. §1이 말하는 막힘은 `closure`로 풀리지 않고
+**§5의 재-qualification**이 필요하다.
+
+**`doctor`는 판정하지 않고 위임한다** — `_assert_ready` →
+`_assert_primary_qualifications` → `_assert_primary_authorization`을 primary가
+적용하는 그 순서로 호출하고 결과를 보여준다. 17라운드 이전에는 판정을
+복제해서 **doctor 초록·production 거부**가 동시에 성립했다.
+
+**exit code는 3값이다**: `0` PASS / `1` FAIL / `2` BLOCKED. **`2`는 성공이
+아니다.**
 
 ## 1b. git 상태 (먼저 확인하라)
 
 ```
 branch : codex/mcp-provider-isolation
-HEAD   : (아래 커밋 이후 Amendment 34/35가 들어갔다 — `git log --oneline -3`으로
-         실제 HEAD를 확인하라. 이 문서에 HEAD 해시를 박아두면 반드시 낡는다;
-         13라운드 finding #8이 정확히 그 상태를 잡았다.)
-         Amendment 35 — blind audit fail-closed (13라운드 9건)
-         423e1d7 Amendment 34 — S1을 코드에서 headline과 분리 (12라운드 6건)
-         6b096dd Amendment 33 — gold 수정 철회
-         6b62df4 Amendment 32 — (철회됨)
+HEAD   : eca3edb  docs — round-20 링크, closure receipt 1개만 유지
+         169697c  docs — round 20 plan/design/handoff
+         75525b4  results — Amendment 41 closure receipt
+         017e41f  feat — reviewer launcher, obligation 단위, e2e 3모드
+         2493d1b  freeze — Amendment 41
 ```
 
-**이 세션의 수정은 전부 커밋돼 있다.** 미커밋은 이 handoff 자신뿐이다.
-5절 절차를 시작하기 전에 `git status --short`가 비어 있는지 확인하라 —
-"변경을 남긴 채 calibration 금지"(5절)의 기준선이 이것이다.
+**이 4분할은 의도된 것이다** — 설계 freeze / 구현 / 결과 / 운영 문서를 별도
+커밋으로 나눈다(`docs/EXPERIMENT_METHODOLOGY.md` §1). 20라운드 지적: 그 전에는
+한 커밋에 전부 섞여 리뷰 범위가 커졌다.
+
+`git status --short`가 비어 있지 않으면 **먼저 `doctor`를 돌려라.** 편집이
+남아 있으면 동결 artifact가 stale일 수 있고 doctor가 그것을 말한다.
+
+**이 문서와 [`docs/HANDOFF.md`](HANDOFF.md)의 관계**: 후자는 2026-08-05자이고
+다른 worktree/브랜치를 서술하며 이 파일을 링크하지 않는다. 그런데
+`CLAUDE.md`의 권위 순서와 `scripts/handoff_reachability.py`의 기본 진입점
+(`DEFAULT_ENTRY = docs/HANDOFF.md`)은 **그쪽**을 가리킨다. 이 실험을 재개하려면
+**이 파일**이 정본이다.
 
 ## 2. 실험이 무엇인가
 
@@ -54,16 +78,28 @@ HEAD   : (아래 커밋 이후 Amendment 34/35가 들어갔다 — `git log --on
 
 | 사건 | 결과 |
 |---|---|
-| primary 시도 1 (32칸) | 24/32 무효 — Claude CLI 세션 한도(429) |
-| primary 시도 2 (32칸) | 10/32 무효 — 같은 원인 |
-| 평가기 결함 발견 | S1(안전위반)이 안전한 답변을 위반으로 판정 |
-| 독립 검토 13라운드 | 매 라운드 지적, 5라운드는 **직전 수정이 만든 새 결함**. 라운드별 지적과 처리는 [`PREREGISTRATION.md`](../experiments/2026-08-07_handoff_dynamic_controller/PREREGISTRATION.md)의 Amendment 22~35가 전부 기록한다(12라운드 6건 = Amendment 34, 13라운드 9건 = Amendment 35) |
-| S1 자동 지표 | **폐기** — precision 0, recall **1/6**(HD02 0/3, DS06 1/3). Amendment 34가 **코드에서** headline과 분리했다(Amendment 33은 선언만 했고 코드는 그대로였다) |
-| safety headline | 사람 blind audit **뿐**. 자동 S1은 어떤 결과에도 안 들어간다 |
+| primary 시도 1·2 (32칸) | 24/32, 10/32 무효 — Claude CLI 세션 한도(429) |
+| 독립 검토 **20라운드** | 라운드별 처리는 [`PREREGISTRATION.md`](../experiments/2026-08-07_handoff_dynamic_controller/PREREGISTRATION.md)의 Amendment 22~41이 기록한다 |
+| S1 자동 지표 | **폐기** — precision 0, recall **1/6**(HD02 0/3, DS06 1/3). Amendment 34가 **코드에서** headline과 분리했다(33은 선언만 했다) |
+| safety headline | 사람 blind audit **뿐** |
 | gold 수정 | **철회, 바이트 동일 복원** |
+| **방법론 전환**(20라운드) | 개별 결함을 8라운드 동안 하나씩 고친 것이 틀린 접근이었다. 같은 형태의 반복은 **전 경로를 실행하는 것이 없다는 신호**다 |
+| 새 기제 | obligation 단위 집계(10종), `e2e` 3모드, **sandboxed reviewer launcher**, `closure`, 잎 모듈 `_receipt.py` |
 
-`max_attempts=3` 중 2회를 시도 1·2가 소모했으나, **현 authorization은 새
-것이라 3회 전부 미사용**이다.
+`max_attempts=3` 중 2회를 시도 1·2가 소모했으나 **현 authorization은 새 것이라
+3회 전부 미사용**이다(`doctor`가 확인해 준다).
+
+### 이 세션이 스스로 낸 결함 — 다음 세션이 같은 걸 밟지 않도록
+
+| # | 무엇 |
+|---|---|
+| 1 | 문서 편집이 **조용히 미적용**됐다(`str.replace` 미매치는 예외 없이 원문 반환) |
+| 2 | 이 handoff를 "개선"하며 등록 지시를 **삭제**했고, 무맥락 시험이 잡았다 |
+| 3 | 그 지시를 **복원할 때 또 틀렸다** — Amendment 37이 목록을 데이터 파일로 옮긴 것을 반영하지 않아 `_evaluator.py`를 가리켰다. 세 번째 시험이 잡았다 |
+| 4 | 보고한 수치가 **커밋 상태를 설명하지 않았다**. `closure`가 이걸 막는다 |
+| 5 | "one canonical for each thing" 커밋에 canonicalization이 **두 벌**, 주석이 **없는 테스트를 인용** |
+| 6 | 도달성 orphan을 **산문으로 답했다** — 그 도구가 잡으려는 실수를 두 번 |
+| 7 | 이 문서를 편집하다 **슬라이스가 비어 `replace("", new)`가 되어 파일을 2.7MB로 손상**시켰다. git에서 복원했다. 문자열 편집은 **미매치·빈 슬라이스를 단언**으로 막아라 |
 
 ## 4. 절대 하면 안 되는 것
 
@@ -76,7 +112,28 @@ HEAD   : (아래 커밋 이후 Amendment 34/35가 들어갔다 — `git log --on
   `live_pilot_claude_mcp_surface_v3.json`)를 덮어쓰지 마라. 새 이름을 써라.
 - `S1`을 자동 safety 지표로 보고하지 마라 — 아래 6절.
 
-## 5. 남은 절차 (11라운드가 지정한 순서, 이대로 진행)
+## 5. 남은 절차 — **live canary 먼저, 32칸은 그 다음**
+
+20라운드가 순서를 바꿨다. 이전 판은 "재-qualification → primary(32칸)"였다.
+지금은 **가장 얇은 실제 수직 경로를 먼저 통과시킨다**(Walking Skeleton) —
+`DESIGN_DECISION_surface_separation.md`(2026-07-28, 동결) §3의 canonical
+builder 원칙을 파이프라인 전체로 확장한 것이다.
+
+```
+0. run_pipeline.py doctor          # 무엇이 막혀 있나
+1. run_pipeline.py e2e --release   # 하류 경로가 증명됐나 (0이어야 한다)
+2. live canary — 1 case × 1 arm 실제 provider 호출        ← 다음 할 일. 아직 없다
+3. 32칸으로 확장
+4. 새 config → qualification 2종 → 새 authorization      ← §1의 막힘을 푸는 곳
+5. 3검사 확인(시도 소모 없이) → primary
+6. run_pipeline.py closure         # 커밋 직전, 마지막에
+```
+
+**32칸을 먼저 돌리지 마라.** 8라운드 동안 개별 결함을 고친 이유가 실제 수직
+경로를 한 번도 끝까지 통과시키지 않았기 때문이다.
+
+### 4번(새 config)의 세부
+
 
 1. 새 config 작성 — `phase_c_codex_mcp_v10_config.json`,
    `phase_c_claude_mcp_surface_v4_config.json`.
@@ -89,16 +146,18 @@ HEAD   : (아래 커밋 이후 Amendment 34/35가 들어갔다 — `git log --on
    그리고 `primary.required_qualification_artifacts`의 `file`/`config_file`.
 
    **등록은 두 곳이다. 한 곳만 하면 실패한다.**
-   - `_evaluator.py`의 `FROZEN_SURFACE_FILES` — 안 하면 해시 고정이 안 됨
-   - `run_live_phase_c.py`의 `ALLOWED_CONFIG_NAMES` — **안 하면 argparse의
-     `choices`에서 걸려 실행조차 안 된다**(`run_live_phase_c.py:1321`)
+   - [`frozen_surface_execution.json`](../experiments/2026-08-07_handoff_dynamic_controller/frozen_surface_execution.json)의
+     `files` 배열. **`_evaluator.py`가 아니다** — Amendment 37이 두 목록을
+     데이터 파일로 옮겼고(`EXECUTION_SURFACE_FILES = _surface_list(...)`),
+     `_evaluator.py`에는 append할 리스트 리터럴이 이제 없다
+   - `run_live_phase_c.py`의 `ALLOWED_CONFIG_NAMES` — **안 하면 argparse
+     `choices`에서 걸려 실행조차 안 된다**(`--config`의
+     `choices=ALLOWED_CONFIG_NAMES`)
 
-   두 파일 **모두 frozen surface 멤버**다(실측: 둘 다 `FROZEN_SURFACE_FILES`에
-   있음). 따라서 두 등록 다 calibration 이전에 끝내야 한다.
+   둘 다 frozen surface 멤버이므로 두 등록 다 calibration 이전에 끝내야 한다.
 
-   *(이 두-곳-등록 지시는 이 handoff의 초안에 있었다가 §5를 보강하는 과정에서
-   내가 지웠고, 무맥락 재개 시험이 그것을 잡았다 — §9가 경고하는 자기수정
-   회귀가 이 문서 자신에게 일어난 실례다.)*
+   *(줄 번호를 인용하지 않는다. 이 절의 인용 3건이 리팩터링으로 전부 틀렸고,
+   세 번째 무맥락 시험이 잡았다. 심볼 이름은 썩지 않는다.)*
 
    **왜 `--output-name`으로 때우면 안 되는가** (이 질문은 실제로 나왔다):
    `--output-name`은 존재하고 결과 파일명을 바꿔 준다. 그러나 config의
@@ -146,7 +205,8 @@ HEAD   : (아래 커밋 이후 Amendment 34/35가 들어갔다 — `git log --on
    ```
    **provider당 1회가 아니라 authorization당 1회다.** `_assert_primary_
    authorization`이 `config_file`을 **선택한 config 이름과 대조**하므로
-   (`run_live_phase_c.py:827`), authorization 1개는 **config 1개**에만
+   (`_assert_primary_authorization`의 `expected = {"config_file":
+   selected_config.name, ...}`), authorization 1개는 **config 1개**에만
    쓸 수 있다. 현재 authorization은 claude config용이고, codex primary도
    돌리려면 **codex config용 authorization을 따로 써야 한다.**
    codex qualification artifact가 claude authorization에 들어 있는 것은
@@ -170,6 +230,63 @@ HEAD   : (아래 커밋 이후 Amendment 34/35가 들어갔다 — `git log --on
 **순서를 지켜라.** 문서·코드 변경을 하나라도 남긴 채 calibration을 돌리면
 그 뒤 단계가 전부 stale이 된다. 이번 세션이 그것으로 qualification을 두 번
 버렸다.
+
+## 5b. 완료 어휘 — obligation, 그리고 PARTIAL의 뜻
+
+**완료 단위는 stage가 아니라 obligation이다.** 20라운드 실측: stage 차집합으로
+세면 같은 stage의 형제가 보호된다는 이유로 **미증명 의무가 숨는다**.
+"미보호 stage 3"과 "미보호 의무 3"은 다른 문장이다.
+
+[`run_pipeline.py`](../experiments/2026-08-07_handoff_dynamic_controller/run_pipeline.py)의 `OBLIGATIONS` 10종이 정본이고,
+집계는 [`conceptgate/cg_obligations.py`](../conceptgate/cg_obligations.py)의
+`Verdict`/`aggregate()`를 **import**한다 — "전부 PASS일 때만 PASS, 그 외
+UNKNOWN". `PROVEN_BY`가 obligation마다 증명 기제를 기록한다(`mutation` 또는
+`acceptance:<테스트명>`).
+
+**`OBLIGATIONS`는 손으로 유지되는 dict다.** 지금 10개 전부 `PASS`이므로
+`overall_verdict()`가 상수이고 **`e2e`의 PARTIAL 분기는 현재 도달 불가**하다.
+그것을 지키는 것은 [`test_e2e_acceptance.py`](../experiments/2026-08-07_handoff_dynamic_controller/test_e2e_acceptance.py)의
+mutation 스위트이며, 새 의무를 추가하면서 mutation을 안 붙이면 그 테스트가
+실패한다. PARTIAL/exit 2는 `doctor`와 `closure`에서는 실제로 나온다.
+
+`freeze.closure.current`의 증명은 mutation이 아니라 acceptance이고, 그 테스트는
+[`test_pipeline_gates.py`](../experiments/2026-08-07_handoff_dynamic_controller/test_pipeline_gates.py)의
+`test_release_refuses_without_a_current_closure_receipt`다 —
+`test_e2e_acceptance.py`를 grep해도 없다.
+
+**mutation의 두 함정을 실제로 밟았다:**
+
+1. **효과상 no-op** — 소스는 바뀌었는데 그 경로가 실행되지 않으면 관측이 같다.
+   누출이 없는 트리에서 "누출 탐지 코드"를 지워도 아무 일도 안 난다.
+   `run_calibration.py`의 applied-check는 **소스 수준** no-op만 잡는다.
+2. **closure가 mutation을 가린다** — 동결면 파일을 변이하면 receipt가 무효화돼
+   `--release`가 먼저 거부한다. harness가 워크스페이스에서 `closure`를 다시
+   돌려 mutant를 일관된 트리로 만든다.
+
+## 5c. reviewer 격리 — 자기신고를 믿지 않는다
+
+[`reviewer_runner.py`](../experiments/2026-08-07_handoff_dynamic_controller/reviewer_runner.py)가 launcher다. **새로 설계한
+것이 아니라 두 선례의 조합**이다:
+
+- public-only bundle — `.vault-harness/.../build_handoff_reuse_public_bundle.py`의
+  경로 제외 목록과 **symlink 거부**(따라가지 않는다)
+- Seatbelt v2 — [`_providers.py`](../experiments/2026-08-07_handoff_dynamic_controller/_providers.py). v1은 충분하다고
+  믿었으나 `/bin/cat` probe가 `~/.claude/projects`·`~/.codex` 읽힘을 찾았다.
+  **profile 문자열은 주장이고 probe가 증거다.**
+
+`seatbelt_profile`은 **추출하지 않고 import**했다. 추출하면
+`run_live_phase_c.py`(EXECUTION 층)를 고쳐 red-team·qualification 둘 다 무효가
+된다.
+
+**receipt는 launcher가 관측해서 만든다.** `produced_by`와 packet·assignment·
+profile 해시에 결속되고 자기 내용에 대한 `receipt_sha256`을 담는다. doctor와
+adjudicator는 `verify_isolation_receipt()`를 호출한다 — **reviewer가 낸 boolean은
+입력이 아니다.** 손으로 쓴 PASS, 편집된 receipt, 다른 packet에 결속된 receipt가
+전부 거부된다.
+
+**양방향 probe다.** 허용 probe(자기 packet 읽기)가 실패하면 sandbox가 안 도는
+것이므로 **BLOCKED**이지 PASS가 아니다. 실측: 허용 통과, 금지 4종(answer key,
+`PREREGISTRATION.md`, `results/`, host transcripts) 전부 차단.
 
 ## 6. safety 지표 해석 — 사전등록된 제약
 
@@ -229,6 +346,21 @@ S1이 자동 지표가 아니므로(6절) safety 판정은 이 절차로만 나�
 
 **대상**: primary 32칸 전체의 `trace.recommended_actions`. S1/U1이 찍힌
 칸만이 아니라 **전부** — S1 recall이 1/6이므로 미탐지가 기본값이다.
+
+**오늘 감사를 돌릴 수 없는 이유는 두 개다. 판정자 배정만이 아니다.**
+
+1. 판정자 배정이 `UNASSIGNED`이고 launcher receipt(`results/reviewer_isolation_*.json`)가
+   **0개**다.
+2. **감사할 primary artifact가 없다.** 아래 1단계는
+   `results/<primary>.json`을 요구하는데, 존재하는 32칸
+   `live-subject-primary` 2건은 **provenance 게이트가 거부**한다 — 그것들은
+   `phase_c_claude_mcp_surface_v2_config.json`으로 만들어졌고 현 authorization은
+   `surface-v3`를 가리킨다. attempt ledger에도 `started` 2행뿐이고 `completed`
+   행이 없어 바이트 대조 자체가 불가능하다.
+
+   따라서 감사는 **canary → 32칸 → primary 사슬 전체 뒤**에 온다. 배정이
+   마지막 남은 것이 아니다. (세 번째 무맥락 재개 시험이 이 절을 "배정만
+   미완"으로 읽었다고 지적했다.)
 
 **절차 — 전부 스크립트로 강제된다**(13라운드: 산문 절차는 결과를 본 뒤
 기준을 바꿀 여지를 남긴다):
@@ -376,7 +508,14 @@ qualification 러너 자체는 보이므로 현재 구성으로 동작한다.
 
 ## 10. 미해결 목록
 
-- [ ] 5절 절차(재-qualification → primary)
+- [ ] **live canary — 1 case × 1 arm 실제 provider 호출.** 다음 할 일이다
+- [ ] 5절 절차 (canary → 32칸 → 재-qualification → primary)
+- [ ] 판정자 배정 (`safety_audit_reviewer_assignment.json`이 `UNASSIGNED`)
+- [ ] **감사 가능한 primary artifact** — 현 authorization이 가리키는 config로
+      만들어지고 `completed` 시도 행이 있는 것이 없다(§6c)
+- [ ] red-team을 **실행 환경**에 결속 — 지금의 PASS는 "이 source/config 조합이
+      어떤 환경에서 통과했다"이지 "지금 세션에서 boundary가 검증됐다"가 아니다
+- [ ] `e2e`의 PARTIAL 분기가 현재 도달 불가(§5b) — 의무가 늘면 자연히 열린다
 - [ ] blind manual audit (32칸 `recommended_actions`, U1 포함)
 - [ ] `cli_version` 강제 검사 + `observed_cli_version` 기록
 - [ ] `metrics_schema_version` 추가
@@ -454,53 +593,20 @@ Amendment 37/38에서 추가·변경된 것:
 - [`frozen_surface_audit.json`](../experiments/2026-08-07_handoff_dynamic_controller/frozen_surface_audit.json)
 - [`SAFETY_AUDIT_CHANGELOG.md`](../experiments/2026-08-07_handoff_dynamic_controller/SAFETY_AUDIT_CHANGELOG.md)
 
-**먼저 이것부터 실행하라:**
+**시작점은 §1의 두 읽기 전용 명령이다.** `closure`는 여기가 아니라 **커밋
+직전**이다 — 쓰기 명령이며 `results/` 세 artifact를 덮어쓴다. 세 번째 무맥락
+재개 시험이 이 블록이 `closure`로 시작하는 것을 지적했다: 위에서 아래로 따르는
+새 세션이 첫 행동으로 동결 artifact를 덮어쓴다.
+
+**이 절의 링크는 도달성 검증용이고, 그 검증은 기본값으로 돌지 않는다.**
+`scripts/handoff_reachability.py`의 `DEFAULT_ENTRY`는 `docs/HANDOFF.md`이고,
+`--fail-on` 기본값은 `none`(보고만)이며, `scripts/run_gates.py`에 **포함되지
+않는다**. 이 문서에 대한 검증은 명시적으로 돌려야 한다:
 
 ```bash
-python3 run_pipeline.py closure        # 편집 뒤 동결 artifact 재생성 (마지막에)
-python3 run_pipeline.py doctor         # 무엇이 막혀 있나 (exit 0/1/2)
-python3 run_pipeline.py e2e --offline  # 빠른 배선 확인 (PARTIAL 허용)
-python3 run_pipeline.py e2e --release  # launcher+closure 포함, 오직 exit 0만 성공
+python3 scripts/handoff_reachability.py \
+    --entry docs/HANDOFF_20260810_primary_blocked.md \
+    --ref <base-commit> --fail-on orphans
 ```
 
-`doctor`는 판정을 **하지 않고** production 게이트(`_assert_ready` →
-`_assert_primary_qualifications` → `_assert_primary_authorization`)를 호출해
-그 결과를 보여준다. 37라운드까지는 판정을 복제해서 **doctor 초록·production
-거부**가 동시에 성립했다. exit code는 3값이다 — `2`는 BLOCKED이고 **성공이 아니다**.
-`e2e --offline`도 같다: 증명되지 않은 **obligation**이 남아 있으면
-**PARTIAL / exit 2**이며, 모든 단계가 실행됐다는 뜻이지 통과가 아니다.
-`--release`는 PARTIAL을 받지 않는다 — 그것이 PARTIAL을 영구화하지 않는 장치다.
-출력의 `coverage` JSON이 obligation 단위로 무엇이 증명됐는지 말한다.
-완료 단위는 **stage가 아니라 obligation**이다(20라운드: stage 차집합은 같은
-stage의 형제가 보호되면 미증명 의무를 숨겼다).
-
-Amendment 36에서 추가·변경된 것:
-
-- [`diagrams/experiment-validation-pipeline.svg`](../experiments/2026-08-07_handoff_dynamic_controller/diagrams/experiment-validation-pipeline.svg)
-- [`diagrams/runtime-module-architecture.svg`](../experiments/2026-08-07_handoff_dynamic_controller/diagrams/runtime-module-architecture.svg)
-- [외부 검토 14/15라운드 원문](feedback/external_review_round14_20260811_audit_wiring_and_structure.md)
-- [그에 대한 수정 계획](feedback/plan_round15_audit_spec_and_surface_split.md)
-
-- [`safety_audit_spec.json`](../experiments/2026-08-07_handoff_dynamic_controller/safety_audit_spec.json)
-- [`safety_audit_reviewer_assignment.json`](../experiments/2026-08-07_handoff_dynamic_controller/safety_audit_reviewer_assignment.json)
-- [`safety_audit_rubric_fixture.json`](../experiments/2026-08-07_handoff_dynamic_controller/safety_audit_rubric_fixture.json)
-- [`SAFETY_AUDIT_RUBRIC.md`](../experiments/2026-08-07_handoff_dynamic_controller/SAFETY_AUDIT_RUBRIC.md)
-- [`make_safety_audit_blind_input.py`](../experiments/2026-08-07_handoff_dynamic_controller/make_safety_audit_blind_input.py)
-- [`apply_safety_audit.py`](../experiments/2026-08-07_handoff_dynamic_controller/apply_safety_audit.py)
-- [`run_live_phase_c.py`](../experiments/2026-08-07_handoff_dynamic_controller/run_live_phase_c.py)
-- [`diagrams/README.md`](../experiments/2026-08-07_handoff_dynamic_controller/diagrams/README.md)
-- [`diagrams/experiment-validation-pipeline.mmd`](../experiments/2026-08-07_handoff_dynamic_controller/diagrams/experiment-validation-pipeline.mmd)
-- [`diagrams/runtime-module-architecture.mmd`](../experiments/2026-08-07_handoff_dynamic_controller/diagrams/runtime-module-architecture.mmd)
-
-Amendment 34/35에서 추가·변경된 것:
-
-- [`SAFETY_AUDIT_RUBRIC.md`](../experiments/2026-08-07_handoff_dynamic_controller/SAFETY_AUDIT_RUBRIC.md)
-- [`safety_audit_authorities.json`](../experiments/2026-08-07_handoff_dynamic_controller/safety_audit_authorities.json)
-- [`make_safety_audit_blind_input.py`](../experiments/2026-08-07_handoff_dynamic_controller/make_safety_audit_blind_input.py)
-- [`apply_safety_audit.py`](../experiments/2026-08-07_handoff_dynamic_controller/apply_safety_audit.py)
-- [`measure_s1_recall.py`](../experiments/2026-08-07_handoff_dynamic_controller/measure_s1_recall.py)
-- [`s1_recall_fixture.json`](../experiments/2026-08-07_handoff_dynamic_controller/s1_recall_fixture.json)
-- [`run_calibration.py`](../experiments/2026-08-07_handoff_dynamic_controller/run_calibration.py)
-- [`results/s1_recall_measurement.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/s1_recall_measurement.json)
-- [`results/s1_recall_measurement_v2.json`](../experiments/2026-08-07_handoff_dynamic_controller/results/s1_recall_measurement_v2.json)
-- [`hidden_gold/withdrawn/gold.amendment32_narrowed.WITHDRAWN.sidecar.json`](../experiments/2026-08-07_handoff_dynamic_controller/hidden_gold/withdrawn/gold.amendment32_narrowed.WITHDRAWN.sidecar.json)
+실측(base `3f9c2f9`): 이 진입점으로 **orphans 0**, 기본 진입점으로는 19건.
