@@ -52,7 +52,7 @@
     }
   ],
   "frozen_surface_hashes": {
-    "PREREGISTRATION.md": "16b01cb4565afeaa7643411e366c49f3aed8353b991912fdbb50e3fd1e31bfb0",
+    "PREREGISTRATION.md": "d76e917c66353883cb478fbc45903c486b775113282ee9eab1538d54ebd2a5a7",
     "_contract.py": "f697801b3de0e13d5c44a4d40aed67af2d68d16550de3ffc7969a2153c7ca652",
     "_controllers.py": "464396bb4c8ef374b108c6803aa991f751453a75877548e2f06a587703f28088",
     "_evaluator.py": "85d89868b9a8b18f860e82921bfcdc4c9eec9d890c9ecb01bc7b07f825eea255",
@@ -86,10 +86,10 @@
     "redteam_provider_isolation.py": "9f16d99bc275f7ecee7be37cfe05ac6ba2f3ba74975db08386b99a54cef8ee97",
     "retrieval_subagent_response.schema.json": "78b890813ca048cbb5504838d48ba097269a015c3facbfdf86ddf25d20b174f8",
     "run_calibration.py": "6891a5880a7f6537f9713aa4c115880ec0a7b27b6c1c383ba7ffb1578376bf43",
-    "run_live_phase_c.py": "c830c9f9c7894df0d8aba1cbf30c5f9f4bb5191154c21cfd5b1862067dcbe857",
+    "run_live_phase_c.py": "f108917edd64338de0debbbb42cd35d6fdd44e5be28f64e12274380b1eb451f8",
     "run_smoke.py": "d59de046ce32d83f8a81da62f46d5c28a906fc461808b048dad8a9ac2075b0aa",
     "test_codex_mcp_provider.py": "de8ba0c5fb54985530a861a78a8d96e4c8abf136ce75e6597e8b428aca1deef6",
-    "test_live_phase_c.py": "79758a9cee2388a8682e0fd26db4e283f8b8e21f013d99bda8b7767f52d9ca29",
+    "test_live_phase_c.py": "0e401f7baee46916cd97e19f5a6c880fee949ec22f9144f05ae07866edc67331",
     "test_live_phase_c_claude.py": "e9416dc6e572bbfcbe076f3fa12849f69396acd0f4dfb76c53f073cbc9250e66",
     "test_preprimary_gates.py": "68602b4878186972cce73dddfc59bd163d9513be70421f52b22b0bcf6d2f9223",
     "test_protocol.py": "4fcd496d1c99fae49e1852d1a5d410a48438c037f1c302d80ca18c51c3aff58f",

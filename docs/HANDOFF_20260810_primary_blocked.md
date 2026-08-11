@@ -339,12 +339,25 @@ e2e --release   exit 0
 `DESIGN_DECISION_surface_separation.md`(2026-07-28, 동결) §3의 canonical
 builder 원칙을 파이프라인 전체로 확장한 것이다.
 
+**먼저 어휘를 고정한다. 이 문서에서 "canary"는 두 가지를 뜻해 왔고, 그 혼동이
+무맥락 agent를 엉뚱한 프로그램으로 보낸다**(22라운드에 실제로 이 문서가 그랬다):
+
+| 이름 | 프로그램 | 무엇을 하나 |
+|---|---|---|
+| **retrieval canary** | `run_live_phase_c.py --canary` | 실제 provider가 1 case × 1 arm을 돈다. artifact kind `live-subject-canary` |
+| **reviewer isolation probe** | `reviewer_runner.py` | sandbox 경계를 probe한다. provider와 무관 |
+| **safety audit dry-run** | `run_pipeline.py e2e --release` | 하류 감사 경로. provider 없음 |
+| **qualification pilot** | `run_live_phase_c.py --pilot` | config의 pilot 행렬. kind `live-subject-pilot`. **qualification ledger에 기록된다** |
+| **primary run** | `run_live_phase_c.py --primary` | 8×4 본 실행. kind `live-subject-primary`. authorization과 attempt를 소모한다 |
+
 ```
 0. run_pipeline.py doctor          # 무엇이 막혀 있나
 1. run_pipeline.py e2e --release   # 하류 경로가 증명됐나 (0이어야 한다)
 1b. 21라운드 수정 9건                                     ← 완료(아래 §3b)
-2. live canary — 1 case × 1 arm 실제 provider 호출        ← 다음 할 일. 아직 없다
-3. 32칸으로 확장
+2. retrieval canary — 아래 명령. kind `live-subject-canary`   ← 다음 할 일
+   ledger 기록 없음, authorization 불필요
+3. `--pilot`으로 1 case × 4 arms (= surface_v3의 pilot 행렬 그대로)
+   kind `live-subject-pilot`. **여기서부터 qualification ledger에 남는다**
 4. 새 config → qualification 2종 → 새 authorization      ← §1의 막힘을 푸는 곳
 5. 3검사 확인(시도 소모 없이) → primary
 6. run_pipeline.py closure         # 커밋 직전, 마지막에
@@ -352,6 +365,48 @@ builder 원칙을 파이프라인 전체로 확장한 것이다.
 
 **32칸을 먼저 돌리지 마라.** 8라운드 동안 개별 결함을 고친 이유가 실제 수직
 경로를 한 번도 끝까지 통과시키지 않았기 때문이다.
+
+### 2번 retrieval canary — 정확한 명령
+
+```bash
+cd experiments/2026-08-07_handoff_dynamic_controller
+
+# preflight (이 두 개만)
+python3 run_pipeline.py doctor          # qualification stale은 canary에 비차단
+python3 run_pipeline.py e2e --release   # 0이어야 한다. 1/2면 아래 표를 보라
+
+# ledger 해시를 먼저 적어 둔다 — canary는 둘 다 건드리지 않아야 한다
+shasum -a 256 results/qualification_ledger.jsonl results/primary_attempt_ledger.jsonl
+
+python3 run_live_phase_c.py \
+    --canary \
+    --config phase_c_claude_mcp_surface_v3_config.json \
+    --case-id HD01 --arm S_STATIC \
+    --output-name live_canary_claude_surface_v3_HD01_S_STATIC_attempt1
+
+# 실행 후 같은 해시를 다시 계산해 **동일**한지 확인한다
+shasum -a 256 results/qualification_ledger.jsonl results/primary_attempt_ledger.jsonl
+```
+
+**HD01 × S_STATIC을 먼저 쓰는 이유**: direct handoff case이고 retrieval subagent도
+dynamic controller도 없다. provider → host search/read → answer → clean judge의
+**최소 수직 경로**만 남으므로 실패 시 원인이 하나다. `R_DYNAMIC`으로 시작하면
+provider·dynamic decision·subagent·retrieval이 동시에 후보가 된다.
+
+**preflight 판정**:
+
+| 결과 | 행동 |
+|---|---|
+| release 0 | canary 진행 |
+| release 1이고 **실제 LEAK** | 중단. 격리를 먼저 고친다 |
+| release 1/2이고 **BLOCKED** | 이 host는 sandbox 권한이 없다. host-capable 세션에서 실행 |
+| doctor qualification stale | canary에는 **비차단**. primary만 막는다 |
+
+**실패해도 지우거나 같은 이름으로 다시 돌리지 마라.** `--output-name`에
+`_attempt2`를 붙인다 — overwrite는 러너가 거부한다.
+
+**판정은 3층으로 분리한다**(Amendment 43): Runtime / Retrieval / Reconstruction.
+단일 PASS/FAIL로 뭉치면 provider 문제와 검색 문제와 해석 문제가 구별되지 않는다.
 
 ### 4번(새 config)의 세부
 
@@ -759,9 +814,11 @@ qualification 러너 자체는 보이므로 현재 구성으로 동작한다.
       F4(mutation 결과 결속)는 난이도가 아니라 **순환** 때문이다: mutation 하네스가
       자기 workspace에서 closure와 release를 다시 돌리므로 closure가 증거를 만들면
       재귀한다
-- [ ] **live canary — 1 case × 1 arm 실제 provider 호출.** 다음 할 일. `command`에
-      실제 CLI를 넘기는 자리는 이제 있다 — `_stub_reviewer_script`가 그 자리를
-      점유한 stub이며 무엇이 아닌지 docstring이 명시한다
+- [ ] **retrieval canary — `run_live_phase_c.py --canary`, 1 case × 1 arm.**
+      다음 할 일. **`reviewer_runner.py --command`가 아니다** — 이 항목은
+      21c에서 `_stub_reviewer_script`(reviewer isolation probe)를 언급하며 두
+      경로를 섞어 놓았고, 그러면 무맥락 agent가 엉뚱한 프로그램을 돌린다.
+      위 §5의 어휘 표를 보라
 - [ ] 5절 절차 (canary → 32칸 → 재-qualification → primary)
 - [ ] 판정자 배정 (`safety_audit_reviewer_assignment.json`이 `UNASSIGNED`)
 - [ ] **감사 가능한 primary artifact** — 현 authorization이 가리키는 config로
