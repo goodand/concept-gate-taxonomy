@@ -413,3 +413,50 @@ def test_default_permission_is_present_and_identical_in_both_arms():
     policy = _sys.modules[key]
     for arm in h1a_contract.ARMS:
         assert policy.GLOBAL_DEFAULT_PERMISSION_TEXT in h1a_contract.render_arm(t, arm)
+
+
+# --- F10 (independent review 20260806, axis c): the module `render_arm`
+# actually renders from must be the SAME object a caller mutates, not a
+# private copy loaded under a different sys.modules key ------------------
+
+def test_render_arm_uses_the_exact_policy_module_a_caller_passes_in():
+    """Regression for F10: `_fill_policy_slots` used to import `_h1a_policy.py`
+    itself under a private key and cache the result, so a caller that loaded
+    its own copy (this folder's loading discipline requires every caller to
+    load under its own key) and mutated it was mutating a THIRD object that
+    fed nothing. Every mutation-recall test built on that pattern could not,
+    even in principle, detect a defect in the bytes render_arm actually
+    produces. Proven both directions: injecting a mutated module changes the
+    rendered bytes; omitting it (the production default) does not see that
+    mutation."""
+    import importlib.util as _il, sys as _sys
+    key = "f10_regression__policy"
+    spec = _il.spec_from_file_location(key, HERE / "_h1a_policy.py")
+    mutable_policy = _il.module_from_spec(spec)
+    _sys.modules[key] = mutable_policy
+    spec.loader.exec_module(mutable_policy)
+
+    t = template()
+    canary = "F10_REGRESSION_CANARY"
+    original_render = mutable_policy.render_policy_block
+
+    def poisoned(arm):
+        blocks = original_render(arm)
+        return [
+            (cid, txt + " " + canary if cid == mutable_policy.CARRIER_DEFAULT else txt)
+            for cid, txt in blocks
+        ]
+    mutable_policy.render_policy_block = poisoned
+
+    mutated_render = h1a_contract.render_arm(t, "PROHIBITION_REMOVED", policy_module=mutable_policy)
+    assert canary in mutated_render, (
+        "injecting the caller's mutated policy module must change the "
+        "rendered bytes -- if this fails, render_arm is reading from some "
+        "other copy again"
+    )
+
+    default_render = h1a_contract.render_arm(t, "PROHIBITION_REMOVED")
+    assert canary not in default_render, (
+        "the production default path (no policy_module passed) must stay "
+        "isolated from a module a test mutated under its own key"
+    )

@@ -220,7 +220,7 @@ def load_h1a_native_template(path: Path = DESIGN_DECISION_PATH) -> str:
 _POLICY_SLOTS = ("{global_default_permission}", "{decision_basis_tiebreaker}")
 
 
-def _fill_policy_slots(template: str, arm: str) -> str:
+def _fill_policy_slots(template: str, arm: str, policy_module=None) -> str:
     """Substitute the two policy-generated regions (D-H1a-11).
 
     Both are filled from `_h1a_policy`'s frozen table, not from prose in the
@@ -228,21 +228,38 @@ def _fill_policy_slots(template: str, arm: str) -> str:
     prohibition could live in two places and deleting one left the other, which
     is what made the 2026-08-03 cohort non-identifying.
 
-    Imported lazily and under a unique sys.modules key, matching the loading
-    discipline the rest of this folder uses -- experiment folders here hold
-    same-named modules and one experiment has been observed running on
-    another's code.
-    """
-    import importlib.util
-    import sys
+    F10 (independent review 20260806, axis c): this function used to import
+    `_h1a_policy.py` itself under a private sys.modules key
+    (`_h1a_contract__policy`) and cache the result. A test file that loads
+    `_h1a_policy.py` under ITS OWN key (as this folder's loading discipline
+    requires -- see module docstring) and mutates that object was silently
+    mutating a *third* copy: neither the test's copy nor this function's
+    cached copy ever converge, so every mutation-recall test in this repo
+    that asserted "the rendered bytes changed" was, in fact, asserting it
+    about a module object that never fed the renderer. `render_arm` always
+    produced its bytes from the private cached copy, immune to any mutation
+    a test applied to a module it thought it was injecting.
 
-    key = "_h1a_contract__policy"
-    module = sys.modules.get(key)
+    Fix: accept the caller's already-loaded policy module directly.
+    `policy_module=None` (the default used by every production call site)
+    still lazily loads and caches a private copy -- unauthenticated code
+    outside this file has no reason to reach into a policy module by hand.
+    Tests that need to prove a mutation changes the rendered prompt MUST
+    pass their own loaded module explicitly; passing it is what makes the
+    assertion about the module the test actually mutated.
+    """
+    module = policy_module
     if module is None:
-        spec = importlib.util.spec_from_file_location(key, HERE / "_h1a_policy.py")
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[key] = module
-        spec.loader.exec_module(module)
+        import importlib.util
+        import sys
+
+        key = "_h1a_contract__policy"
+        module = sys.modules.get(key)
+        if module is None:
+            spec = importlib.util.spec_from_file_location(key, HERE / "_h1a_policy.py")
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[key] = module
+            spec.loader.exec_module(module)
 
     for slot in _POLICY_SLOTS:
         count = template.count(slot)
@@ -272,7 +289,7 @@ def _fill_policy_slots(template: str, arm: str) -> str:
     return out
 
 
-def render_arm(template: str, arm: str) -> str:
+def render_arm(template: str, arm: str, policy_module=None) -> str:
     """Return the arm-specific H1a-native prompt (payload slot unfilled).
 
     Two policy-generated regions are filled in BOTH arms, byte-identically:
@@ -282,11 +299,15 @@ def render_arm(template: str, arm: str) -> str:
 
     So the arm contrast remains exactly one region -- Q1's clause -- even
     though the common template changed (D-H1a-11 sec 11 `arm_diff`).
+
+    `policy_module`: forwarded to `_fill_policy_slots` (F10 fix). Pass the
+    exact module object a mutation test loaded and mutated -- omitting it
+    renders from a private, separately-loaded, unmutated copy.
     """
     if arm not in ARMS:
         raise ValueError(f"arm must be one of {ARMS}, got {arm!r}")
 
-    filled = _fill_policy_slots(template, arm)
+    filled = _fill_policy_slots(template, arm, policy_module=policy_module)
     if arm == "PROHIBITION_REMOVED":
         return filled
     return insert_liveness_clause(filled)
