@@ -158,7 +158,40 @@ def score() -> dict:
     }
 
 
+class ScoreOverwriteRefused(Exception):
+    """main() would destroy the preserved 2026-08-03 cohort's scored output."""
+
+
 def main() -> int:
+    """⚠️ FAIL-CLOSED SINCE 2026-08-06 (F9, independent review 20260806 axis c).
+
+    `_h1a_cohort.py::freeze()` refuses to overwrite the preserved original
+    cohort's manifest. This function had no equivalent guard: running it
+    unconditionally overwrote `trials.json` and `h1a_cohort_score.json`,
+    which is exactly the preserved output `COHORT_STATUS_20260803_nonidentifying.md`
+    rests its sha256 values on. Re-scoring for any reason (a coder fix, a
+    repaired-cohort run wired to the same paths by mistake) would silently
+    re-write those files in place -- the same irreversibility freeze() was
+    fixed for, on the other half of the harness.
+
+    Refuses whenever either output file already exists. The repaired cohort
+    needs its own scored-output paths (a `cohort_id`-qualified path or
+    filename), matching PREREGISTRATION_REPAIRED_COHORT.md's cohort
+    separation requirement -- that wiring is a pending change (same status as
+    freeze()'s own docstring records for COHORT_PATH), not something to work
+    around by deleting this check.
+    """
+    for path in (TRIALS_PATH, SCORE_PATH):
+        if path.exists():
+            raise ScoreOverwriteRefused(
+                f"{path.name} already exists and holds the preserved 2026-08-03 "
+                f"cohort's scored output that COHORT_STATUS_20260803_nonidentifying.md "
+                f"rests its sha256 values on. Re-running the scorer here would "
+                f"overwrite it irreversibly.\n\n"
+                f"The repaired cohort needs its own scored-output paths "
+                f"(cohort_id-qualified, per PREREGISTRATION_REPAIRED_COHORT.md). "
+                f"That wiring is not done. Do not delete this check to proceed."
+            )
     result = score()
     TRIALS_PATH.write_text(
         json.dumps({"records": result["records"]}, ensure_ascii=False, indent=2) + "\n",

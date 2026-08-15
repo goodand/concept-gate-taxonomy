@@ -84,3 +84,53 @@ def test_scoring_proceeds_and_summarizes_when_calibration_passes(
         "by_axis": {},
     }
     assert "mismatches" not in summary
+
+
+# --- F9 (independent review 20260806, axis c): main() had no equivalent of
+# freeze()'s overwrite refusal, so re-running the scorer for any reason
+# silently destroyed the preserved 2026-08-03 cohort's scored output -------
+
+def test_main_refuses_to_overwrite_the_preserved_trials_file():
+    """Recall against the REAL repo state, not a synthetic fixture: the
+    preserved cohort's trials.json genuinely exists at this path right now.
+    If this ever stops raising, the preserved artifact is one `main()` call
+    away from being silently overwritten again."""
+    assert score.TRIALS_PATH.exists(), (
+        "precondition: the preserved cohort's trials.json must exist for "
+        "this to be a meaningful recall check"
+    )
+    with pytest.raises(score.ScoreOverwriteRefused, match="trials.json"):
+        score.main()
+
+
+def test_main_refuses_to_overwrite_the_preserved_score_file(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """The check is a loop over both paths, not just the first one -- isolate
+    SCORE_PATH by redirecting TRIALS_PATH to somewhere that doesn't exist, so
+    a regression that only checks TRIALS_PATH still gets caught here."""
+    assert score.SCORE_PATH.exists(), (
+        "precondition: the preserved cohort's h1a_cohort_score.json must "
+        "exist for this to be a meaningful recall check"
+    )
+    monkeypatch.setattr(score, "TRIALS_PATH", tmp_path / "trials.json")
+    with pytest.raises(score.ScoreOverwriteRefused, match="h1a_cohort_score.json"):
+        score.main()
+
+
+def test_main_proceeds_when_neither_output_path_exists(
+    monkeypatch: pytest.MonkeyPatch, tmp_path
+) -> None:
+    """Precision: the guard must not fire when there is nothing to destroy --
+    e.g. a genuinely new cohort_id-qualified path once that separation is
+    wired in."""
+    monkeypatch.setattr(score, "TRIALS_PATH", tmp_path / "trials.json")
+    monkeypatch.setattr(score, "SCORE_PATH", tmp_path / "h1a_cohort_score.json")
+    monkeypatch.setattr(score._coder, "run_calibration", lambda: _calibration("passed"))
+    monkeypatch.setattr(score, "score", lambda: {
+        "records": [], "coder_calibration": _calibration("passed"),
+    })
+
+    assert score.main() == 0
+    assert (tmp_path / "trials.json").exists()
+    assert (tmp_path / "h1a_cohort_score.json").exists()
