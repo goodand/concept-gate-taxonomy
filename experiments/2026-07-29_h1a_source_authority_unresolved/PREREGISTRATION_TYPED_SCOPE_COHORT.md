@@ -145,7 +145,14 @@ qualification:
     required_rate: 0.80
 ```
 
-두 control 중 하나라도 기준 미달이면:
+> ⚠️ **2026-08-15 AMENDMENT — QF-DEFER 부분만 아래 §5c로 변경됐다.** 위
+> yaml과 "두 control 중 하나라도" 문구는 **원안(2026-08-06) 그대로 이력
+> 보존**한다. 실제 gate 동작은 §5c를 따른다: `cohort_freeze`는
+> `select_control` 하나에만 의존하고, `defer_control`은 non-blocking
+> 진단으로 강등됐다. QF-SELECT의 hard-gate 지위는 이 판정문 그대로
+> **불변**이다.
+
+두 control 중 하나라도 기준 미달이면(원안, §5c로 부분 대체됨):
 
 ```yaml
 cohort_freeze: blocked
@@ -156,9 +163,115 @@ result_category: floor_or_ceiling_failure
 evidence of a null treatment effect.`**(판정문 승인 문구 — 모델 대면
 프롬프트가 아니라 이 분석·보고 계약에만 둔다.)
 
-**미구현 — 다음 세션이 할 일**: QF-SELECT/QF-DEFER 두 fixture를 실제로
-설계·동결하고, `_h1a_score.py`에 qualification 실행·판정 경로를 배선해야
-한다. 지금은 계약만 사전등록됐다.
+**구현 상태 (2026-08-15 갱신)**: QF-SELECT fixture 확보·동결
+(`fixture_qf_select.json`), `_h1a_qualification.py` 스코어러 구현 완료.
+QF-DEFER fixture는 §5c의 사유로 **의도적으로 미구성** — "아직 못 만든
+미구현"이 아니라 "저장소에 재료가 없음을 전수 확인하고 gate를 그에 맞게
+재설계한 것"이다.
+
+### 5c. 2026-08-15 AMENDMENT — QF-DEFER 강등 (non-blocking diagnostic)
+
+**계기**: D-H1a-13 Q13.3의 명령대로 QF-DEFER fixture를 만들려 했으나,
+`docs/`, `conceptgate/`, `experiments/`(H1a 자기 폴더 제외) 전체를 인스턴스
+결박 + enum 내 타입 단언 기준으로 전수 열거하고 `_h1a_surface.py`의 실제
+`_eligibility_profile`로 자격을 걸러본 결과, **같은 `source_kind` 내부에서
+서로 다른 type을 진술하는 자격 있는 소스 쌍이 이 저장소에 없다** — 유일한
+충돌(칼/철)은 이미 confirmatory cohort의 fixture 그 자체였다
+(`correspondence/DESIGN_REQUEST_H1a_qualification_defer_material.md`, Q14
+전문 및 실측 표 §3.2 참조). 그걸 QF-DEFER로 재사용하면
+`pooled_with_main_cohort: false`(Q13.3 원문)를 어기게 된다.
+
+**판정 경로**: 이 강등은 D-H1a-1~13류의 **외부 판정 채널을 거치지 않았다**
+— Q14 요청서를 외부 설계 상담에 공유해 받은 분석(1차: Q14=E "material
+unavailable" 권고 → 사용자의 두 명확화 질문 답변 이후 2차: QF-DEFER의
+실제 역할이 "ceiling diagnostic"이지 "freeze 전제조건"이 아니라는 재분석)
+과, 그 결론을 이 실험 자신의 근거 문서에 직접 대조 검증한 결과다. 따라서
+`D-H1a-14`처럼 새 판정 번호를 붙이지 않는다 — 그렇게 부르면 실제로 거치지
+않은 외부 판정 채널을 거친 것처럼 기록을 왜곡하게 된다.
+
+**근거 (직접 인용 대조 완료)**:
+
+1. `README.md` §2 — H1a의 연구 질문은 순수 서술적이다("계약 서문에서
+   liveness 재판정 금지 문장을 제거했을 때, 선택/보류 행동 분포가
+   달라지는가?"). 인과 귀속 금지(D-H1a-7), 단일 K=1 fixture 밖 일반화
+   금지가 명시돼 있을 뿐, "trial subject가 defer 능력을 입증해야
+   KEPT/REMOVED 대비가 증거가 된다"는 요구는 이 정의 어디에도 없다.
+2. `DESIGN_DECISION_H1a_residual_prohibition.md` §3의 형식 식별가능성
+   정의: `M_allowed = ¬Q1 ∧ ¬Q7`. 이것은 **조작(arm 설계)의 허용 여부에
+   관한 명제**이지 trial subject의 select/defer 능력에 관한 명제가
+   아니다. QF-SELECT/QF-DEFER는 이 형식 정의 밖에 있다 — Q13.3이 둘을
+   대칭 쌍으로 묶은 것은 "defer 능력이 왜 반드시 hard precondition이어야
+   하는가"에 대한 별도 논증 없이 이뤄졌다.
+3. Qualification gate 자신의 명시된 목적(Q13.3 rationale)은 null/동일
+   modal 범주 결과를 "치료 효과 없음"으로 **오독**하는 것을 막는 것이다.
+   그 보호는 confirmatory 결과가 실제로 null/ceiling-suspicious일 때만
+   load-bearing이다. 뚜렷한 KEPT/REMOVED 대비는 QF-DEFER와 무관하게
+   그 자체로 증거력을 갖는다.
+4. 사용자가 직접 답한 두 명확화 질문(2026-08-15): "H1a의 치료 효과
+   판단이 QF-DEFER를 요구하는가?" → **아니오**. "QF-DEFER 없이도 큰
+   KEPT/REMOVED 차이가 H1a 증거로 인정되는가?" → **예**. 이 두 답이
+   위 1·2·3의 문서 근거와 일치한다.
+
+**변경 내용**:
+
+```yaml
+qualification:
+  select_control:
+    required_rate: 0.80
+    blocking: true          # 변경 없음 — 여전히 hard gate
+  defer_control:
+    required_rate: 0.80
+    blocking: false          # 2026-08-15 AMENDMENT
+    on_unavailable: recorded_as_limitation_L9   # freeze를 막지 않음
+```
+
+`cohort_freeze`는 `select_control["passes"]` **하나에만** 의존한다.
+`defer_control`은 다음 세 상태 중 하나로 기록되지만(`_h1a_qualification.py`
+`DEFER_MATERIAL_UNAVAILABLE`/`DEFER_DIAGNOSTIC_PASSED`/
+`DEFER_DIAGNOSTIC_FAILED`), 어느 값도 `cohort_freeze`를 바꾸지 않는다.
+`material_unavailable`(현재 실제 상태) 또는 `diagnostic_failed`인 경우
+결과에 `defer_ceiling_diagnostic_limitation: true`와 L9 보고 문구가
+동반된다(§5d).
+
+**변경되지 않은 것 — 명시적으로 litigate하지 않은 것**: QF-SELECT의
+hard-gate 지위는 그대로다. "always select" ceiling도 QF-DEFER가 막으려는
+것과 대칭적인 spurious-null 실패 모드를 만들 수 있으므로 QF-SELECT도
+같은 논리로 non-blocking화해야 하는가는 **별도의 열린 질문**이며, 이
+문서는 그 질문을 **결정하지 않고 다음 항에 남긴다** — 요청받지 않은
+범위 확장은 이 저장소가 경계하는 바로 그 실패 모드다.
+
+### 5d. 열린 질문 (결정되지 않음)
+
+**Q15 (가칭, 아직 상신 안 됨)**: QF-SELECT도 §5c와 같은 논리로
+non-blocking으로 강등해야 하는가? — 아직 아무도 묻지 않았다. §5c는
+QF-DEFER에 대해서만 litigate됐다. 다음 세션이 이 질문을 다룰 때는 새
+DESIGN_REQUEST로 상신하거나, 최소한 이 문서에 "결정 보류" 상태로 명시적
+등록부터 할 것.
+
+### 5e. L9 등록
+
+```text
+L9 — QF-DEFER ceiling diagnostic unavailable
+
+No same-source_kind conflicting-type material for QF-DEFER exists in this
+repository (exhaustive eligibility-aware enumeration, 2026-08-15;
+correspondence/DESIGN_REQUEST_H1a_qualification_defer_material.md sec 3).
+The QF-DEFER control is therefore recorded as material_unavailable and does
+not gate cohort_freeze (sec 5c amendment).
+
+Accordingly, a null or same-modal-category confirmatory result cannot be
+ruled out as a defer-side floor/ceiling artifact via this gate. A clear
+KEPT/REMOVED contrast is unaffected by this limitation and remains
+evidential per README.md sec 2.
+```
+
+**보고 제한**: "QF-SELECT passed, so the instrument is free of select/defer
+ceiling effects"는 금지 — QF-SELECT는 select 방향만 검사한다. "a null main
+result rules out a defer-side ceiling artifact"도 금지. 뚜렷한 KEPT/REMOVED
+대비를 보고하는 것은 L9와 무관하게 허용된다.
+
+**L1~L4·L8과의 관계**: L9는 이들 중 어느 것도 포섭하지 않고 포섭되지도
+않는다 — 서로 다른 축(defer 방향 진단 능력)의 선언적 한계다.
 
 ### 5b. L8 등록 (D-H1a-13 Q13.4)
 
