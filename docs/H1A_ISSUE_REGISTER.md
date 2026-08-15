@@ -781,6 +781,20 @@ B/C가 실패하면 REMOVED에서 select_type 급증 = **거짓 양성**이고, 
   리뷰어 주장을 그대로 받지 않고 fixture를 직접 재측정해서 확인한 것이다
   — evidence 텍스트에 우선순위 어휘 0건.
 
+### I.3 (2026-08-15) D-H1a-13 부분 적용 + Q14 상신
+
+**D-H1a-13 적용 완료: Q13(dangling 삭제)·Q13.1(source_order 분리)·
+Q13.2(evidence-scope 분리)·Q13.4(L8 등록).** Q13.3(qualification gate)은
+결정론적 채점기(`_h1a_qualification.py`)와 코호트 파라미터화
+(`CohortSpec`, 수선 코호트와 공유하는 선행 배선)까지 완료, **QF-SELECT
+fixture 재료 확보**(`docs/phase_a_implementation_packet.md:99` +
+`conceptgate/concept_gate_v7.py:1189`, 양쪽 `structural_composition`,
+바이트 검증 완료). **QF-DEFER 재료는 저장소 전수 열거(자격 함수 재사용)로
+부재 확인** — 유일한 동일-kind 무충돌 밖 사례는 칼/철(본 fixture 자체)
+뿐이라 지어낼 수 없다. 판정 요청:
+`correspondence/DESIGN_REQUEST_H1a_qualification_defer_material.md`(Q14).
+상세는 `OPERATIONS_LOG.md` "2026-08-15" 절.
+
 ### I.2 남은 것 — 이 섹션에서 반복 서술하지 않는다
 
 **§16의 freeze 해제 조건 12개.** 전문은 `DESIGN_DECISION_H1a_identification_validity.md`
