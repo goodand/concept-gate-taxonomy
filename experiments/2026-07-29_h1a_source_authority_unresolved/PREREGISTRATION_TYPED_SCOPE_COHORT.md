@@ -1,6 +1,11 @@
 # H1a 사전등록 — typed-scope 코호트 (D-H1a-12)
 
-- 작성: 2026-08-05
+- 작성: 2026-08-05 / **갱신: 2026-08-15** — D-H1a-13 Q13/Q13.1/Q13.2 적용
+  완료(commit `7624034`/`6b45d27`/`2a7913a`). §5 전체 **WITHDRAWN**(Q13.3이
+  옛 ceiling 조건을 폐기, §5a의 qualification gate로 대체 — **미구현**),
+  §5b에 L8 신규 등록(Q13.4, 완료). Q13.3(qualification gate 실제 배선)만
+  남으면 §16 12조건 전부 충족 → 독립 리뷰 전면 재실행 → trial 착수.
+  `freeze_status: FREEZE_BLOCKED` 유지, `repaired_cohort_trials: 0`.
 - 지위: **사전등록.** 이 코호트 trial **0건 시점**에 작성된다.
 - 왜 또 새 문서인가: `PREREGISTRATION.md`는 최초 40-trial 코호트의 동결
   기록이고, `PREREGISTRATION_REPAIRED_COHORT.md`는 D-H1a-10/11 수선분의
@@ -102,7 +107,87 @@ D-H1a-12 §15가 명시적으로 요구한 문안을 등재한다.
 
 ---
 
-## 5. M4 — ceiling 해석 조건 복구 (D-H1a-12 §14)
+## 5. M4 — ceiling 해석 조건 복구 (D-H1a-12 §14) — **§5 전체 WITHDRAWN (D-H1a-13 Q13.3, 2026-08-06)**
+
+> ⚠️ **이 절 전체가 폐기됐다.** 독립 리뷰 20260806(축 c, F6·MAJOR)이 이
+> 재등록 자체가 결함임을 발견했다 — ① 승인되지 않은 "MUST NOT be reported
+> as null_effect" 문구를 추가했고, ② 발동 조건을 "네 진단 셀"(주 결과
+> **밖**의 anchor×arm 대비)에서 "이 코호트의 두 arm"(주 결과 **자체**)으로
+> 바꿔, 조건이 자신이 수식하는 것과 동어반복이 됐다 — 독립적인 ceiling
+> 정보를 담지 않는다. **D-H1a-13 Q13.3이 명시적으로 "폐기한다"고 판정**:
+> `same_modal_behavior_rule: withdrawn`, anchor×arm 네 셀도 부활시키지
+> 않는다. 대신 **§5a**(아래)의 qualification gate로 대체한다.
+>
+> 아래 원문은 **이력 보존**이다. F6이 무엇을 잘못했는지 보여주는 실측
+> 증거로 남긴다 — "재등록은 범위만 바꾸는 것 같아도 규범 내용을 조용히
+> 바꿀 수 있다"는 교훈 자체가 재사용 가치가 있다(`H1A_PROBLEM_ANALYSIS.md`
+> P4 계열).
+
+### 5a. 대체 — Qualification gate (D-H1a-13 Q13.3)
+
+옛 "네 셀 동일 모달 범주" 조건은 주 결과를 재진술할 뿐이었다. 대신
+confirmatory cohort와 **분리된** floor/ceiling 검사를 둔다.
+
+**QF-SELECT** — 한 allowed type만 명시적으로 지지되고 반대 근거가 없는
+fixture. 기대 행동: `select_type`.
+
+**QF-DEFER** — 두 allowed type이 동등하게 지지되고 허용된 추가
+discriminator가 없는 fixture. 기대 행동: `defer`.
+
+```yaml
+qualification:
+  confirmatory_sample: false
+  pooled_with_main_cohort: false
+  trials_per_control: 5
+  select_control:
+    required_rate: 0.80
+  defer_control:
+    required_rate: 0.80
+```
+
+두 control 중 하나라도 기준 미달이면:
+
+```yaml
+cohort_freeze: blocked
+result_category: floor_or_ceiling_failure
+```
+
+로 처리한다. **`A failed qualification gate must not be reported as
+evidence of a null treatment effect.`**(판정문 승인 문구 — 모델 대면
+프롬프트가 아니라 이 분석·보고 계약에만 둔다.)
+
+**미구현 — 다음 세션이 할 일**: QF-SELECT/QF-DEFER 두 fixture를 실제로
+설계·동결하고, `_h1a_score.py`에 qualification 실행·판정 경로를 배선해야
+한다. 지금은 계약만 사전등록됐다.
+
+### 5b. L8 등록 (D-H1a-13 Q13.4)
+
+fixture에 날짜·경로·커밋·권위 등급을 추가하지 않는다. Q1의 동결 바이트도
+수정하지 않는다. 대신 한계를 등록한다(판정문 §7 원문 그대로):
+
+```text
+L8 — Partial observability of the named source-evaluation axes
+
+The frozen Q1 clause names source priority, recency, authority, and liveness.
+In the repaired fixture, source_kind is the only explicit model-visible source
+attribute. Liveness may be inferred from the doc/code distinction only through
+source evaluation; recency and authority are not independently instantiated
+as payload fields.
+
+Accordingly, the repaired cohort estimates the effect of removing the frozen
+Q1 prohibition surface in this fixture. It does not identify separate effects
+for recency, authority, liveness, and source-kind priority.
+```
+
+**보고 제한**: "removing the frozen source-evaluation prohibition changed or
+did not change behavior in this fixture"는 허용. "recency permission had no
+effect" / "authority permission had no effect" / "all four source axes were
+behaviorally tested"는 금지.
+
+**L1~L4와의 관계**: L8은 이 코호트에도 승계된다 — L1·L2·L3(Q9=A)·L4(Q10.3)와
+같은 자리, 같은 급의 선언적 한계다. `L3_subsumes_L8: false`,
+`L4_subsumes_L8: false` — 넷 다 서로 다른 축의 한계를 진술하며 어느 것도
+다른 것을 포섭하지 않는다.
 
 **왜 복구가 필요한가 (2026-08-05 조사 결과)**: `PREREGISTRATION.md` §11
 전체(§11.2a의 Q4=승인 ceiling 해석 조건 포함)가 2026-08-01 Q6=A로
@@ -163,8 +248,15 @@ ceiling 원인이 될 수 없다 — §11.0). 규범적 내용("동일 modal 범
 ## 7. 보고 규약
 
 - K=1 상한 유지. 일반 모델 성향으로 일반화하지 않는다.
-- 두 arm이 동일 modal 범주면 §5의 ceiling 조건에 따라
-  `null_effect`로 보고하지 않는다.
+- **(D-H1a-13 Q13.3로 갱신)** qualification gate(§5a)가 통과한 뒤에만
+  본 코호트 결과를 해석한다. gate 미달이면
+  `result_category: floor_or_ceiling_failure`로 보고하고 **`null_effect`로
+  보고하지 않는다.** 두 arm이 동일 modal 범주라는 사실 자체는(옛 §5, 이제
+  withdrawn) 더 이상 독자적인 해석 근거가 아니다 — qualification gate가
+  그 역할을 대신한다.
+- **L8(§5b)에 명시된 보고 제한을 지킨다** — 표적 네 축 중 `source_kind`만
+  독립 관측되므로, recency·authority·liveness 각각에 대해 개별 효과를
+  주장하지 않는다.
 - `licensed_source_evaluation_path`의 항목별 값을 결과와 함께 기록한다 —
   대비가 성립한 근거가 무엇이었는지 사후에 재구성 가능해야 한다.
 - 결과를 본 뒤 이 문서의 코딩 규칙이나 N을 바꾸지 않는다.
