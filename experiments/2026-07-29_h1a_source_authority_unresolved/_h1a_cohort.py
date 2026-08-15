@@ -95,16 +95,67 @@ def _trial_subject_surface() -> dict:
     }
 
 
-def _order_key(bundle: int) -> tuple:
+def _order_key(bundle: int, order_seed: str = ORDER_SEED) -> tuple:
     """Same sha256_blocked_sort shape as E2.3's _gen_prompts.py::_order_key,
     blocked by bundle/replicate index -- bundle order only, since content is
-    identical within an arm (K=1) and cannot itself be perturbed by order."""
-    material = "\0".join((ORDER_SEED, str(bundle)))
+    identical within an arm (K=1) and cannot itself be perturbed by order.
+
+    `order_seed` is a parameter (D-H1a-13 wiring) so a second cohort gets a
+    different execution order rather than silently reusing the preserved
+    cohort's. The default keeps every existing call byte-identical."""
+    material = "\0".join((order_seed, str(bundle)))
     return (bundle, hashlib.sha256(material.encode("utf-8")).hexdigest())
 
 
-def build_cohort() -> dict:
-    fixture = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
+class CohortSpec:
+    """Which cohort is being built (D-H1a-13 Q13.3 / D-H1a-10 Q10.1).
+
+    Everything a second cohort must NOT share with the preserved 2026-08-03
+    one, in a single object. Q10.1 forbids merging or reusing that cohort, and
+    `freeze()`'s docstring already recorded that the repaired cohort needs its
+    own manifest path, ORDER_SEED and trial-id prefix -- "that wiring is not
+    done". This is that wiring, and the qualification gate needs the same
+    thing, so it is done once here rather than twice.
+
+    The default instance reproduces the original cohort byte-for-byte
+    (verified: `build_cohort()` with no argument hashes identically to the
+    pre-refactor implementation), so no existing caller changes behavior.
+    """
+
+    def __init__(self, *, cohort_id: str, fixture_path, cohort_path,
+                 order_seed: str, trial_id_prefix: str, n_per_arm: int,
+                 stage_a_replicates=None):
+        self.cohort_id = cohort_id
+        self.fixture_path = fixture_path
+        self.cohort_path = cohort_path
+        self.order_seed = order_seed
+        self.trial_id_prefix = trial_id_prefix
+        self.n_per_arm = n_per_arm
+        # Stage A is the harness-integrity slice (P7 sec 7.1). For a 5-trial
+        # qualification control the whole run is the check, so callers pass
+        # their own range rather than inheriting the main cohort's 1..5.
+        self.stage_a_replicates = (
+            list(stage_a_replicates) if stage_a_replicates is not None
+            else list(range(1, 6))
+        )
+
+
+# The preserved 2026-08-03 cohort. Values match the module constants above so
+# the two cannot drift; changing either without the other is caught by
+# test_default_cohort_spec_matches_the_module_constants.
+ORIGINAL_COHORT = CohortSpec(
+    cohort_id="h1a-original-20260803",
+    fixture_path=FIXTURE_PATH,
+    cohort_path=COHORT_PATH,
+    order_seed=ORDER_SEED,
+    trial_id_prefix="H1A",
+    n_per_arm=N_PER_ARM,
+)
+
+
+def build_cohort(spec: "CohortSpec | None" = None) -> dict:
+    spec = spec or ORIGINAL_COHORT
+    fixture = json.loads(spec.fixture_path.read_text(encoding="utf-8"))
     schema_doc = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
     decision_schema = schema_doc["variants"]["h1a_response"]["schema"]
 
@@ -160,12 +211,12 @@ def build_cohort() -> dict:
 
     trials = []
     bundles = []
-    for replicate in range(1, N_PER_ARM + 1):
+    for replicate in range(1, spec.n_per_arm + 1):
         bundle_id = replicate
-        order = _order_key(bundle_id)
+        order = _order_key(bundle_id, spec.order_seed)
         bundles.append({"bundle": bundle_id, "order_key": order[1]})
         for arm in contract.ARMS:
-            trial_id = f"H1A-{arm}-{replicate:02d}"
+            trial_id = f"{spec.trial_id_prefix}-{arm}-{replicate:02d}"
             manifest = surface.trial_manifest(
                 trial_id=trial_id,
                 fixture=fixture,
@@ -205,14 +256,17 @@ def build_cohort() -> dict:
             "transport": "schema_forced_structured_output",
             "trial_model": MODEL,
             "expected_trials": len(trials),
-            "n_per_arm": N_PER_ARM,
+            "n_per_arm": spec.n_per_arm,
             "randomization": {
                 "method": "sha256_blocked_sort",
-                "seed": ORDER_SEED,
+                "seed": spec.order_seed,
                 "block": "bundle (paired replicate index across both arms)",
             },
-            "stage_a_replicates": list(range(1, 6)),
-            "stage_b_replicates": list(range(6, N_PER_ARM + 1)),
+            "stage_a_replicates": list(spec.stage_a_replicates),
+            "stage_b_replicates": [
+                r for r in range(1, spec.n_per_arm + 1)
+                if r not in set(spec.stage_a_replicates)
+            ],
         },
         "trial_subject_surface": trial_subject,
         "fixture_sha256": surface.sha256_of(fixture),
@@ -229,7 +283,7 @@ class CohortOverwriteRefused(Exception):
     """freeze() would destroy a preserved cohort. Never proceed."""
 
 
-def freeze() -> dict:
+def freeze(spec: "CohortSpec | None" = None) -> dict:
     """Build and write the cohort manifest.
 
     ⚠️ FAIL-CLOSED SINCE 2026-08-04. Three independent reviewers of the
@@ -249,23 +303,32 @@ def freeze() -> dict:
     D-H1a-10 Q10.1 forbids merging or reusing the original cohort, and
     D-H1a-11 §13 repeats it (`merge_original_and_repaired_cohorts: false`).
     Overwriting in place is the most irreversible form of that violation, so
-    this refuses rather than warns. The repaired-cohort wiring (new path, new
-    seed, new id prefix) is a pending change, not something to work around by
-    deleting the guard.
+    this refuses rather than warns.
+
+    2026-08-15 (D-H1a-13 wiring): the "pending change" this docstring used to
+    name is now done -- `CohortSpec` carries the path, seed, trial-id prefix
+    and N, so a second cohort no longer has to reuse the first one's. The
+    refusal below is now per-spec: it protects whatever `spec.cohort_path`
+    points at, not only the original manifest. Passing a new spec is the
+    supported way to build a second cohort; deleting this check is still not.
     """
-    if COHORT_PATH.exists():
+    spec = spec or ORIGINAL_COHORT
+    if spec.cohort_path.exists():
         raise CohortOverwriteRefused(
-            f"{COHORT_PATH.name} already exists and holds the 2026-08-03 "
-            f"cohort that D-H1a-10 ruled non-identifying and ordered PRESERVED "
-            f"(Q10.1: merge_with_repaired_cohort: false). Writing here would "
+            f"{spec.cohort_path.name} already exists and holds the "
+            f"{spec.cohort_id!r} cohort's frozen manifest. D-H1a-10 Q10.1 "
+            f"ordered cohorts PRESERVED and not merged or reused "
+            f"(merge_with_repaired_cohort: false), so writing here would "
             f"destroy it irreversibly.\n\n"
-            f"The repaired cohort needs its own manifest path, ORDER_SEED "
-            f"{'H1A-repaired-fixed-order-v1'!r} and trial-id prefix 'H1AR-' "
-            f"per PREREGISTRATION_REPAIRED_COHORT.md §5. That wiring is not "
-            f"done. Do not delete this check to proceed."
+            f"A different cohort needs its own CohortSpec -- its own "
+            f"cohort_path, order_seed and trial_id_prefix (e.g. "
+            f"{'H1A-repaired-fixed-order-v1'!r} / 'H1AR' per "
+            f"PREREGISTRATION_REPAIRED_COHORT.md §5). Build it with "
+            f"build_cohort(spec) / freeze(spec). Do not delete this check "
+            f"to proceed."
         )
-    cohort = build_cohort()
-    COHORT_PATH.write_text(
+    cohort = build_cohort(spec)
+    spec.cohort_path.write_text(
         json.dumps(cohort, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     return cohort
