@@ -11,6 +11,61 @@
 
 ---
 
+## 2026-08-15 — D-H1a-13 착수: F10·F9 선행 수정 + Q13(dangling) 적용
+
+2026-08-06 로그의 "다음 행동"(§5, 이 파일 하단)이 지시한 순서 그대로:
+운영 세션이 고칠 것(F10·F9) → Q13. **F5는 착수 전 재확인에서 무의미해진
+것을 발견하고 건너뜀** — D-H1a-13 Q13.3이 그 대상(옛 "네 셀 동일 모달"
+ceiling)을 이미 "withdrawn"으로 폐기했다.
+
+### 1. F10 (가장 심각) — `render_arm`이 사설 사본에서 정책을 읽었다
+
+`_fill_policy_slots`가 `_h1a_policy.py`를 자체 캐싱 사본
+(`_h1a_contract__policy`)으로 로드했다. 테스트가 관행대로 **자기 키로**
+policy를 로드해 변조해도 그 변조는 `render_arm`이 실제로 읽는 사본에
+닿지 않았다 — 세 번째 객체를 만드는 셈이었다. `policy_module` 파라미터를
+추가해 호출자가 변조한 모듈을 직접 주입할 수 있게 했다(생략 시 기존 동작
+그대로). 양방향 실측: 주입 시 변조가 렌더 바이트에 반영, 생략 시 격리됨.
+회귀 테스트 고정. 커밋 `0c4cac9`.
+
+### 2. F9 — 채점기에 `freeze()`와 동등한 fail-close가 없었다
+
+`_h1a_score.py::main()`이 무조건 `trials.json`·`h1a_cohort_score.json`을
+썼다 — 보존된 40-trial 산출물을 채점기를 다시 돌리는 것만으로 덮어쓸 수
+있었다. `freeze()`의 거부 패턴을 그대로 이식. **실측: 두 파일 모두 실제로
+지금 존재하므로**(합성 fixture가 아니라 실제 저장소 상태 대조) 가드가
+바로 발동함을 확인, 이후 `git status`/`md5`로 원본 무변경 확인. 커밋
+`f4e7a9e`.
+
+### 3. Q13 — dangling reference 문장 삭제
+
+`SCOPE_DISAMBIGUATION_TEXT`의 둘째 절("Source evaluation is governed by
+the arm-specific source-evaluation clause.")을 양 arm에서 삭제. golden
+contract가 drift를 정확히 잡아 재동결 필요(3번째 amendment,
+`h1a_common_policy_block_v2.json`) — 실측 sha256이 테스트 실패 메시지의
+"got" 값과 정확히 일치함을 재계산으로 확인 후 기록. 커밋 `7624034`.
+
+게이트: H1a 178 passed/1 skipped(F10·F9 회귀 테스트 포함), E2.4 118 불변.
+
+### 4. 남은 것 — 아직 안 함
+
+- **Q13.1** `source_order` → `evidence_item_presentation_order`(비표적,
+  Q7 담지) / `source_priority_ordering`(표적, `source_meta_reasoning`
+  하위축)로 분리. 정책 스키마·렌더 문구 변경 필요
+- **Q13.2** evidence-reading rule과 recorded-fields 평가를 문장으로 분리
+  (§4 처방 문구 교체)
+- **Q13.3** qualification gate(QF-SELECT/QF-DEFER 별도 fixture) 신설 —
+  가장 큰 미구현 항목. 새 fixture 2개 + 실행 계약 설계 필요
+- **Q13.4** L8 한계 등록(문서만, 코드 변경 없음)
+- **Q13.5/Q13.6** 리뷰어 capability gate + bounded semantic compiler —
+  이건 **다음 독립 리뷰 자체의 절차**이지 지금 짤 코드가 아니다
+- 위 전부 완료 후 **독립 리뷰 전면 재실행**(`INDEPENDENT_SEMANTIC_REVIEW_PASSED`
+  여전히 `False`) → 통과해야 `repaired_cohort_trials` 40건 착수
+
+`freeze_status: FREEZE_BLOCKED` 유지. 미푸시(커밋만, 푸시는 별도 승인).
+
+---
+
 ## 2026-08-06 — D-H1a-12 §16 구현(조건 1~10) + 독립 리뷰 5차 → FREEZE_BLOCKED
 
 worktree `concept-gate-h1a-scope-wt`(브랜치 `codex/h1a-typed-scope-split`)에
