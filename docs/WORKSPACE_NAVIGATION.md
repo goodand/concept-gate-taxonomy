@@ -80,7 +80,18 @@ Project_in_progress/
 | **외부 설계 판정** | `experiments/<...>/DESIGN_DECISION*.md` (평면) | 외부 판정자의 회신. **구속력 있음**, 사전등록만큼 무겁다 | **원문 보존 — 수정 금지.** 판정이 바뀌면 새 요청→새 판정 파일 |
 | **외부 설계 요청** | `experiments/<...>/correspondence/DESIGN_REQUEST*.md` | 운영 세션이 외부 판정자에게 보내는 자기완결형 질의서(저장소 접근 없이 판정 가능하게 원문·실측 embed) | 발송 전 인용 대조(citation-check) 필수. 발송 후엔 원문 보존 |
 | **설계 문서** | `docs/*.md`(실험 폴더 밖) | 아키텍처/로드맵/스펙 | 해당 작업 시 |
+| **세션 회고 / 프로세스 패턴** | **`../notes/projects/concept-gate/process/`**(vault, worktree 밖) | 에이전트 작업 과정의 결함과 반복 패턴. **실험 이슈가 아니다** | 신규는 vault에 쓴다 — 아래 경고 참조 |
 | **승격된 교훈** | 외부 `skills-catalog/.../references/*-at<ts>.md` | 재사용 가능한 노하우 | 덮어쓰지 않고 새 타임스탬프 추가 |
+
+> **⚠️ 세션 회고를 `docs/feedback/`에 새로 쓰지 마라(2026-08-15 규약 변경).**
+> 그 경로는 git-tracked라 **브랜치별로 격리된다** — 실측: `codex-mcp-wt`에
+> 회고 8개가 있는데 `h1-wt`에서는 2개만 보였고, 그래서 이슈 ID 최댓값을 git이
+> 아니라 파일시스템 전수 검색으로 찾아야 했다(`I29`인 줄 알았으나 실제
+> `I147`). 회고는 동결 규율 대상이 아닌 **프로세스 지식**이므로 브랜치에 묶일
+> 이유가 없다. 정본 위치와 ID 채번 규약:
+> `../notes/projects/concept-gate/process/retrospectives-index.md`,
+> 패턴 누적값 정본: 같은 폴더 `patterns-ledger.md`.
+> **기존 `docs/feedback/*.md`는 그대로 둔다**(git 이력이고 여러 문서가 인용).
 
 **핵심 구분**: 동결 아티팩트(설계)와 운영 로그(그 설계를 실행하며 생긴 기록)는
 **절대 같은 커밋에 섞지 않는다**. 이게 방법론 규칙 1이고, 커밋 히스토리를
