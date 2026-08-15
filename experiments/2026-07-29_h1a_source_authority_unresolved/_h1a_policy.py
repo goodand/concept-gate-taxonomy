@@ -134,16 +134,26 @@ _CARRIER_SEMANTICS = {
 # here for the audit trail and deliberately excluded from carrier cardinality.
 SCOPE_CONSTRAINTS = ("PACKET_ONLY", "NO_EXTERNAL_SOURCES", "SCOPE_DISAMBIGUATION")
 
-# D-H1a-12 sec 4, third sentence. NOT a carrier: it flips no axis to
-# forbidden. It exists to stop the domain-knowledge boundary from being read
-# as also governing source evaluation -- which is precisely the subsumption
-# that made the previous cohort nonidentifying. Byte-identical in both arms.
+# D-H1a-12 sec 4, third sentence -- REPAIRED by D-H1a-13 Q13 (2026-08-06).
+#
+# The original two-sentence form's second sentence, "Source evaluation is
+# governed by the arm-specific source-evaluation clause.", is a dangling
+# reference in PROHIBITION_REMOVED: it names Q1's clause, which exists only
+# in KEPT (referent_in_removed: none). Independent review 20260806 (axis b,
+# BLOCKER) found this contradicts D-H1a-11's own default-permission design --
+# the sentence asserts a governing rule exists in REMOVED too, which makes
+# whether default-permission even applies there ambiguous, and it names the
+# realized policy in model-facing prose, disclosing experiment structure
+# ("arm-specific") to the trial subject. D-H1a-13 Q13 = C: delete the second
+# sentence in BOTH arms; keep the first, which still does the real job (domain
+# knowledge boundary does not itself decide source evaluation) without
+# claiming a referent that isn't there in REMOVED.
+#
+# NOT a carrier: it flips no axis to forbidden. Byte-identical in both arms.
 SCOPE_DISAMBIGUATION_ID = "SCOPE_DISAMBIGUATION"
 SCOPE_DISAMBIGUATION_TEXT = (
     "- The restriction on outside domain or ontology knowledge does not "
-    "itself govern evaluation of the supplied evidence items as sources. "
-    "Source evaluation is governed by the arm-specific source-evaluation "
-    "clause."
+    "itself govern evaluation of the supplied evidence items as sources."
 )
 
 # D-H1a-12 sec 4, second sentence. Carrier for outside_domain_knowledge and

@@ -15,6 +15,12 @@
       "to_sha256": "3ebf3f621865ff7c37aea245457fcebca0ed0a8d7ef5671401be00e369b68861",
       "at_trials": 0,
       "reason": "Independent review 2026-08-06 (MAJOR): carriers_included omitted Q7_NON_TARGET_TIEBREAKER, so the tie-breaker sentence had no frozen bytes anywhere. Mutation M2 restored the exact clause D-H1a-12 sec 8 ordered removed ('unless that priority is directly stated inside an evidence item's text') and all 167 tests passed while it reached the trial surface. Adding the carrier closes that hole."
+    },
+    {
+      "from_sha256": "3ebf3f621865ff7c37aea245457fcebca0ed0a8d7ef5671401be00e369b68861",
+      "to_sha256": "169bcd1969a0c4d2138629f8d7c7438bb06a9f91ac9c4e4f6302b1d043af97c3",
+      "at_trials": 0,
+      "reason": "D-H1a-13 Q13 = C (2026-08-06, independent review 20260806 axis b BLOCKER): the SCOPE_DISAMBIGUATION carrier's second sentence, 'Source evaluation is governed by the arm-specific source-evaluation clause.', is a dangling reference in PROHIBITION_REMOVED -- it names Q1's clause, which does not exist there (referent_in_removed: none). The ruling found this also disclosed experiment structure ('arm-specific') to the model and made whether D-H1a-11's default-permission rule even applies in REMOVED ambiguous, since the sentence asserts a more specific governing rule exists. Deleted the second sentence in both arms; kept the first, which still separates the domain-knowledge boundary from source evaluation without claiming a referent."
     }
   ],
   "carriers_included": [
@@ -23,6 +29,6 @@
     "DOMAIN_KNOWLEDGE_BOUNDARY",
     "SCOPE_DISAMBIGUATION"
   ],
-  "sha256": "3ebf3f621865ff7c37aea245457fcebca0ed0a8d7ef5671401be00e369b68861",
-  "text": "Within the supplied packet, a decision basis may be considered unless this\nprompt explicitly prohibits it. The fact that this prompt does not prohibit\na decision basis is not itself a reason to select a type. A permitted basis\nmay affect the decision only through its application to the supplied\nevidence.\n\n- Do not break ties using evidence item count or source order unless the\n  packet explicitly authorizes that basis.\n\n- Do not use outside domain or ontology knowledge to supply facts about the\n  concept-feature relation, and do not consult external sources.\n\n- The restriction on outside domain or ontology knowledge does not itself\n  govern evaluation of the supplied evidence items as sources. Source\n  evaluation is governed by the arm-specific source-evaluation clause."
+  "sha256": "169bcd1969a0c4d2138629f8d7c7438bb06a9f91ac9c4e4f6302b1d043af97c3",
+  "text": "Within the supplied packet, a decision basis may be considered unless this\nprompt explicitly prohibits it. The fact that this prompt does not prohibit\na decision basis is not itself a reason to select a type. A permitted basis\nmay affect the decision only through its application to the supplied\nevidence.\n\n- Do not break ties using evidence item count or source order unless the\n  packet explicitly authorizes that basis.\n\n- Do not use outside domain or ontology knowledge to supply facts about the\n  concept-feature relation, and do not consult external sources.\n\n- The restriction on outside domain or ontology knowledge does not itself\n  govern evaluation of the supplied evidence items as sources."
 }
