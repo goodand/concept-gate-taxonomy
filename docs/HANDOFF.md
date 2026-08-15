@@ -1,5 +1,19 @@
 # HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
+- 갱신: **2026-08-15** — D-H1a-13 **부분 적용**. Q13(dangling 문장 삭제),
+  Q13.1(`source_order`→`evidence_item_presentation_order` 개명),
+  Q13.2(evidence-scope 문구 분리), Q13.4(L8 등록 + 옛 M4 ceiling
+  WITHDRAWN 표시) **완료**. Q13.3(qualification gate)은 **결정론적
+  채점기만 완료**(`_h1a_qualification.py`, 커밋 `85bff26`) — QF-SELECT/
+  QF-DEFER **fixture 자체는 아직 없다**(합성 불가, 실제 저장소 근거
+  필요). 같은 세션에 F10(정책 모듈 이중 로드 버그)·F9(채점기 fail-close
+  누락)도 수정. 게이트: H1a 186 passed/1 skipped, E2.4 118 불변. 커밋
+  8개 전부 `origin/codex/h1-source-authority`에 푸시 완료. 상세는
+  `OPERATIONS_LOG.md` "2026-08-15" 절. **다음 세션이 할 일**: QF-SELECT/
+  QF-DEFER fixture 설계·검증(`PREREGISTRATION_TYPED_SCOPE_COHORT.md`
+  §5a) → 채점기 배선 → Q13.5/13.6(독립 리뷰 자체의 절차) → 독립 리뷰
+  전면 재실행(`INDEPENDENT_SEMANTIC_REVIEW_PASSED` 여전히 `False`) →
+  `repaired_cohort_trials` 40건. `freeze_status: FREEZE_BLOCKED` 유지.
 - 갱신: **2026-08-08** — 이 문서의 아래 §10.4 10항목 목록은 **낡았다.**
   2026-08-06 `concept-gate-h1a-scope-wt`(브랜치 `codex/h1a-typed-scope-split`)
   세션이 §16의 12조건 중 **10개를 구현**했고(174 passed, 가드 게이트 10
