@@ -781,7 +781,7 @@ B/C가 실패하면 REMOVED에서 select_type 급증 = **거짓 양성**이고, 
   리뷰어 주장을 그대로 받지 않고 fixture를 직접 재측정해서 확인한 것이다
   — evidence 텍스트에 우선순위 어휘 0건.
 
-### I.3 (2026-08-15) D-H1a-13 부분 적용 + Q14 상신
+### I.3 (2026-08-15) D-H1a-13 부분 적용 + Q14 상신 + QF-DEFER 강등 amendment
 
 **D-H1a-13 적용 완료: Q13(dangling 삭제)·Q13.1(source_order 분리)·
 Q13.2(evidence-scope 분리)·Q13.4(L8 등록).** Q13.3(qualification gate)은
@@ -793,7 +793,20 @@ fixture 재료 확보**(`docs/phase_a_implementation_packet.md:99` +
 부재 확인** — 유일한 동일-kind 무충돌 밖 사례는 칼/철(본 fixture 자체)
 뿐이라 지어낼 수 없다. 판정 요청:
 `correspondence/DESIGN_REQUEST_H1a_qualification_defer_material.md`(Q14).
-상세는 `OPERATIONS_LOG.md` "2026-08-15" 절.
+
+**같은 날 이어서 — QF-DEFER를 non-blocking diagnostic으로 강등.** 사용자가
+외부 설계 상담(공유된 재분석 + 사용자 자신의 두 명확화 질문 답변)을 전달하고
+"상위 목적에 따라서 결정해라"고 직접 지시 — **D-H1a-1~13류 외부 판정
+채널을 거치지 않았으므로 새 판정 번호(`D-H1a-14`)를 붙이지 않는다.**
+근거는 `README.md` §2(순수 서술적 연구 질문)와
+`DESIGN_DECISION_H1a_residual_prohibition.md` §3(`M_allowed = ¬Q1 ∧ ¬Q7`
+— arm 설계 허용 명제, trial subject 능력 명제 아님)에 대한 직접 인용
+대조. `cohort_freeze`는 이제 QF-SELECT 하나에만 의존, QF-DEFER 부재는
+영구 등록 한계 **L9**(`PREREGISTRATION_TYPED_SCOPE_COHORT.md` §5e)로
+전환됐다. QF-SELECT의 hard-gate 지위는 불변 — 대칭 확장 여부는 **Q15로
+미결 등록**(같은 문서 §5d), 상신하지 않았다.
+
+상세는 `OPERATIONS_LOG.md` "2026-08-15" 절(§5·§7).
 
 ### I.2 남은 것 — 이 섹션에서 반복 서술하지 않는다
 

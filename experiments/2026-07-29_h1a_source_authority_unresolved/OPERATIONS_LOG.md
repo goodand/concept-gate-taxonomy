@@ -109,16 +109,73 @@ doc(`phase_a_implementation_packet.md:99`)·code(`concept_gate_v7.py:1189`)
 
 ### 6. 남은 것 — 아직 안 함
 
-- **Q14 판정 대기** — QF-DEFER 처리 방향(칼/철 재사용/다른 재료/보류 등)
-- Q14 판정 도착 후 `_h1a_score.py`(또는 별도 실행 경로)에
-  `_h1a_qualification.py` 실제 배선 — 지금은 채점기·QF-SELECT fixture
-  둘 다 있지만 QF-DEFER가 없어 gate를 완주할 수 없다
+> ⚠️ 아래 첫 두 항목은 §7(같은 날, 이어서)에서 해소됐다 — Q14는 외부
+> 판정 채널이 아니라 사용자의 직접 지시("상위 목적에 따라서 결정해라")로
+> 처리 방향이 정해졌다. 나머지는 여전히 유효.
+
+- ~~Q14 판정 대기~~ → §7: QF-DEFER를 non-blocking으로 강등, 재료 자체는
+  계속 부재(L9로 등록)
+- ~~`_h1a_score.py`에 실제 배선~~ → §7: gate는 QF-SELECT 하나로 완주
+  가능해졌으므로 QF-DEFER 부재가 더 이상 배선을 막지 않음. 실행 경로
+  배선 자체는 여전히 다음 세션 몫
 - **Q13.5/Q13.6** 리뷰어 capability gate + bounded semantic compiler —
   이건 **다음 독립 리뷰 자체의 절차**이지 지금 짤 코드가 아니다
 - 위 전부 완료 후 **독립 리뷰 전면 재실행**(`INDEPENDENT_SEMANTIC_REVIEW_PASSED`
   여전히 `False`) → 통과해야 `repaired_cohort_trials` 40건 착수
+- **Q15(가칭, 미상신)** — QF-SELECT도 같은 논리로 non-blocking화해야
+  하는가. §7에서 의도적으로 결정하지 않고 열어둠
+  (`PREREGISTRATION_TYPED_SCOPE_COHORT.md` §5d)
 
 `freeze_status: FREEZE_BLOCKED` 유지.
+
+### 7. (같은 날, 이어서) QF-DEFER 강등 — non-blocking diagnostic
+
+**지시**: 사용자가 외부 설계 상담(공유된 분석 2차본 — 두 명확화 질문에
+대한 사용자 자신의 답변 이후 재분석)을 전달하고 "상위 목적에 따라서
+결정해라"고 지시. 이 판정은 D-H1a-1~13류 **외부 판정 채널을 거치지
+않았다** — 그렇게 표기하면 안 거친 채널을 거친 것처럼 기록을 왜곡한다.
+`D-H1a-14` 같은 새 번호를 붙이지 않은 이유가 그것이다.
+
+**근거 재확인(직접 인용 대조, 메모리 인용 아님)**:
+`README.md` §2(H1a 연구 질문은 순수 서술적, defer 능력 입증을 전제조건으로
+요구하지 않음), `DESIGN_DECISION_H1a_residual_prohibition.md` §3
+(`M_allowed = ¬Q1 ∧ ¬Q7` — arm 설계 허용 여부의 명제이지 trial subject
+능력의 명제가 아님). 사용자 자신의 두 명확화 질문 답변("치료 효과 판단이
+QF-DEFER를 요구하는가?" → 아니오, "QF-DEFER 없이도 큰 KEPT/REMOVED
+차이가 증거로 인정되는가?" → 예)이 이 문서 근거와 일치.
+
+**변경**: `_h1a_qualification.py::score_qualification()`의
+`defer_outputs`를 `= None` 기본값으로 변경, `cohort_freeze`를
+`select_result["passes"]` 하나에만 의존하도록 재작성. QF-DEFER는
+`DEFER_MATERIAL_UNAVAILABLE`/`DEFER_DIAGNOSTIC_PASSED`/
+`DEFER_DIAGNOSTIC_FAILED` 세 상태 중 하나로 기록되지만 어느 값도 freeze를
+막지 않음 — `material_unavailable` 또는 `diagnostic_failed`일 때만
+`defer_ceiling_diagnostic_limitation: true` + L9 보고 문구 동반.
+QF-SELECT의 hard-gate 지위는 **불변** — 대칭 확장(QF-SELECT도
+non-blocking화)은 litigate하지 않고 Q15로 열어둠
+(`PREREGISTRATION_TYPED_SCOPE_COHORT.md` §5d).
+
+`PREREGISTRATION_TYPED_SCOPE_COHORT.md` §5a에 amendment 경고 박스 추가,
+§5c(근거·변경 내용)·§5d(Q15 열린 질문)·§5e(L9 등록) 신설. §5a 원문(원안
+yaml·문구)은 이력 보존.
+
+**테스트**: `test_h1a_qualification.py`의
+`test_gate_blocks_when_defer_control_falls_below_the_rate`를
+`test_gate_allows_freeze_when_only_defer_control_falls_below_the_rate`로
+재작성(이제 `cohort_freeze == "allowed"` + L9 플래그를 검증). 신규 3건 —
+`defer_outputs=None` 경로, select 단독 실패가 여전히 차단하는지, 통과
+diagnostic엔 L9가 안 붙는지. H1a 24→ 신규 포함 총 스위트 205
+passed/1 skipped(회귀 없음), E2.4 118 불변, core pytest 기존 owlready2
+결함 1건 그대로(`conceptgate/` 무변경, `git status`로 확인).
+
+**Q14 자체의 상태**: 이 amendment로 "언제 답이 오나"가 아니라 "QF-DEFER
+재료 부재는 영구 등록 한계(L9)"로 바뀌었다 — 더 이상 gate 완주를 막는
+미결 질문이 아니다. Q14 요청서 자체는 이력으로 남긴다(상담 계기의 원문
+증거).
+
+**미변경/범위 밖**: `_h1a_score.py`에 이 스코어러를 실제 실행 경로로
+배선하는 것은 여전히 다음 세션 몫(위 §6). 본 코호트 코드·frozen
+assets·결과 파일은 이 amendment에서 손대지 않았다.
 
 ---
 

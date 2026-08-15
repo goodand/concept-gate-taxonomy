@@ -1,6 +1,23 @@
 # HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
-- 갱신: **2026-08-15** — D-H1a-13 **부분 적용**. Q13(dangling 문장 삭제),
+- 갱신: **2026-08-15(2)** — **QF-DEFER를 non-blocking diagnostic으로
+  강등**(amendment, D-H1a-1~13류 외부 판정 채널 아님 — 사용자가 공유한
+  설계 상담 + "상위 목적에 따라서 결정해라" 직접 지시에 근거해 처리,
+  `D-H1a-14` 번호 부여 안 함). `_h1a_qualification.py::score_qualification()`이
+  이제 `cohort_freeze`를 **QF-SELECT 하나에만** 의존시킨다 — QF-DEFER는
+  재료 부재/진단 실패/진단 통과 세 상태로 기록되지만 어느 것도 freeze를
+  막지 않는다. QF-DEFER 재료 부재는 **영구 등록 한계 L9**
+  (`PREREGISTRATION_TYPED_SCOPE_COHORT.md` §5e)로 전환 — 더 이상 gate
+  완주를 막는 미결 질문이 아니다. QF-SELECT의 hard-gate 지위는 불변이며,
+  대칭 강등 여부는 **Q15로 미결 등록**(§5d, 상신 안 함). 근거 인용:
+  `README.md` §2, `DESIGN_DECISION_H1a_residual_prohibition.md` §3
+  (`M_allowed = ¬Q1 ∧ ¬Q7`). 테스트 갱신·신규 3건, 게이트 H1a
+  205 passed/1 skipped(회귀 없음), E2.4 118 불변, core pytest 기존
+  owlready2 결함 1건 그대로. 상세는 `OPERATIONS_LOG.md` "2026-08-15" §7.
+  **다음 세션이 할 일은 아래 2026-08-15(1) 항목과 동일** —
+  `_h1a_score.py`에 `_h1a_qualification.py` 실행 경로 배선은 여전히
+  미완.
+- 갱신: **2026-08-15(1)** — D-H1a-13 **부분 적용**. Q13(dangling 문장 삭제),
   Q13.1(`source_order`→`evidence_item_presentation_order` 개명),
   Q13.2(evidence-scope 문구 분리), Q13.4(L8 등록 + 옛 M4 ceiling
   WITHDRAWN 표시) **완료**. Q13.3(qualification gate)은 **결정론적
