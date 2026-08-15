@@ -47,16 +47,39 @@ contract가 drift를 정확히 잡아 재동결 필요(3번째 amendment,
 
 게이트: H1a 178 passed/1 skipped(F10·F9 회귀 테스트 포함), E2.4 118 불변.
 
-### 4. 남은 것 — 아직 안 함
+### 4. Q13.1/Q13.2/Q13.4/Q13.3(부분) — 같은 세션, 이어서 완료
 
-- **Q13.1** `source_order` → `evidence_item_presentation_order`(비표적,
-  Q7 담지) / `source_priority_ordering`(표적, `source_meta_reasoning`
-  하위축)로 분리. 정책 스키마·렌더 문구 변경 필요
-- **Q13.2** evidence-reading rule과 recorded-fields 평가를 문장으로 분리
-  (§4 처방 문구 교체)
-- **Q13.3** qualification gate(QF-SELECT/QF-DEFER 별도 fixture) 신설 —
-  가장 큰 미구현 항목. 새 fixture 2개 + 실행 계약 설계 필요
-- **Q13.4** L8 한계 등록(문서만, 코드 변경 없음)
+- **Q13.1 완료** — `source_order` → `evidence_item_presentation_order`로
+  개명, 렌더 문구를 "the order in which evidence items appear in the
+  packet"로 명확화(옛 "source order"는 presentation-order와
+  source_kind_priority 둘 다로 읽힐 수 있었다 — Q10 결함이 단어 하나로
+  재발할 뻔한 지점). golden 4번째 amendment. 커밋 `6b45d27`.
+- **Q13.2 완료** — `GLOBAL_DEFAULT_PERMISSION_TEXT`에 "evidence items,
+  including their recorded fields"로 확장 + 4번째 문장 추가(evidence-text
+  지지 규칙과 recorded-field 평가 규칙을 분리). golden 5번째 amendment.
+  커밋 `2a7913a`.
+- **Q13.4 완료** — L8을 `PREREGISTRATION_TYPED_SCOPE_COHORT.md` §5b에
+  판정문 원문 그대로 등록(문서만, fixture·Q1 바이트 무변경). 같은 커밋에서
+  **옛 §5(M4 ceiling 재등록)를 WITHDRAWN으로 표시** — F6(2026-08-06
+  리뷰)가 그 재등록 자체를 결함으로 지적했고 Q13.3이 명시적으로
+  폐기했으므로, 원문은 이력으로 보존하고 §5a에 대체 설계(qualification
+  gate 계약)를 사전등록. 커밋 `a377731`.
+- **Q13.3 부분 완료** — `_h1a_qualification.py` 신설: QF-SELECT/QF-DEFER
+  두 control의 결정론적 채점기. `_coder.code()`로 분류(rationale 안 읽음,
+  P5 규율 동일), 80% 이상 + **양쪽 다** 통과해야 gate 통과, 실패 시
+  `floor_or_ceiling_failure`로 강제(판정문의 "null_effect로 보고 금지"
+  문구 동봉). trial 데이터 없이 합성 출력 8건으로 테스트 고정. 커밋
+  `85bff26`.
+
+게이트: H1a 186 passed/1 skipped, E2.4 118 불변. 4개 커밋 전부 push 완료
+(`origin/codex/h1-source-authority`).
+
+### 5. 남은 것 — 아직 안 함
+
+- **Q13.3 나머지** — QF-SELECT/QF-DEFER **fixture 자체**(실제 저장소
+  근거 필요, `fixture_source_authority.json`과 같은 검증 규율 — 합성
+  불가) + `_h1a_score.py`(또는 별도 실행 경로)에 `_h1a_qualification.py`
+  실제 배선. 지금은 채점기만 있고 잴 데이터가 없다
 - **Q13.5/Q13.6** 리뷰어 capability gate + bounded semantic compiler —
   이건 **다음 독립 리뷰 자체의 절차**이지 지금 짤 코드가 아니다
 - 위 전부 완료 후 **독립 리뷰 전면 재실행**(`INDEPENDENT_SEMANTIC_REVIEW_PASSED`
