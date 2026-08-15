@@ -109,15 +109,15 @@ doc(`phase_a_implementation_packet.md:99`)·code(`concept_gate_v7.py:1189`)
 
 ### 6. 남은 것 — 아직 안 함
 
-> ⚠️ 아래 첫 두 항목은 §7(같은 날, 이어서)에서 해소됐다 — Q14는 외부
+> ⚠️ 아래 첫 세 항목은 §7·§8(같은 날, 이어서)에서 해소됐다 — Q14는 외부
 > 판정 채널이 아니라 사용자의 직접 지시("상위 목적에 따라서 결정해라")로
-> 처리 방향이 정해졌다. 나머지는 여전히 유효.
+> 처리 방향이 정해졌고, QF-SELECT 5-trial 실행·배선도 같은 날 끝났다.
+> 나머지는 여전히 유효.
 
 - ~~Q14 판정 대기~~ → §7: QF-DEFER를 non-blocking으로 강등, 재료 자체는
   계속 부재(L9로 등록)
-- ~~`_h1a_score.py`에 실제 배선~~ → §7: gate는 QF-SELECT 하나로 완주
-  가능해졌으므로 QF-DEFER 부재가 더 이상 배선을 막지 않음. 실행 경로
-  배선 자체는 여전히 다음 세션 몫
+- ~~`_h1a_score.py`에 실제 배선~~ → §8: `_h1a_qualification_run.py` 신설로
+  실전 배선 완료. QF-SELECT 5/5 통과, `cohort_freeze: allowed`
 - **Q13.5/Q13.6** 리뷰어 capability gate + bounded semantic compiler —
   이건 **다음 독립 리뷰 자체의 절차**이지 지금 짤 코드가 아니다
 - 위 전부 완료 후 **독립 리뷰 전면 재실행**(`INDEPENDENT_SEMANTIC_REVIEW_PASSED`
@@ -176,6 +176,64 @@ passed/1 skipped(회귀 없음), E2.4 118 불변, core pytest 기존 owlready2
 **미변경/범위 밖**: `_h1a_score.py`에 이 스코어러를 실제 실행 경로로
 배선하는 것은 여전히 다음 세션 몫(위 §6). 본 코호트 코드·frozen
 assets·결과 파일은 이 amendment에서 손대지 않았다.
+
+### 8. (같은 날, 이어서) QF-SELECT 5-trial 실행 + 실전 배선
+
+**배선**: `_h1a_score.py`는 확인 결과 확정적으로 confirmatory
+cohort(`cohort_prompts.json`/`trials.json`/arm 대비/stage_a) 전용
+하드코딩 모듈이라 qualification(arm 없음, `pooled_with_main_cohort:
+false`)을 억지로 그 안에 넣는 것은 별개 관심사를 섞는 것이었다. 대신
+신규 `_h1a_qualification_run.py` — `_h1a_cohort.py`(build/freeze) +
+`_h1a_score.py`(score+persist)가 confirmatory cohort에 대해 하는 역할
+분리를 qualification 쪽에 그대로 적용한 실행·영속 계층. `_h1a_qualification.py`
+자신은 여전히 fixture 없이 synthetic 출력만으로 테스트 가능한 순수
+스코어러로 **안 건드림** — 이 분리 자체가 모듈 docstring의 명시적 설계
+의도였다.
+
+`render_control()`이 확인 코호트와 **동일한 파이프라인**
+(`qualify_fixture`→`build_model_payload`→`assert_no_model_facing_type_anchor`→
+`load_h1a_native_template`→`render_arm`→`render_prompt`)을 재사용해
+QF-SELECT의 model-facing prompt를 렌더. `build_cohort()`/`assert_freezable()`는
+**호출 안 함** — 그건 confirmatory 40-trial 동결 전용이고
+`INDEPENDENT_SEMANTIC_REVIEW_PASSED`에 게이트돼 있어서, qualification이
+그 경로를 타면 "본 동결 전에 먼저 돈다"는 gate 자신의 존재 목적과
+모순된다.
+
+**Arm 선택(운영 결정, 새 판정 아님)**: `PROHIBITION_REMOVED`. D-H1a-13
+§6은 "trials_per_control: 5"(control당 1회, arm당 아님)만 명령하고 어느
+arm의 표면을 쓸지는 명시하지 않았다. QF-SELECT/QF-DEFER 둘 다
+liveness 절이 작용할 출처 충돌 자체가 없어(두 fixture 모두 만장일치
+또는 재료 부재) 이 선택이 측정 행동에 영향을 줄 것으로 보이지 않는다
+— 재현성을 위해 `_h1a_qualification_run.py` 모듈 docstring에 근거를
+남겼다.
+
+**실행**: `h1a-decider` trial subject로 5회 독립 dispatch(같은 렌더된
+prompt, 동일 텍스트 — K=1 fixture, R=5 재표본). 결과: **5/5
+`select_type`/`structural_composition`**(만장일치, rationale은 5건 전부
+표현이 다름 — 캐시·재생 아닌 독립 표본). `_h1a_qualification.score_qualification()`
+실행 결과: `QF-SELECT.rate = 1.0`, `passes: true`, `cohort_freeze: allowed`,
+`QF-DEFER.status: material_unavailable` → `defer_ceiling_diagnostic_limitation: true`
+(L9 문구 동반, freeze는 막지 않음).
+
+**산출물**(F9 스타일 덮어쓰기 거부 확인 완료 — 재실행 시 `QualificationScoreOverwriteRefused`
+실제 발동 확인):
+
+| 파일 | 계층 |
+|---|---|
+| `h1a_qualification_manifest.json` | manifest freeze(QF-SELECT rendered_prompt sha256 고정, drift 검사 대상) |
+| `h1a_qualification_raw.json` | 원시 5출력 |
+| `h1a_qualification_score.json` | 스코어 + manifest 발췌 |
+
+**테스트**: `test_h1a_qualification_run.py` 신규 8건 — no-anchor 페이로드,
+manifest 구성, drift 검출(재실측: 값 변조 시 실제로 raise), F9식 덮어쓰기
+거부의 recall(현재 저장소에 실제로 존재하는 `h1a_qualification_score.json`
+대상)과 precision(경로 없을 때 통과), 그리고 실제 기록된 점수가
+`cohort_freeze: allowed`임을 확인하는 recall 테스트. 게이트: H1a
+213 passed/1 skipped(회귀 없음), E2.4 118 불변, core pytest 기존
+owlready2 결함 1건 그대로.
+
+**남은 것**: QF-DEFER는 여전히 L9로 non-blocking 등록 상태(재료 없음).
+독립 리뷰 전면 재실행은 아직(§6 그대로).
 
 ---
 

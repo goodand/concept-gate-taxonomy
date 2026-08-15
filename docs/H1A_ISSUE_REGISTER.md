@@ -806,7 +806,17 @@ fixture 재료 확보**(`docs/phase_a_implementation_packet.md:99` +
 전환됐다. QF-SELECT의 hard-gate 지위는 불변 — 대칭 확장 여부는 **Q15로
 미결 등록**(같은 문서 §5d), 상신하지 않았다.
 
-상세는 `OPERATIONS_LOG.md` "2026-08-15" 절(§5·§7).
+**같은 날 이어서 — QF-SELECT 5-trial 실행 + 실전 배선.** 신규
+`_h1a_qualification_run.py`(fixture→prompt 렌더 + manifest 동결/drift
+검사 + F9식 덮어쓰기 거부)로 `_h1a_qualification.py`를 실행 경로에
+연결. `h1a-decider`로 5회 독립 실행 — **5/5 `select_type`/
+`structural_composition`**(만장일치). 스코어 결과: `cohort_freeze:
+allowed`, `QF-DEFER.status: material_unavailable`(L9 문구 동반, freeze는
+안 막음). Arm은 `PROHIBITION_REMOVED`(D-H1a-13 미명시, 운영 결정으로
+문서화). 산출물 `h1a_qualification_manifest.json`/`_raw.json`/
+`_score.json`, 신규 테스트 8건.
+
+상세는 `OPERATIONS_LOG.md` "2026-08-15" 절(§5·§7·§8).
 
 ### I.2 남은 것 — 이 섹션에서 반복 서술하지 않는다
 

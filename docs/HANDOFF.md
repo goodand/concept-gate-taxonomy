@@ -1,5 +1,24 @@
 # HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
+- 갱신: **2026-08-15(3)** — **QF-SELECT 5-trial 실행 + `_h1a_qualification.py`
+  실전 배선 완료.** 신규 `_h1a_qualification_run.py`
+  (`_h1a_cohort.py`/`_h1a_score.py`가 confirmatory cohort에 대해 하는
+  build/freeze·score/persist 역할 분리를 qualification에 적용 — fixture
+  →prompt 렌더는 confirmatory와 동일 파이프라인 재사용, `build_cohort()`/
+  `assert_freezable()`는 호출 안 함, 그건 `INDEPENDENT_SEMANTIC_REVIEW_PASSED`
+  게이트가 있는 40-trial 전용). `h1a-decider`로 5회 독립 실행 — **5/5
+  `select_type`/`structural_composition`**(만장일치, rationale 전부
+  상이 — 독립 표본). 스코어: `cohort_freeze: allowed`,
+  `QF-DEFER.status: material_unavailable`(L9, freeze는 안 막음). Arm은
+  `PROHIBITION_REMOVED`(D-H1a-13 미명시, 운영 결정 — 근거는 새 모듈
+  docstring). 산출물 `h1a_qualification_manifest.json`/`_raw.json`/
+  `_score.json`, F9식 덮어쓰기 거부 재실행으로 실측 확인. 신규 테스트
+  8건, 게이트 H1a 213 passed/1 skipped(회귀 없음), E2.4 118 불변, core
+  pytest 기존 owlready2 결함 그대로. 상세는 `OPERATIONS_LOG.md`
+  "2026-08-15" §8. **다음 세션이 할 일**: Q13.5/13.6(다음 독립 리뷰
+  자체의 절차) → 독립 리뷰 전면 재실행(`INDEPENDENT_SEMANTIC_REVIEW_PASSED`
+  여전히 `False`) → 통과해야 `repaired_cohort_trials` 40건 착수. Q15
+  (QF-SELECT 대칭 강등 여부)는 여전히 미결.
 - 갱신: **2026-08-15(2)** — **QF-DEFER를 non-blocking diagnostic으로
   강등**(amendment, D-H1a-1~13류 외부 판정 채널 아님 — 사용자가 공유한
   설계 상담 + "상위 목적에 따라서 결정해라" 직접 지시에 근거해 처리,
