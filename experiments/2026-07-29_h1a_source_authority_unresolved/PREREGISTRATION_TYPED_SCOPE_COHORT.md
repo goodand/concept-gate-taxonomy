@@ -169,6 +169,18 @@ QF-DEFER fixture는 §5c의 사유로 **의도적으로 미구성** — "아직 
 미구현"이 아니라 "저장소에 재료가 없음을 전수 확인하고 gate를 그에 맞게
 재설계한 것"이다.
 
+**QF-SELECT 5-trial 실행 완료 (2026-08-15, 같은 날 이어서)**: `_h1a_qualification_run.py`
+신설(fixture→prompt 렌더 + manifest 동결/drift 검사 + F9식 덮어쓰기 거부를
+갖춘 실행·영속 계층 — `_h1a_qualification.py` 자신은 여전히 fixture 없이도
+테스트 가능한 순수 스코어러로 남긴다). `h1a-decider` trial subject로 5회
+독립 실행, 5/5 `select_type`/`structural_composition`(만장일치, rate=1.0).
+`cohort_freeze: allowed`. 산출물: `h1a_qualification_manifest.json`
+(렌더된 prompt의 sha256 동결), `h1a_qualification_raw.json`(원시 5출력),
+`h1a_qualification_score.json`(스코어 + manifest 발췌). Arm 선택
+(`PROHIBITION_REMOVED`)은 D-H1a-13이 명시하지 않은 운영상 결정이며
+근거는 `_h1a_qualification_run.py` 모듈 docstring에 기록. 상세는
+`OPERATIONS_LOG.md` "2026-08-15" §8.
+
 ### 5c. 2026-08-15 AMENDMENT — QF-DEFER 강등 (non-blocking diagnostic)
 
 **계기**: D-H1a-13 Q13.3의 명령대로 QF-DEFER fixture를 만들려 했으나,

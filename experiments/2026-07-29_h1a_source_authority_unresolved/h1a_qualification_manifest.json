@@ -1,0 +1,16 @@
+{
+  "record_class": "h1a_qualification_manifest",
+  "builder_commit": "db07867a6c9601ecf1e00d1604ad22f411a1eb1d",
+  "arm_for_qualification": "PROHIBITION_REMOVED",
+  "trials_per_control": 5,
+  "QF-SELECT": {
+    "fixture_path": "experiments/2026-07-29_h1a_source_authority_unresolved/fixture_qf_select.json",
+    "fixture_sha256": "38ed0402510b19031bada6eb94dd38b64542f075b6b6706c5ab3041224a24ef6",
+    "model_payload_sha256": "f008c197a361124ca9ec12047f0ff6c51619a873bee79f36c1a7e26ee1b563cd",
+    "rendered_prompt_sha256": "fd793fc70ee1b41e799e385e8548be35aec6e461747ba1fb6f46bddd3193dbaf"
+  },
+  "QF-DEFER": {
+    "status": "material_unavailable",
+    "reason": "No repo-grounded, same-source_kind conflicting-type material exists for QF-DEFER (Q14, exhaustive enumeration). See correspondence/DESIGN_REQUEST_H1a_qualification_defer_material.md sec 3 and PREREGISTRATION_TYPED_SCOPE_COHORT.md sec 5c/5e (L9)."
+  }
+}
