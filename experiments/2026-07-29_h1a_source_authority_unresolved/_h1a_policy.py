@@ -204,12 +204,28 @@ SCOPE_CONSTRAINT_TEXT = (
 # conflated:
 #     permission status alone  != evidence
 #     permitted basis applied to evidence = potentially relevant
+#
+# D-H1a-13 Q13.2 (2026-08-06) extended the third sentence and added a fourth.
+# The old text said a permitted basis "may affect the decision only through
+# its application to the supplied evidence" without saying whether "evidence"
+# means the item's text alone or also its other recorded fields (e.g.
+# source_kind) -- exactly the split source_meta_reasoning's permission in
+# REMOVED needs, since that permission is specifically about evaluating an
+# item's recorded fields as source information, not about what its text
+# supports. The evidence-reading rule (declared elsewhere in the template)
+# already governs text-support; this addition states explicitly that it does
+# not ALSO prohibit reading an item's other recorded fields as source
+# information -- separating "what type does this text support" from "how do I
+# evaluate this item as a source" into two non-conflicting rules.
 GLOBAL_DEFAULT_PERMISSION_TEXT = (
     "Within the supplied packet, a decision basis may be considered unless this\n"
     "prompt explicitly prohibits it. The fact that this prompt does not prohibit\n"
     "a decision basis is not itself a reason to select a type. A permitted basis\n"
     "may affect the decision only through its application to the supplied\n"
-    "evidence."
+    "evidence items, including their recorded fields. The evidence-reading rule\n"
+    "above determines what ontology type an item's text supports; it does not\n"
+    "by itself prohibit evaluating the item's other recorded fields as source\n"
+    "information."
 )
 
 POLICY_DEFAULTS = {

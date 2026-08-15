@@ -27,6 +27,12 @@
       "to_sha256": "d26d1a53920579558ed5624e7b0bbbb40fb3466676e7253bdbaf3761940790e7",
       "at_trials": 0,
       "reason": "D-H1a-13 Q13.1 (2026-08-06): axis `source_order` renamed to `evidence_item_presentation_order` and its rendered phrase changed from the ambiguous 'source order' to 'the order in which evidence items appear in the packet'. The old phrase could read as either presentation order (non-target, this axis) or source-kind priority (target, source_meta_reasoning's subaxis) -- rendering it in the common Q7 tie-breaker sentence risked re-forbidding the target axis in both arms, the Q10 defect shape again with the ambiguity moved into one word. Also matches Q13.1's prescribed exact sentence, including the comma before 'unless' (D-H1a-13 sec 11)."
+    },
+    {
+      "from_sha256": "d26d1a53920579558ed5624e7b0bbbb40fb3466676e7253bdbaf3761940790e7",
+      "to_sha256": "d7375c44b111f24cba9f3e8653b31fe5be1e52df836ef9bc930ba37fa7f5b4e8",
+      "at_trials": 0,
+      "reason": "D-H1a-13 Q13.2 (2026-08-06): the default-permission text's third sentence said a permitted basis 'may affect the decision only through its application to the supplied evidence' without saying whether 'evidence' means an item's text alone or also its other recorded fields (e.g. source_kind) -- exactly what REMOVED's source_meta_reasoning permission needs to be unambiguous about, since that permission is specifically about evaluating recorded fields as source information, not about what an item's text supports. Extended the third sentence to 'evidence items, including their recorded fields' and added a fourth sentence separating the evidence-reading rule's role (what type an item's text supports) from this rule's role (recorded fields may be evaluated as source information), so the two do not conflict or subsume each other."
     }
   ],
   "carriers_included": [
@@ -35,6 +41,6 @@
     "DOMAIN_KNOWLEDGE_BOUNDARY",
     "SCOPE_DISAMBIGUATION"
   ],
-  "sha256": "d26d1a53920579558ed5624e7b0bbbb40fb3466676e7253bdbaf3761940790e7",
-  "text": "Within the supplied packet, a decision basis may be considered unless this\nprompt explicitly prohibits it. The fact that this prompt does not prohibit\na decision basis is not itself a reason to select a type. A permitted basis\nmay affect the decision only through its application to the supplied\nevidence.\n\n- Do not break ties using evidence item count or the order in which evidence\n  items appear in the packet, unless the packet explicitly authorizes that\n  basis.\n\n- Do not use outside domain or ontology knowledge to supply facts about the\n  concept-feature relation, and do not consult external sources.\n\n- The restriction on outside domain or ontology knowledge does not itself\n  govern evaluation of the supplied evidence items as sources."
+  "sha256": "d7375c44b111f24cba9f3e8653b31fe5be1e52df836ef9bc930ba37fa7f5b4e8",
+  "text": "Within the supplied packet, a decision basis may be considered unless this\nprompt explicitly prohibits it. The fact that this prompt does not prohibit\na decision basis is not itself a reason to select a type. A permitted basis\nmay affect the decision only through its application to the supplied\nevidence items, including their recorded fields. The evidence-reading rule\nabove determines what ontology type an item's text supports; it does not\nby itself prohibit evaluating the item's other recorded fields as source\ninformation.\n\n- Do not break ties using evidence item count or the order in which evidence\n  items appear in the packet, unless the packet explicitly authorizes that\n  basis.\n\n- Do not use outside domain or ontology knowledge to supply facts about the\n  concept-feature relation, and do not consult external sources.\n\n- The restriction on outside domain or ontology knowledge does not itself\n  govern evaluation of the supplied evidence items as sources."
 }

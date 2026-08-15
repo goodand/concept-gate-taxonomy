@@ -168,20 +168,27 @@ def test_default_permission_is_emitted_in_both_arms_byte_identically():
 
 
 def test_default_permission_text_matches_the_ruling_bytes():
-    """RETARGETED to D-H1a-12 sec 7 (2026-08-05).
+    """RETARGETED to D-H1a-13 Q13.2 (2026-08-06).
 
     D-H1a-11's second sentence read "Permission to consider a basis does not by
     itself warrant selecting a type", which Q12.2 found could be read as
     denying that the basis is a warrant at all -- cancelling the treatment.
-    The replacement splits the two propositions. Pinned byte-exact for the
-    same reason as before: this is a preregistration device.
+    D-H1a-12 sec 7 split the two propositions. Q13.2 then extended the third
+    sentence and added a fourth: "evidence" was ambiguous between an item's
+    text and its other recorded fields, which is exactly what REMOVED's
+    source_meta_reasoning permission needs to be unambiguous about. Pinned
+    byte-exact for the same reason as before: this is a preregistration
+    device.
     """
     expected = (
         "Within the supplied packet, a decision basis may be considered unless this\n"
         "prompt explicitly prohibits it. The fact that this prompt does not prohibit\n"
         "a decision basis is not itself a reason to select a type. A permitted basis\n"
         "may affect the decision only through its application to the supplied\n"
-        "evidence."
+        "evidence items, including their recorded fields. The evidence-reading rule\n"
+        "above determines what ontology type an item's text supports; it does not\n"
+        "by itself prohibit evaluating the item's other recorded fields as source\n"
+        "information."
     )
     assert policy.GLOBAL_DEFAULT_PERMISSION_TEXT == expected
 
