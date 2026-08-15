@@ -1,0 +1,73 @@
+{
+  "fixture_version": "repo_evidence_fixture_v2",
+  "experiment_id": "H1a-QF-SELECT",
+  "repo": "goodand/concept-gate-taxonomy",
+  "source_commit": "0c8be5ced8de4587e1f87196723f815f08d7003e",
+  "run_pipeline_input": [
+    {
+      "name": "자동차",
+      "features": [
+        {
+          "feature": "엔진",
+          "type": "structural_composition",
+          "evidence": "엔진은 자동차의 구성요소이다",
+          "relation_hint": "part_of"
+        }
+      ]
+    }
+  ],
+  "candidate_concepts": [
+    {
+      "name": "자동차",
+      "features": [
+        {
+          "feature": "엔진",
+          "type": "structural_composition",
+          "evidence_refs": [
+            "ev1",
+            "ev2"
+          ]
+        }
+      ]
+    }
+  ],
+  "evidence_sources": [
+    {
+      "evidence_id": "ev1",
+      "source_kind": "doc",
+      "source_ref": {
+        "kind": "file_lines",
+        "path": "docs/phase_a_implementation_packet.md",
+        "start_line": 99,
+        "end_line": 99
+      },
+      "text": "(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → structural_composition",
+      "text_sha256": "d14a1e729547be8d4244bd0d9da58cc3e7a45a35e56b5149aff62fc102972f19"
+    },
+    {
+      "evidence_id": "ev2",
+      "source_kind": "code",
+      "source_ref": {
+        "kind": "file_lines",
+        "path": "conceptgate/concept_gate_v7.py",
+        "start_line": 1189,
+        "end_line": 1189
+      },
+      "text": "        \"(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → structural_composition\\n\"",
+      "text_sha256": "c139e237c2e7d1e05de9265251c8e1cc7350594e2dd995c38371b7a09e4b8d06"
+    }
+  ],
+  "server_response": {
+    "status": "NEEDS_CORRECTION",
+    "dag": {},
+    "composition_issues": [],
+    "anti_patterns": []
+  },
+  "builder_metadata": {
+    "purpose": "Q13.3 qualification control QF-SELECT. Exactly one allowed type (structural_composition) is directly and instance-boundly asserted by BOTH an eligible doc source and an eligible code source, with no counter-evidence anywhere in the repository for this concept/feature pair. Expected trial-subject behavior: select_type.",
+    "material_search": "Full eligibility-aware enumeration across docs/, conceptgate/, experiments/ (excluding H1a's own self-referential folder) found no source naming 자동차/엔진 with any conflicting type. See correspondence/DESIGN_REQUEST_H1a_qualification_defer_material.md sec 3 for the search method and full results table (which also covers this pair).",
+    "no_oracle": "This is a qualification-gate fixture, not the confirmatory K=1 fixture. It carries no expected_decision/expected_type field; the expected behavior (select_type) is a floor check on the trial subject's baseline competence, recorded in _h1a_qualification.py's contract, not in this fixture.",
+    "not_pooled": "D-H1a-13 sec 6 (Q13.3): pooled_with_main_cohort: false. This fixture and its trial results must never be merged with the confirmatory 칼/철 cohort.",
+    "server_response_honesty": "run_and_certify on a single-feature payload (자동차/엔진 alone, no essential_feature sibling) returns status=NEEDS_CORRECTION -- verified by direct execution against this repo's certifier. This is recorded honestly rather than fabricating an unrelated essential_feature fact about 자동차 (which does not exist in this repository) merely to force a PASS status. It does not matter for the qualification gate: build_model_payload never forwards server_response to the model (H1a deviation #2), and this fixture's only role is to test whether the trial subject selects when a type is unambiguously supported by the evidence it is shown."
+  }
+}

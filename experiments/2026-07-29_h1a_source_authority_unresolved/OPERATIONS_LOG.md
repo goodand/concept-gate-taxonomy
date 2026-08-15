@@ -74,18 +74,51 @@ contract가 drift를 정확히 잡아 재동결 필요(3번째 amendment,
 게이트: H1a 186 passed/1 skipped, E2.4 118 불변. 4개 커밋 전부 push 완료
 (`origin/codex/h1-source-authority`).
 
-### 5. 남은 것 — 아직 안 함
+### 5. (같은 날 이어서) 코호트 파라미터화 + QF-SELECT fixture + Q14 상신
 
-- **Q13.3 나머지** — QF-SELECT/QF-DEFER **fixture 자체**(실제 저장소
-  근거 필요, `fixture_source_authority.json`과 같은 검증 규율 — 합성
-  불가) + `_h1a_score.py`(또는 별도 실행 경로)에 `_h1a_qualification.py`
-  실제 배선. 지금은 채점기만 있고 잴 데이터가 없다
+**S0 — `_h1a_cohort.py` 파라미터화.** `freeze()` docstring이 2026-08-04부터
+"수선 코호트는 자기 경로·seed·id 접두사가 필요하다, 그 배선은 안 됐다"고
+기록해뒀는데, Q13.3의 qualification gate도 정확히 같은 것(별도 5-trial
+코호트, confirmatory와 풀링 금지)이 필요해 **한 번에 풀었다.**
+`CohortSpec` 도입, 기본값은 보존 코호트를 **바이트 동일**하게 재현
+(`build_cohort()` 결과 sha256이 리팩터 전후 `41996e99…`로 일치 — 동결
+플래그는 메모리에서만 우회, `git status`로 디스크 무변경 확인). 덮어쓰기
+거부를 spec별로 만들어 새 코호트도 보호. 회귀 테스트 4종. 커밋 `48d6056`.
+
+**S1 — QF-SELECT fixture 확보.** 재료 조사: 인스턴스 결박 + enum 내 타입
+단언을 저장소 전수 열거(단발 grep 아님) → `_h1a_surface._eligibility_profile`
+**재사용**(새 규칙 안 만듦)으로 자기참조 3건 배제 → `자동차/엔진`이
+doc(`phase_a_implementation_packet.md:99`)·code(`concept_gate_v7.py:1189`)
+양쪽에서 만장일치로 `structural_composition`, 반대 근거 없음을 확인.
+`fixture_qf_select.json` 작성, `qualify_fixture`→`build_model_payload`→
+`assert_no_model_facing_type_anchor`→실제 H1a 템플릿 렌더까지 전 경로
+실행 확인. `server_response`는 실제 인증기 실행 결과(`NEEDS_CORRECTION`,
+단일-feature payload라 essential 짝이 없어서)를 **정직하게 기록** —
+날조된 PASS를 넣지 않음(모델에 안 가는 필드라 무관하지만).
+
+**S2 — `test_h1a_qualification_fixtures.py` 신규(13개).** provenance·
+만장일치·no-anchor·oracle 부재를 확인 fixture용 표현으로 pin. 202 passed.
+커밋 대기(다음 커밋에 포함).
+
+**Q14 상신** — QF-DEFER 재료는 **부재**. 같은 전수 열거 방법으로 확인:
+자격 있는 소스 중 동일 `source_kind` 내부 충돌 0건. 유일한 충돌(칼/철)은
+본 confirmatory fixture 자체라 재사용하면 `pooled_with_main_cohort`
+위반. 지어내면 fixture provenance 규율 위반. 판정 요청서:
+`correspondence/DESIGN_REQUEST_H1a_qualification_defer_material.md`.
+커밋 `0c8be5c`, 푸시 완료.
+
+### 6. 남은 것 — 아직 안 함
+
+- **Q14 판정 대기** — QF-DEFER 처리 방향(칼/철 재사용/다른 재료/보류 등)
+- Q14 판정 도착 후 `_h1a_score.py`(또는 별도 실행 경로)에
+  `_h1a_qualification.py` 실제 배선 — 지금은 채점기·QF-SELECT fixture
+  둘 다 있지만 QF-DEFER가 없어 gate를 완주할 수 없다
 - **Q13.5/Q13.6** 리뷰어 capability gate + bounded semantic compiler —
   이건 **다음 독립 리뷰 자체의 절차**이지 지금 짤 코드가 아니다
 - 위 전부 완료 후 **독립 리뷰 전면 재실행**(`INDEPENDENT_SEMANTIC_REVIEW_PASSED`
   여전히 `False`) → 통과해야 `repaired_cohort_trials` 40건 착수
 
-`freeze_status: FREEZE_BLOCKED` 유지. 미푸시(커밋만, 푸시는 별도 승인).
+`freeze_status: FREEZE_BLOCKED` 유지.
 
 ---
 
