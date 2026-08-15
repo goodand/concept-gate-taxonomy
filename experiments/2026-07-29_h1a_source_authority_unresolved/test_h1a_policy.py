@@ -96,7 +96,7 @@ def test_table_matches_the_ruling_sec_7_verbatim():
     """
     expected = {
         "evidence_count": ("Q7_NON_TARGET_TIEBREAKER", "Q7_NON_TARGET_TIEBREAKER"),
-        "source_order": ("Q7_NON_TARGET_TIEBREAKER", "Q7_NON_TARGET_TIEBREAKER"),
+        "evidence_item_presentation_order": ("Q7_NON_TARGET_TIEBREAKER", "Q7_NON_TARGET_TIEBREAKER"),
         "outside_domain_knowledge": ("DOMAIN_KNOWLEDGE_BOUNDARY",
                                      "DOMAIN_KNOWLEDGE_BOUNDARY"),
         "external_source_retrieval": ("DOMAIN_KNOWLEDGE_BOUNDARY",
@@ -212,7 +212,8 @@ def test_common_q7_names_all_three_nontarget_axes_in_both_arms():
             (c, policy._normalize_ws(txt))
             for c, txt in policy.render_policy_block(arm)
         )
-        for phrase in ("evidence item count", "source order"):
+        for phrase in ("evidence item count",
+                       "the order in which evidence items appear in the packet"):
             assert policy._normalize_ws(phrase) in blocks[policy.CARRIER_Q7], \
                 f"{arm}: {phrase!r} missing from the tie-breaker sentence"
         # The tie-breaker sentence must NOT name the domain axes any more.
@@ -396,7 +397,7 @@ def test_mutation_allowed_by_default_on_a_non_default_carrier_is_caught(clean_po
 
 
 def test_mutation_forbidden_state_on_the_default_carrier_is_caught(clean_policy):
-    clean_policy["source_order"]["kept"] = {
+    clean_policy["evidence_item_presentation_order"]["kept"] = {
         "state": policy.EXPLICITLY_FORBIDDEN, "carrier": policy.CARRIER_DEFAULT,
     }
     with pytest.raises(policy.PolicyContractError, match=r"\[3\]"):
@@ -411,7 +412,7 @@ def test_mutation_unspecified_removed_target_state_is_caught(clean_policy):
 
 
 def test_mutation_nontarget_axis_made_arm_varying_is_caught(clean_policy):
-    clean_policy["source_order"]["removed"] = {
+    clean_policy["evidence_item_presentation_order"]["removed"] = {
         "state": policy.ALLOWED_BY_DEFAULT, "carrier": policy.CARRIER_DEFAULT,
     }
     with pytest.raises(policy.PolicyContractError, match=r"\[8\]"):
@@ -778,7 +779,7 @@ def test_assert_0_catches_a_table_key_outside_the_declared_axes(clean_policy):
 
 
 def test_assert_0_catches_a_declared_axis_missing_from_the_table(clean_policy):
-    del clean_policy["source_order"]
+    del clean_policy["evidence_item_presentation_order"]
     with pytest.raises(policy.PolicyContractError, match=r"\[0\].*absent from the table"):
         policy.assert_0_table_keys_are_exactly_the_declared_axes()
 

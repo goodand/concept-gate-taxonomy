@@ -69,11 +69,22 @@ _BULLET_INDENT = "  "
 # --------------------------------------------------------------------------
 AXES = (
     "evidence_count",
-    "source_order",
+    "evidence_item_presentation_order",
     "outside_domain_knowledge",
     "external_source_retrieval",
     "source_meta_reasoning",
 )
+
+# D-H1a-13 Q13.1 (2026-08-06): renamed from `source_order`. The old name was
+# ambiguous between two distinct policies -- the order evidence items are
+# PRESENTED in the packet (non-target, this axis) and prioritizing one
+# SOURCE over another by kind (target, `source_meta_reasoning`'s
+# `source_kind_priority` subaxis). Because `source_order` could plausibly
+# read as either, rendering it in the common tie-breaker sentence risked
+# re-forbidding the target axis in BOTH arms -- the exact Q10 defect shape,
+# just with the ambiguity moved into a single word instead of a whole
+# clause. The rename makes what this axis governs unambiguous from its name
+# alone: only presentation order, never source priority.
 
 # D-H1a-12 Q12=F: the four former target axes are now SUBAXES of
 # source_meta_reasoning, which is a sibling of outside_domain_knowledge
@@ -221,7 +232,7 @@ DECISION_BASIS_POLICY: dict[str, dict[str, dict[str, str]]] = {
         "kept": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q7},
         "removed": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q7},
     },
-    "source_order": {
+    "evidence_item_presentation_order": {
         "kept": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q7},
         "removed": {"state": EXPLICITLY_FORBIDDEN, "carrier": CARRIER_Q7},
     },
@@ -246,7 +257,9 @@ DECISION_BASIS_POLICY: dict[str, dict[str, dict[str, str]]] = {
 # object. Assertion 12 uses this list and says so in its own message.
 AXIS_SURFACE_TOKENS: dict[str, tuple[str, ...]] = {
     "evidence_count": ("evidence item count", "evidence count"),
-    "source_order": ("source order",),
+    "evidence_item_presentation_order": (
+        "order in which evidence items appear", "presentation order",
+    ),
     "outside_domain_knowledge": ("outside domain", "ontology knowledge",
                                  "general ontology"),
     "external_source_retrieval": ("external sources", "consult external"),
@@ -260,7 +273,9 @@ AXIS_SURFACE_TOKENS: dict[str, tuple[str, ...]] = {
 
 _Q7_AXIS_PHRASE = {
     "evidence_count": "evidence item count",
-    "source_order": "source order",
+    "evidence_item_presentation_order": (
+        "the order in which evidence items appear in the packet"
+    ),
 }
 
 
@@ -361,7 +376,7 @@ def render_policy_block(arm: str) -> list[tuple[str, str]]:
         out.append((
             CARRIER_Q7,
             _bullet(
-                f"Do not break ties using {phrase} unless the packet "
+                f"Do not break ties using {phrase}, unless the packet "
                 f"explicitly authorizes that basis."
             ),
         ))
@@ -452,7 +467,7 @@ def assert_0c_declared_states_match_the_ruling_table() -> None:
     """
     ruling = {
         "evidence_count": (EXPLICITLY_FORBIDDEN, EXPLICITLY_FORBIDDEN),
-        "source_order": (EXPLICITLY_FORBIDDEN, EXPLICITLY_FORBIDDEN),
+        "evidence_item_presentation_order": (EXPLICITLY_FORBIDDEN, EXPLICITLY_FORBIDDEN),
         "outside_domain_knowledge": (EXPLICITLY_FORBIDDEN, EXPLICITLY_FORBIDDEN),
         "external_source_retrieval": (EXPLICITLY_FORBIDDEN, EXPLICITLY_FORBIDDEN),
         "source_meta_reasoning": (EXPLICITLY_FORBIDDEN, ALLOWED_BY_DEFAULT),

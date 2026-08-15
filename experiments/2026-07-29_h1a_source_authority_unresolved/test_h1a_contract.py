@@ -373,7 +373,8 @@ def test_rendered_tie_breaker_list_is_the_r1_repaired_set():
         # sentence -- it is now `outside domain or ontology knowledge` carried by
         # DOMAIN_KNOWLEDGE_BOUNDARY. All three still must reach the prompt; only
         # which sentence carries which changed.
-        for retained in ("evidence item count", "source order",
+        for retained in ("evidence item count",
+                         "the order in which evidence items appear in the packet",
                          "outside domain or ontology knowledge"):
             assert retained in text, f"{arm}: {retained!r} should be retained"
         for removed in ("source_kind priority", "recency", "authority"):

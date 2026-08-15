@@ -21,6 +21,12 @@
       "to_sha256": "169bcd1969a0c4d2138629f8d7c7438bb06a9f91ac9c4e4f6302b1d043af97c3",
       "at_trials": 0,
       "reason": "D-H1a-13 Q13 = C (2026-08-06, independent review 20260806 axis b BLOCKER): the SCOPE_DISAMBIGUATION carrier's second sentence, 'Source evaluation is governed by the arm-specific source-evaluation clause.', is a dangling reference in PROHIBITION_REMOVED -- it names Q1's clause, which does not exist there (referent_in_removed: none). The ruling found this also disclosed experiment structure ('arm-specific') to the model and made whether D-H1a-11's default-permission rule even applies in REMOVED ambiguous, since the sentence asserts a more specific governing rule exists. Deleted the second sentence in both arms; kept the first, which still separates the domain-knowledge boundary from source evaluation without claiming a referent."
+    },
+    {
+      "from_sha256": "169bcd1969a0c4d2138629f8d7c7438bb06a9f91ac9c4e4f6302b1d043af97c3",
+      "to_sha256": "d26d1a53920579558ed5624e7b0bbbb40fb3466676e7253bdbaf3761940790e7",
+      "at_trials": 0,
+      "reason": "D-H1a-13 Q13.1 (2026-08-06): axis `source_order` renamed to `evidence_item_presentation_order` and its rendered phrase changed from the ambiguous 'source order' to 'the order in which evidence items appear in the packet'. The old phrase could read as either presentation order (non-target, this axis) or source-kind priority (target, source_meta_reasoning's subaxis) -- rendering it in the common Q7 tie-breaker sentence risked re-forbidding the target axis in both arms, the Q10 defect shape again with the ambiguity moved into one word. Also matches Q13.1's prescribed exact sentence, including the comma before 'unless' (D-H1a-13 sec 11)."
     }
   ],
   "carriers_included": [
@@ -29,6 +35,6 @@
     "DOMAIN_KNOWLEDGE_BOUNDARY",
     "SCOPE_DISAMBIGUATION"
   ],
-  "sha256": "169bcd1969a0c4d2138629f8d7c7438bb06a9f91ac9c4e4f6302b1d043af97c3",
-  "text": "Within the supplied packet, a decision basis may be considered unless this\nprompt explicitly prohibits it. The fact that this prompt does not prohibit\na decision basis is not itself a reason to select a type. A permitted basis\nmay affect the decision only through its application to the supplied\nevidence.\n\n- Do not break ties using evidence item count or source order unless the\n  packet explicitly authorizes that basis.\n\n- Do not use outside domain or ontology knowledge to supply facts about the\n  concept-feature relation, and do not consult external sources.\n\n- The restriction on outside domain or ontology knowledge does not itself\n  govern evaluation of the supplied evidence items as sources."
+  "sha256": "d26d1a53920579558ed5624e7b0bbbb40fb3466676e7253bdbaf3761940790e7",
+  "text": "Within the supplied packet, a decision basis may be considered unless this\nprompt explicitly prohibits it. The fact that this prompt does not prohibit\na decision basis is not itself a reason to select a type. A permitted basis\nmay affect the decision only through its application to the supplied\nevidence.\n\n- Do not break ties using evidence item count or the order in which evidence\n  items appear in the packet, unless the packet explicitly authorizes that\n  basis.\n\n- Do not use outside domain or ontology knowledge to supply facts about the\n  concept-feature relation, and do not consult external sources.\n\n- The restriction on outside domain or ontology knowledge does not itself\n  govern evaluation of the supplied evidence items as sources."
 }
