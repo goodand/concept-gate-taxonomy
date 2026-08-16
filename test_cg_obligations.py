@@ -7,6 +7,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 import importlib
 
+import pytest
+
+# 이 저장소가 선택 의존성으로 취급하는 것들 (scripts/run_gates.py의
+# OPTIONAL_DEPS와 같은 목록). 여기 없는 이름의 ModuleNotFoundError는
+# 스킵하지 않고 실패시킨다 — 그래야 registry-코드 drift가 계속 잡힌다.
+OPTIONAL_DEPS = frozenset({"fastmcp", "owlready2"})
+
 from conceptgate.cg_obligations import (
     MAX_ASSURANCE, OBLIGATION_REGISTRY, Assurance, DeciderKind,
     ObligationResult, Verdict, aggregate, certify,
@@ -196,10 +203,51 @@ def test_registered_handlers_resolve():
     # drift하면(예: 클래스명 오타) 여기서 잡는다.
     for name, spec in OBLIGATION_REGISTRY.items():
         parts = spec.handler.split(".")
-        obj = importlib.import_module("conceptgate." + parts[0])
+        try:
+            obj = importlib.import_module("conceptgate." + parts[0])
+        except ModuleNotFoundError as exc:
+            # 선택 의존성 부재는 drift가 아니다. 이 저장소는 이미 3곳에서
+            # `pytest.importorskip("owlready2", ...)`로 스킵하는데 이 테스트만
+            # 관례를 벗어나 있어서, 맨손 checkout에서 게이트가 red였다
+            # (HANDOFF.md §10.1). 파일 상단 importorskip은 쓰면 안 된다 —
+            # 같은 파일의 나머지 24개까지 스킵된다.
+            if exc.name in OPTIONAL_DEPS:
+                pytest.skip(
+                    f"{exc.name} 미설치 (선택 의존성) — {name} 핸들러 검증 생략"
+                )
+            # conceptgate.X 자체가 없으면 그것이 진짜 registry-코드 drift다.
+            # 무조건 스킵하면 이 테스트의 존재 이유가 죽으므로 계속 실패시킨다.
+            raise
         for attr in parts[1:]:
             obj = getattr(obj, attr)  # 없으면 AttributeError → 테스트 실패
         assert obj is not None, name
+
+
+def test_handler_resolution_still_fails_on_real_drift(monkeypatch):
+    """선택 의존성 스킵이 registry-코드 drift까지 삼키면 안 된다.
+
+    `test_registered_handlers_resolve`의 존재 이유가 drift 탐지인데, 위에
+    추가한 ModuleNotFoundError 스킵을 무조건 적용하면 그 이유가 죽는다.
+    OPTIONAL_DEPS 밖의 이름이면 여전히 실패하는지 양성으로 확인한다
+    (HANDOFF.md §10.1이 명시적으로 경고한 지점)."""
+    real_import = importlib.import_module
+
+    def missing_conceptgate_module(name, *a, **kw):
+        if name.startswith("conceptgate."):
+            raise ModuleNotFoundError(f"No module named {name!r}", name=name)
+        return real_import(name, *a, **kw)
+
+    monkeypatch.setattr(importlib, "import_module", missing_conceptgate_module)
+    with pytest.raises(ModuleNotFoundError):
+        test_registered_handlers_resolve()
+
+
+def test_optional_deps_list_matches_the_gate_runner():
+    """이 목록이 러너와 갈라지면 한쪽만 스킵돼 게이트 신호가 어긋난다."""
+    runner = Path(__file__).parent / "scripts" / "run_gates.py"
+    text = runner.read_text(encoding="utf-8")
+    for dep in OPTIONAL_DEPS:
+        assert f'"{dep}"' in text, f"{dep}가 run_gates.py의 OPTIONAL_DEPS에 없다"
 
 
 # ── 필드 부재는 위반 0건과 다르다 (세탁 방지 하드닝) ──────

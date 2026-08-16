@@ -921,15 +921,20 @@ python3 _score.py             # class별 clean_rate, 밴드, escalate cell
 
 이 worktree의 알려진 환경 공백(회귀 아님):
 - `fastmcp` 미설치 → `test_server.py` **BLOCKED**(러너가 분리 보고)
-- `owlready2` 미설치 → `test_cg_obligations.py::test_registered_handlers_resolve`
-  가 **FAIL**. 이 저장소는 이미 optional-dep 스킵 관례
-  (`pytest.importorskip("owlready2", ...)`, `test_cg_owl.py` 등 3곳)를 쓰는데
-  이 테스트만 따르지 않아 스킵 대신 실패한다. **기존 결함**(변경 전에도 동일,
-  `git stash`로 확인). 제안 수정은 아래 §10.
+- ~~`owlready2` 미설치 → `test_cg_obligations.py::test_registered_handlers_resolve`
+  가 **FAIL**~~ → **2026-08-16 해소**(§10.1 제안안 승인·적용). 이제 스킵된다.
+  루트 게이트가 **8 passed / 0 failed / 1 blocked**로 green이 됐다 —
+  남은 blocked는 `test_server.py`(fastmcp 부재)이며 규정상 "판정 보류"다.
 
 ## 10. 미결 — 승인 대기 (범위 밖이라 손대지 않음)
 
-### 10.1 `test_cg_obligations.py::test_registered_handlers_resolve` (core, 1줄 수정 제안)
+### 10.1 ~~`test_cg_obligations.py::test_registered_handlers_resolve`~~ — **해소 (2026-08-16)**
+
+> ✅ 승인받아 적용했다. `OPTIONAL_DEPS`(러너의 목록과 동일) 안의 이름일
+> 때만 스킵하고, `conceptgate.X` 자체가 없으면 **계속 실패**한다.
+> 스킵이 drift 탐지를 삼키지 않는지 양성 테스트로 고정했다
+> (`test_handler_resolution_still_fails_on_real_drift`), 그리고 목록이
+> 러너와 갈라지지 않는지도 테스트한다. 아래는 당시 제안 원문(이력).
 
 이 테스트는 `OBLIGATION_REGISTRY`의 핸들러 dotted path를 실제로 import해
 registry-코드 drift를 잡는다. 핸들러 중 하나가 `owlready2`를 요구하는 모듈에
