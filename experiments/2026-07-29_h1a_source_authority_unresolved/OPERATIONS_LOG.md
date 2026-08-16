@@ -544,9 +544,46 @@ REMOVED의 absent_verified를 담보하는 유일 carrier인데 compiler가 판�
 
 게이트: H1a 301 passed/1 skipped, 루트 8 passed/0 failed/1 blocked.
 
-**남은 것**: `INDEPENDENT_SEMANTIC_REVIEW_PASSED` 설정 여부 **사용자 결정** →
-설정 시 `repaired_cohort_trials` 40건 착수 가능. 계측 미수정 3건은 코호트
-실행을 막지 않으나(리뷰어들이 독해로 해소했다) 다음 리뷰 전에 닫는 것이 좋다.
+### 14. (2026-08-16) 리뷰 지적 처리 — 구현 해소 2건 + 설계 상신 1건
+
+리뷰어 지적을 **고칠 수 있는 것 / 설계 판정이 필요한 것**으로 갈라 처리했다.
+
+**구현으로 해소(2건)**:
+- **조건부 상태(R3)** — tie-breaker 금지가 "unless the packet explicitly
+  authorizes that basis" 예외를 달고 있어 실효 상태가 payload 의존인데
+  compiler가 평면 `present`로 보고했다. R3가 payload를 육안 확인해 메웠다.
+  claim에 `conditional`·`condition` 추가, audit이 `CONDITIONAL_STATE`를
+  발행한다 — 이제 `present`를 확정으로 읽으려면 누군가 antecedent를 확인해야
+  한다.
+- **분기 상보성(R5)** — conflict→defer 하드 매핑 부재는 필요조건이지
+  충분조건이 아닌데 이를 검사할 수단이 없었다. `DECISION_BRANCH_PARTITION`
+  구조 검사 신설. **리터럴 상보 여부만 판정하고 아니면 리뷰어에게 라우팅**한다 —
+  비리터럴 표현도 의도된 독해에서는 상보일 수 있고, 그걸 단정하는 것은 이
+  모듈이 갖지 않은 의미 능력을 참칭하는 것이다.
+
+부수 교정: conditional finding에 `target_critical` 필드를 붙였다가 뺐다.
+**아무것도 차단하지 않는 필드에 차단을 뜻하는 이름**을 준 것이고, 이는
+리뷰어들이 이 계측의 다른 곳에서 지적한 오도와 같은 종류다.
+`family_is_target_critical`로 개명하고 차단 이름은 실제 차단 findings에만 쓴다.
+
+**설계 상신(1건) — Q16**:
+`correspondence/DESIGN_REQUEST_H1a_canonical_policy_coverage.md`.
+
+Q13.5가 정한 **target-critical 6개 중 3개**(conflict-to-defer mapping,
+recorded-field access, default permission applicability)가 **정본 DSL에 대응
+axis가 없어 compiler로 구조적 반증 불가**다. 특히 `default permission
+applicability`는 REMOVED에서 표적 축의 `absent_verified`를 담보하는 **유일
+carrier**인데, 하필 그 자리에서 compiler가 판정을 보류한다(R2). 즉 표적 축
+부재라는 주장이 compiler만으로는 미지지 상태이고 리뷰어 육안이 메우고 있다.
+
+이건 정본의 범위 문제라 운영 세션이 정할 수 없다 — `DECISION_BASIS_POLICY`를
+확장할지, 리뷰어 독해를 정식 경로로 승인할지, target-critical 목록을 조정할지는
+설계 판정 사항이다. 하위 질문으로 `external_source_retrieval`의 감사 해상도,
+정본의 조건부 규칙 표현, 리뷰어 독해의 assurance 등급도 함께 물었다.
+
+**남은 것**: Q16 판정 대기. `INDEPENDENT_SEMANTIC_REVIEW_PASSED` 설정 여부는
+**사용자 결정**이며, Q16 요청서가 "이 공백 해소 전에 설정해도 되는가"도 함께
+묻고 있다. 설정 시 `repaired_cohort_trials` 40건 착수 가능.
 
 ---
 
