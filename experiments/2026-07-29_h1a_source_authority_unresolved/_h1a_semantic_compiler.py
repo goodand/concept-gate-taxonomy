@@ -117,10 +117,16 @@ DUPLICATE_CARRIER = "DUPLICATE_CARRIER"
 # Reverting to the ambiguous wording restores that defect while leaving the
 # policy "present", so presence alone cannot catch it.
 AMBIGUOUS_AXIS_PHRASING = "AMBIGUOUS_AXIS_PHRASING"
+# R5, 2026-08-16: absence of a conflict-to-defer hard mapping is NECESSARY but
+# not SUFFICIENT for decision-mapping neutrality. Nothing in the family
+# vocabulary asks whether the select and defer branches actually partition the
+# outcome space, so a prompt could leave a gap (neither branch licensed) or an
+# overlap (both licensed) while CONFLICT_TO_DEFER_MAPPING reads absent_verified.
+DECISION_BRANCH_PARTITION = "DECISION_BRANCH_PARTITION"
 
 STRUCTURAL_ITEMS = (
     DANGLING_REFERENCE, EXPERIMENT_ARM_DISCLOSURE, DUPLICATE_CARRIER,
-    AMBIGUOUS_AXIS_PHRASING,
+    AMBIGUOUS_AXIS_PHRASING, DECISION_BRANCH_PARTITION,
 )
 
 # Q13.5: families where `unknown` is not an acceptable terminal state. Listed
@@ -134,6 +140,28 @@ TARGET_CRITICAL = frozenset({
     RECORDED_FIELDS_ACCESS,
     GLOBAL_DEFAULT_PERMISSION,
 })
+
+
+# A policy sentence carrying an exception clause does not state an
+# unconditional rule: its state depends on whether the antecedent fires. The
+# 2026-08-16 independent review (R3) found the compiler reporting a flat
+# `present` for the tie-breaker prohibition even though it reads "...unless the
+# packet explicitly authorizes that basis", so whether it actually binds
+# depends on payload content the compiler never inspected. R3 did that check by
+# hand. An instrument that reports a conditional rule as unconditional invites
+# exactly that manual rescue.
+_EXCEPTION_CLAUSE = re.compile(
+    r"(?:,\s*)?\b(?:unless|except(?:\s+(?:where|when|for))?|other than)\b[^.]*",
+    re.IGNORECASE,
+)
+
+
+def _condition_on(span: str) -> "str | None":
+    """The exception clause qualifying a rule, if it carries one."""
+    if not span:
+        return None
+    match = _EXCEPTION_CLAUSE.search(span)
+    return match.group(0).strip(" ,") if match else None
 
 
 class CompilerContractError(Exception):
@@ -395,6 +423,58 @@ def detect_ambiguous_axis_phrasing(text: str) -> list[dict]:
     ]
 
 
+_SELECT_BRANCH = re.compile(
+    r"choose\s+select_type\s+(?:only\s+)?if\b([^.]*)", re.IGNORECASE)
+_DEFER_BRANCH = re.compile(
+    r"choose\s+defer\s+if\b([^.]*)", re.IGNORECASE)
+
+
+def detect_decision_branch_partition(text: str) -> dict:
+    """Do the select and defer branches partition the outcome space?
+
+    Reports, it does not decide. Literal complementarity is checkable
+    (`defer if NOT <select condition>`); anything else needs a reader to judge
+    whether the two conditions are complements under their intended reading,
+    and saying otherwise would be the instrument claiming a semantic
+    competence it does not have.
+
+    Exists because R5 (2026-08-16) showed CONFLICT_TO_DEFER_MAPPING can read
+    absent_verified while the branches still fail to partition -- absence of a
+    hard mapping is necessary, not sufficient.
+    """
+    flat = _join_wrapped(text)
+    select = _SELECT_BRANCH.search(flat)
+    defer = _DEFER_BRANCH.search(flat)
+    if not (select and defer):
+        return {
+            "branches_found": False,
+            "literal_complement": None,
+            "requires_reviewer_adjudication": True,
+            "note": "one or both decision branches were not located",
+        }
+
+    select_cond = " ".join(select.group(1).split()).strip(" ,")
+    defer_cond = " ".join(defer.group(1).split()).strip(" ,")
+    negations = ("not ", "neither ", "no ")
+    literal = any(defer_cond.lower().startswith(n) for n in negations) and (
+        select_cond.lower().lstrip("not ").strip() in defer_cond.lower()
+    )
+    return {
+        "branches_found": True,
+        "select_condition": select_cond,
+        "defer_condition": defer_cond,
+        "literal_complement": literal,
+        # Not a defect claim: non-literal wording can still be complementary
+        # under the only coherent reading, which is a judgment for a reader.
+        "requires_reviewer_adjudication": not literal,
+        "note": (
+            "The defer branch is not the literal negation of the select "
+            "branch. That may still be complementary under the intended "
+            "reading, but this module cannot establish it; a reviewer must."
+        ) if not literal else "The defer branch is the literal negation.",
+    }
+
+
 def detect_repeated_mentions(text: str) -> dict[str, int]:
     """Sentences that each independently express a family -- a CANDIDATE list.
 
@@ -455,6 +535,7 @@ def compile_policy_graph(
             # sec 9.6: undemonstrated detection returns unknown, never a
             # verified absence.
             state = UNKNOWN
+        condition = _condition_on(span) if found else None
         claims.append({
             "policy_id": family,
             "arm": arm,
@@ -465,6 +546,16 @@ def compile_policy_graph(
             "scope": "rendered_prompt",
             "referents": [],
             "capability_proven": family in proven,
+            # `present` alone would overstate a rule that only binds when its
+            # antecedent fails to fire (R3, 2026-08-16).
+            "conditional": condition is not None,
+            "condition": condition,
+            "condition_note": (
+                "This rule carries an exception clause, so its effective state "
+                "depends on content this module does not inspect (the payload). "
+                "Resolving whether the antecedent fires requires reading that "
+                "content."
+            ) if condition else None,
         })
 
     dangling = detect_dangling_reference(rendered_text)
@@ -486,6 +577,7 @@ def compile_policy_graph(
             DANGLING_REFERENCE: dangling,
             EXPERIMENT_ARM_DISCLOSURE: detect_experiment_arm_disclosure(rendered_text),
             AMBIGUOUS_AXIS_PHRASING: detect_ambiguous_axis_phrasing(rendered_text),
+            DECISION_BRANCH_PARTITION: detect_decision_branch_partition(rendered_text),
             # Candidate list only -- see detect_repeated_mentions' docstring.
             DUPLICATE_CARRIER: {
                 "repeated_mention_counts": detect_repeated_mentions(rendered_text),

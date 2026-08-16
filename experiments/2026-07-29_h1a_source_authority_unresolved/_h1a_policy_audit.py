@@ -75,6 +75,8 @@ NO_EXPECTED_COUNTERPART = "no_expected_counterpart"
 NO_OBSERVED_COUNTERPART = "no_observed_counterpart"
 MIXED_EXPECTATION = "mixed_expectation"
 STRUCTURAL_DEFECT = "structural_defect"
+CONDITIONAL_STATE = "conditional_state"
+REQUIRES_REVIEWER_ADJUDICATION = "requires_reviewer_adjudication"
 
 # sec 9.3's "별도 구조 항목" are defects in their own right, independent of any
 # family's present/absent state. `compare()` ignored them until 2026-08-16,
@@ -85,7 +87,8 @@ STRUCTURAL_IS_DEFECT = {
     sc.DANGLING_REFERENCE: True,
     sc.EXPERIMENT_ARM_DISCLOSURE: True,
     sc.AMBIGUOUS_AXIS_PHRASING: True,
-    sc.DUPLICATE_CARRIER: False,   # candidate list only -- see its docstring
+    sc.DUPLICATE_CARRIER: False,           # candidate list only
+    sc.DECISION_BRANCH_PARTITION: False,   # handled separately below
 }
 
 
@@ -211,6 +214,35 @@ def compare(observed: dict, expected: dict) -> dict:
                     "says -- this is drift, and the DSL is canonical"
                 ),
             })
+
+    # A rule qualified by an exception clause is not unconditionally in the
+    # state reported. Surfaced so a reader cannot take `present` as settled
+    # without checking whether the antecedent fires (R3, 2026-08-16).
+    for claim in observed["claims"]:
+        if claim.get("conditional"):
+            findings.append({
+                "kind": CONDITIONAL_STATE, "policy_id": claim["policy_id"],
+                "observed_state": claim["state"],
+                "condition": claim["condition"],
+                # NOT `target_critical`: that name means "this blocks", and a
+                # conditional state does not. Naming a non-blocking field as
+                # if it blocked is the kind of misleading label the 2026-08-16
+                # reviewers flagged elsewhere in this instrument.
+                "family_is_target_critical": claim["policy_id"] in sc.TARGET_CRITICAL,
+                "detail": claim["condition_note"],
+            })
+
+    partition = observed["structural"].get(sc.DECISION_BRANCH_PARTITION) or {}
+    if partition.get("requires_reviewer_adjudication"):
+        findings.append({
+            "kind": REQUIRES_REVIEWER_ADJUDICATION,
+            "structural_item": sc.DECISION_BRANCH_PARTITION,
+            "observed": partition,
+            # Deliberately not escalated: non-literal wording may still be
+            # complementary, and this module cannot decide which. It routes to
+            # a reviewer, it does not rule.
+            "detail": partition.get("note"),
+        })
 
     for item, is_defect in sorted(STRUCTURAL_IS_DEFECT.items()):
         if not is_defect:

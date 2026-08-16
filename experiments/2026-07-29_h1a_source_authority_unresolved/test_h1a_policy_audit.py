@@ -215,3 +215,61 @@ def test_expected_states_come_from_the_dsl_not_from_the_prompt():
     removed_entry = audit.expected_graph("removed")["expectations"][
         sc.SOURCE_META_REASONING_PROHIBITION]
     assert removed_entry["expected_state"] == sc.ABSENT_VERIFIED
+
+
+# --- findings the 2026-08-16 independent review asked the instrument to make
+# instead of leaving to a reviewer's manual check --------------------------
+
+def test_a_rule_with_an_exception_clause_is_reported_as_conditional():
+    """R3: the tie-breaker prohibition reads '...unless the packet explicitly
+    authorizes that basis', so whether it binds depends on payload content the
+    compiler never inspects. Reporting a flat `present` invited the manual
+    rescue R3 had to perform."""
+    report = audit.audit_arm(_rendered("PROHIBITION_REMOVED"), "removed",
+                             proven_families=PROVEN)
+    conditional = [f for f in report["findings"] if f["kind"] == audit.CONDITIONAL_STATE]
+    families = {f["policy_id"] for f in conditional}
+    assert sc.EVIDENCE_ITEM_PRESENTATION_ORDER_PROHIBITION in families
+    assert sc.GLOBAL_DEFAULT_PERMISSION in families
+    for finding in conditional:
+        assert finding["condition"]
+        # must not claim to block -- a conditional state is not a defect
+        assert "target_critical" not in finding
+
+
+def test_an_unconditional_rule_is_not_reported_as_conditional():
+    """Precision: the flag must distinguish, not decorate."""
+    graph = sc.compile_policy_graph(
+        "Do not use outside domain or ontology knowledge to supply facts.",
+        "removed", proven_families=PROVEN)
+    claim = next(c for c in graph["claims"]
+                 if c["policy_id"] == sc.OUTSIDE_DOMAIN_KNOWLEDGE_PROHIBITION)
+    assert claim["conditional"] is False
+    assert claim["condition"] is None
+
+
+def test_branch_partition_is_routed_to_a_reviewer_not_ruled_on():
+    """R5: absence of a conflict-to-defer mapping is necessary but not
+    sufficient for decision-mapping neutrality. The instrument now asks the
+    question instead of leaving it unasked -- but does not answer it."""
+    report = audit.audit_arm(_rendered("PROHIBITION_REMOVED"), "removed",
+                             proven_families=PROVEN)
+    [finding] = [f for f in report["findings"]
+                 if f["kind"] == audit.REQUIRES_REVIEWER_ADJUDICATION]
+    assert finding["structural_item"] == sc.DECISION_BRANCH_PARTITION
+    assert finding["observed"]["branches_found"] is True
+    assert finding["observed"]["literal_complement"] is False
+    assert "target_critical" not in finding, (
+        "routing to a reviewer is not a blocking claim"
+    )
+
+
+def test_branch_partition_recognises_a_literal_complement():
+    """Recall for the detector: if the branches ARE literal complements it
+    must say so, otherwise the check is a constant."""
+    text = ("Choose select_type if exactly one allowed type is warranted. "
+            "Choose defer if not exactly one allowed type is warranted.")
+    result = sc.detect_decision_branch_partition(text)
+    assert result["branches_found"] is True
+    assert result["literal_complement"] is True
+    assert result["requires_reviewer_adjudication"] is False
