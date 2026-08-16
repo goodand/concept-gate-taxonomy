@@ -446,6 +446,68 @@ QF-DEFER `material_unavailable`(L9 등록). `cohort_freeze`는 이 계층이
 판정하지 않는다. `freeze_status: FREEZE_BLOCKED`,
 `INDEPENDENT_SEMANTIC_REVIEW_PASSED = False` 유지.
 
+### 12. (2026-08-16) Q13.6 착수 — semantic compiler + capability gate
+
+**owlready2 게이트 red 해소 먼저**(HANDOFF §10.1 승인·적용). 이 저장소가 이미
+3곳에서 쓰는 optional-dep 스킵 관례를 이 테스트만 안 따라 맨손 checkout에서
+게이트가 red였다. `OPTIONAL_DEPS` 안의 이름일 때만 스킵하고 `conceptgate.X`
+부재는 계속 실패시킨다(진짜 drift). 스킵이 drift 탐지를 삼키지 않는지 양성
+테스트로 고정. **루트 게이트 8 passed / 0 failed / 1 blocked** — 이 세션 처음
+green. (Render 배포는 이 문제와 무관하다 — Render는 산출물이 도는 곳이고
+이건 로컬 테스트가 모듈을 직접 import하는 것이다.)
+
+**Q13.6 §9 구현**. 정본(typed policy DSL)은 이미 `_h1a_policy`에 있으므로
+만든 것은 **독립 drift auditor**다.
+
+- **독립성을 AST로 강제**. `_h1a_policy`엔 이미 `AXIS_SURFACE_TOKENS`가 있고
+  assertion 12가 그걸로 렌더 산문을 검사한다. compiler가 그걸 가져다 쓰면
+  렌더러를 렌더러 자신의 어휘로 검사하는 셈이라 **구성상 항상 동의**한다 —
+  F10과 오늘 오전 피험자 해시 가드에서 이미 두 번 당한 패턴이다. 주석으로
+  적으면 다음 세션이 편의상 import하므로 테스트로 막았다.
+- **fail-closed(§9.6)**. `proven_families` 밖의 침묵은 구조적으로
+  `absent_verified`가 될 수 없고 `unknown`이 된다. 기본값은 공집합.
+  아무것도 못 잡는 compiler는 무용하지만 무해하고, 입증 없이 verified
+  absence를 내는 compiler는 **금지가 arm에 살아남는 경로**다(D-H1a-10이
+  실제로 그랬다).
+- `proven_families`는 fixture 실행으로 **계산**한다. 손으로 적은 목록은
+  썩어서 허위 커버리지 주장이 된다.
+
+**capability gate가 실제로 잡은 것** — 코드를 확인해준 게 아니라 결함을
+찾았다. `CONFLICT_TO_DEFER_MAPPING` detector가 실제 렌더 문장(hard mapping의
+**정반대**인 "does not by itself require either selection or deferral")에
+`found=True`를 냈다. boolean이 자기 family 이름과 어긋나 모든 호출자가
+오독할 상태였다. 수정.
+
+**미입증으로 남긴 것(정직하게 보고, regex로 맞춰 지우지 않음)**:
+`GLOBAL_DEFAULT_PERMISSION`이 조건부·필드범위축소 형태를 놓친다(**target-critical
+이라 Q13.5상 freeze 전 해소 필요**). `EVIDENCE_COUNT`·`TEXT_TYPE_SUPPORT`는
+fixture 미작성. 셋 다 침묵이 `unknown`으로 나가므로 안전한 방향이다.
+
+`detect_duplicate_carrier`는 **`detect_repeated_mentions`로 재규정**했다.
+한 정책이 여러 문장에 걸친 것과 carrier가 둘인 것을 구별하지 못하는데
+(실측: outside-domain 3, 그 외 2), 그 판별에는 carrier registry가 필요하고
+이 모듈은 그걸 읽으면 안 된다. 권위 있어 보이는데 아닌 검사는 믿어버리므로
+`establishes_duplicate_carriage: false`를 명시한 후보 목록으로 낮췄다.
+
+**핵심 결과**: 정책 모듈을 한 번도 참조하지 않은 auditor가 실제 렌더
+프롬프트에서 `SOURCE_META_REASONING_PROHIBITION`을 **KEPT=present /
+REMOVED=absent_verified**로 관측했다. 첫 코호트를 비식별로 만든 바로 그
+대비에 대한 **독립 증거**다. 양 arm 모두 arm 메타언어 노출 0건, dangling
+reference 0건(Q13이 지운 문장의 회귀 검사).
+
+게이트: H1a 256 passed/1 skipped, 루트 8 passed/0 failed/1 blocked.
+
+**남은 것 (Q13.5/13.6 완료까지)**:
+- expected policy graph 생성 + 관측 graph와 **비교** 단계(§9.4 화살표 마지막)
+- `GLOBAL_DEFAULT_PERMISSION` 탐지 능력 확보 — target-critical이라 필수
+- `EVIDENCE_COUNT`·`TEXT_TYPE_SUPPORT` fixture
+- **Q13.5 reviewer capability gate** — blinded mutation pack, 리뷰어별 배정
+  범위 선언, 최소 1건 탐지 못 하면 그 리뷰어의 "문제 없음"을 freeze 승인으로
+  계산하지 않음
+- 그 다음에야 독립 리뷰 전면 재실행 → `repaired_cohort_trials` 40건
+
+---
+
 ---
 
 ## 2026-08-06 — D-H1a-12 §16 구현(조건 1~10) + 독립 리뷰 5차 → FREEZE_BLOCKED
