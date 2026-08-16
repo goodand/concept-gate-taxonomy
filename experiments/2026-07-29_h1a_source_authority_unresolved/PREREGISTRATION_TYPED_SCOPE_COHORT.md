@@ -145,15 +145,18 @@ qualification:
     required_rate: 0.80
 ```
 
-> ⚠️ **2026-08-15 amendment는 2026-08-16 적대 검토에서 채택되지 않았고
-> 철회됐다.** 아래 yaml과 "두 control 중 하나라도" 문구가 **현행 규범**이다.
-> 철회 경위와 근거는 §5c(철회 표시된 원문 보존) 및
-> `docs/feedback/h1a_qf_defer_amendment_review_20260816.md`.
-> 현재 gate 상태: QF-SELECT 5/5 통과, QF-DEFER 미시행(재료 부재) →
-> **`cohort_freeze: blocked`**. 이는 결함이 아니라 이 판정문이 의도한
-> 동작이며, 해소에는 Q14 판정이 필요하다(코드 변경이 아니라).
+> ⚠️ **아래 "두 control 중 하나라도 → cohort_freeze: blocked" 규칙은
+> D-H1a-14/15(2026-08-16 수령)로 철회됐다.** 현행 규범은 **§5f**다.
+> 이 절의 나머지(독립 control, 별도 trial, 비풀링, floor/ceiling 진단)는
+> **그대로 유지**된다 — 판정문이 명시적으로 보존을 지시했다.
+>
+> 이력: 2026-08-15에 운영 세션이 **판정 없이** QF-DEFER만 강등했다가
+> 적대 검토에서 철회했고(§5c), 그 뒤 재상신해 받은 것이 D-H1a-14/15다.
+> 판정은 더 나아가 **두 control 모두** non-blocking으로 하고 freeze 권한
+> 자체를 식별 계약으로 분리했다. **결론이 수렴했다고 절차가 정당화되지는
+> 않는다** — §5c는 그 구분을 위해 남긴다.
 
-두 control 중 하나라도 기준 미달이면:
+두 control 중 하나라도 기준 미달이면(**철회됨 — §5f 참조**):
 
 ```yaml
 cohort_freeze: blocked
@@ -181,14 +184,17 @@ rate=1.0, `passes: true`). 산출물: `h1a_qualification_manifest.json`
 D-H1a-13이 명시하지 않은 운영상 결정이며 근거는
 `_h1a_qualification_run.py` 모듈 docstring에 기록.
 
-**현재 gate 판정 (2026-08-16 기준)**: `cohort_freeze: blocked`.
-QF-SELECT는 통과했으나 QF-DEFER가 **미시행**(재료 부재)이라 "둘 다 통과"
-요건을 못 채운다. 기록은 `status: material_unavailable` +
-`qualification_incomplete_reason`로 **"시행됐는데 실패"와 "시행 자체가
-안 됨"을 구분**한다 — 시행되지 않은 진단을 피험자가 실패한 것처럼
-기록하지 않기 위해서다. (2026-08-15 score 파일은 amendment 하의
-`allowed`를 기록했었고 커밋 `3916ac2`에 이력으로 남아 있다. 원시 5출력은
-동일하며 채점 규칙만 원복됐다.) 상세는 `OPERATIONS_LOG.md` §8·§9.
+**현재 진단 상태 (D-H1a-14/15 적용 후)**: QF-SELECT `passed`(5/5),
+QF-DEFER `material_unavailable`. `cohort_freeze`는 이 모듈이 판정하지
+않는다 — `{determined_by: identification_contract}`. QF-DEFER 미시행은
+**L9로 등록**(§5e)되며 코호트를 막지 않는다. 기록은 `material_unavailable`과
+`failed`를 구분해 유지한다(Q14.2) — 시행되지 않은 진단을 피험자가 실패한
+것처럼 기록하지 않기 위해서다.
+
+이력: 2026-08-15 score 파일은 무판정 강등 하의 `allowed`를(커밋 `3916ac2`),
+철회 후에는 `blocked`를 기록했다. 원시 5출력(`h1a_qualification_raw.json`)은
+그 사이 **한 번도 바뀌지 않았다** — 바뀐 것은 채점·해석 규칙뿐이다.
+상세는 `OPERATIONS_LOG.md` §8·§9·§10.
 
 ### 5c. 2026-08-15 AMENDMENT — QF-DEFER 강등 — **철회됨 (2026-08-16)**
 
@@ -295,30 +301,124 @@ hard-gate 지위는 그대로다. "always select" ceiling도 QF-DEFER가 막으�
 문서는 그 질문을 **결정하지 않고 다음 항에 남긴다** — 요청받지 않은
 범위 확장은 이 저장소가 경계하는 바로 그 실패 모드다.
 
-### 5d. 열린 질문 — **Q14·Q15 재상신 (2026-08-16)**
+### 5d. Q14·Q15 재상신 (2026-08-16) — **판정 도착**
 
-**Q15**: QF-SELECT도 QF-DEFER와 대칭으로 non-blocking화해야 하는가?
+Q14와 Q15를 **하나의 요청서에** 상신했다
+(`correspondence/DESIGN_REQUEST_H1a_qualification_gate_scope.md`). 분리해서
+묻는 것 자체가 적대 검토(축 C)가 지적한 결함이었기 때문이다 — 강등 근거가
+두 control에 대칭 적용되므로 한쪽만 묻고 한쪽만 바꾸면 그 비대칭은 원리가
+아니라 "무엇을 물었나"의 산물이 된다.
 
-2026-08-16 적대 검토(축 C)가 지적한 대로, 이 질문을 §5c와 **분리해서**
-다루는 것 자체가 결함이었다 — §5c의 근거(README §2, `M_allowed`)는 두
-control에 **대칭적으로** 적용되므로, QF-DEFER만 강등한 비대칭은 원리적
-구분이 아니라 **"무엇을 물었나"의 산물**이다("always select" ceiling도
-QF-DEFER가 막으려는 것과 같은 spurious-null 실패 모드를 만든다).
+**판정 수령: `DESIGN_DECISION_H1a_qualification_gate_scope.md`(D-H1a-14/15).**
+Q14=E(gate 재설계), Q15=G(둘 다 non-blocking). 내용은 §5f.
 
-따라서 Q14와 Q15를 **하나의 요청서에 함께** 외부 판정 채널로 상신한다:
-`correspondence/DESIGN_REQUEST_H1a_qualification_gate_scope.md`.
-그 판정이 오기 전까지 §5a 원안(둘 다 필수)이 유효하며
-`cohort_freeze: blocked`가 유지된다.
+### 5e. L9 등록 (D-H1a-14/15)
 
-### 5e. L9 등록 — **철회됨 (2026-08-16)**
+> 2026-08-15에 L9를 등록했다가 철회한 적이 있다. 그때는 **무판정 강등의
+> 부산물**이었고, 재료 부재를 "한계"로 등록하면 미해소 blocker를 잘못
+> 표기하는 것이었다. 지금은 다르다 — 판정문이 "그 방향의 capability는
+> 독립적으로 진단되지 않음을 **한계로 등록**한다"고 직접 명령했고,
+> 동시에 그것이 blocker가 아님을 확정했다. 같은 번호, 다른 근거.
 
-> ⚠️ **L9는 등록되지 않는다.** L9는 §5c의 강등을 전제로 "QF-DEFER 부재를
-> 비차단 한계로 등록한다"는 것이었는데, 그 전제가 철회됐다. QF-DEFER
-> 재료 부재는 **한계(limitation)가 아니라 미해소 blocker**다 — L1~L4·L8과
-> 같은 급의 선언적 한계로 등록하면 "실험이 이 제약을 안고 진행됐다"는
-> 뜻이 되어, 실제 상태("gate가 완주되지 못했다")를 잘못 표기한다.
-> 아래 원문은 이력 보존이며 **인용 금지**. 다음 L 번호는 L9가 아니라
-> **L9부터 다시 사용 가능**하다(이 등록이 발효된 적이 없으므로).
+```text
+L9 — Ceiling-direction capability not independently diagnosed
+
+The QF-DEFER capability diagnostic was not administered: no repo-grounded,
+same-source_kind conflicting-type material for it exists in this repository
+(exhaustive eligibility-aware enumeration, 2026-08-15), and D-H1a-14/15 Q14.1
+forbids manufacturing one by reusing the confirmatory 칼/철 fixture.
+
+Accordingly the trial subject's deferral capability is recorded as UNKNOWN,
+not as absent or failed. Q14.2: material_unavailable licenses no negative
+conclusion about the subject. Per Q15=G this does not block the cohort;
+freeze is determined by the identification contract alone.
+
+Reporting consequence: a null or small confirmatory effect must not be
+reported as ruling out an always-select (ceiling) saturation explanation.
+A non-null effect is not affected by this limitation. Where the main cohort
+itself shows both select_type and defer occurring across arms, that data
+independently bears on the saturation question.
+```
+
+**보고 제한**: "the instrument was shown to be free of ceiling effects" 금지.
+"defer capability was tested and failed" **금지**(시행되지 않았다).
+"QF-SELECT passed, therefore both directions are sound" 금지 — QF-SELECT는
+floor 방향만 진단한다.
+
+**L1~L4·L8과의 관계**: 서로 다른 축이며 어느 것도 다른 것을 포섭하지 않는다.
+
+### 5f. 현행 규범 — capability diagnostics (D-H1a-14/15)
+
+**Q14=E / Q15=G.** qualification control은 **freeze 전제조건이 아니다.**
+판정문의 근거: `IndependentDiagnostic ⇏ HardFreezePrerequisite` —
+"독립적으로 측정한다"와 "통과 못 하면 본 실험을 실행할 수 없다"는 서로 다른
+설계 결정이고, 식별가능성 C에 대해 `C → (S ∧ D)`는 tautology가 아니다.
+또 두 control은 대칭이다(`Role(QF_SELECT) = Role(QF_DEFER)`) — 실패가 같은
+포화 위험의 좌우 대칭이기 때문이다.
+
+```yaml
+capability_diagnostics:                 # Q13.3에서 보존된 부분
+  independent_fixtures: true
+  separate_trials: true
+  pooled_with_main_cohort: false
+  trials_per_control: 5
+  required_rate: 0.80
+  controls_are_freeze_prerequisites: false   # ← 철회된 부분
+
+  qf_select: { probes: floor_saturation }
+  qf_defer:  { probes: ceiling_saturation }
+
+  status_taxonomy: [passed, failed, material_unavailable]
+  # material_unavailable ≠ failed. 같은 category를 공유하지 않는다(Q14.2).
+
+qualification_surface:                  # Q14.3
+  name: QUALIFICATION_COMMON
+  treatment_arm: none
+  policy_role: treatment_invariant
+  byte_source: COMMON_WITHOUT_Q1
+  must_equal_current_removed_bytes: true
+
+confirmatory_fixture_reused_as_capability_control: false   # Q14.1
+
+freeze:
+  determined_by: identification_contract
+  capability_diagnostics_control_freeze: false
+```
+
+**해석 규약**:
+
+| 진단 결과 | 결과 해석 |
+|---|---|
+| 둘 다 통과 | floor·ceiling 대안 설명이 모두 독립적으로 약화됨 |
+| 하나 실패 | 코호트 실행 가능. **null/작은 효과**를 그 방향의 포화로 설명하는 것을 배제하지 못한다. **비-null 효과는 무효화되지 않는다** |
+| 하나 미시행 | 코호트 실행 가능. 그 방향은 독립 진단되지 않음(unknown). **실패로 취급 금지** |
+
+**Q14.3 재분류 — 기존 5건 재실행 불필요**: 판정문은 byte identity 검증을
+조건으로 재사용을 허가했다. 실측 확인: `render_qualification_surface()`가
+`render_arm(..., "PROHIBITION_REMOVED")`와 **바이트 동일**이고, 기존 5건이
+실제로 받은 `rendered_prompt_sha256`(`fd793fc7…`)과 일치한다. 이 조건은
+프로즈가 아니라 코드로 고정됐다
+(`_h1a_qualification_run._assert_recorded_trials_match_the_qualification_surface`) —
+한 바이트라도 달라지면 기존 5건은 historical diagnostic이 되고 재실행이
+필요하므로, 사람이 알아채는 데 맡길 수 없다.
+
+```yaml
+surface:
+  old_label: PROHIBITION_REMOVED
+  reclassified_as: QUALIFICATION_COMMON
+  byte_identity_verified: true
+```
+
+### 5g. 거버넌스 규칙 (D-H1a-14/15가 부과)
+
+> **기존 판정에서 `freeze_blocker`인 조건을 `diagnostic`으로 낮추거나 그
+> 반대로 승격하는 변경은 구현 변경이 아니라 estimand/governance 변경으로
+> 취급하고, 외부 판정 전에는 실행하지 않는다.**
+
+2026-08-15 위반에 대해 판정문이 부과한 유일한 새 제약이다. 판정문은 그
+집행이 "결론의 옳고 그름과 별개로 절차 위반"이라는 기록을 **유지하라**고
+명시했다 — 이 판정이 같은 방향으로 결론났다는 사실이 그때의 절차를
+정당화하지 않는다.
 
 ```text
 L9 — QF-DEFER ceiling diagnostic unavailable

@@ -334,6 +334,79 @@ def insert_liveness_clause(text: str) -> str:
     )
 
 
+QUALIFICATION_SURFACE = "QUALIFICATION_COMMON"
+
+
+def render_qualification_surface(template: str, policy_module=None) -> str:
+    """The capability-diagnostic surface -- D-H1a-14/15 Q14.3.
+
+    Qualification controls do not belong to either treatment arm. The ruling
+    defines their surface as the common policy-filled template with Q1's
+    liveness clause absent, and freezes it as byte-equal to what
+    `render_arm(..., "PROHIBITION_REMOVED")` currently produces:
+
+        qualification_surface:
+          policy_role: treatment_invariant
+          byte_source: COMMON_WITHOUT_Q1
+          must_equal_current_removed_bytes: true
+
+    No new prose is authored -- the ruling is explicit that borrowing REMOVED's
+    BYTES is fine and that what matters is the CONTRACT that qualification is
+    not a treatment condition. `assert_qualification_surface_is_treatment_invariant`
+    is that contract; this function is only the renderer.
+
+    Naming it `QUALIFICATION_COMMON` rather than reusing the arm label is the
+    point: a reader must not be able to conclude from the manifest that the
+    diagnostic ran "in the REMOVED condition".
+    """
+    return _fill_policy_slots(template, "PROHIBITION_REMOVED", policy_module=policy_module)
+
+
+def assert_qualification_surface_is_treatment_invariant(
+    template: str, policy_module=None
+) -> None:
+    """The qualification surface must not depend on which arm it was built from.
+
+    Two propositions, both required by D-H1a-14/15 Q14.3:
+
+    1. `treatment_invariant` -- filling the policy slots from KEPT and from
+       REMOVED produces identical bytes. If they ever diverge, "the common
+       surface" is not well defined and a diagnostic rendered from it would
+       silently carry one arm's policy text.
+    2. `must_equal_current_removed_bytes` -- the frozen byte source is exactly
+       what `render_arm(..., "PROHIBITION_REMOVED")` produces, which is what
+       the existing QF-SELECT trials were rendered under. This is the
+       precondition the ruling attached to reusing those 5 trials instead of
+       re-running them.
+
+    Checked here rather than asserted in prose because the ruling made trial
+    reuse CONDITIONAL on it: if this ever fails, the recorded QF-SELECT
+    results stop being valid for the qualification surface and must be
+    re-run, and that must be discovered by the harness, not by a reader.
+    """
+    from_kept = _fill_policy_slots(template, "PROHIBITION_KEPT", policy_module=policy_module)
+    from_removed = _fill_policy_slots(template, "PROHIBITION_REMOVED", policy_module=policy_module)
+    if from_kept != from_removed:
+        raise ContractDriftError(
+            "qualification surface is not treatment-invariant: filling the "
+            "policy slots from PROHIBITION_KEPT and from PROHIBITION_REMOVED "
+            "produced different bytes, so QUALIFICATION_COMMON has no "
+            "well-defined value (D-H1a-14/15 Q14.3 policy_role: "
+            "treatment_invariant)."
+        )
+
+    surface = render_qualification_surface(template, policy_module=policy_module)
+    removed_arm = render_arm(template, "PROHIBITION_REMOVED", policy_module=policy_module)
+    if surface != removed_arm:
+        raise ContractDriftError(
+            "QUALIFICATION_COMMON no longer equals the current "
+            "PROHIBITION_REMOVED bytes. D-H1a-14/15 Q14.3 permits reusing the "
+            "recorded QF-SELECT trials ONLY while this holds; if it is broken "
+            "deliberately, those trials become historical diagnostics and the "
+            "controls must be re-run on the new surface."
+        )
+
+
 def assert_no_residual_prohibition(removed_arm_text: str) -> None:
     """Structural guard first (normalized clause absence), keyword tripwire
     second -- the two-tier pattern manipulation-scope requirement 8 asks for.

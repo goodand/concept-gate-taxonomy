@@ -461,3 +461,58 @@ def test_render_arm_uses_the_exact_policy_module_a_caller_passes_in():
         "the production default path (no policy_module passed) must stay "
         "isolated from a module a test mutated under its own key"
     )
+
+
+# --- D-H1a-14/15 Q14.3: QUALIFICATION_COMMON ------------------------------
+
+def test_qualification_surface_equals_the_removed_arm_bytes():
+    """The ruling made reuse of the recorded QF-SELECT trials conditional on
+    exactly this identity, so it is pinned rather than assumed."""
+    t = template()
+    assert h1a_contract.render_qualification_surface(t) == h1a_contract.render_arm(
+        t, "PROHIBITION_REMOVED"
+    )
+
+
+def test_qualification_surface_carries_no_liveness_clause():
+    """`byte_source: COMMON_WITHOUT_Q1` -- the diagnostic surface must not
+    contain the manipulation under study."""
+    surface = h1a_contract.render_qualification_surface(template())
+    assert h1a_contract.LIVENESS_CLAUSE_TEXT not in surface
+
+
+def test_treatment_invariance_guard_passes_on_the_real_template():
+    """Precision: the guard must not fire on the shipping template."""
+    h1a_contract.assert_qualification_surface_is_treatment_invariant(template())
+
+
+def test_treatment_invariance_guard_fires_when_the_arms_fill_differently():
+    """Recall. Reuses the F10 `policy_module` injection: a policy module whose
+    blocks depend on the arm makes "the common surface" ill-defined, and the
+    guard must refuse rather than silently pick one arm's text.
+
+    Without this the guard is indistinguishable from a no-op -- the exact
+    defect class `test_guard_negative_coverage.py` exists to prevent."""
+    import importlib.util as _il, sys as _sys
+    key = "q143_invariance__policy"
+    spec = _il.spec_from_file_location(key, HERE / "_h1a_policy.py")
+    arm_dependent = _il.module_from_spec(spec)
+    _sys.modules[key] = arm_dependent
+    spec.loader.exec_module(arm_dependent)
+
+    original_render = arm_dependent.render_policy_block
+
+    def arm_dependent_render(arm):
+        blocks = original_render(arm)
+        if arm != "PROHIBITION_KEPT":
+            return blocks
+        return [
+            (cid, txt + " ARM_DEPENDENT_DRIFT" if cid == arm_dependent.CARRIER_DEFAULT else txt)
+            for cid, txt in blocks
+        ]
+    arm_dependent.render_policy_block = arm_dependent_render
+
+    with pytest.raises(h1a_contract.ContractDriftError, match="treatment-invariant"):
+        h1a_contract.assert_qualification_surface_is_treatment_invariant(
+            template(), policy_module=arm_dependent
+        )

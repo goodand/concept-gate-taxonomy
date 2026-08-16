@@ -1,78 +1,84 @@
-"""H1a qualification gate -- D-H1a-13 Q13.3, as ruled (both controls block).
+"""H1a capability diagnostics -- D-H1a-14/15 (supersedes D-H1a-13 Q13.3's gate).
 
-⚠️ 2026-08-15 AMENDMENT RETRACTED 2026-08-16
----------------------------------------------
-A 2026-08-15 amendment demoted QF-DEFER to a non-blocking diagnostic so
-`cohort_freeze` depended on QF-SELECT alone. Adversarial review the next day
-(`docs/feedback/h1a_qf_defer_amendment_review_20260816.md`) did not adopt it,
-on four blockers. The decisive one is self-inflicted: the Q14 request
-document that raised the question had already annotated this exact move --
-its own option D, "relax Q13.3's both-must-pass requirement" -- with "새 판정
-필요" (a new ruling is required), and the amendment proceeded without one.
+QF-SELECT and QF-DEFER are NON-BLOCKING capability diagnostics. They do not
+grant or withhold permission to run the confirmatory cohort. The ruling
+separated the two authorities:
 
-The review also found the change was a structural regression: Q13.3 exists
-precisely because independent review F6 judged an *interpretation condition*
-insufficient and replaced it with a *hard gate*. Demoting QF-DEFER to a
-recorded limitation converted that half back into an interpretation
-condition -- the form F6 condemned -- via an operating session's own
-re-registration, which is the shape of defect F6 flagged.
-
-This module is therefore back to the ruling as written: BOTH controls must
-pass. QF-DEFER's material does not exist (Q14), so the gate blocks. That is
-the ruling working, not a defect to route around. The question is resubmitted
-as Q14 (with Q15) through the external ruling channel; until it returns,
-`cohort_freeze` stays blocked.
+    IDENTIFICATION CONTRACT -> freeze
+    CAPABILITY DIAGNOSTICS  -> interpretation strength
 
 WHY THIS MODULE EXISTS
 -----------------------
 D-H1a-13 Q13.3 withdrew the old "if both arms of this cohort fall into the
 same modal behavior category" ceiling condition (PREREGISTRATION_TYPED_SCOPE_COHORT.md
-sec 5, now WITHDRAWN): independent review 20260806 (F6, MAJOR) found that
-condition restated the primary result rather than providing independent
-floor/ceiling information, and that its own re-registration had silently
-added unapproved normative text.
+sec 5, WITHDRAWN): independent review 20260806 (F6, MAJOR) found it restated
+the primary result instead of providing independent floor/ceiling
+information, and that its own re-registration had silently added unapproved
+normative text.
 
-The replacement is a qualification gate SEPARATE from the confirmatory
-cohort: two small, non-target fixtures with an unambiguous expected
-behavior (QF-SELECT: exactly one type is warranted; QF-DEFER: neither type
-is uniquely warranted), run BEFORE the confirmatory cohort, not pooled with
-it, and not counted toward D-H1a-11's licensed-path contrast.
+Q13.3's replacement -- independent, non-pooled, separately-run fixtures --
+is PRESERVED by D-H1a-14/15. What that ruling withdrew is only the coupling
+"a control failed or is missing -> cohort_freeze: blocked", on the grounds
+that `IndependentDiagnostic` does not entail `HardFreezePrerequisite`:
+identifiability (C) does not logically require both controls to pass, and
+`C -> (S AND D)` is not a tautology.
 
-WHY THE ARGUMENT FOR DEMOTING QF-DEFER DID NOT SURVIVE
--------------------------------------------------------
-Recorded because the reasoning was plausible enough to be acted on once,
-and a future session will meet it again. The retracted amendment argued:
+Q15=G additionally made the two controls symmetric -- `Role(QF_SELECT) =
+Role(QF_DEFER)` -- because their failures are mirror images of one saturation
+risk:
 
-  - README.md sec 2 defines a purely descriptive estimand and says nothing
-    about needing to prove defer capability first; and
-  - DESIGN_DECISION_H1a_residual_prohibition.md sec 3's identifiability
-    test `M_allowed = NOT Q1 AND NOT Q7` is about ARM DESIGN permissions,
-    not trial-subject capability, so QF-DEFER sits outside it.
+    QF-SELECT fail -> always-defer possible  -> floor saturation
+    QF-DEFER  fail -> always-select possible -> ceiling saturation
 
-Both citations are textually accurate. The inference from them is not.
-Q13.3 never derived QF-SELECT/QF-DEFER from `M_allowed` -- those constructs
-did not exist when D-H1a-10 was written -- so `M_allowed`'s silence about
-QF-DEFER was never in dispute and licenses nothing. Q13.3 introduced the
-two controls for a separate stated purpose: preventing a null or
-same-modal-category confirmatory result from being misread as a genuine
-null effect when it could instead be an instrument floor/ceiling artifact.
-Arguing from an unrelated document's silence is a non-sequitur.
+so the status vocabulary here is control-agnostic by design.
 
-The amendment's own text also conceded that the protection is load-bearing
-exactly when the confirmatory result turns out null -- yet switched it off
-prospectively, at zero trials, before anyone could know whether that is the
-case. A safeguard removed for precisely the scenario its own rationale says
-it exists for.
+HOW A DIAGNOSTIC OUTCOME IS READ
+---------------------------------
+  both pass          : floor and ceiling explanations independently weakened
+  one fails          : cohort still runs; a null/small effect must NOT be
+                       reported as ruling out that saturation explanation.
+                       A NON-null effect is not invalidated.
+  one unavailable    : cohort still runs; that direction is simply not
+                       independently diagnosed. Recorded as unknown, and
+                       explicitly NOT as failure -- it licenses no negative
+                       conclusion about the trial subject (Q14.2).
+
+HISTORY -- a retracted amendment, kept because the argument was persuasive
+--------------------------------------------------------------------------
+On 2026-08-15 this session demoted QF-DEFER to non-blocking WITHOUT a ruling,
+and adversarial review retracted it the next day
+(`docs/feedback/h1a_qf_defer_amendment_review_20260816.md`). D-H1a-14/15 then
+reached a compatible conclusion through the proper channel -- and went
+further, applying it symmetrically to BOTH controls.
+
+The outcome converging does not vindicate the procedure. Two of the review's
+findings stand independently of where the ruling landed:
+
+  - The Q14 request document had itself annotated that exact move with
+    "새 판정 필요" (a new ruling is required). Acting anyway was the defect,
+    regardless of the answer.
+  - The amendment's stated grounds were a non-sequitur: it argued from
+    `M_allowed = NOT Q1 AND NOT Q7`'s silence about QF-DEFER, but Q13.3 never
+    derived the controls from `M_allowed` (they did not exist when D-H1a-10
+    was written). D-H1a-14/15 reaches the same demotion from an entirely
+    different and valid argument -- the diagnostic/prerequisite distinction.
+    Being right by luck is not being right.
+
+D-H1a-14/15 accordingly imposed one standing rule:
+
+    Moving a condition between `freeze_blocker` and `diagnostic` in either
+    direction is an estimand/governance change, not an implementation
+    change, and must not be executed before an external ruling.
 
 WHAT THIS MODULE DOES NOT DO
 -----------------------------
-It does not construct or freeze the QF-SELECT/QF-DEFER fixtures. QF-SELECT
-is grounded (`fixture_qf_select.json`); QF-DEFER has no repo-grounded
-material (Q14, still open), so the gate cannot currently complete. This
-module is the DETERMINISTIC SCORING contract -- given raw trial outputs, it
-classifies them (via `_coder.code`, never `rationale`, same P5 discipline
-as the main cohort) and applies the pass/fail rule. It is independently
-testable with synthetic outputs and does not require the fixtures to exist.
+It does not construct or freeze the fixtures. QF-SELECT is grounded
+(`fixture_qf_select.json`); QF-DEFER has no repo-grounded material (Q14), and
+per Q14.1 the confirmatory 칼/철 fixture must NOT be reused to manufacture
+one. This module is the DETERMINISTIC SCORING contract -- given raw trial
+outputs it classifies them (via `_coder.code`, never `rationale`, same P5
+discipline as the main cohort). It is independently testable with synthetic
+outputs and does not require the fixtures to exist.
 
 Stdlib only.
 """
@@ -95,16 +101,47 @@ _EXPECTED_CATEGORY = {
     QF_DEFER: _coder.DEFERRAL,
 }
 
-FLOOR_OR_CEILING_FAILURE = "floor_or_ceiling_failure"
+# Control-agnostic status vocabulary (D-H1a-14/15 Q14.2's recommended block).
+# Not prefixed per-control because Q15=G made the two roles identical:
+# `Role(QF_SELECT) = Role(QF_DEFER)`. A defer-only vocabulary would re-encode
+# the asymmetry the ruling rejected.
+DIAGNOSTIC_PASSED = "passed"
+DIAGNOSTIC_FAILED = "failed"
+MATERIAL_UNAVAILABLE = "material_unavailable"
 
-# QF-DEFER outcome states (2026-08-15 amendment). Distinct from QF-SELECT's
-# plain pass/fail because "material never existed" and "material existed and
-# the subject failed the diagnostic" carry different reporting obligations --
-# collapsing them would be exactly the "DEFER capability failed != DEFER
-# material unavailable" confusion the design consultation flagged.
-DEFER_MATERIAL_UNAVAILABLE = "material_unavailable"
-DEFER_DIAGNOSTIC_PASSED = "diagnostic_passed"
-DEFER_DIAGNOSTIC_FAILED = "diagnostic_failed"
+# Q14.2: these two must NOT collapse into one category. "could not be tested"
+# and "was tested and did not show the expected behavior" are epistemically
+# different, and the ruling is explicit that `material_unavailable` licenses
+# NO negative conclusion about subject capability.
+_IMPLIES_SUBJECT_FAILURE = {
+    DIAGNOSTIC_PASSED: False,
+    DIAGNOSTIC_FAILED: True,
+    MATERIAL_UNAVAILABLE: False,
+}
+
+# Which saturation risk each control probes (ruling's failure-mode table):
+#   QF-SELECT fail -> always-defer possible  -> floor saturation
+#   QF-DEFER  fail -> always-select possible -> ceiling saturation
+_RISK_DIRECTION = {
+    QF_SELECT: "floor",
+    QF_DEFER: "ceiling",
+}
+
+# Retired 2026-08-16 (D-H1a-14/15). The name encoded the hard-gate era: it
+# named a GATE OUTCOME that blocked the cohort. Under the ruling the controls
+# do not gate anything, so a "failure category" on the run itself would be a
+# category error. Failure is now recorded per control as a `status`, and its
+# consequence is an interpretation limit, not a block.
+# FLOOR_OR_CEILING_FAILURE = "floor_or_ceiling_failure"
+
+# Q13.3 approved this sentence and D-H1a-14/15 did not retract it -- it
+# restated the same obligation as `null_effect_requires_limitation: true`.
+# Kept VERBATIM rather than reworded to match the new vocabulary: silently
+# rewriting approved text is the F6 defect this experiment already paid for.
+APPROVED_NULL_EFFECT_SENTENCE = (
+    "A failed qualification gate must not be reported as evidence "
+    "of a null treatment effect."
+)
 
 
 class QualificationContractError(Exception):
@@ -136,72 +173,108 @@ def _score_one_control(control: str, outputs: list) -> dict:
     }
 
 
-def score_qualification(select_outputs: list, defer_outputs: "list | None" = None) -> dict:
-    """The whole gate, in one call.
+def _diagnose_control(control: str, outputs: "list | None") -> dict:
+    """One control's capability diagnostic.
 
-    Both controls are scored and BOTH must pass -- Q13.3 requires
-    "select_control: required_rate 0.80" AND "defer_control: required_rate
-    0.80", not either/or. A trial subject that reliably selects but never
-    defers (or vice versa) has not demonstrated the instrument responds to
-    its dependent variable in both directions.
-
-    `defer_outputs=None` means QF-DEFER was not run because no repo-grounded
-    material for it exists (Q14). That control therefore does not pass, so
-    the gate blocks -- which is what Q13.3 prescribes and NOT a defect to be
-    routed around. The `status` field records WHY it did not pass
-    (`DEFER_MATERIAL_UNAVAILABLE`, not `DEFER_DIAGNOSTIC_FAILED`) so the
-    record never claims the subject failed a diagnostic that was never
-    administered.
+    Returns a `status` and, when the control actually ran, the observed rate.
+    Deliberately emits NO `passes` boolean: a bare pass/fail invites callers
+    to re-derive a gate from it, which is the coupling D-H1a-14/15 removed.
     """
-    select_result = _score_one_control(QF_SELECT, select_outputs)
-
-    if defer_outputs is None:
-        defer_result = {
-            "control": QF_DEFER,
-            "status": DEFER_MATERIAL_UNAVAILABLE,
-            # An un-administered control has not met the required rate. The
-            # ruling's gate is "both pass"; "not run" is not "passed".
-            "passes": False,
+    if outputs is None:
+        return {
+            "control": control,
+            "status": MATERIAL_UNAVAILABLE,
+            # Q14.2: material_unavailable licenses NO negative conclusion
+            # about the trial subject's capability.
+            "subject_verdict": None,
+            "implies_subject_failure": _IMPLIES_SUBJECT_FAILURE[MATERIAL_UNAVAILABLE],
         }
-    else:
-        defer_result = _score_one_control(QF_DEFER, defer_outputs)
-        defer_result["status"] = (
-            DEFER_DIAGNOSTIC_PASSED if defer_result["passes"] else DEFER_DIAGNOSTIC_FAILED
-        )
 
-    gate_passes = select_result["passes"] and defer_result["passes"]
+    scored = _score_one_control(control, outputs)
+    met_rate = scored.pop("passes")
+    scored["status"] = DIAGNOSTIC_PASSED if met_rate else DIAGNOSTIC_FAILED
+    scored["implies_subject_failure"] = _IMPLIES_SUBJECT_FAILURE[scored["status"]]
+    if not met_rate:
+        scored["observed_risk"] = f"{_RISK_DIRECTION[control]}_susceptibility"
+    return scored
+
+
+def score_qualification(
+    select_outputs: "list | None" = None, defer_outputs: "list | None" = None
+) -> dict:
+    """Score both capability diagnostics -- D-H1a-14/15 (Q14=E, Q15=G).
+
+    These controls DO NOT gate anything. The ruling separated the two
+    authorities outright:
+
+        IDENTIFICATION CONTRACT -> freeze
+        CAPABILITY DIAGNOSTICS  -> interpretation strength
+
+    so this function reports what was observed and what that does (and does
+    not) license, and names `identification_contract` as freeze's owner
+    instead of issuing a verdict of its own. The old
+    `cohort_freeze: allowed|blocked` field was a verdict no freeze gate ever
+    read -- `_h1a_policy.assert_freezable` has never referenced qualification
+    -- so emitting it invited exactly the confusion this ruling resolved.
+
+    Both parameters default to None, symmetrically: Q15=G established
+    `Role(QF_SELECT) = Role(QF_DEFER)`, so neither control is privileged in
+    this signature. QF-DEFER is currently None because its material does not
+    exist in this repository (Q14).
+    """
+    select = _diagnose_control(QF_SELECT, select_outputs)
+    defer = _diagnose_control(QF_DEFER, defer_outputs)
+
+    def _observed(entry: dict):
+        if entry["status"] == MATERIAL_UNAVAILABLE:
+            return "unknown"
+        return entry["status"] == DIAGNOSTIC_PASSED
 
     result = {
-        "record_class": "h1a_qualification_score",
+        "record_class": "h1a_capability_diagnostics",
+        "ruling": "D-H1a-14/15",
         "required_rate": REQUIRED_RATE,
         "trials_per_control": TRIALS_PER_CONTROL,
-        QF_SELECT: select_result,
-        QF_DEFER: defer_result,
-        "cohort_freeze": "allowed" if gate_passes else "blocked",
+        "capability_diagnostics": {"qf_select": select, "qf_defer": defer},
+        "diagnostic_summary": {
+            "select_capability_observed": _observed(select),
+            "defer_capability_observed": _observed(defer),
+            # "checked" means the diagnostic was administered at all, whatever
+            # its outcome -- an executed-and-failed check IS independent
+            # information about that risk; an un-run one is not.
+            "floor_risk_independently_checked": select["status"] != MATERIAL_UNAVAILABLE,
+            "ceiling_risk_independently_checked": defer["status"] != MATERIAL_UNAVAILABLE,
+        },
+        # Not a verdict -- a pointer to who owns the verdict.
+        "cohort_freeze": {"determined_by": "identification_contract"},
     }
-    if not gate_passes:
-        result["result_category"] = FLOOR_OR_CEILING_FAILURE
-        # Q13.3's own required sentence -- analysis/reporting contract only,
-        # never rendered into the model-facing prompt.
-        result["reporting_note"] = (
-            "A failed qualification gate must not be reported as evidence "
-            "of a null treatment effect."
-        )
 
-    if defer_result["status"] == DEFER_MATERIAL_UNAVAILABLE:
-        # Descriptive bookkeeping, NOT a new normative category. Q13.3
-        # prescribes one result_category for a non-passing gate and this does
-        # not add a second; it records which of the two ways QF-DEFER failed
-        # to pass, so a reader never mistakes "never administered" for
-        # "administered and failed". Whether the ruling intends these two to
-        # share a result_category at all is an open question submitted as
-        # Q14.2 -- it is asked, not answered here.
-        result["qualification_incomplete"] = True
-        result["qualification_incomplete_reason"] = (
-            "QF-DEFER was not administered: no repo-grounded, same-source_kind "
-            "conflicting-type material exists for it (Q14). This is not a "
-            "diagnostic failure by the trial subject. The gate blocks because "
-            "D-H1a-13 sec 6 requires both controls to pass; resolving it "
-            "requires the Q14 ruling, not a code change."
-        )
+    failed = [e for e in (select, defer) if e["status"] == DIAGNOSTIC_FAILED]
+    unavailable = [e for e in (select, defer) if e["status"] == MATERIAL_UNAVAILABLE]
+
+    if failed:
+        result["interpretation"] = {
+            "null_effect_requires_limitation": True,
+            "nonzero_effect_invalidated": False,
+            "affected_controls": [e["control"] for e in failed],
+            # Verbatim Q13.3 text, not reworded (see APPROVED_NULL_EFFECT_SENTENCE).
+            "approved_reporting_sentence": APPROVED_NULL_EFFECT_SENTENCE,
+            "note": (
+                "A null or small effect must not be reported as ruling out the "
+                "corresponding floor/ceiling explanation. A non-null effect is "
+                "NOT invalidated by a failed capability diagnostic."
+            ),
+        }
+    if unavailable:
+        result["unavailable_diagnostics"] = {
+            "controls": [e["control"] for e in unavailable],
+            "record_as_unknown": True,
+            "treat_as_failure": False,
+            "note": (
+                "Capability in this direction was not independently diagnosed. "
+                "This licenses no negative conclusion about the trial subject "
+                "(Q14.2) and does not block the cohort (Q15=G). Registered as "
+                "a limitation, not a blocker."
+            ),
+        }
     return result

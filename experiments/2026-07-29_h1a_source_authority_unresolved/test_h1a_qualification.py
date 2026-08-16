@@ -1,18 +1,22 @@
-"""Tests for the D-H1a-13 Q13.3 qualification gate, as ruled: BOTH controls
-must pass at 0.80 or `cohort_freeze` is blocked.
+"""Tests for the H1a capability diagnostics -- D-H1a-14/15 (Q14=E, Q15=G).
 
-A 2026-08-15 amendment briefly demoted QF-DEFER to non-blocking; adversarial
-review the next day did not adopt it and it was retracted
-(`docs/feedback/h1a_qf_defer_amendment_review_20260816.md`,
-`PREREGISTRATION_TYPED_SCOPE_COHORT.md` sec 5c). These tests pin the ruled
-behavior, so reintroducing the demotion without a ruling fails here first.
+The controls are NON-BLOCKING: they never grant or withhold permission to run
+the confirmatory cohort. Two properties are load-bearing and each has a test
+that fails first if it is undone:
+
+  - `cohort_freeze` must never again become a verdict this module issues
+    (`test_cohort_freeze_is_a_pointer_not_a_verdict`). A 2026-08-15 amendment
+    and the pre-ruling code both emitted allowed/blocked here; the ruling
+    assigned that authority to the identification contract instead.
+  - the two controls must stay symmetric (`test_the_two_controls_are_treated
+    _symmetrically`). Q15=G rejected privileging either one, and the failure
+    modes are mirror images: QF-SELECT fail -> floor, QF-DEFER fail -> ceiling.
 
 Synthetic trial outputs only -- QF-SELECT has a real fixture
-(`fixture_qf_select.json`); QF-DEFER's material does not exist in this
-repository (Q14, still open) and its control is exercised here only via
-synthetic outputs to pin the SCORING contract independently of fixture
-availability, per this folder's convention of committing scorers before
-any trial data exists.
+(`fixture_qf_select.json`); QF-DEFER has no repo-grounded material (Q14) and
+per Q14.1 the confirmatory fixture must not be reused to manufacture one.
+Scoring is pinned independently of fixture availability, per this folder's
+convention of committing scorers before any trial data exists.
 """
 
 from __future__ import annotations
@@ -61,134 +65,185 @@ def _invalid_output() -> dict:
             "cited_evidence_ids": [], "rationale": "test"}
 
 
-# --- both controls pass -----------------------------------------------
+PASSING_SELECT = [_select_output()] * 5
+PASSING_DEFER = [_defer_output()] * 5
+FAILING_SELECT = [_select_output()] * 3 + [_invalid_output()] * 2   # 0.6
+FAILING_DEFER = [_defer_output()] * 3 + [_select_output()] * 2      # 0.6
 
-def test_gate_passes_when_both_controls_meet_the_required_rate():
+
+def _diag(result: dict, control: str) -> dict:
+    return result["capability_diagnostics"][control]
+
+
+# --- the separation of authority the ruling installed ---------------------
+
+def test_cohort_freeze_is_a_pointer_not_a_verdict():
+    """The load-bearing regression. Before D-H1a-14/15 this module emitted
+    `cohort_freeze: allowed|blocked` -- a verdict no freeze gate ever read
+    (`_h1a_policy.assert_freezable` has never referenced qualification).
+    The ruling assigned freeze to the identification contract, so this field
+    may only name its owner."""
+    for kwargs in (
+        {"select_outputs": PASSING_SELECT, "defer_outputs": PASSING_DEFER},
+        {"select_outputs": FAILING_SELECT, "defer_outputs": FAILING_DEFER},
+        {"select_outputs": PASSING_SELECT},
+        {},
+    ):
+        result = qual.score_qualification(**kwargs)
+        assert result["cohort_freeze"] == {"determined_by": "identification_contract"}
+        assert result["cohort_freeze"] not in ("allowed", "blocked")
+
+
+def test_no_control_outcome_changes_the_freeze_field():
+    """Stronger form: the freeze field is invariant across every combination
+    of control outcomes. If any branch ever makes it vary, the coupling is
+    back."""
+    freeze_values = {
+        str(qual.score_qualification(select_outputs=s, defer_outputs=d)["cohort_freeze"])
+        for s in (PASSING_SELECT, FAILING_SELECT, None)
+        for d in (PASSING_DEFER, FAILING_DEFER, None)
+    }
+    assert len(freeze_values) == 1, freeze_values
+
+
+# --- Q15=G: the two controls are symmetric --------------------------------
+
+def test_the_two_controls_are_treated_symmetrically():
+    """Q15=G: `Role(QF_SELECT) = Role(QF_DEFER)`. Failing one must produce
+    the mirror image of failing the other -- same structure, opposite
+    saturation direction. An asymmetry here would re-encode exactly what the
+    ruling rejected."""
+    select_failed = qual.score_qualification(
+        select_outputs=FAILING_SELECT, defer_outputs=PASSING_DEFER)
+    defer_failed = qual.score_qualification(
+        select_outputs=PASSING_SELECT, defer_outputs=FAILING_DEFER)
+
+    assert _diag(select_failed, "qf_select")["status"] == qual.DIAGNOSTIC_FAILED
+    assert _diag(defer_failed, "qf_defer")["status"] == qual.DIAGNOSTIC_FAILED
+
+    # same keys on both sides -- no control carries extra machinery
+    assert set(_diag(select_failed, "qf_select")) == set(_diag(defer_failed, "qf_defer"))
+
+    # opposite risk directions
+    assert _diag(select_failed, "qf_select")["observed_risk"] == "floor_susceptibility"
+    assert _diag(defer_failed, "qf_defer")["observed_risk"] == "ceiling_susceptibility"
+
+    # and the interpretation block has the same shape either way
+    assert set(select_failed["interpretation"]) == set(defer_failed["interpretation"])
+
+
+def test_either_control_can_be_unavailable():
+    """The signature must not privilege one control. Q14 happens to be about
+    QF-DEFER, but nothing in the contract may assume that."""
+    only_defer = qual.score_qualification(defer_outputs=PASSING_DEFER)
+    assert _diag(only_defer, "qf_select")["status"] == qual.MATERIAL_UNAVAILABLE
+    assert only_defer["diagnostic_summary"]["floor_risk_independently_checked"] is False
+    assert only_defer["diagnostic_summary"]["ceiling_risk_independently_checked"] is True
+
+
+# --- both pass ------------------------------------------------------------
+
+def test_both_passing_weakens_both_saturation_explanations():
     result = qual.score_qualification(
-        select_outputs=[_select_output()] * 5,
-        defer_outputs=[_defer_output()] * 5,
-    )
-    assert result["cohort_freeze"] == "allowed"
-    assert result[qual.QF_SELECT]["passes"] is True
-    assert result[qual.QF_SELECT]["rate"] == 1.0
-    assert result[qual.QF_DEFER]["passes"] is True
-    assert "result_category" not in result
+        select_outputs=PASSING_SELECT, defer_outputs=PASSING_DEFER)
+    summary = result["diagnostic_summary"]
+    assert summary["select_capability_observed"] is True
+    assert summary["defer_capability_observed"] is True
+    assert summary["floor_risk_independently_checked"] is True
+    assert summary["ceiling_risk_independently_checked"] is True
+    assert "interpretation" not in result
+    assert "unavailable_diagnostics" not in result
 
 
-def test_gate_passes_at_exactly_the_required_rate_boundary():
+def test_passes_at_exactly_the_required_rate_boundary():
     """0.80 of 5 is 4/5 -- the boundary itself must pass (>=, not >)."""
-    select = [_select_output()] * 4 + [_invalid_output()]
-    result = qual.score_qualification(select_outputs=select, defer_outputs=[_defer_output()] * 5)
-    assert result[qual.QF_SELECT]["rate"] == 0.8
-    assert result[qual.QF_SELECT]["passes"] is True
-    assert result["cohort_freeze"] == "allowed"
-
-
-# --- either control failing blocks the whole gate ----------------------
-
-def test_gate_blocks_when_select_control_falls_below_the_rate():
-    select = [_select_output()] * 3 + [_invalid_output()] * 2  # 3/5 = 0.6
-    result = qual.score_qualification(select_outputs=select, defer_outputs=[_defer_output()] * 5)
-    assert result[qual.QF_SELECT]["passes"] is False
-    assert result[qual.QF_DEFER]["passes"] is True
-    assert result["cohort_freeze"] == "blocked"
-    assert result["result_category"] == qual.FLOOR_OR_CEILING_FAILURE
-
-
-def test_gate_blocks_when_defer_control_falls_below_the_rate():
-    """Recall in the OTHER direction: passing select alone is not enough --
-    Q13.3 requires both, not either/or.
-
-    A 2026-08-15 amendment briefly made this case return "allowed"; the
-    adversarial review of 2026-08-16 did not adopt that change
-    (docs/feedback/h1a_qf_defer_amendment_review_20260816.md). This test is
-    what fails first if the demotion is reintroduced without a ruling."""
-    defer = [_defer_output()] * 3 + [_select_output()] * 2  # 3/5 = 0.6
-    result = qual.score_qualification(select_outputs=[_select_output()] * 5, defer_outputs=defer)
-    assert result[qual.QF_SELECT]["passes"] is True
-    assert result[qual.QF_DEFER]["passes"] is False
-    assert result[qual.QF_DEFER]["status"] == qual.DEFER_DIAGNOSTIC_FAILED
-    assert result["cohort_freeze"] == "blocked"
-    assert result["result_category"] == qual.FLOOR_OR_CEILING_FAILURE
-
-
-def test_gate_blocks_when_defer_material_is_unavailable():
-    """The current real state (Q14 open, no repo-grounded QF-DEFER material).
-    An un-administered control does not pass, so the gate blocks -- that is
-    the ruling working, not a defect."""
-    result = qual.score_qualification(select_outputs=[_select_output()] * 5)
-    assert result["cohort_freeze"] == "blocked"
-    assert result[qual.QF_DEFER]["status"] == qual.DEFER_MATERIAL_UNAVAILABLE
-    assert result[qual.QF_DEFER]["passes"] is False
-    assert result["result_category"] == qual.FLOOR_OR_CEILING_FAILURE
-
-
-def test_material_unavailable_is_never_reported_as_a_diagnostic_failure():
-    """The record must not claim the subject failed a diagnostic that was
-    never administered -- the two are distinct facts even though both block."""
-    unavailable = qual.score_qualification(select_outputs=[_select_output()] * 5)
-    assert unavailable[qual.QF_DEFER]["status"] == qual.DEFER_MATERIAL_UNAVAILABLE
-    assert unavailable["qualification_incomplete"] is True
-    assert "not administered" in unavailable["qualification_incomplete_reason"]
-
-    failed = qual.score_qualification(
-        select_outputs=[_select_output()] * 5,
-        defer_outputs=[_defer_output()] * 3 + [_select_output()] * 2,
-    )
-    assert failed[qual.QF_DEFER]["status"] == qual.DEFER_DIAGNOSTIC_FAILED
-    assert "qualification_incomplete" not in failed
-
-
-def test_a_passing_defer_diagnostic_carries_no_incompleteness_marker():
     result = qual.score_qualification(
-        select_outputs=[_select_output()] * 5,
-        defer_outputs=[_defer_output()] * 5,
-    )
-    assert result[qual.QF_DEFER]["status"] == qual.DEFER_DIAGNOSTIC_PASSED
-    assert "qualification_incomplete" not in result
-    assert result["cohort_freeze"] == "allowed"
+        select_outputs=[_select_output()] * 4 + [_invalid_output()],
+        defer_outputs=PASSING_DEFER)
+    assert _diag(result, "qf_select")["rate"] == 0.8
+    assert _diag(result, "qf_select")["status"] == qual.DIAGNOSTIC_PASSED
 
 
-def test_a_blocked_gate_carries_the_rulings_exact_reporting_sentence():
-    """Q13.3's own required sentence must travel with a failed gate --
-    analysis/reporting contract, never rendered to the model."""
+# --- failure: bounds interpretation, does not invalidate a real effect ----
+
+def test_a_failed_diagnostic_limits_null_reporting_but_not_a_nonzero_effect():
     result = qual.score_qualification(
-        select_outputs=[_invalid_output()] * 5,
-        defer_outputs=[_defer_output()] * 5,
-    )
-    assert result["reporting_note"] == (
+        select_outputs=PASSING_SELECT, defer_outputs=FAILING_DEFER)
+    interpretation = result["interpretation"]
+    assert interpretation["null_effect_requires_limitation"] is True
+    assert interpretation["nonzero_effect_invalidated"] is False
+    assert interpretation["affected_controls"] == [qual.QF_DEFER]
+
+
+def test_the_q13_3_approved_sentence_is_carried_verbatim():
+    """D-H1a-14/15 restated this obligation but did not retract the sentence.
+    Rewording approved text to match new vocabulary is the F6 defect."""
+    result = qual.score_qualification(
+        select_outputs=FAILING_SELECT, defer_outputs=PASSING_DEFER)
+    assert result["interpretation"]["approved_reporting_sentence"] == (
         "A failed qualification gate must not be reported as evidence "
         "of a null treatment effect."
     )
+
+
+# --- Q14.2: unavailable is not failure ------------------------------------
+
+def test_material_unavailable_is_recorded_as_unknown_not_as_failure():
+    """Q14.2: `material_unavailable`에서 피험자 능력에 대한 부정적 결론을
+    내리면 안 된다. The current real state for QF-DEFER."""
+    result = qual.score_qualification(select_outputs=PASSING_SELECT)
+    defer = _diag(result, "qf_defer")
+    assert defer["status"] == qual.MATERIAL_UNAVAILABLE
+    assert defer["subject_verdict"] is None
+    assert defer["implies_subject_failure"] is False
+    assert result["diagnostic_summary"]["defer_capability_observed"] == "unknown"
+    assert result["unavailable_diagnostics"]["treat_as_failure"] is False
+    assert result["unavailable_diagnostics"]["record_as_unknown"] is True
+    # an un-run control must not be reported as a failed one
+    assert "interpretation" not in result
+
+
+def test_unavailable_and_failed_never_collapse():
+    """The two must stay distinguishable in the record -- Q14.2 forbids
+    giving them one shared category."""
+    unavailable = _diag(qual.score_qualification(select_outputs=PASSING_SELECT), "qf_defer")
+    failed = _diag(
+        qual.score_qualification(select_outputs=PASSING_SELECT, defer_outputs=FAILING_DEFER),
+        "qf_defer")
+    assert unavailable["status"] != failed["status"]
+    assert unavailable["implies_subject_failure"] is False
+    assert failed["implies_subject_failure"] is True
+
+
+def test_the_retired_hard_gate_category_is_gone():
+    """`floor_or_ceiling_failure` named a gate outcome that blocked the
+    cohort. Under the ruling nothing blocks, so re-adding it would smuggle
+    the retired semantics back in."""
+    assert not hasattr(qual, "FLOOR_OR_CEILING_FAILURE")
+    result = qual.score_qualification(
+        select_outputs=FAILING_SELECT, defer_outputs=FAILING_DEFER)
+    assert "result_category" not in result
 
 
 # --- precondition guards -------------------------------------------------
 
 def test_refuses_the_wrong_number_of_trials():
     with pytest.raises(qual.QualificationContractError, match="expected exactly 5"):
-        qual.score_qualification(
-            select_outputs=[_select_output()] * 4,
-            defer_outputs=[_defer_output()] * 5,
-        )
+        qual.score_qualification(select_outputs=[_select_output()] * 4)
 
 
 def test_refuses_an_unknown_control_name():
     with pytest.raises(qual.QualificationContractError, match="unknown control"):
-        qual._score_one_control("QF-BOGUS", [_select_output()] * 5)
+        qual._score_one_control("QF-BOGUS", PASSING_SELECT)
 
-
-# --- invalid outputs count against the rate, not silently excluded ------
 
 def test_invalid_outputs_count_as_misses_not_as_excluded():
     """An invalid (malformed) output must not be dropped from the
-    denominator -- that would let a subject dodge the gate by producing
+    denominator -- that would let a subject dodge the diagnostic by producing
     garbage instead of a wrong-but-valid answer."""
-    select = [_select_output()] * 4 + [_invalid_output()]
-    result = qual.score_qualification(select_outputs=select, defer_outputs=[_defer_output()] * 5)
-    assert result[qual.QF_SELECT]["n"] == 5
-    assert result[qual.QF_SELECT]["categories"].count(_coder_invalid_marker()) == 1
-
-
-def _coder_invalid_marker() -> str:
     import _coder
-    return _coder.INVALID
+    result = qual.score_qualification(
+        select_outputs=[_select_output()] * 4 + [_invalid_output()])
+    select = _diag(result, "qf_select")
+    assert select["n"] == 5
+    assert select["categories"].count(_coder.INVALID) == 1
