@@ -291,3 +291,21 @@ def test_the_superseded_2026_08_15_run_is_preserved_and_marked():
     assert doc["record_class"].endswith("HISTORICAL")
     assert doc["provenance_recorded"] is False
     assert len(doc["QF-SELECT"]) == 5
+
+
+def test_trial_subject_matches_the_frozen_confirmatory_cohort():
+    """Precision, against the real repo state: the diagnostic's subject is
+    the same one the 40 confirmatory trials ran."""
+    run._assert_trial_subject_matches_the_confirmatory_cohort()
+
+
+def test_trial_subject_guard_fires_when_the_definition_drifts(monkeypatch):
+    """Recall. The guard must compare against the COHORT's frozen record, not
+    against a freshly-recomputed copy of itself -- otherwise a drifting
+    definition moves both sides together and the check is vacuous (F10)."""
+    import _h1a_cohort as cohort_mod
+    drifted = dict(cohort_mod._trial_subject_surface())
+    drifted["definition_sha256"] = "0" * 64
+    monkeypatch.setattr(run.cohort_mod, "_trial_subject_surface", lambda: drifted)
+    with pytest.raises(run.ManifestDriftError, match="differs from the frozen"):
+        run._assert_trial_subject_matches_the_confirmatory_cohort()

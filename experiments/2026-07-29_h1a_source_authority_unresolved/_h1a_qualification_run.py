@@ -150,6 +150,7 @@ def build_manifest() -> dict:
     trial subjects were actually shown, pinned before results are scored --
     same rationale as `cohort_prompts.json` for the confirmatory cohort."""
     select = render_control(QF_SELECT_FIXTURE_PATH)
+    _assert_trial_subject_matches_the_confirmatory_cohort()
     manifest = {
         "record_class": "h1a_qualification_manifest",
         "builder_commit": _git_head(),
@@ -241,6 +242,38 @@ PROVENANCE_KEYS = (
     "trial_subject_definition_sha256", "decision_schema_sha256",
     "rendered_prompt_sha256",
 )
+
+
+def _assert_trial_subject_matches_the_confirmatory_cohort() -> None:
+    """The diagnostic's subject must be the COHORT's subject, byte-for-byte.
+
+    `_trial_subject_surface()` hashes the agent definition as it is on disk
+    NOW. Comparing a freshly-computed hash against a manifest built from the
+    same fresh computation compares a value to itself: if the definition
+    drifts, both move together and the check stays silent. That is the F10
+    shape -- a true proposition asserted about the wrong object.
+
+    The only external anchor is the frozen cohort manifest, which recorded
+    the definition hash at the time the 40 confirmatory trials ran. That is
+    what "the same subject as the cohort" has to mean, so it is what is
+    compared here.
+    """
+    frozen = json.loads(cohort_mod.COHORT_PATH.read_text(encoding="utf-8"))
+    cohort_subject = frozen["trial_subject_surface"]
+    live_subject = cohort_mod._trial_subject_surface()
+
+    for field in ("trial_subject", "definition_sha256", "system_prompt_sha256"):
+        if live_subject[field] != cohort_subject[field]:
+            raise ManifestDriftError(
+                f"trial subject {field} differs from the frozen confirmatory "
+                f"cohort's: live={live_subject[field]!r} "
+                f"cohort={cohort_subject[field]!r}. A capability diagnostic "
+                f"run against a different subject than the cohort says "
+                f"nothing about that cohort. If the definition was changed "
+                f"deliberately, the confirmatory cohort's own subject record "
+                f"is now stale too -- that is a freeze-integrity question, "
+                f"not something to resolve by editing this check."
+            )
 
 
 def _assert_raw_provenance_matches_the_manifest(raw: dict, manifest: dict) -> None:
