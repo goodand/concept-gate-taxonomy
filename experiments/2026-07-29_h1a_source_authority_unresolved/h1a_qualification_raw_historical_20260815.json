@@ -1,33 +1,52 @@
 {
+  "record_class": "h1a_capability_diagnostic_raw_HISTORICAL",
+  "superseded_on": "2026-08-16",
+  "why_superseded": "Dispatched via the Agent tool, which has no schema parameter, so the transport was NOT schema_forced_structured_output as the confirmatory cohort's protocol pins. The h1a-decider definition pins no model, so the subject inherited the dispatching session's model rather than the cohort's trial_model (claude-opus-5). Neither fact was recorded at the time, which is itself the defect: the artifact could not reveal its own mismatch. Found by comparing this harness against the cohort harness (_h1a_cohort.py/_h1a_score.py) on 2026-08-16. The rendered prompt WAS byte-correct; prompt byte-identity was necessary and not sufficient. Preserved, not deleted: the 5 outputs are real observations of SOME subject, and D-H1a-14/15 Q14.3 prescribes preserving superseded runs as historical diagnostics. Not scored, not cited as QF-SELECT evidence.",
+  "provenance_recorded": false,
   "QF-SELECT": [
     {
       "decision": "select_type",
       "selected_type": "structural_composition",
-      "cited_evidence_ids": ["ev1", "ev2"],
+      "cited_evidence_ids": [
+        "ev1",
+        "ev2"
+      ],
       "rationale": "Both evidence items directly state the classification: ev1 (doc) explicitly reads '엔진은 자동차의 구성요소 → structural_composition', and ev2 (code) contains the identical text as a literal string, also asserting '엔진은 자동차의 구성요소 → structural_composition'. Neither item is merely an implementation detail or adjacent context -- both directly entail that the 엔진/자동차 pair is a structural_composition relation (part-whole), with no evidence item asserting essential_feature. Since both cited items converge on the same single type without conflict, exactly one allowed type is warranted."
     },
     {
       "decision": "select_type",
       "selected_type": "structural_composition",
-      "cited_evidence_ids": ["ev1", "ev2"],
+      "cited_evidence_ids": [
+        "ev1",
+        "ev2"
+      ],
       "rationale": "Both ev1 (doc) and ev2 (code) directly state the same mapping: '엔진은 자동차의 구성요소 → structural_composition', i.e., engine is a component of the automobile, entailing structural_composition. The text in both items ties the supplied concept/feature pair explicitly to one of the allowed types rather than merely mentioning implementation details or labels in passing. There is no evidence item supporting essential_feature, so no conflict exists to prevent selection."
     },
     {
       "decision": "select_type",
       "selected_type": "structural_composition",
-      "cited_evidence_ids": ["ev1", "ev2"],
+      "cited_evidence_ids": [
+        "ev1",
+        "ev2"
+      ],
       "rationale": "Both evidence items directly state the ontology classification for the pair: ev1 (doc) explicitly reads '엔진은 자동차의 구성요소 → structural_composition', and ev2 (code) contains the identical explicit statement. Neither item merely mentions implementation details or adjacent context -- both directly assert the structural_composition classification for 엔진/자동차, and there is no conflicting evidence proposing essential_feature. Since both permitted evidence items concur on the same explicit type entailment, exactly one allowed type (structural_composition) is warranted."
     },
     {
       "decision": "select_type",
       "selected_type": "structural_composition",
-      "cited_evidence_ids": ["ev1", "ev2"],
+      "cited_evidence_ids": [
+        "ev1",
+        "ev2"
+      ],
       "rationale": "Both evidence items directly state the ontology classification for the pair: ev1 (source_kind: doc) explicitly reads '엔진은 자동차의 구성요소 → structural_composition', and ev2 (source_kind: code) contains the identical statement verbatim. Neither item merely mentions implementation details or adjacent context; each directly entails structural_composition for 엔진/자동차. No evidence item in the packet points to essential_feature, so there is no conflict to resolve and no basis for deferral."
     },
     {
       "decision": "select_type",
       "selected_type": "structural_composition",
-      "cited_evidence_ids": ["ev1", "ev2"],
+      "cited_evidence_ids": [
+        "ev1",
+        "ev2"
+      ],
       "rationale": "Both evidence items directly state the classification for the pair: ev1 (doc) reads '엔진은 자동차의 구성요소 → structural_composition', and ev2 (code) contains the identical statement as its text content. Neither item is a mere implementation detail or adjacent-context mention; each explicitly ties 엔진/자동차 to the structural_composition type via the same component-whole (구성요소-통합체) characterization, and there is no competing evidence entailing essential_feature. With convergent, directly-entailing evidence from both cited items, exactly one allowed type is warranted."
     }
   ],

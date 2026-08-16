@@ -1,0 +1,62 @@
+{
+  "record_class": "h1a_capability_diagnostic_raw",
+  "provenance": {
+    "transport": "schema_forced_structured_output",
+    "trial_model": "claude-opus-5",
+    "tool_access": "no_tools",
+    "context_isolation": "workflow_cold_subagent",
+    "trial_subject_definition_sha256": "c22287cb7efec728704782f2b6c6376cd8d9b9a105c5900a12ac5969d9f23a7b",
+    "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+    "rendered_prompt_sha256": "fd793fc70ee1b41e799e385e8548be35aec6e461747ba1fb6f46bddd3193dbaf",
+    "run_date": "2026-08-16",
+    "supersedes": "h1a_qualification_raw_historical_20260815.json"
+  },
+  "QF-SELECT": [
+    {
+      "decision": "select_type",
+      "selected_type": "structural_composition",
+      "cited_evidence_ids": [
+        "ev1",
+        "ev2"
+      ],
+      "rationale": "Both packet items address the supplied pair directly and state the same typing. ev1 (doc) reads \\\"(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → structural_composition\\\", which explicitly names 엔진 as a 구성요소 of 자동차 and maps that relation to structural_composition — this directly states the ontology type of the supplied concept/feature pair, satisfying the evidence-reading rule rather than merely mentioning adjacent context. ev2 (code) carries the identical string as an embedded literal, again naming the pair and the type. No item in the packet asserts or entails essential_feature for this pair, so there is no conflict to resolve and no tie requiring count- or order-based breaking. Because exactly one allowed type is warranted on the packet's own text, I select rather than defer; the source_kind difference (doc vs code) is not load-bearing here since the two sources agree in substance."
+    },
+    {
+      "decision": "select_type",
+      "selected_type": "structural_composition",
+      "cited_evidence_ids": [
+        "ev1",
+        "ev2"
+      ],
+      "rationale": "Both packet items address the supplied pair (자동차 / 엔진) directly and both state the same ontology type. ev1 (source_kind: doc) reads \\\"(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → structural_composition\\\", explicitly tying 엔진 to 자동차 as a component-of-whole relation and naming the type. ev2 (source_kind: code) contains the identical assertion as an embedded string literal, again naming structural_composition for the same pair. Each item independently satisfies the evidence-reading rule: it is not a mere mention, label, or adjacent context, but a direct statement of the concept/feature pair's type. No item in the packet states or entails essential_feature for this pair, so the two allowed types are not both supported; there is nothing here requiring a tie-break by source authority (doc vs. code), item count, or ordering, since the doc and code items agree rather than conflict. Exactly one allowed type is therefore warranted on the packet alone, without recourse to outside domain or ontology knowledge."
+    },
+    {
+      "decision": "select_type",
+      "selected_type": "structural_composition",
+      "cited_evidence_ids": [
+        "ev1",
+        "ev2"
+      ],
+      "rationale": "Both packet items address the supplied pair directly and state the same ontology type. ev1 (source_kind: doc) reads \"(1) 구성요소-통합체: 엔진은 자동차의 구성요소 → structural_composition\", which names the concept (자동차), the feature (엔진), and explicitly maps the relation to structural_composition — satisfying the evidence-reading rule that the text directly state the type of the supplied pair. ev2 (source_kind: code) contains the identical assertion as an embedded string literal; even read only as a source of its recorded text, it asserts the same mapping and does not qualify or contradict ev1. No item in the packet supports essential_feature, so there is no cross-type conflict to resolve and no need to weigh doc against code authority, nor to break a tie by item count or ordering. Exactly one allowed type is warranted on the packet alone, so I select structural_composition rather than defer. Note that this rationale is interpretive and not a self-report of cause."
+    },
+    {
+      "decision": "select_type",
+      "selected_type": "structural_composition",
+      "cited_evidence_ids": [
+        "ev1",
+        "ev2"
+      ],
+      "rationale": "Both packet items address the supplied pair (자동차 / 엔진) directly and explicitly assign an allowed type. ev1 (source_kind: doc) states \"엔진은 자동차의 구성요소 → structural_composition\", which directly states the ontology type of the pair rather than merely mentioning an example or label. ev2 (source_kind: code) carries the identical assertion as an embedded string literal, again naming the same pair and the same type. No item in the packet asserts essential_feature or otherwise entails a competing type, so the anticipated cross-source conflict does not materialize on these fields: the doc and code sources agree. Because exactly one allowed type is stated and clearly entailed by the evidence text, and no permitted basis in the packet weighs against it, selection is warranted without needing to break any tie by item count or ordering. Note that the selection rests on the substantive assertion in the item texts, not on any ranking of doc over code authority; the source_kind fields were inspected and found concordant rather than discriminating."
+    },
+    {
+      "decision": "select_type",
+      "selected_type": "structural_composition",
+      "cited_evidence_ids": [
+        "ev1",
+        "ev2"
+      ],
+      "rationale": "Both packet items address the supplied pair (자동차 / 엔진) directly and state the same ontology type. ev1 (source_kind: doc) reads \"엔진은 자동차의 구성요소 → structural_composition\", explicitly naming the concept, the feature, and the resulting type. ev2 (source_kind: code) carries the identical assertion as an embedded string literal; it is a quoted restatement of the same claim rather than an independent one, but it does directly state the pair's type and so satisfies the evidence-reading rule on its own terms.\n\nNo item in the packet states or entails essential_feature for this pair, so there is nothing on that side to weigh — the anticipated doc/code conflict does not materialize in the evidence actually supplied. Because exactly one allowed type is asserted, and it is asserted by every item that speaks to the pair, the selection does not rest on evidence count, ordering, or on preferring one source_kind over the other; it would hold from either item alone. I did not import outside knowledge about engines or cars to reach it.\n\nNoting one limit for the record: ev2 appears to be the serialized form of the same sentence as ev1, so the packet supplies one substantive assertion attested twice, not two independent attestations. That reduces corroborative weight but does not create a competing type or otherwise undercut the sole type the packet warrants."
+    }
+  ],
+  "QF-DEFER": null
+}
