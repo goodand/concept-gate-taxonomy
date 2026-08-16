@@ -1,10 +1,15 @@
-"""Tests for the D-H1a-13 Q13.3 qualification gate, AMENDED 2026-08-15
-(QF-DEFER demoted to non-blocking -- see PREREGISTRATION_TYPED_SCOPE_COHORT.md
-sec 5c and _h1a_qualification.py's module docstring for the full rationale).
+"""Tests for the D-H1a-13 Q13.3 qualification gate, as ruled: BOTH controls
+must pass at 0.80 or `cohort_freeze` is blocked.
 
-Synthetic trial outputs only -- QF-SELECT has a real fixture now
-(fixture_qf_select.json); QF-DEFER's material does not exist in this
-repository (Q14, sec 5c) and its control is exercised here only via
+A 2026-08-15 amendment briefly demoted QF-DEFER to non-blocking; adversarial
+review the next day did not adopt it and it was retracted
+(`docs/feedback/h1a_qf_defer_amendment_review_20260816.md`,
+`PREREGISTRATION_TYPED_SCOPE_COHORT.md` sec 5c). These tests pin the ruled
+behavior, so reintroducing the demotion without a ruling fails here first.
+
+Synthetic trial outputs only -- QF-SELECT has a real fixture
+(`fixture_qf_select.json`); QF-DEFER's material does not exist in this
+repository (Q14, still open) and its control is exercised here only via
 synthetic outputs to pin the SCORING contract independently of fixture
 availability, per this folder's convention of committing scorers before
 any trial data exists.
@@ -90,51 +95,58 @@ def test_gate_blocks_when_select_control_falls_below_the_rate():
     assert result["result_category"] == qual.FLOOR_OR_CEILING_FAILURE
 
 
-def test_gate_allows_freeze_when_only_defer_control_falls_below_the_rate():
-    """2026-08-15 amendment: QF-DEFER no longer gates freeze. A subject that
-    selects reliably but fails the defer diagnostic still gets
-    cohort_freeze: allowed -- the failure is recorded as a non-blocking
-    ceiling-diagnostic limitation (L9), not a block."""
+def test_gate_blocks_when_defer_control_falls_below_the_rate():
+    """Recall in the OTHER direction: passing select alone is not enough --
+    Q13.3 requires both, not either/or.
+
+    A 2026-08-15 amendment briefly made this case return "allowed"; the
+    adversarial review of 2026-08-16 did not adopt that change
+    (docs/feedback/h1a_qf_defer_amendment_review_20260816.md). This test is
+    what fails first if the demotion is reintroduced without a ruling."""
     defer = [_defer_output()] * 3 + [_select_output()] * 2  # 3/5 = 0.6
     result = qual.score_qualification(select_outputs=[_select_output()] * 5, defer_outputs=defer)
     assert result[qual.QF_SELECT]["passes"] is True
     assert result[qual.QF_DEFER]["passes"] is False
     assert result[qual.QF_DEFER]["status"] == qual.DEFER_DIAGNOSTIC_FAILED
-    assert result["cohort_freeze"] == "allowed"
-    assert "result_category" not in result
-    assert result["defer_ceiling_diagnostic_limitation"] is True
-    assert "L9" in result["defer_ceiling_reporting_note"]
-
-
-def test_gate_allows_freeze_when_defer_material_is_unavailable():
-    """The current real state (Q14 pending, no repo-grounded QF-DEFER
-    material exists): defer_outputs=None must not block freeze, and must
-    be distinguished from a failed diagnostic."""
-    result = qual.score_qualification(select_outputs=[_select_output()] * 5)
-    assert result["cohort_freeze"] == "allowed"
-    assert result[qual.QF_DEFER]["status"] == qual.DEFER_MATERIAL_UNAVAILABLE
-    assert result[qual.QF_DEFER]["passes"] is None
-    assert result["defer_ceiling_diagnostic_limitation"] is True
-
-
-def test_gate_still_blocks_on_select_failure_when_defer_material_is_unavailable():
-    """QF-SELECT remains the sole hard gate regardless of QF-DEFER's
-    availability."""
-    select = [_select_output()] * 3 + [_invalid_output()] * 2  # 3/5 = 0.6
-    result = qual.score_qualification(select_outputs=select)
     assert result["cohort_freeze"] == "blocked"
     assert result["result_category"] == qual.FLOOR_OR_CEILING_FAILURE
 
 
-def test_defer_diagnostic_passed_status_carries_no_limitation():
-    """A passed QF-DEFER diagnostic is not a limitation -- it is confirmatory
-    evidence the instrument can defer, so no L9 flag should attach."""
+def test_gate_blocks_when_defer_material_is_unavailable():
+    """The current real state (Q14 open, no repo-grounded QF-DEFER material).
+    An un-administered control does not pass, so the gate blocks -- that is
+    the ruling working, not a defect."""
+    result = qual.score_qualification(select_outputs=[_select_output()] * 5)
+    assert result["cohort_freeze"] == "blocked"
+    assert result[qual.QF_DEFER]["status"] == qual.DEFER_MATERIAL_UNAVAILABLE
+    assert result[qual.QF_DEFER]["passes"] is False
+    assert result["result_category"] == qual.FLOOR_OR_CEILING_FAILURE
+
+
+def test_material_unavailable_is_never_reported_as_a_diagnostic_failure():
+    """The record must not claim the subject failed a diagnostic that was
+    never administered -- the two are distinct facts even though both block."""
+    unavailable = qual.score_qualification(select_outputs=[_select_output()] * 5)
+    assert unavailable[qual.QF_DEFER]["status"] == qual.DEFER_MATERIAL_UNAVAILABLE
+    assert unavailable["qualification_incomplete"] is True
+    assert "not administered" in unavailable["qualification_incomplete_reason"]
+
+    failed = qual.score_qualification(
+        select_outputs=[_select_output()] * 5,
+        defer_outputs=[_defer_output()] * 3 + [_select_output()] * 2,
+    )
+    assert failed[qual.QF_DEFER]["status"] == qual.DEFER_DIAGNOSTIC_FAILED
+    assert "qualification_incomplete" not in failed
+
+
+def test_a_passing_defer_diagnostic_carries_no_incompleteness_marker():
     result = qual.score_qualification(
         select_outputs=[_select_output()] * 5,
         defer_outputs=[_defer_output()] * 5,
     )
     assert result[qual.QF_DEFER]["status"] == qual.DEFER_DIAGNOSTIC_PASSED
-    assert "defer_ceiling_diagnostic_limitation" not in result
+    assert "qualification_incomplete" not in result
+    assert result["cohort_freeze"] == "allowed"
 
 
 def test_a_blocked_gate_carries_the_rulings_exact_reporting_sentence():

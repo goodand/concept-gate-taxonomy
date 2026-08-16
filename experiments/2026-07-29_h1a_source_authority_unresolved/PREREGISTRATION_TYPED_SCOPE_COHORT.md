@@ -145,14 +145,15 @@ qualification:
     required_rate: 0.80
 ```
 
-> ⚠️ **2026-08-15 AMENDMENT — QF-DEFER 부분만 아래 §5c로 변경됐다.** 위
-> yaml과 "두 control 중 하나라도" 문구는 **원안(2026-08-06) 그대로 이력
-> 보존**한다. 실제 gate 동작은 §5c를 따른다: `cohort_freeze`는
-> `select_control` 하나에만 의존하고, `defer_control`은 non-blocking
-> 진단으로 강등됐다. QF-SELECT의 hard-gate 지위는 이 판정문 그대로
-> **불변**이다.
+> ⚠️ **2026-08-15 amendment는 2026-08-16 적대 검토에서 채택되지 않았고
+> 철회됐다.** 아래 yaml과 "두 control 중 하나라도" 문구가 **현행 규범**이다.
+> 철회 경위와 근거는 §5c(철회 표시된 원문 보존) 및
+> `docs/feedback/h1a_qf_defer_amendment_review_20260816.md`.
+> 현재 gate 상태: QF-SELECT 5/5 통과, QF-DEFER 미시행(재료 부재) →
+> **`cohort_freeze: blocked`**. 이는 결함이 아니라 이 판정문이 의도한
+> 동작이며, 해소에는 Q14 판정이 필요하다(코드 변경이 아니라).
 
-두 control 중 하나라도 기준 미달이면(원안, §5c로 부분 대체됨):
+두 control 중 하나라도 기준 미달이면:
 
 ```yaml
 cohort_freeze: blocked
@@ -169,19 +170,61 @@ QF-DEFER fixture는 §5c의 사유로 **의도적으로 미구성** — "아직 
 미구현"이 아니라 "저장소에 재료가 없음을 전수 확인하고 gate를 그에 맞게
 재설계한 것"이다.
 
-**QF-SELECT 5-trial 실행 완료 (2026-08-15, 같은 날 이어서)**: `_h1a_qualification_run.py`
+**QF-SELECT 5-trial 실행 완료 (2026-08-15)**: `_h1a_qualification_run.py`
 신설(fixture→prompt 렌더 + manifest 동결/drift 검사 + F9식 덮어쓰기 거부를
 갖춘 실행·영속 계층 — `_h1a_qualification.py` 자신은 여전히 fixture 없이도
 테스트 가능한 순수 스코어러로 남긴다). `h1a-decider` trial subject로 5회
-독립 실행, 5/5 `select_type`/`structural_composition`(만장일치, rate=1.0).
-`cohort_freeze: allowed`. 산출물: `h1a_qualification_manifest.json`
+독립 실행, **5/5 `select_type`/`structural_composition`**(만장일치,
+rate=1.0, `passes: true`). 산출물: `h1a_qualification_manifest.json`
 (렌더된 prompt의 sha256 동결), `h1a_qualification_raw.json`(원시 5출력),
-`h1a_qualification_score.json`(스코어 + manifest 발췌). Arm 선택
-(`PROHIBITION_REMOVED`)은 D-H1a-13이 명시하지 않은 운영상 결정이며
-근거는 `_h1a_qualification_run.py` 모듈 docstring에 기록. 상세는
-`OPERATIONS_LOG.md` "2026-08-15" §8.
+`h1a_qualification_score.json`. Arm 선택(`PROHIBITION_REMOVED`)은
+D-H1a-13이 명시하지 않은 운영상 결정이며 근거는
+`_h1a_qualification_run.py` 모듈 docstring에 기록.
 
-### 5c. 2026-08-15 AMENDMENT — QF-DEFER 강등 (non-blocking diagnostic)
+**현재 gate 판정 (2026-08-16 기준)**: `cohort_freeze: blocked`.
+QF-SELECT는 통과했으나 QF-DEFER가 **미시행**(재료 부재)이라 "둘 다 통과"
+요건을 못 채운다. 기록은 `status: material_unavailable` +
+`qualification_incomplete_reason`로 **"시행됐는데 실패"와 "시행 자체가
+안 됨"을 구분**한다 — 시행되지 않은 진단을 피험자가 실패한 것처럼
+기록하지 않기 위해서다. (2026-08-15 score 파일은 amendment 하의
+`allowed`를 기록했었고 커밋 `3916ac2`에 이력으로 남아 있다. 원시 5출력은
+동일하며 채점 규칙만 원복됐다.) 상세는 `OPERATIONS_LOG.md` §8·§9.
+
+### 5c. 2026-08-15 AMENDMENT — QF-DEFER 강등 — **철회됨 (2026-08-16)**
+
+> ⚠️ **이 절은 채택되지 않았다. 규범적 효력 없음 — 이력 보존이다.**
+> 아래 원문은 삭제하지 않고 남긴다. §5(M4)를 F6 증거로 보존한 것과 같은
+> 이유이며, 이 amendment는 **§5가 기록한 그 실패 모드의 재발 사례**라
+> 보존 가치가 더 크다.
+>
+> **철회 사유 (적대 검토 4축 + lead 재실측,
+> `docs/feedback/h1a_qf_defer_amendment_review_20260816.md`, blocker 4건)**:
+>
+> 1. **자기 요청서가 이미 부정하고 있었다.** Q14 요청서 §4 선택지 D —
+>    "QF-DEFER를 보류하고 QF-SELECT만으로 gate를 부분 운영" — 에 요청서
+>    자신이 **"Q13.3의 '둘 다 필수' 요구를 완화 — 새 판정 필요"**라고
+>    주석했다. 실제로 구현된 것이 바로 그 선택지 D이고, 새 판정 없이
+>    실행됐다.
+> 2. **자기가 명시한 규율을 자기에게만 적용하지 않았다.** 아래 §5c 말미가
+>    "요청받지 않은 범위 확장은 이 저장소가 경계하는 바로 그 실패 모드다"라며
+>    Q15를 미결로 남기는데, §5c 자신이 Q14(재료를 무엇으로 할 것인가)에
+>    대한 답이 아니라 **QF-DEFER의 지위 자체를 바꾼 범위 확장**이다.
+> 3. **근거가 non-sequitur다.** `M_allowed = ¬Q1 ∧ ¬Q7`가 QF-DEFER를
+>    언급하지 않는 것은 참이지만, Q13.3이 QF-DEFER를 `M_allowed`에서
+>    연역한 적이 없다(D-H1a-10 작성 시점에 QF-* 는 존재하지도 않았다).
+>    쟁점이 아니었던 것의 침묵을 근거로 삼았다. Q13.3의 목적은 식별가능성이
+>    아니라 **null 결과 오독 방지**다.
+> 4. **구조적 회귀다.** Q13.3의 존재 이유는 F6이 *해석 조건*을 불충분하다고
+>    판정해 *하드 게이트*로 교체한 것이다. QF-DEFER를 L9 보고 문구로
+>    강등한 것은 그 절반을 **다시 해석 조건으로** 되돌린 것이고, 그것도
+>    운영 세션의 자기 재등록으로 — F6이 지적한 구조와 동형이다.
+>
+> 덧붙여 아래 근거 3번이 "그 보호는 결과가 실제로 null일 때만
+> load-bearing"이라 **자인**해놓고, **trial 0건** 시점에 결과가 null일지
+> 모르는 상태에서 사전에 무조건 껐다.
+>
+> **현행 규범은 §5a의 원안**(둘 다 통과 필수)이다. Q14는 Q15와 함께
+> 외부 판정 채널로 **재상신**한다(`correspondence/DESIGN_REQUEST_H1a_qualification_gate_scope.md`).
 
 **계기**: D-H1a-13 Q13.3의 명령대로 QF-DEFER fixture를 만들려 했으나,
 `docs/`, `conceptgate/`, `experiments/`(H1a 자기 폴더 제외) 전체를 인스턴스
@@ -252,15 +295,30 @@ hard-gate 지위는 그대로다. "always select" ceiling도 QF-DEFER가 막으�
 문서는 그 질문을 **결정하지 않고 다음 항에 남긴다** — 요청받지 않은
 범위 확장은 이 저장소가 경계하는 바로 그 실패 모드다.
 
-### 5d. 열린 질문 (결정되지 않음)
+### 5d. 열린 질문 — **Q14·Q15 재상신 (2026-08-16)**
 
-**Q15 (가칭, 아직 상신 안 됨)**: QF-SELECT도 §5c와 같은 논리로
-non-blocking으로 강등해야 하는가? — 아직 아무도 묻지 않았다. §5c는
-QF-DEFER에 대해서만 litigate됐다. 다음 세션이 이 질문을 다룰 때는 새
-DESIGN_REQUEST로 상신하거나, 최소한 이 문서에 "결정 보류" 상태로 명시적
-등록부터 할 것.
+**Q15**: QF-SELECT도 QF-DEFER와 대칭으로 non-blocking화해야 하는가?
 
-### 5e. L9 등록
+2026-08-16 적대 검토(축 C)가 지적한 대로, 이 질문을 §5c와 **분리해서**
+다루는 것 자체가 결함이었다 — §5c의 근거(README §2, `M_allowed`)는 두
+control에 **대칭적으로** 적용되므로, QF-DEFER만 강등한 비대칭은 원리적
+구분이 아니라 **"무엇을 물었나"의 산물**이다("always select" ceiling도
+QF-DEFER가 막으려는 것과 같은 spurious-null 실패 모드를 만든다).
+
+따라서 Q14와 Q15를 **하나의 요청서에 함께** 외부 판정 채널로 상신한다:
+`correspondence/DESIGN_REQUEST_H1a_qualification_gate_scope.md`.
+그 판정이 오기 전까지 §5a 원안(둘 다 필수)이 유효하며
+`cohort_freeze: blocked`가 유지된다.
+
+### 5e. L9 등록 — **철회됨 (2026-08-16)**
+
+> ⚠️ **L9는 등록되지 않는다.** L9는 §5c의 강등을 전제로 "QF-DEFER 부재를
+> 비차단 한계로 등록한다"는 것이었는데, 그 전제가 철회됐다. QF-DEFER
+> 재료 부재는 **한계(limitation)가 아니라 미해소 blocker**다 — L1~L4·L8과
+> 같은 급의 선언적 한계로 등록하면 "실험이 이 제약을 안고 진행됐다"는
+> 뜻이 되어, 실제 상태("gate가 완주되지 못했다")를 잘못 표기한다.
+> 아래 원문은 이력 보존이며 **인용 금지**. 다음 L 번호는 L9가 아니라
+> **L9부터 다시 사용 가능**하다(이 등록이 발효된 적이 없으므로).
 
 ```text
 L9 — QF-DEFER ceiling diagnostic unavailable

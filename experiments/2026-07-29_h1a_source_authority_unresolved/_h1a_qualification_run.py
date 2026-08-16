@@ -34,6 +34,7 @@ import json
 import subprocess
 from pathlib import Path
 
+import _h1a_cohort as cohort_mod
 import _h1a_contract as contract
 import _h1a_qualification as qual
 import _h1a_surface as surface
@@ -55,12 +56,10 @@ RAW_PATH = HERE / "h1a_qualification_raw.json"
 SCORE_PATH = HERE / "h1a_qualification_score.json"
 
 
-def _git_head() -> str:
-    proc = subprocess.run(
-        ["git", "rev-parse", "HEAD"], cwd=str(REPO_ROOT),
-        capture_output=True, text=True, check=True,
-    )
-    return proc.stdout.strip()
+# Ponytail rung 2 (codebase reuse): `_h1a_cohort._git_head` is the same call
+# against the same REPO_ROOT. A byte-identical copy lived here until the
+# 2026-08-16 review flagged it (finding D-7).
+_git_head = cohort_mod._git_head
 
 
 def render_control(fixture_path: Path, arm: str = ARM_FOR_QUALIFICATION) -> dict:
@@ -131,6 +130,42 @@ class QualificationScoreOverwriteRefused(Exception):
     silently overwrite a prior gate result."""
 
 
+def _assert_manifest_has_not_drifted(recorded: dict, fresh: dict) -> None:
+    """The recorded manifest must still describe what the pipeline produces.
+
+    Named `_assert_*` so `test_guard_negative_coverage.py`'s AST scan sees it:
+    that gate only collects guards matching `GUARD_PREFIXES`, so a guard
+    buried inside `_freeze_or_check_manifest()`/`main()` sat outside the
+    mechanism this repo built precisely because the written "remember to add
+    a negative test" discipline failed 7/7 times (2026-08-16 review, D-6).
+    """
+    recorded_sha = recorded[qual.QF_SELECT]["rendered_prompt_sha256"]
+    fresh_sha = fresh[qual.QF_SELECT]["rendered_prompt_sha256"]
+    if recorded_sha != fresh_sha:
+        raise ManifestDriftError(
+            f"{MANIFEST_PATH.name}: recorded QF-SELECT rendered_prompt_sha256 "
+            f"{recorded_sha!r} no longer matches what the fixture/"
+            f"template/policy pipeline produces now ({fresh_sha!r}). "
+            f"The prompt trial subjects actually saw may differ from what "
+            f"this manifest claims. Refusing to score against a drifted "
+            f"manifest."
+        )
+
+
+def _assert_score_path_is_free() -> None:
+    """Refuse to destroy a previously recorded qualification score.
+
+    Same fail-closed shape as `_h1a_score.py::ScoreOverwriteRefused` (F9).
+    Named `_assert_*` for the same reason as the function above.
+    """
+    if SCORE_PATH.exists():
+        raise QualificationScoreOverwriteRefused(
+            f"{SCORE_PATH.name} already exists. Re-running the qualification "
+            f"scorer would overwrite a prior gate result irreversibly. Delete "
+            f"or move it deliberately first if a re-score is actually intended."
+        )
+
+
 def _freeze_or_check_manifest() -> dict:
     fresh = build_manifest()
     if not MANIFEST_PATH.exists():
@@ -139,17 +174,7 @@ def _freeze_or_check_manifest() -> dict:
         )
         return fresh
     recorded = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    fresh_select_sha = fresh[qual.QF_SELECT]["rendered_prompt_sha256"]
-    recorded_select_sha = recorded[qual.QF_SELECT]["rendered_prompt_sha256"]
-    if fresh_select_sha != recorded_select_sha:
-        raise ManifestDriftError(
-            f"{MANIFEST_PATH.name}: recorded QF-SELECT rendered_prompt_sha256 "
-            f"{recorded_select_sha!r} no longer matches what the fixture/"
-            f"template/policy pipeline produces now ({fresh_select_sha!r}). "
-            f"The prompt trial subjects actually saw may differ from what "
-            f"this manifest claims. Refusing to score against a drifted "
-            f"manifest."
-        )
+    _assert_manifest_has_not_drifted(recorded, fresh)
     return recorded
 
 
@@ -171,12 +196,7 @@ def main() -> int:
         qual.QF_SELECT: manifest[qual.QF_SELECT],
     }
 
-    if SCORE_PATH.exists():
-        raise QualificationScoreOverwriteRefused(
-            f"{SCORE_PATH.name} already exists. Re-running the qualification "
-            f"scorer would overwrite a prior gate result irreversibly. Delete "
-            f"or move it deliberately first if a re-score is actually intended."
-        )
+    _assert_score_path_is_free()
     SCORE_PATH.write_text(
         json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )

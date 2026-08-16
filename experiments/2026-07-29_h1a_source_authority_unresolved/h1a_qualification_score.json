@@ -20,11 +20,13 @@
   "QF-DEFER": {
     "control": "QF-DEFER",
     "status": "material_unavailable",
-    "passes": null
+    "passes": false
   },
-  "cohort_freeze": "allowed",
-  "defer_ceiling_diagnostic_limitation": true,
-  "defer_ceiling_reporting_note": "The QF-DEFER ceiling diagnostic did not confirm defer capability (unavailable or failed). A null or ceiling-suspicious confirmatory result must not be read as ruling out a defer-side floor/ceiling artifact; L9 applies. A clear KEPT/REMOVED contrast is unaffected by this limitation.",
+  "cohort_freeze": "blocked",
+  "result_category": "floor_or_ceiling_failure",
+  "reporting_note": "A failed qualification gate must not be reported as evidence of a null treatment effect.",
+  "qualification_incomplete": true,
+  "qualification_incomplete_reason": "QF-DEFER was not administered: no repo-grounded, same-source_kind conflicting-type material exists for it (Q14). This is not a diagnostic failure by the trial subject. The gate blocks because D-H1a-13 sec 6 requires both controls to pass; resolving it requires the Q14 ruling, not a code change.",
   "manifest": {
     "builder_commit": "db07867a6c9601ecf1e00d1604ad22f411a1eb1d",
     "arm_for_qualification": "PROHIBITION_REMOVED",

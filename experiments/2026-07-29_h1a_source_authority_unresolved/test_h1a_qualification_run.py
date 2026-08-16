@@ -79,6 +79,40 @@ def test_freeze_or_check_raises_on_drift(tmp_path, monkeypatch):
         run._freeze_or_check_manifest()
 
 
+# --- the two guards called directly, so test_guard_negative_coverage.py's
+# AST scan can see their recall proven (2026-08-16 review, D-6) -------------
+
+def test_assert_manifest_has_not_drifted_fires_on_mismatch():
+    fresh = run.build_manifest()
+    stale = json.loads(json.dumps(fresh))
+    stale[run.qual.QF_SELECT]["rendered_prompt_sha256"] = "0" * 64
+    with pytest.raises(run.ManifestDriftError, match="rendered_prompt_sha256"):
+        run._assert_manifest_has_not_drifted(stale, fresh)
+
+
+def test_assert_manifest_has_not_drifted_passes_when_identical():
+    """Precision: an unchanged manifest must not trip the guard."""
+    fresh = run.build_manifest()
+    run._assert_manifest_has_not_drifted(fresh, fresh)  # must not raise
+
+
+def test_assert_score_path_is_free_fires_when_the_score_exists():
+    """Recall against the REAL repo state: the recorded qualification score
+    genuinely exists right now."""
+    assert run.SCORE_PATH.exists(), (
+        "precondition: h1a_qualification_score.json must exist for this to "
+        "be a meaningful recall check"
+    )
+    with pytest.raises(run.QualificationScoreOverwriteRefused, match="h1a_qualification_score.json"):
+        run._assert_score_path_is_free()
+
+
+def test_assert_score_path_is_free_passes_when_absent(tmp_path, monkeypatch):
+    """Precision: nothing to destroy, so the guard must stay quiet."""
+    monkeypatch.setattr(run, "SCORE_PATH", tmp_path / "score.json")
+    run._assert_score_path_is_free()  # must not raise
+
+
 # --- F9-style overwrite guard on the score file -----------------------------
 
 def test_main_refuses_to_overwrite_an_existing_score_file():
@@ -113,16 +147,21 @@ def test_main_proceeds_when_score_path_absent(tmp_path, monkeypatch):
     assert (tmp_path / "manifest.json").exists()
     assert (tmp_path / "score.json").exists()
     written = json.loads((tmp_path / "score.json").read_text(encoding="utf-8"))
-    assert written["cohort_freeze"] == "allowed"
+    # QF-DEFER was not administered, so the gate blocks (D-H1a-13 sec 6).
+    assert written["cohort_freeze"] == "blocked"
     assert written["QF-DEFER"]["status"] == run.qual.DEFER_MATERIAL_UNAVAILABLE
 
 
 # --- the real recorded score is what the gate actually decided --------------
 
-def test_the_real_recorded_score_shows_qf_select_passing_and_freeze_allowed():
+def test_the_real_recorded_score_shows_qf_select_passing_but_gate_blocked():
+    """QF-SELECT genuinely passed 5/5 on 2026-08-15. The gate still blocks,
+    because QF-DEFER was never administered -- Q13.3 requires both. The
+    2026-08-15 amendment briefly recorded "allowed" here; that was retracted
+    on 2026-08-16 (docs/feedback/h1a_qf_defer_amendment_review_20260816.md)."""
     recorded = json.loads(run.SCORE_PATH.read_text(encoding="utf-8"))
     assert recorded[run.qual.QF_SELECT]["rate"] == 1.0
     assert recorded[run.qual.QF_SELECT]["passes"] is True
-    assert recorded["cohort_freeze"] == "allowed"
+    assert recorded["cohort_freeze"] == "blocked"
     assert recorded["QF-DEFER"]["status"] == run.qual.DEFER_MATERIAL_UNAVAILABLE
-    assert recorded["defer_ceiling_diagnostic_limitation"] is True
+    assert recorded["qualification_incomplete"] is True
