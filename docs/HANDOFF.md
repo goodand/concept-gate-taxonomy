@@ -1,5 +1,24 @@
 # HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
+- 갱신: **2026-08-16** — ⚠️ **아래 2026-08-15(2)의 QF-DEFER 강등은 철회됐다.**
+  `adversarial-review` 4축 + lead 재실측에서 blocker 4건으로 **채택 불가**
+  (`docs/feedback/h1a_qf_defer_amendment_review_20260816.md`). 결정적
+  finding: **Q14 요청서 자신이 그 조치(선택지 D)에 "새 판정 필요"라고
+  주석해뒀는데 새 판정 없이 실행**했다. 그 외 — 자기가 명시한 규율을
+  Q15에만 적용한 선택적 rigor, `M_allowed` 인용의 non-sequitur, **F6이
+  폐기시킨 "해석 조건" 형태로의 구조적 회귀**(4축이 못 찾고 lead 재실측에서
+  나옴). **현재 상태**: 코드·문서 Q13.3 원안 복원 → `cohort_freeze:
+  blocked`(QF-SELECT 5/5 통과, QF-DEFER **미시행** — 재료 부재).
+  **L9 등록 취소**(재료 부재는 한계가 아니라 미해소 blocker). Q14를
+  **Q15(QF-SELECT 대칭 적용)와 함께** 재상신:
+  `correspondence/DESIGN_REQUEST_H1a_qualification_gate_scope.md` —
+  Q14.2(미시행/실패 구분 승인), Q14.3(qualification의 렌더 arm) 포함.
+  부수 수리: 새 가드 2개를 `test_guard_negative_coverage.py` AST 스캔
+  표면으로 이동(D-6 — 기제화한 규율이 수동으로 회귀해 있었다),
+  `_git_head()` 중복 제거(D-7). 게이트 H1a 217 passed/1 skipped.
+  **다음 세션이 할 일**: Q14/Q15 판정 대기 → 도착 후 gate 완주 →
+  Q13.5/13.6 → 독립 리뷰 전면 재실행 → `repaired_cohort_trials` 40건.
+  **판정 없이 gate 요건을 완화하지 마라** — 이번에 그렇게 했다가 철회했다.
 - 갱신: **2026-08-15(3)** — **QF-SELECT 5-trial 실행 + `_h1a_qualification.py`
   실전 배선 완료.** 신규 `_h1a_qualification_run.py`
   (`_h1a_cohort.py`/`_h1a_score.py`가 confirmatory cohort에 대해 하는

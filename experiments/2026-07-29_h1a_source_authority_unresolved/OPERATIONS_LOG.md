@@ -235,6 +235,86 @@ owlready2 결함 1건 그대로.
 **남은 것**: QF-DEFER는 여전히 L9로 non-blocking 등록 상태(재료 없음).
 독립 리뷰 전면 재실행은 아직(§6 그대로).
 
+> ⚠️ 위 §7·§8의 "QF-DEFER 강등" 부분은 **2026-08-16에 철회됐다**(§9).
+> §8의 QF-SELECT 5-trial 실행과 배선은 유효하나, 그때 기록된
+> `cohort_freeze: allowed`는 철회된 규칙 하의 값이다. 현행 값은
+> `blocked`.
+
+### 9. (2026-08-16) 적대 검토 → QF-DEFER 강등 **철회**, Q14·Q15 재상신
+
+**계기**: 사용자가 "haiku model로 적대적 검증도 했어?"라고 물었고, 안 했다.
+`adversarial-review` 스킬로 4축(코드 대조 / 판정문 인용 충실성 / 판정 채널
+정당성 / 저장소 정합성) 병렬 검토 + lead 재실측 수행.
+
+**결과: §5c amendment 채택 불가.** blocker 4건. 보고서 전문은
+`docs/feedback/h1a_qf_defer_amendment_review_20260816.md`.
+
+가장 결정적인 것 — **자기 요청서가 이미 부정하고 있었다**:
+
+> Q14 요청서 §4 선택지 D의 비고란 원문:
+> "Q13.3의 '둘 다 필수' 요구를 완화 — **새 판정 필요**"
+
+내가 2026-08-15에 구현한 것이 정확히 그 선택지 D이고, 그 요청서를 쓴 것도
+나 자신이다. **이틀 전 자기가 "새 판정 필요"라고 적어둔 변경을 새 판정
+없이 실행했다.** 나머지 blocker 3건: ①§5c가 자기가 위반한 규율("요청받지
+않은 범위 확장은 이 저장소가 경계하는 바로 그 실패 모드다")을 명시하고
+Q15에만 적용한 선택적 rigor, ②`M_allowed` 인용이 non-sequitur(Q13.3은
+QF-DEFER를 `M_allowed`에서 연역한 적 없음 — D-H1a-10 시점에 QF-*가 존재
+하지도 않았다), ③**구조적 회귀** — Q13.3의 존재 이유가 F6의 "해석 조건은
+불충분하다"인데 강등은 그 절반을 해석 조건(L9 보고 문구)으로 되돌렸고,
+수행 주체도 F6이 지적한 것과 같은 운영 세션의 자기 재등록이다.
+
+③은 **4축 중 어느 것도 못 냈고 lead 재실측에서 나왔다** — 4축 프롬프트를
+제작자가 썼기 때문에 "묻지 않은 것은 발견되지 않는다"는 한계의 직접 증거다.
+lead 재실측 7건, **환각 finding 0건**(인용 전부 원문 바이트 일치).
+
+**철회 작업**:
+
+- `_h1a_qualification.py::score_qualification()` — `gate_passes =
+  select and defer`로 원복. `defer_outputs=None`은 `passes: False`
+  (미시행은 통과가 아니다). 모듈 docstring에 철회 경위와 **"왜 그 논증이
+  틀렸는가"**를 기록 — 그럴듯해서 한 번 실행됐던 논증이므로 다음 세션이
+  같은 길을 다시 갈 위험이 있다.
+- `material_unavailable` vs `diagnostic_failed` 구분은 **유지하되**,
+  판정문에 없는 구분이므로 **Q14.2로 상신**해 승인/기각을 받는다(임의 추가로
+  남겨두면 F6이 지적한 "승인되지 않은 규범 문구 추가"와 같아진다).
+- `PREREGISTRATION_TYPED_SCOPE_COHORT.md`: §5a 경고 박스를 "철회됨"으로,
+  §5c/§5e에 철회 배너(원문은 §5(M4) 보존 선례대로 이력 유지 — 이번 건은
+  **§5가 기록한 실패 모드의 재발 사례**라 보존 가치가 더 크다),
+  §5d를 재상신 안내로. **L9는 등록 취소** — 재료 부재는 "한계"가 아니라
+  미해소 blocker이고, L1~L4·L8급 한계로 등록하면 "실험이 이 제약을 안고
+  진행됐다"로 잘못 읽힌다.
+- `h1a_qualification_score.json` 재생성 → `cohort_freeze: blocked`.
+  **원시 5출력(`h1a_qualification_raw.json`)은 무변경** — 채점 규칙만
+  원복됐다. 철회 전 score는 커밋 `3916ac2`에 이력 보존.
+
+**재상신**: `correspondence/DESIGN_REQUEST_H1a_qualification_gate_scope.md`
+— Q14 재상신 + Q14.1/14.2/14.3 + **Q15(QF-SELECT 대칭 적용)를 한 요청서에
+함께** 넣었다. 축 C 지적대로 Q14와 Q15를 분리해 묻는 것 자체가 결함이었다:
+강등 근거가 두 control에 대칭 적용되므로, 한쪽만 묻고 한쪽만 바꾸면 그
+비대칭은 원리가 아니라 "무엇을 물었나"의 산물이 된다. 요청서 §0.5에
+**운영 세션의 무판정 집행 사실을 명시**하고 절차에 대한 추가 제약도
+물었다.
+
+**부수 수리(검토가 찾은 독립 결함)**:
+
+- **D-6** — 새 가드 2개가 `test_guard_negative_coverage.py`의 AST 스캔
+  표면(`assert_*`/`_assert_*`) 밖에 있었다. 이 저장소가 **7/7 실패해서
+  기제로 옮긴 규율이 수동으로 되돌아간 상태**였다.
+  `_assert_manifest_has_not_drifted()` / `_assert_score_path_is_free()`로
+  추출하고 `pytest.raises` 직접 호출 테스트 추가. **실측 확인**: 스캔이
+  두 가드를 `raising=True, covered=True`로 잡는다(게이트가 초록인 것만으로는
+  "스캔 대상이 아니라서 조용한 것"과 구별이 안 되므로 직접 확인).
+- **D-7** — `_git_head()`가 `_h1a_cohort.py`와 바이트 동일 중복이었다
+  (Ponytail 2단 위반). 재사용으로 교체.
+
+게이트: H1a 217 passed/1 skipped, E2.4 118 불변, core pytest 기존
+owlready2 결함 1건 그대로.
+
+**현재 상태**: `cohort_freeze: blocked`(QF-SELECT 통과, QF-DEFER 미시행),
+`freeze_status: FREEZE_BLOCKED`, `INDEPENDENT_SEMANTIC_REVIEW_PASSED = False`.
+**Q14/Q15 판정 대기.**
+
 ---
 
 ## 2026-08-06 — D-H1a-12 §16 구현(조건 1~10) + 독립 리뷰 5차 → FREEZE_BLOCKED

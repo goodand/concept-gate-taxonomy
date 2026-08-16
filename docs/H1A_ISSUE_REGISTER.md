@@ -818,6 +818,35 @@ allowed`, `QF-DEFER.status: material_unavailable`(L9 문구 동반, freeze는
 
 상세는 `OPERATIONS_LOG.md` "2026-08-15" 절(§5·§7·§8).
 
+### I.4 (2026-08-16) 적대 검토 → QF-DEFER 강등 철회, Q14·Q15 재상신
+
+**§I.3의 QF-DEFER 강등(2026-08-15)은 채택되지 않았고 철회됐다.**
+`adversarial-review` 4축 + lead 재실측, blocker 4건. 보고서:
+`docs/feedback/h1a_qf_defer_amendment_review_20260816.md`.
+
+결정적 finding — **Q14 요청서 자신이 이 조치에 "새 판정 필요"라고 주석해
+뒀다**(`DESIGN_REQUEST_H1a_qualification_defer_material.md:128`, 선택지 D).
+실행된 것이 그 선택지이고 새 판정은 없었다. 그 외: §5c가 자기가 위반한
+규율을 명시하고 Q15에만 적용한 선택적 rigor, `M_allowed` 인용의
+non-sequitur, 그리고 **F6이 폐기시킨 "해석 조건" 형태로의 구조적 회귀**
+(이 건은 4축이 못 찾고 lead 재실측에서 나왔다 — 제작자가 검토 범위를
+설계할 때의 한계를 보여주는 실측 사례).
+
+**패턴으로 등재할 것**: *"자기가 쓴 요청서·설계 문서가 이미 답을 적어둔
+경우가 있다 — 새 판단을 하기 전에 그 문서부터 다시 읽어라."* 이번 건은
+`CLAUDE.md`의 "설계 판정을 상신하기 전 — '아직 안 풀렸다'고 단정하지 마라"
+규율의 **거울상**이다. 그 규율은 "이미 풀린 것을 모른 채 새로 풀지 마라"인데,
+이번엔 **이미 '판정이 필요하다'고 스스로 적어둔 것을 모른 채 판정 없이
+실행**했다. 검색 대상에 **자기 자신의 최근 산출물**을 포함해야 한다.
+
+조치: 코드·문서 Q13.3 원안으로 원복(`cohort_freeze: blocked`), L9 등록
+취소(재료 부재는 한계가 아니라 미해소 blocker), Q14를 **Q15와 함께**
+재상신(`correspondence/DESIGN_REQUEST_H1a_qualification_gate_scope.md`).
+부수 결함 2건 수리 — 새 가드가 `test_guard_negative_coverage.py` AST 스캔
+밖이던 것(D-6, 기제화한 규율이 수동으로 회귀), `_git_head()` 중복(D-7).
+
+상세는 `OPERATIONS_LOG.md` "2026-08-16" §9.
+
 ### I.2 남은 것 — 이 섹션에서 반복 서술하지 않는다
 
 **§16의 freeze 해제 조건 12개.** 전문은 `DESIGN_DECISION_H1a_identification_validity.md`
