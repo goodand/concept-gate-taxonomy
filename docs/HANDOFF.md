@@ -1,5 +1,28 @@
 # HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
+- 갱신: **2026-08-16(2)** — **D-H1a-14/15 판정 도착·적용 + QF-SELECT 재실행.**
+  판정문: `DESIGN_DECISION_H1a_qualification_gate_scope.md`. **Q14=E**(gate
+  재설계) / **Q15=G**(QF-SELECT·QF-DEFER **둘 다 non-blocking capability
+  diagnostic**). **freeze 권한이 식별 계약으로 분리**됐다 — qualification은
+  더 이상 아무것도 막지 않고, `cohort_freeze`는
+  `{determined_by: identification_contract}`로 소유자만 지목한다.
+  QF-DEFER 미시행은 **L9로 정식 등록**(§5e). 새 거버넌스 규칙:
+  *freeze_blocker ↔ diagnostic 이동은 estimand/governance 변경이며 외부
+  판정 전에 실행 금지.*
+  **별건 — 하네스 결함 발견·수정**: 정본 하네스(`_h1a_cohort.py`)와 대조한
+  결과 2026-08-15 QF-SELECT 5건이 **스키마 미강제 + 다른 모델**(정의 파일에
+  `model:` 없어 세션 모델 상속)로 실행됐음이 드러나, 코호트와 동일 경로
+  (Workflow schema 강제 + `claude-opus-5`)로 **재실행**했다(결과 동일 5/5).
+  기존 5건은 `h1a_qualification_raw_historical_20260815.json`으로 보존.
+  하네스에 `protocol`·`trial_subject_surface`·`decision_schema_sha256` 배선,
+  원시 파일이 **자기 provenance를 선언**하도록 요구하는 가드 추가, drift
+  가드를 구조적 staleness까지 잡도록 강화. 게이트 H1a 237 passed/1 skipped.
+  **다음 세션이 할 일**: Q13.5/13.6(다음 독립 리뷰 자체의 절차) → **독립
+  리뷰 전면 재실행**(`INDEPENDENT_SEMANTIC_REVIEW_PASSED` 여전히 `False`)
+  → 통과해야 `repaired_cohort_trials` 40건.
+  ⚠️ **그 독립 리뷰의 범위는 제작자가 설계하지 마라** — 이번에 4축 적대
+  검토가 하네스 결함을 통째로 놓쳤고, 범위를 제작자가 잡았던 것이 원인이다
+  (`H1A_ISSUE_REGISTER.md` §I.5 메타 항목).
 - 갱신: **2026-08-16** — ⚠️ **아래 2026-08-15(2)의 QF-DEFER 강등은 철회됐다.**
   `adversarial-review` 4축 + lead 재실측에서 blocker 4건으로 **채택 불가**
   (`docs/feedback/h1a_qf_defer_amendment_review_20260816.md`). 결정적

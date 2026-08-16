@@ -847,6 +847,45 @@ non-sequitur, 그리고 **F6이 폐기시킨 "해석 조건" 형태로의 구조
 
 상세는 `OPERATIONS_LOG.md` "2026-08-16" §9.
 
+### I.5 (2026-08-16) D-H1a-14/15 적용 + 하네스 대조 → QF-SELECT 재실행
+
+**판정 도착**: `DESIGN_DECISION_H1a_qualification_gate_scope.md`.
+Q14=E(gate 재설계), Q15=G(두 control 모두 non-blocking capability
+diagnostic). freeze 권한이 식별 계약으로 분리됐다. 근거는
+`IndependentDiagnostic ⇏ HardFreezePrerequisite` — §I.4의 무판정 강등과
+결론 방향은 같으나 **논거가 다르고**, 판정문이 그때의 절차 위반 기록을
+유지하라고 명시했다. 새 거버넌스 규칙 1건 부과: *freeze_blocker ↔
+diagnostic 이동은 구현 변경이 아니라 estimand/governance 변경이며 외부
+판정 전에 실행하지 않는다.*
+
+**하네스 대조에서 나온 별건 결함** — 사용자 지시로 정본 하네스
+(`_h1a_cohort.py`+`_h1a_score.py`)와 `_h1a_qualification_run.py`를 직접
+대조한 결과, 2026-08-15 QF-SELECT 5건이 **본 코호트와 다른 transport
+(스키마 미강제)와 다른 모델(정의 파일에 `model:` 미지정 → 세션 모델 상속)**
+로 실행됐음이 드러났다. 5건을 코호트와 동일 경로로 **재실행**(결과 동일
+5/5), 기존 5건은 historical로 보존.
+
+**패턴으로 등재할 것 2건**:
+
+1. ***prompt byte-identity는 필요조건이지 충분조건이 아니다.*** capability
+   diagnostic이 식별하는 것은 프롬프트가 아니라 **어떤 transport 하의 어떤
+   subject**다. 판정문의 byte-identity 재사용 조건을 통과했다고 재사용이
+   정당화되지 않는다.
+2. ***기록되지 않은 것은 "괜찮음"이 아니다.*** 이 결함은 **자기 자신을
+   은폐**했다 — manifest가 모델·transport를 안 남겨서, 산출물만 봐서는
+   불일치를 알 방법이 없었다. 그래서 원시 출력 파일이 **자기 provenance를
+   선언**하도록 요구하고, 선언이 없으면 거부하도록 기제화했다. 같은 이유로
+   drift 가드도 강화 — 해시만 비교하면 **구조가 낡아도 통과**한다
+   (실제로 통과했다). **구조적 staleness도 drift다.**
+
+**메타**: 이 결함은 §I.4의 적대 검토 4축이 **전부 놓쳤다.** 내가 검토
+범위를 "판정문"으로 잡고 "하네스"로 잡지 않았기 때문이다. §I.4의 L-1
+(lead 재실측에서만 나온 finding)에 이어 **제작자가 검토 범위를 설계할 때의
+한계가 두 번째로 실증**됐다. 다음 독립 리뷰는 범위 설정을 제작자가 하지
+않아야 한다.
+
+상세는 `OPERATIONS_LOG.md` "2026-08-16" §10·§11.
+
 ### I.2 남은 것 — 이 섹션에서 반복 서술하지 않는다
 
 **§16의 freeze 해제 조건 12개.** 전문은 `DESIGN_DECISION_H1a_identification_validity.md`

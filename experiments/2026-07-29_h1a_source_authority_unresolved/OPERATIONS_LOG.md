@@ -315,6 +315,137 @@ owlready2 결함 1건 그대로.
 `freeze_status: FREEZE_BLOCKED`, `INDEPENDENT_SEMANTIC_REVIEW_PASSED = False`.
 **Q14/Q15 판정 대기.**
 
+### 10. (2026-08-16) D-H1a-14/15 판정 도착·적용
+
+**Q14=E**(qualification gate 재설계), **Q15=G**(두 control 모두 non-blocking
+capability diagnostic). 판정문 원문: `DESIGN_DECISION_H1a_qualification_gate_scope.md`.
+핵심은 **freeze 권한의 분리**다 — `IndependentDiagnostic ⇏
+HardFreezePrerequisite`. "독립적으로 측정한다"와 "통과 못 하면 실행할 수
+없다"는 서로 다른 설계 결정이고, 식별가능성 C에 대해 `C → (S ∧ D)`는
+tautology가 아니다. 두 control은 대칭이므로(`Role(QF_SELECT) =
+Role(QF_DEFER)`) 한쪽만 강등하는 것도 기각됐다.
+
+**결론이 2026-08-15의 무판정 강등과 같은 방향이지만, 그것이 그때의 절차를
+정당화하지 않는다.** 판정문 자신이 "절차 위반이라는 현재 기록을
+유지하라"고 명시했다. 근거도 다르다 — 그때 든 `M_allowed` 논거는
+non-sequitur였고(§9), 판정은 전혀 다른 논거(진단/전제조건 구분)로 같은
+결론에 도달했다. **운 좋게 맞은 것은 맞은 것이 아니다.**
+
+**적용 내역**:
+
+- `_h1a_qualification.py` — 출력이 gate 판정에서 **capability diagnostics
+  기록**으로 바뀌었다. `record_class: h1a_capability_diagnostics`,
+  `cohort_freeze: {determined_by: identification_contract}`(판정이 아니라
+  **소유자 지목**). 상태 어휘를 control-무관하게 통일
+  (`passed`/`failed`/`material_unavailable`) — Q15=G가 두 역할을 동일하게
+  만들었으므로 `DEFER_` 접두사는 그 자체로 기각된 비대칭을 재인코딩한다.
+  `FLOOR_OR_CEILING_FAILURE` 상수는 **은퇴**(hard-gate 시절 의미를 담고
+  있어 혼동을 부른다). Q13.3이 승인한 문장은 **원문 그대로 보존**하되
+  `nonzero_effect_invalidated: false`를 함께 기록 — 승인 문구를 새 어휘에
+  맞춰 다시 쓰는 것이 F6의 결함이다.
+- `_h1a_contract.py` — `QUALIFICATION_COMMON` 표면 신설(Q14.3).
+  **새 문장 저작 0줄**: `_fill_policy_slots()`가 이미 만들어내는 공통
+  표면을 이름 붙였을 뿐이다. `assert_qualification_surface_is_treatment_invariant()`가
+  두 명제를 검사 — ①KEPT/REMOVED 어느 쪽에서 채워도 바이트 동일
+  (treatment_invariant), ②현재 REMOVED 바이트와 동일(재사용 조건).
+  음성 테스트는 **F10 수정분(`policy_module` 주입)을 재사용**해 arm-의존
+  정책 모듈을 주입하는 방식으로 작성했다.
+- `PREREGISTRATION_TYPED_SCOPE_COHORT.md` §5f(현행 규범)·§5g(거버넌스
+  규칙) 신설, §5e에 **L9 정식 등록**. L9는 2026-08-15에 등록했다 철회한
+  번호인데, 그때는 무판정 강등의 부산물이라 미해소 blocker를 "한계"로
+  잘못 표기하는 것이었고 지금은 판정이 직접 명령한 한계다. 같은 번호,
+  다른 근거.
+
+**판정문 사실 주장 대조 결과**(`DESIGN_DECISION_…gate_scope.md` §2에 기록):
+Q14.3의 조건부 전제(REMOVED가 Q1 절 없는 공통 표면)는 **실측 성립**.
+그리고 "freeze에서 capability를 떼라"는 지시에 대해 — **그 결합은 애초에
+코드에 없었다.** `_h1a_policy.py`에 qualification 참조 0건, `cohort_freeze`
+생산자 1곳·소비자 0곳, D-H1a-13 §10 조건 10은 문서에만 있고 미구현.
+즉 `score_qualification()`은 **아무도 읽지 않는 freeze 판정을 스스로
+발행**하고 있었다. 2026-08-15 강등이 실질적으로 위험했던 이유도 이것이다 —
+실제 freeze를 푼 게 아니라 사전등록 문서의 규범만 바꿨다.
+
+### 11. (2026-08-16) 하네스 대조 → **QF-SELECT 5건 재실행**
+
+**계기**: 사용자가 "실험용 하네스가 문제라면 codex가 만든 하네스의 코드를
+directly READ then comparison"이라고 지시. 정본 하네스
+(`_h1a_cohort.py`+`_h1a_score.py`)와 내가 만든
+`_h1a_qualification_run.py`를 **무엇을 고정(pin)하는가** 기준으로 대조했다.
+
+**결과 — 적대 검토 4축이 전부 놓친 결함이 나왔다.** 놓친 이유가 명확하다:
+내가 검토 범위를 **"판정문/amendment"로 잡고 "하네스"로 잡지 않았다.**
+제작자가 검토 범위를 설계할 때의 한계가 §9의 L-1에 이어 **두 번째로**
+실증됐다.
+
+정본 하네스가 고정하는데 내 하네스가 고정하지 않던 것:
+
+| 누락 | 정본 기록값 |
+|---|---|
+| `protocol.transport` | `schema_forced_structured_output` |
+| `protocol.trial_model` | `claude-opus-5` |
+| `trial_subject_surface` | 정의 파일 sha + system prompt sha + `tools: []` 단언 |
+| `decision_schema_sha256` | (있음) |
+| `contract_prompt_sha256`·`payload_sha256`·`qualification_sha256` | (있음) |
+
+**실질 결함 2건**:
+
+1. **transport 불일치.** 본 코호트는 Workflow `agent(prompt, {schema})`로
+   **스키마 강제** 실행됐다. 2026-08-15 QF-SELECT 5건은 Agent 도구로
+   dispatch했는데 **그 도구에는 schema 파라미터가 없다** — 출력이 JSON이었던
+   것은 프롬프트가 요청해서지 강제된 것이 아니다.
+2. **피험자 모델 불일치(추정).** `h1a-decider.md`에 `model:` 지정이 없어
+   **부모 세션 모델을 상속**한다. 5건 dispatch 당시 세션은 Sonnet 5였고
+   코호트 protocol은 `trial_model: claude-opus-5`다. → 본 코호트의 피험자가
+   아닌 다른 모델을 진단한 셈.
+
+**그리고 이것이 핵심**: 2번을 **산출물로 증명할 수 없었다.** 내 manifest가
+모델·transport·피험자 표면을 하나도 안 남겼기 때문이다. **증명 불가 자체가
+결함**이며, 이 결함은 자기 자신을 은폐한다.
+
+**교훈(재사용 가치 높음)**: **prompt byte-identity는 필요조건이지
+충분조건이 아니다.** capability diagnostic이 식별하는 것은 *프롬프트*가
+아니라 **어떤 TRANSPORT 하의 어떤 SUBJECT**다. Q14.3의 byte-identity 재사용
+조건을 통과했다고 재사용이 정당화되지 않는다.
+
+**수정**:
+
+- `_h1a_qualification_run.py`가 `protocol`·`trial_subject_surface`·
+  `decision_schema_sha256`을 기록. 피험자 계약은 **복제가 아니라 재사용** —
+  `TRIAL_MODEL = cohort_mod.MODEL`, `TRIAL_PARAMETERS = cohort_mod.PARAMETERS`,
+  `cohort_mod._trial_subject_surface()` 호출. 코호트의 모델이 바뀌면 진단도
+  자동으로 따라간다(따라가지 않으면 진단이 무의미해지므로 구조로 강제).
+- **원시 출력 파일이 자기 provenance를 선언하도록 요구**
+  (`_assert_raw_provenance_matches_the_manifest`). provenance 블록이 없으면
+  **"호환된다고 가정"하지 않고 거부**한다 — "기록 안 됨"은 "괜찮음"이 아니다.
+  2026-08-15 파일이 이 가드에 정확히 걸린다.
+- drift 가드 강화. 기존 가드는 `rendered_prompt_sha256`만 비교했는데 그 값은
+  **구조가 낡아도 안 바뀐다**(실제로 `protocol` 없는 낡은 manifest가 조용히
+  통과해 `KeyError`로 터졌다). 이제 `protocol`·`trial_subject_surface`·
+  `decision_schema_sha256`까지 비교하고, 필드 자체가 없으면 "이 manifest는
+  해당 필드 이전 것"이라고 거부한다. **구조적 staleness도 drift다.**
+- score 레코드가 **자기 출처를 서술**하도록 `protocol`·`trial_subject_surface`·
+  `decision_schema_sha256`·`raw_provenance`를 발췌 포함.
+
+**재실행**: 코호트와 동일 경로로 5건 재실행 — Workflow `agent()` +
+`schema` 강제 + `model: 'opus'` 명시. 결과 **5/5
+`select_type`/`structural_composition`**(변화 없음). rationale이 이전 실행보다
+확연히 길고 구조가 달라, 다른 모델이었다는 정황과 일치한다.
+
+기존 5건은 **삭제하지 않고** `h1a_qualification_raw_historical_20260815.json`으로
+보존 — 실제 관측이고, Q14.3이 superseded run의 historical 보존을 지시한다.
+`record_class`에 `_HISTORICAL`, `provenance_recorded: false`, 그리고 왜
+superseded인지를 파일 안에 기록했다. **채점하지 않고 QF-SELECT 증거로
+인용하지 않는다.**
+
+게이트: H1a 237 passed/1 skipped, E2.4 118 불변, core pytest 기존 owlready2
+결함 1건 그대로. 새 `_assert_*` 가드 4개 전부 AST 스캔에 잡히고 covered
+확인(게이트 초록만으로는 "스캔 대상 아님"과 구별되지 않으므로 직접 확인).
+
+**현재 상태**: QF-SELECT `passed`(5/5, 올바른 피험자·transport),
+QF-DEFER `material_unavailable`(L9 등록). `cohort_freeze`는 이 계층이
+판정하지 않는다. `freeze_status: FREEZE_BLOCKED`,
+`INDEPENDENT_SEMANTIC_REVIEW_PASSED = False` 유지.
+
 ---
 
 ## 2026-08-06 — D-H1a-12 §16 구현(조건 1~10) + 독립 리뷰 5차 → FREEZE_BLOCKED
