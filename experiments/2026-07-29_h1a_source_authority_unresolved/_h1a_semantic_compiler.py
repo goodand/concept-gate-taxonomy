@@ -112,8 +112,16 @@ POLICY_FAMILIES = (
 DANGLING_REFERENCE = "DANGLING_REFERENCE"
 EXPERIMENT_ARM_DISCLOSURE = "EXPERIMENT_ARM_DISCLOSURE"
 DUPLICATE_CARRIER = "DUPLICATE_CARRIER"
+# Q13.1 renamed `source_order` because it read as BOTH presentation order and
+# source-kind priority -- one non-target axis quietly covering the target one.
+# Reverting to the ambiguous wording restores that defect while leaving the
+# policy "present", so presence alone cannot catch it.
+AMBIGUOUS_AXIS_PHRASING = "AMBIGUOUS_AXIS_PHRASING"
 
-STRUCTURAL_ITEMS = (DANGLING_REFERENCE, EXPERIMENT_ARM_DISCLOSURE, DUPLICATE_CARRIER)
+STRUCTURAL_ITEMS = (
+    DANGLING_REFERENCE, EXPERIMENT_ARM_DISCLOSURE, DUPLICATE_CARRIER,
+    AMBIGUOUS_AXIS_PHRASING,
+)
 
 # Q13.5: families where `unknown` is not an acceptable terminal state. Listed
 # here for the caller's gate; this module still RETURNS unknown when that is
@@ -369,6 +377,24 @@ def detect_experiment_arm_disclosure(text: str) -> list[str]:
     return sorted({m.group(0) for m in _ARM_METALANGUAGE.finditer(flat)})
 
 
+_AMBIGUOUS_PHRASINGS = {
+    "source order": (
+        "Q13.1 renamed this axis because 'source order' reads as both "
+        "presentation order and source-kind priority. The disambiguated "
+        "wording is 'the order in which evidence items appear in the packet'."
+    ),
+}
+
+
+def detect_ambiguous_axis_phrasing(text: str) -> list[dict]:
+    flat = _join_wrapped(text).lower()
+    return [
+        {"phrasing": phrase, "why": why}
+        for phrase, why in sorted(_AMBIGUOUS_PHRASINGS.items())
+        if phrase in flat
+    ]
+
+
 def detect_repeated_mentions(text: str) -> dict[str, int]:
     """Sentences that each independently express a family -- a CANDIDATE list.
 
@@ -459,6 +485,7 @@ def compile_policy_graph(
         "structural": {
             DANGLING_REFERENCE: dangling,
             EXPERIMENT_ARM_DISCLOSURE: detect_experiment_arm_disclosure(rendered_text),
+            AMBIGUOUS_AXIS_PHRASING: detect_ambiguous_axis_phrasing(rendered_text),
             # Candidate list only -- see detect_repeated_mentions' docstring.
             DUPLICATE_CARRIER: {
                 "repeated_mention_counts": detect_repeated_mentions(rendered_text),

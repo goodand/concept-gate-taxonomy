@@ -74,6 +74,19 @@ UNRESOLVED = "unresolved"
 NO_EXPECTED_COUNTERPART = "no_expected_counterpart"
 NO_OBSERVED_COUNTERPART = "no_observed_counterpart"
 MIXED_EXPECTATION = "mixed_expectation"
+STRUCTURAL_DEFECT = "structural_defect"
+
+# sec 9.3's "별도 구조 항목" are defects in their own right, independent of any
+# family's present/absent state. `compare()` ignored them until 2026-08-16,
+# when the mutation pack's reality check showed a reintroduced dangling
+# reference produced NO audit finding at all -- the defect class that
+# produced D-H1a-13 in the first place would have passed silently.
+STRUCTURAL_IS_DEFECT = {
+    sc.DANGLING_REFERENCE: True,
+    sc.EXPERIMENT_ARM_DISCLOSURE: True,
+    sc.AMBIGUOUS_AXIS_PHRASING: True,
+    sc.DUPLICATE_CARRIER: False,   # candidate list only -- see its docstring
+}
 
 
 class AuditContractError(Exception):
@@ -197,6 +210,21 @@ def compare(observed: dict, expected: dict) -> dict:
                     "the rendered prose does not say what the canonical policy "
                     "says -- this is drift, and the DSL is canonical"
                 ),
+            })
+
+    for item, is_defect in sorted(STRUCTURAL_IS_DEFECT.items()):
+        if not is_defect:
+            continue
+        observed_item = observed["structural"].get(item)
+        if observed_item:
+            findings.append({
+                "kind": STRUCTURAL_DEFECT, "structural_item": item,
+                "observed": observed_item,
+                # Referential integrity is one of Q13.5's target-critical
+                # families; an unresolved referent is not a stylistic note.
+                "target_critical": item in (
+                    sc.DANGLING_REFERENCE, sc.EXPERIMENT_ARM_DISCLOSURE),
+                "detail": "sec 9.3 structural item present in the rendered prompt",
             })
 
     for axis in expected["axes_without_a_family"]:
