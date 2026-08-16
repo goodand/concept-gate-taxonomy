@@ -506,24 +506,47 @@ non_target / evidence_scope / decision_mapping) 전원 자격 취득 —
   실제로 보는 렌더 결과가 아니었다.
 둘 다 바로잡아 2차(condition_12)를 실물 아티팩트로 재실행했다.
 
-**condition_12 결과: 미완 — 5명 중 4명이 조직 월 지출 한도 초과로 실패.**
-R3(non_target)만 완료했고 **승인**했다(양 arm이 Q1 절 하나만 다르고
-`kept.replace(Q1,'',1) == removed`, Q7 불릿 바이트 동일, payload 바이트 동일이며
-count/order를 승인하는 필드 없음을 스스로 실측). 프로토콜상 보고서를 안 낸
-리뷰어가 있으면 `assess()`가 거부하므로 **독립 리뷰는 통과하지 않았다.**
-`INDEPENDENT_SEMANTIC_REVIEW_PASSED = False` 유지.
+**condition_12 결과: 충족 (한도 복구 후 재실행 완료).**
+1차 시도에서 5명 중 4명이 조직 월 지출 한도로 중단됐고 R3만 완료했다.
+한도 복구 후 **R1·R2·R4·R5만 재실행**(자격 검증은 이미 통과했고 대상이
+바뀌지 않았으므로 재실행 안 함). **5명 전원 승인, blocker 0 · major 0.**
 
-**R3가 찾은 내 결함(수정 완료)**: `EVIDENCE_COUNT_PROHIBITION`이 capability
-report에는 미입증인데 동시에 `agreed`에 들어가 **커버리지를 과대 표시**했다.
-"매치됐다"와 "이 detector가 이 family를 신뢰성 있게 매치한다"는 다른 주장이므로
-`agreed`(입증된 detector)와 `agreed_by_unproven_detector`로 분리했다.
-R3가 지적한 두 번째 건(조건부 carve-out 때문에 상태가 payload 의존인데
-compiler가 평면적 "present"로 보고)은 **미수정 — 다음 세션 몫**.
+각 리뷰어가 자기 범위의 target-critical 상태를 **compiler에 의존하지 않고
+직접 독해로** 해소했다고 명시했다. 리뷰어들이 독립 실측한 것: 양 arm 차이는
+Q1 절 하나뿐(`kept.replace(Q1,'',1) == removed`), Q7 불릿·payload 바이트
+동일, REMOVED의 `absent_verified`는 침묵이 아니라 GLOBAL_DEFAULT 절이 적극
+담보, payload가 양 arm 모두 최종 위치라 그 뒤 지시문 없음, 옛 conflict→defer
+문구가 `cohort_prompts.json`에 남은 것은 폐기된 2026-08-03 코호트의 의도적
+provenance이며 live render 경로가 안 읽음.
+
+**R2가 1차에서 제기한 trust-boundary 가설을 실물 확인 후 스스로 철회**했다.
+
+`assess()` 판정: `condition_11_met: True`, `condition_12_met: True`,
+`independent_semantic_review_passed: True`. **그러나 플래그는 사람이
+설정한다** — 모듈이 그렇게 설계됐고, 이번 세션이 무판정 집행으로 한 번
+철회당한 뒤 세운 규율이다. `INDEPENDENT_SEMANTIC_REVIEW_PASSED`는 **아직
+`False`**이며 사용자 결정 대기.
+
+**리뷰어가 찾은 계측 결함 — 4명이 독립적으로 같은 지점**:
+`EVIDENCE_COUNT_PROHIBITION`이 capability report에는 미입증인데 동시에
+`agreed`에 계상돼 커버리지를 과대 표시했다(R1·R2·R4·R5). 수정 완료
+(`agreed` / `agreed_by_unproven_detector` 분리). **R2가 붙인 제약을
+기록이 준수한다** — "freeze 기록이 EVIDENCE_COUNT나 GLOBAL_DEFAULT에 대해
+compiler_diff를 독립 확인 근거로 인용하면 그 인용은 부당하다."
+
+**미수정 3건(다음 세션)**: ①정본 DSL에 기대값 없는 target-critical family
+3개는 compiler로 구조적 반증 불가 — 특히 `GLOBAL_DEFAULT_PERMISSION`은
+REMOVED의 absent_verified를 담보하는 유일 carrier인데 compiler가 판정 보류
+하는 자리다(R2·R4). ②분기 상보성을 표현하는 family 부재(R5).
+③조건부 carve-out의 payload 의존성을 compiler가 평면 present로 보고(R3).
+
+전문: `docs/feedback/h1a_independent_semantic_review_20260816.md`
 
 게이트: H1a 301 passed/1 skipped, 루트 8 passed/0 failed/1 blocked.
 
-**남은 것**: condition_12 리뷰 4건 재실행(할당량 해소 후) → 통과 시에만
-`INDEPENDENT_SEMANTIC_REVIEW_PASSED` 설정 → `repaired_cohort_trials` 40건.
+**남은 것**: `INDEPENDENT_SEMANTIC_REVIEW_PASSED` 설정 여부 **사용자 결정** →
+설정 시 `repaired_cohort_trials` 40건 착수 가능. 계측 미수정 3건은 코호트
+실행을 막지 않으나(리뷰어들이 독해로 해소했다) 다음 리뷰 전에 닫는 것이 좋다.
 
 ---
 
