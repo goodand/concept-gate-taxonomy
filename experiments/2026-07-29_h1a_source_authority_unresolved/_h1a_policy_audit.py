@@ -236,11 +236,26 @@ def compare(observed: dict, expected: dict) -> dict:
             ),
         })
 
-    agreed = sorted(
+    # Agreement from a detector whose capability is NOT demonstrated must not
+    # be pooled with agreement from a proven one. Found by reviewer R3 in the
+    # 2026-08-16 condition-12 review: EVIDENCE_COUNT_PROHIBITION appeared under
+    # `agreed` while the same report listed it as unproven, so a reader
+    # reconciling the two fields got a coverage claim the instrument had not
+    # earned. The match may well be correct -- a positive detection is
+    # self-evidencing in a way an absence is not -- but "it matched" and "this
+    # detector is known to match this family reliably" are different claims and
+    # are now reported as different fields.
+    matched = [
         family for family, exp in expected["expectations"].items()
         if exp["expected_state"] is not None
         and observed_by_id.get(family, {}).get("state") == exp["expected_state"]
-    )
+    ]
+    proven_here = {
+        family for family in matched
+        if observed_by_id[family].get("capability_proven")
+    }
+    agreed = sorted(proven_here)
+    agreed_by_unproven_detector = sorted(set(matched) - proven_here)
     blocking = [
         f for f in findings
         if f["kind"] in (STATE_MISMATCH, UNRESOLVED) and f.get("target_critical")
@@ -252,6 +267,7 @@ def compare(observed: dict, expected: dict) -> dict:
         # sec 9.5: capped by the observed graph that fed it.
         "assurance": observed["assurance"],
         "agreed": agreed,
+        "agreed_by_unproven_detector": agreed_by_unproven_detector,
         "findings": findings,
         "target_critical_blocking": blocking,
         "clean": not findings,

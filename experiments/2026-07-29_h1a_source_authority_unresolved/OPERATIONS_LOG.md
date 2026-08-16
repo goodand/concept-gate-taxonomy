@@ -446,6 +446,87 @@ QF-DEFER `material_unavailable`(L9 등록). `cohort_freeze`는 이 계층이
 판정하지 않는다. `freeze_status: FREEZE_BLOCKED`,
 `INDEPENDENT_SEMANTIC_REVIEW_PASSED = False` 유지.
 
+### 13. (2026-08-16) Q13.6 완결 + Q13.5 + 독립 리뷰 — **condition_12 미완(할당량)**
+
+의존성 분석 후 ①→②→③→④ 순서로 진행.
+
+**① expected graph 비교(§9.4 마지막 화살표)** — `_h1a_policy_audit.py` 신설.
+compiler는 정책을 import하면 안 되고(AST 강제), 그 독립성은 누군가 비교해야
+값이 있으므로 **양쪽을 볼 수 있는 유일한 모듈**로 분리했다. mutation 테스트가
+핵심: REMOVED에 잔여 금지를 주입하면 target-critical `state_mismatch`로 잡힌다
+(한국어·영어 양쪽). KEPT에서 절을 지우는 역방향도 잡힌다. **family(8)과
+axis(5)가 1:1이 아니며**(template-level 3개는 대응 axis 없음,
+`external_source_retrieval`은 전용 family 없음) 양방향 모두 findings로 노출한다 —
+조용히 버리면 family 하나가 통째로 미감사인 채 보고서가 clean으로 읽힌다.
+
+**② GLOBAL_DEFAULT_PERMISSION 탐지 능력** — target-critical 중 유일한 미입증
+이었다. 원인이 둘로 갈렸다: (a) 내 fixture가 **라벨과 다른 것**을 담고 있었고
+("필드 범위 축소"인데 내용은 Q13.2의 범위 *확장*), (b) 조건부 형태를 놓치는
+**진짜 detector 결함**. 고정 문구 목록을 의미 핵심(허가 표현 + 금지 참조 공기)
+으로 교체.
+
+**가장 중요한 부분**: 모든 fixture를 통과시킨 뒤 **fixture 밖 변형으로
+일반화 검증**을 했더니 3개 중 2개를 놓쳤다. 거기서 "proven"을 보고했으면 이
+계층이 막으려던 허위 커버리지 주장 그 자체가 된다. **probe의 실패를 fixture로
+승격**했고(자기가 아는 약점보다 약한 fixture 집합은 거짓 proven을 만든다),
+detector를 확장했다(`forbid`가 금지 어휘에 아예 없었다). 남은 1건(비국소
+부정)은 `KNOWN_DETECTION_LIMITS`에 사유·담당과 함께 등재 —
+저장소의 `KNOWN_UNPROVEN` 관례 그대로이며, 조용히 동작하기 시작하면 실패하는
+테스트로 썩는 것을 막는다.
+
+**③ blinded mutation pack(Q13.5)** — `_h1a_mutation_pack.py`.
+**clean packet 필수**(없으면 "항상 결함 있다고 답하기"가 통과해 아무것도 측정
+못 한다), **답안지 분리 반환**, 그리고 **변이 진위 검증**(정책 의미를 안 바꾸는
+변이로 리뷰어를 시험하면 노이즈를 재는 것).
+
+그 진위 검증이 6개 중 **3개가 무력함**을 잡아냈고, 원인은 전부 결함이었다:
+- **`compare()`가 §9.3 구조 항목을 통째로 무시**하고 있었다. dangling
+  reference를 재주입해도 findings가 0건 — **D-H1a-13을 낳은 바로 그 결함
+  종류가 조용히 통과**했다. 구조 항목을 findings로 편입.
+- presentation-order detector가 Q13.1이 **모호해서 개명한** `source order`를
+  여전히 유효 표현으로 받았다. 되돌려도 "present"라 존재 검사로는 못 잡는다 →
+  `AMBIGUOUS_AXIS_PHRASING` 구조 항목 신설.
+- M5 변이가 Q13.2의 두 문장 중 하나만 지워 무력했다.
+
+**④ 독립 리뷰 실행** — `_h1a_review_protocol.py`로 절차를 **코드화**했다.
+2026-08-16 적대 검토가 하네스 결함을 통째로 놓친 원인이 "검토 대상 세션이
+검토 범위를 정한 것"이었으므로, 범위 선언·blinding·자격 채점을 실행자 재량에서
+빼앗는다. 자격 미달자의 승인은 **기계적으로 폐기**되고, 대칭적으로 **그의
+blocker도 세지 않는다**(측정 안 된 판단은 양방향으로 측정 안 된 것이다).
+
+**condition_11 결과: 통과.** 리뷰어 5명(target_axis / referential /
+non_target / evidence_scope / decision_mapping) 전원 자격 취득 —
+변이 6건 **전원 탐지, 오탐 0, 누락 0**.
+
+1차 실행에서 **내 프로토콜 결함 2건**이 리뷰어에 의해 드러났다:
+- condition_11은 `rendered_prompt_reviewed`와 `adversarial_mutation_pack_used`를
+  **별개 요구**로 나열하는데 내가 변이 패킷만 주고 실물을 안 줬다 → 그들의
+  `scope_findings`는 주입 변이를 실험 결함으로 읽은 것이라 리뷰로 셀 수 없다.
+- R4가 잡음: 내가 준 것은 `{payload_json}` **미치환 arm 템플릿**이었지 피험자가
+  실제로 보는 렌더 결과가 아니었다.
+둘 다 바로잡아 2차(condition_12)를 실물 아티팩트로 재실행했다.
+
+**condition_12 결과: 미완 — 5명 중 4명이 조직 월 지출 한도 초과로 실패.**
+R3(non_target)만 완료했고 **승인**했다(양 arm이 Q1 절 하나만 다르고
+`kept.replace(Q1,'',1) == removed`, Q7 불릿 바이트 동일, payload 바이트 동일이며
+count/order를 승인하는 필드 없음을 스스로 실측). 프로토콜상 보고서를 안 낸
+리뷰어가 있으면 `assess()`가 거부하므로 **독립 리뷰는 통과하지 않았다.**
+`INDEPENDENT_SEMANTIC_REVIEW_PASSED = False` 유지.
+
+**R3가 찾은 내 결함(수정 완료)**: `EVIDENCE_COUNT_PROHIBITION`이 capability
+report에는 미입증인데 동시에 `agreed`에 들어가 **커버리지를 과대 표시**했다.
+"매치됐다"와 "이 detector가 이 family를 신뢰성 있게 매치한다"는 다른 주장이므로
+`agreed`(입증된 detector)와 `agreed_by_unproven_detector`로 분리했다.
+R3가 지적한 두 번째 건(조건부 carve-out 때문에 상태가 payload 의존인데
+compiler가 평면적 "present"로 보고)은 **미수정 — 다음 세션 몫**.
+
+게이트: H1a 301 passed/1 skipped, 루트 8 passed/0 failed/1 blocked.
+
+**남은 것**: condition_12 리뷰 4건 재실행(할당량 해소 후) → 통과 시에만
+`INDEPENDENT_SEMANTIC_REVIEW_PASSED` 설정 → `repaired_cohort_trials` 40건.
+
+---
+
 ### 12. (2026-08-16) Q13.6 착수 — semantic compiler + capability gate
 
 **owlready2 게이트 red 해소 먼저**(HANDOFF §10.1 승인·적용). 이 저장소가 이미

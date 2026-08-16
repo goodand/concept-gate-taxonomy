@@ -56,16 +56,30 @@ def _findings_for(report, policy_id, kind=None):
 
 # --- the shipping prompts -------------------------------------------------
 
-def test_every_mappable_family_agrees_in_both_arms():
+def test_every_mappable_family_matches_in_both_arms():
     for label, arm in (("kept", "PROHIBITION_KEPT"), ("removed", "PROHIBITION_REMOVED")):
         report = audit.audit_arm(_rendered(arm), label, proven_families=PROVEN)
-        assert set(report["agreed"]) == {
+        assert set(report["agreed"]) | set(report["agreed_by_unproven_detector"]) == {
             sc.EVIDENCE_COUNT_PROHIBITION,
             sc.EVIDENCE_ITEM_PRESENTATION_ORDER_PROHIBITION,
             sc.OUTSIDE_DOMAIN_KNOWLEDGE_PROHIBITION,
             sc.SOURCE_META_REASONING_PROHIBITION,
         }, label
         assert report["target_critical_blocking"] == [], label
+
+
+def test_agreement_from_an_unproven_detector_is_reported_separately():
+    """Reviewer R3, 2026-08-16: a family listed as unproven in the capability
+    report was simultaneously counted under `agreed`, overstating coverage.
+    "It matched" and "this detector reliably matches this family" are
+    different claims."""
+    report = audit.audit_arm(_rendered("PROHIBITION_REMOVED"), "removed",
+                             proven_families=PROVEN)
+    assert sc.EVIDENCE_COUNT_PROHIBITION not in report["agreed"]
+    assert sc.EVIDENCE_COUNT_PROHIBITION in report["agreed_by_unproven_detector"]
+    assert not set(report["agreed"]) - set(PROVEN), (
+        "`agreed` must contain only families whose detector is demonstrated"
+    )
 
 
 def test_the_manipulated_axis_agrees_with_the_dsl_in_both_directions():
