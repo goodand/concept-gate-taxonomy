@@ -228,3 +228,36 @@ def test_unresolved_target_critical_reports_only_unknown_ones():
         claim = next(c for c in graph["claims"] if c["policy_id"] == pid)
         assert claim["state"] == sc.UNKNOWN
         assert pid in sc.TARGET_CRITICAL
+
+
+# --- known detection limits must stay real --------------------------------
+
+def test_known_detection_limits_are_not_stale():
+    """If a recorded limit silently starts working, the record has become a
+    false claim about the compiler's weakness -- remove the entry rather than
+    leave it. Mirrors `test_guard_negative_coverage`'s staleness check."""
+    for policy_id, cases in cap.KNOWN_DETECTION_LIMITS.items():
+        detector = sc._DETECTORS[policy_id]
+        for sentence, reason in cases.items():
+            found, _, _ = detector(sentence)
+            assert not found, (
+                f"{policy_id} now detects {sentence!r}; delete its "
+                f"KNOWN_DETECTION_LIMITS entry instead of keeping a stale "
+                f"claim that it cannot ({reason})"
+            )
+
+
+def test_every_known_limit_has_a_reason_and_an_owner():
+    for policy_id, cases in cap.KNOWN_DETECTION_LIMITS.items():
+        assert cases, policy_id
+        for sentence, reason in cases.items():
+            assert len(reason) > 40, (policy_id, sentence)
+            assert "Owner:" in reason, (policy_id, sentence)
+
+
+def test_global_default_permission_capability_is_now_demonstrated():
+    """Q13.5 forbids leaving a target-critical family unknown at freeze, and
+    this was the last one outstanding."""
+    report = cap.evaluate_capability()
+    assert sc.GLOBAL_DEFAULT_PERMISSION in report["proven_families"]
+    assert report["target_critical_unproven"] == []

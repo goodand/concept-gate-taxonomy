@@ -44,6 +44,11 @@ PARAPHRASED = "의역된 금지문"
 CONDITIONAL = "조건부 금지문"
 WITH_EXCEPTION = "예외가 있는 금지문"
 DOUBLE_NEGATION = "이중 부정"
+# A second instance of the same form. Added 2026-08-16 after a generalisation
+# probe showed the detector passed the first double-negation fixture while
+# missing other sentences of the same construction: a fixture set weaker than
+# what its author already knows is broken produces a false "proven".
+DOUBLE_NEGATION_2 = "이중 부정 (변형 2)"
 CROSS_SENTENCE_SCOPE = "문장 간 scope 결합"
 FIELD_NARROWING = "필드 범위 축소"
 NEARBY_NON_POLICY = "가까운 비정책 문장"
@@ -158,13 +163,21 @@ POSITIVE_FIXTURES: dict[str, dict[str, str]] = {
         DOUBLE_NEGATION: (
             "A basis this prompt does not prohibit is not thereby unavailable."
         ),
+        DOUBLE_NEGATION_2: (
+            "A decision basis the prompt does not forbid is not off-limits."
+        ),
         CROSS_SENTENCE_SCOPE: (
             "This prompt lists several prohibitions.\n"
             "A decision basis may be considered unless it appears among them."
         ),
+        # 2026-08-16: this fixture previously read "...including their
+        # recorded fields", which is field-scope EXPANSION (Q13.2's own text),
+        # not the narrowing form it was labelled as. A fixture that does not
+        # instantiate the form it claims proves nothing about that form, so it
+        # was corrected rather than left to pass or fail meaninglessly.
         FIELD_NARROWING: (
-            "The permission covers the supplied evidence items, including "
-            "their recorded fields."
+            "Within an evidence item's text, a decision basis may be "
+            "considered unless this prompt prohibits it."
         ),
     },
     sc.RECORDED_FIELDS_ACCESS: {
@@ -266,6 +279,29 @@ NEGATIVE_FIXTURES: dict[str, dict[str, str]] = {
             "either selection or deferral."
         ),
         DIRECT: "Choose defer if neither allowed type is uniquely warranted.",
+    },
+}
+
+
+# Constructions the detectors are KNOWN not to handle, kept explicit so the
+# limit cannot be forgotten. Same discipline as `test_guard_negative_coverage`'s
+# KNOWN_UNPROVEN: the honest state is "not handled, and here is why", never a
+# quiet omission. `test_known_detection_limits_are_not_stale` fails if one of
+# these silently starts working, so the list cannot rot into a false cap.
+#
+# Consequence assessment matters here. For a family the DSL expects PRESENT, a
+# detection miss surfaces as a divergence -- a false alarm, which is safe. The
+# dangerous direction is a family expected ABSENT, where a miss becomes a false
+# `absent_verified`. The entry below is a permission statement (expected
+# present wherever it appears), so its failure mode is the safe one.
+KNOWN_DETECTION_LIMITS: dict[str, dict[str, str]] = {
+    sc.GLOBAL_DEFAULT_PERMISSION: {
+        "Nothing this prompt does not prohibit is thereby excluded.":
+            "Non-local negation: the negation that makes this a permission "
+            "scopes from the subject ('Nothing ... does not prohibit') over a "
+            "clause that is itself positive ('is thereby excluded'). "
+            "Resolving it needs scope analysis, not pattern matching. Owner: "
+            "whoever next extends the compiler beyond regex detectors.",
     },
 }
 

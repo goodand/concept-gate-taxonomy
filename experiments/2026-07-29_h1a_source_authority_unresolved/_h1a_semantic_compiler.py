@@ -224,13 +224,38 @@ def _detect_source_meta_reasoning(text: str):
     return found, span, FORBIDDEN if found else NEUTRAL
 
 
+_PERMISSION_EXPRESSION = re.compile(
+    r"\b(?:may be considered|may be used|may consider|remains available"
+    r"|is (?:still )?available"
+    # Double negation of unavailability -- sec 9.6 lists 이중 부정 as a form
+    # the compiler must survive. Written against the CONSTRUCTION (a negation
+    # scoping over a negative-availability word) rather than against any one
+    # sentence, so it generalises past the fixture that exposed the gap.
+    r"|not\s+(?:\w+\s+){0,2}(?:unavailable|disallowed|impermissible|barred"
+    r"|off[- ]limits|excluded))\b",
+    re.IGNORECASE,
+)
+_PROHIBITION_REFERENCE = re.compile(
+    r"\b(?:unless|prohibit\w*|forbid\w*|disallow\w*)\b", re.IGNORECASE
+)
+
+
 def _detect_global_default_permission(text: str):
-    found, span = _find_rule(
-        text,
-        (r"may be considered unless", r"does not prohibit",
-         r"decision basis may be considered"),
-    )
-    return found, span, ALLOWED_BY_DEFAULT if found else NEUTRAL
+    """The default-permission rule: a basis is available UNLESS prohibited.
+
+    Matched by co-occurrence of a permission expression and a reference to
+    prohibition in one sentence, rather than by fixed phrasings. The capability
+    gate showed why: the conditional form ("If a basis is not prohibited here,
+    it may be considered.") carries neither "may be considered unless" nor
+    "does not prohibit", so a phrase list missed it while the rule was plainly
+    present. Requiring BOTH halves is what keeps this from firing on any
+    sentence that merely contains "unless".
+    """
+    flat = _join_wrapped(text)
+    for sentence in re.split(r"(?<=[.!?])\s+", flat):
+        if _PERMISSION_EXPRESSION.search(sentence) and _PROHIBITION_REFERENCE.search(sentence):
+            return True, sentence.strip(), ALLOWED_BY_DEFAULT
+    return False, "", NEUTRAL
 
 
 def _detect_recorded_fields_access(text: str):
