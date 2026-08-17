@@ -129,10 +129,25 @@ STRUCTURAL_ITEMS = (
     AMBIGUOUS_AXIS_PHRASING, DECISION_BRANCH_PARTITION,
 )
 
-# Q13.5: families where `unknown` is not an acceptable terminal state. Listed
-# here for the caller's gate; this module still RETURNS unknown when that is
-# the honest answer -- forcing a verdict is what the list exists to prevent.
-TARGET_CRITICAL = frozenset({
+# D-H1a-17 split one enum into two, because it was carrying two different
+# claims. Q13.5's single `target-critical` conflated:
+#
+#   "if this semantic proposition is false, causal identification breaks"
+#   "this proposition must ALSO be certified via canonical DSL -> compiler"
+#
+# The first is about the experiment's validity. The second is about which
+# instrument certifies it. D-H1a-16 required canonical coverage for everything
+# in the merged set; D-H1a-17 narrowed that to the second category only:
+#
+#   CanonicalAuditCritical => CanonicalExpectedState
+#
+# The ruling's criterion is counterfactual, and therefore measurable: remove
+# the check and ask whether a false or non-identified causal claim can now
+# pass. `test_h1a_criticality.py` runs that counterfactual rather than
+# accepting the classification on the ruling's word.
+
+# If this proposition is false, the causal claim does not hold.
+CAUSAL_SEMANTIC_CRITICAL = frozenset({
     SOURCE_META_REASONING_PROHIBITION,
     OUTSIDE_DOMAIN_KNOWLEDGE_PROHIBITION,
     EVIDENCE_ITEM_PRESENTATION_ORDER_PROHIBITION,
@@ -140,6 +155,58 @@ TARGET_CRITICAL = frozenset({
     RECORDED_FIELDS_ACCESS,
     GLOBAL_DEFAULT_PERMISSION,
 })
+
+# Of those, the ones that must ALSO be certified through the canonical
+# DSL -> expected-graph path. Empty by D-H1a-17: for all six, independent
+# certification already exists, so adding canonical coverage changes who
+# certifies rather than what is certified.
+#
+# `false` here is CONTINGENT, not intrinsic. It records that another route
+# currently suffices. Remove that route and the entry must move back --
+# `test_h1a_criticality.py` fails if the independent route stops covering a
+# family while it is still classified audit-only.
+CANONICAL_AUDIT_CRITICAL: frozenset = frozenset()
+
+# Why each family's classification holds, keyed for the record. Prose, not a
+# gate -- the gate is the counterfactual test.
+CERTIFICATION_PATH = {
+    GLOBAL_DEFAULT_PERMISSION:
+        "policy_invariants_plus_golden_contract_plus_review — assert_4 binds "
+        "allowed_by_default to CARRIER_DEFAULT, assert_9 pins the rendered "
+        "bytes against an independent golden contract, and assert_freezable "
+        "emits removed_target_state_is_allowed_by_default directly from the "
+        "canonical DSL.",
+    RECORDED_FIELDS_ACCESS:
+        "rendered_surface_plus_independent_review — the Q13.2 sentences are "
+        "present and byte-identical across arms; reviewer R4 verified the "
+        "permission reaches recorded fields rather than item text alone.",
+    CONFLICT_TO_DEFER_MAPPING:
+        "existing_guard_plus_independent_review — the compiler detects a hard "
+        "mapping and reviewer R5 verified the rendered rule states the "
+        "non-mapping in both arms.",
+    SOURCE_META_REASONING_PROHIBITION:
+        "canonical_expected_graph — the manipulated axis. DECISION_BASIS_POLICY "
+        "declares it explicitly_forbidden in kept and allowed_by_default in "
+        "removed, so the audit compares expected against observed in both arms "
+        "and a residual prohibition surfaces as a target-critical mismatch.",
+    OUTSIDE_DOMAIN_KNOWLEDGE_PROHIBITION:
+        "canonical_expected_graph — declared explicitly_forbidden in both arms "
+        "and carried by CARRIER_DOMAIN. One detector covers this and "
+        "external_source_retrieval together, which is an audit-resolution "
+        "limit recorded in _h1a_policy_audit.FAMILY_TO_AXES, not an "
+        "equivalence between the two axes.",
+    EVIDENCE_ITEM_PRESENTATION_ORDER_PROHIBITION:
+        "canonical_expected_graph — declared explicitly_forbidden in both arms "
+        "and carried by CARRIER_Q7. Its rendered wording additionally carries "
+        "an exception clause, so the audit reports it as a conditional state "
+        "rather than an unconditional present.",
+}
+
+# Kept as the union so existing callers keep their meaning: a family where
+# `unknown` is not an acceptable terminal state. This module still RETURNS
+# unknown when that is the honest answer -- forcing a verdict is what the
+# list exists to prevent.
+TARGET_CRITICAL = CAUSAL_SEMANTIC_CRITICAL
 
 
 # A policy sentence carrying an exception clause does not state an

@@ -409,6 +409,74 @@ surface:
   byte_identity_verified: true
 ```
 
+### 5h. D-H1a-17 — 검증 의무의 load-bearing 판별 (2026-08-17)
+
+D-H1a-16(Q16=A, 정본 확장)을 **무효화하지 않고 적용 범위를 한정**한다.
+
+```text
+TargetCritical ⇒ CanonicalExpectedState        (D-H1a-16)
+        ↓ 좁힘
+CanonicalAuditCritical ⇒ CanonicalExpectedState (D-H1a-17)
+```
+
+**판별 기준(반사실)**: 그 검사를 빼면 잘못된 인과 결론이 통과하는가?
+통과하면 load-bearing, 다른 독립 경로가 이미 같은 의미를 충분한 assurance로
+확정하면 audit automation이다.
+
+**분류**: 세 의미 명제는 전부 `causal_semantic_critical: true`이되
+`canonical_audit_critical: false`다. **두 번째가 false인 이유는
+canonicalization이 쓸모없어서가 아니라 독립 경로가 이미 존재하기 때문이며,
+그 경로가 사라지면 다시 true가 된다.**
+
+```yaml
+semantic_status:
+  conflict_to_defer_mapping:
+    resolved: true
+    certification_path: existing_guard_plus_independent_review
+  recorded_field_access:
+    resolved: true
+    certification_path: rendered_surface_plus_independent_review
+  default_permission_applicability:
+    resolved: true
+    certification_path: policy_invariants_plus_golden_contract_plus_review
+
+canonical_automation:
+  status: deferred
+  freeze_blocker: false
+```
+
+**분류를 말로 받지 않고 실측했다**(`test_h1a_criticality.py`). 반사실을
+실행하는 과정에서 **첫 측정이 반증처럼 보였다가 위협 모델이 다름을 발견**한
+것이 이 검증의 실질이다:
+
+| 실패 모드 | compiler 없는 독립 경로 | 실측 |
+|---|---|---|
+| 정본/렌더러 드리프트(현실적) | `assert_9` golden contract | **탐지 O** |
+| 렌더 후 문자열 변조 | 코호트 manifest `rendered_prompt_sha256` | **탐지 O** |
+| (참고) 렌더 후 변조를 `assert_9`로 | 모듈에서 재렌더하므로 구조적으로 못 봄 | 탐지 X |
+
+즉 두 실패 모드 각각에 **compiler와 무관한 경로**가 있다. semantic compiler도
+둘 다 잡지만, 그것이 **유일 경로가 아니라는 것**이 audit_only 분류의 내용이다.
+
+**부수 실측 — 판정문 논거보다 강한 사실**: `assert_freezable`이 정본 DSL을
+직접 읽어 `removed_target_state_is_allowed_by_default: true`와
+`removed_target_state_is_not_unspecified: true`를 산출한다. 즉 "침묵이 아니라
+허가"라는 바로 그 명제가 semantic compiler 없이도 **기계 검증**된다 —
+판정문이 대비한 "기계 vs 리뷰어"보다 유리한 상태다.
+
+### 5i. `criticality` 이중 분류 (D-H1a-17)
+
+`target-critical` 단일 enum이 두 개의 다른 주장을 나르고 있던 것이 구조적
+문제였다. `_h1a_semantic_compiler.py`에서 분리:
+
+- `CAUSAL_SEMANTIC_CRITICAL` — 이 명제가 거짓이면 인과 식별이 깨진다(6개)
+- `CANONICAL_AUDIT_CRITICAL` — 정본→compiler 경로로도 인증해야 한다(**현재 0개**)
+- `CERTIFICATION_PATH` — 각 family가 **어느 경로로** 확정됐는지 기록.
+  경로를 적지 않은 `audit_only` 분류는 증거가 아니라 가정이므로 테스트가 강제한다
+
+`TARGET_CRITICAL`은 `CAUSAL_SEMANTIC_CRITICAL`의 별칭으로 남겨 기존 호출자의
+의미를 보존한다.
+
 ### 5g. 거버넌스 규칙 (D-H1a-14/15가 부과)
 
 > **기존 판정에서 `freeze_blocker`인 조건을 `diagnostic`으로 낮추거나 그
