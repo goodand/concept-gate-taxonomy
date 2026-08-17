@@ -544,6 +544,62 @@ REMOVED의 absent_verified를 담보하는 유일 carrier인데 compiler가 판�
 
 게이트: H1a 301 passed/1 skipped, 루트 8 passed/0 failed/1 blocked.
 
+### 15. (2026-08-17) D-H1a-16 수령 + **상위 목적 기준 재상신(Q17)**
+
+**D-H1a-16 수령**: Q16=A(정본 DSL 확장). Wolfram 형식 검사로
+`TargetCritical(x) ⇒ CanonicalExpectedState(x)`를 freeze invariant로 추가,
+`decision_basis`와 `decision_semantics`를 별도 namespace로, 조건부 규칙을
+정본에 조건부로 표현, `adjudication_mode`를 assurance와 분리.
+new_constraints 12개. `INDEPENDENT_SEMANTIC_REVIEW_PASSED`는 **설정 불가**
+(정본 확장 후 리뷰 재실행 필요).
+
+**그런데 사용자가 상위 목적을 재진술했다**(원문): "정책은 문제되지 않는데
+전체 아키텍처 입장에서 **실사용을 할 수 있어야** 합니다. 우리가 만들고 있는
+도구의 **LLM의 생성의 재현성을 향상시키거나 LLM의 생성을 제어하는 것보다는,
+LLM에게 피드백과 LLM의 출력을 기반으로 인과 추론을 하는 것이 중요**합니다."
+
+그 기준으로 **실측**했다:
+
+| 항목 | 실측 |
+|---|---|
+| 2026-08-16~17 신설 검증 장치 | **2,678줄** (실험 폴더 9,332줄의 **29%**) |
+| 그 장치가 산출한 인과 추론용 trial | **0건** |
+| 마지막 confirmatory trial | 40건(2026-08-03), 비식별 확정 |
+| 수선 코호트 사전등록 이후 | **12일** FREEZE_BLOCKED |
+
+**분석**: 인과 주장에 실제로 필요한 것은 ①arm 차이가 Q1 절 하나뿐
+②REMOVED에 잔여 금지 없음 ③측정 오염 없음 ④가드가 공허하지 않음 — 넷 다
+이미 존재하고, **D-H1a-10의 실패는 정확히 ②였는데 그건 작은 가드가 막는다.**
+semantic compiler는 ①②의 **독립 확인**을 더하므로 값이 있다(공허한 가드를
+5차 리뷰까지 못 잡은 이력).
+
+**그러나 `default_permission_applicability`의 canonicalization은 ①~④ 어디에도
+기여하지 않는다.** 바꾸는 것은 "REMOVED에서 표적 축이 허용된다"를 **누가
+인증하느냐**(기계 vs 리뷰어)이지 그 명제의 참·거짓이 아니다. 두 경로가 이미
+같은 결론에 도달했다. 즉 **감사 자동화이지 인과 추론 능력이 아니다.**
+
+**Q17 상신**: `correspondence/DESIGN_REQUEST_H1a_verification_load_bearing.md`.
+D-H1a-16을 뒤집자는 것이 아니라 **그 판정을 실행하기 전에 실행 대상이 상위
+목적에 load-bearing한지 판별 기준을 구한다.** Q16 요청서가 "어떻게 메울
+것인가"만 묻고 "그 세 항목이 target-critical이어야 하는 이유가 인과 추론에
+있는가 감사 완결성에 있는가"를 묻지 않았다 — 요청서 자신의 프레이밍 결함이다.
+
+하위 질문: Q17.1 이 검증 장치가 산출물(ConceptGate MCP)의 신뢰성에 재사용
+가능한가 — 가능하면 실험 비용이 아니라 제품 자산이다. Q17.2
+`default_permission_applicability`는 조건부 규칙이 아니라 **메타 규칙**이라
+(다른 규칙을 어떻게 읽을지 정한다) 정본의 `axis → {state,carrier}` 타입에
+자리가 없다. 값을 (a)승인 텍스트 전사 — F6 실패 모드 (b)참조로 도출 —
+단일 정본 유지 (c)저작 — 금지, 중 어느 것으로 하는가.
+
+**실측 확인**: `render_policy_block`이 `decision_semantics`를 읽지 않으므로
+정본 확장은 **렌더 바이트 0 변경**이고 golden contract 재동결이 불필요하다.
+즉 A안의 기계적 비용은 낮다 — 비용은 "무엇을 적어 넣을지 누가 정하는가"에
+있다.
+
+**남은 것**: Q17 판정 대기. `INDEPENDENT_SEMANTIC_REVIEW_PASSED = False` 유지.
+
+---
+
 ### 14. (2026-08-16) 리뷰 지적 처리 — 구현 해소 2건 + 설계 상신 1건
 
 리뷰어 지적을 **고칠 수 있는 것 / 설계 판정이 필요한 것**으로 갈라 처리했다.
