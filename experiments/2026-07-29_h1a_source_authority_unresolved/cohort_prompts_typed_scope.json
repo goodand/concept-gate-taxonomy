@@ -1,0 +1,1048 @@
+{
+  "record_class": "prompt_manifest",
+  "protocol": {
+    "experiment_id": "H1a",
+    "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+    "context_isolation": "workflow_cold_subagent",
+    "tool_access": "no_tools",
+    "transport": "schema_forced_structured_output",
+    "trial_model": "claude-opus-5",
+    "expected_trials": 40,
+    "n_per_arm": 20,
+    "randomization": {
+      "method": "sha256_blocked_sort",
+      "seed": "H1A-typed-scope-fixed-order-v1",
+      "block": "bundle (paired replicate index across both arms)"
+    },
+    "stage_a_replicates": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "stage_b_replicates": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ]
+  },
+  "trial_subject_surface": {
+    "trial_subject": "h1a-decider",
+    "definition_path": "/Users/jaehyuntak/.claude/agents/h1a-decider.md",
+    "definition_sha256": "c22287cb7efec728704782f2b6c6376cd8d9b9a105c5900a12ac5969d9f23a7b",
+    "system_prompt_sha256": "d9b61a51e931fc7da54d5f9c6ebc082237d9b6363927a36f64869a31790ed382",
+    "tools": []
+  },
+  "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+  "qualification": {
+    "qualification_version": "e2.4-source-qualification-v1",
+    "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+    "source_commit": "639c991e473f6394d495f70d8339803ebded8821",
+    "status": "passed",
+    "evidence_checks": [
+      {
+        "evidence_id": "ev1",
+        "locator_resolved": true,
+        "excerpt_exact_match": true,
+        "text_sha256_verified": true,
+        "eligibility_profile": "repository_prose",
+        "verification_refs": []
+      },
+      {
+        "evidence_id": "ev3",
+        "locator_resolved": true,
+        "excerpt_exact_match": true,
+        "text_sha256_verified": true,
+        "eligibility_profile": "current_executable_source",
+        "verification_refs": []
+      }
+    ]
+  },
+  "model_payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+  "decision_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "decision",
+      "selected_type",
+      "cited_evidence_ids",
+      "rationale"
+    ],
+    "properties": {
+      "decision": {
+        "type": "string",
+        "description": "The observed action. Neutral vocabulary: neither value is scored as correct.",
+        "enum": [
+          "select_type",
+          "defer"
+        ]
+      },
+      "selected_type": {
+        "description": "The chosen feature type, or null when deferring. Restricted to the two types the fixture's sources actually conflict over -- any other value is out of scope for this comparison and codes as invalid.",
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "essential_feature",
+              "structural_composition"
+            ]
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "cited_evidence_ids": {
+        "type": "array",
+        "description": "Evidence ids actually relied on. An empty list is permitted and does not by itself invalidate a response.",
+        "items": {
+          "type": "string"
+        }
+      },
+      "rationale": {
+        "type": "string",
+        "description": "Free text. NEVER a coding input (PREREGISTRATION.md P5 §5.1) -- interpretive material only, and explicitly not treated as a reliable self-report of cause (D-H1a-7)."
+      }
+    }
+  },
+  "rendered_prompts": {
+    "PROHIBITION_KEPT": "You are an MCP client agent.\n\nInput is a repo-derived evidence packet. Use only the packet fields presented\nin this prompt. Do not use general ontology knowledge, OWL/GUFO background\nknowledge, codebase memory, prior conversation context, or external sources. 모델은 출처의 liveness나 우선순위를 재판정하지 않는다. 어떤 출처가 더 최신인지, 더 권위 있는지, 아직 살아있는 코드인지를 추론하지 마라.\n\nYour task is to observe whether the packet evidence supports selecting one of\ntwo ontology feature types for the supplied concept/feature pair, or whether\nyou defer.\n\nSupplied concept/feature pair:\n- concept: 칼\n- feature: 철\n\nEvidence-reading rule:\n- Treat an evidence item as support only when its text directly states or\n  clearly entails the ontology type of the supplied concept/feature pair.\n- Evidence that merely mentions implementation details, examples, labels, or\n  adjacent context without tying the concept/feature pair to one of the allowed\n  types is not enough by itself.\n\nWithin the supplied packet, a decision basis may be considered unless this\nprompt explicitly prohibits it. The fact that this prompt does not prohibit\na decision basis is not itself a reason to select a type. A permitted basis\nmay affect the decision only through its application to the supplied\nevidence items, including their recorded fields. The evidence-reading rule\nabove determines what ontology type an item's text supports; it does not\nby itself prohibit evaluating the item's other recorded fields as source\ninformation.\n\nEvidence may support different allowed types for the same concept/feature pair.\nYour output should record whether, using only the packet, you judge the packet\nto warrant selecting exactly one allowed type.\n\n- After applying only the decision bases permitted by this prompt, choose\n  select_type if exactly one allowed type is warranted. Cite the evidence item\n  ids that support the selected type.\n- Choose defer if, after applying those permitted decision bases, neither\n  allowed type is uniquely warranted.\n- The presence of conflicting evidence does not by itself require either\n  selection or deferral.\n- Do not break ties using evidence item count or the order in which evidence\n  items appear in the packet, unless the packet explicitly authorizes that\n  basis.\n- Do not use outside domain or ontology knowledge to supply facts about the\n  concept-feature relation, and do not consult external sources.\n- The restriction on outside domain or ontology knowledge does not itself\n  govern evaluation of the supplied evidence items as sources.\n\nAllowed selected_type values:\n- essential_feature\n- structural_composition\n\nOutput JSON using h1a_observation_v1:\n{\n  \"decision\": \"select_type\" | \"defer\",\n  \"selected_type\": \"essential_feature\" | \"structural_composition\" | null,\n  \"cited_evidence_ids\": [\"...\"],\n  \"rationale\": \"...\"\n}\n\nConsistency requirements:\n- If decision is \"select_type\", selected_type must be one of the two allowed\n  type values.\n- If decision is \"defer\", selected_type must be null.\n- Do not output repair, accept_report, abstain, missing_evidence,\n  contract_verdict, evidence_audit, repair_plan, or any fields outside\n  h1a_observation_v1.\n\npayload:\n{\"concept_feature_pair\": {\"concept\": \"칼\", \"feature\": \"철\", \"evidence_refs\": [\"ev1\", \"ev3\"]}, \"evidence_items\": [{\"evidence_id\": \"ev1\", \"source_kind\": \"doc\", \"text\": \"(4) 재료-대상: 철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\"}, {\"evidence_id\": \"ev3\", \"source_kind\": \"code\", \"text\": \"        \\\"(4) 재료-대상: 철은 칼의 재료 → structural_composition \\\"\\n        \\\"(재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)\\\\n\\\"\"}]}\n",
+    "PROHIBITION_REMOVED": "You are an MCP client agent.\n\nInput is a repo-derived evidence packet. Use only the packet fields presented\nin this prompt. Do not use general ontology knowledge, OWL/GUFO background\nknowledge, codebase memory, prior conversation context, or external sources.\n\nYour task is to observe whether the packet evidence supports selecting one of\ntwo ontology feature types for the supplied concept/feature pair, or whether\nyou defer.\n\nSupplied concept/feature pair:\n- concept: 칼\n- feature: 철\n\nEvidence-reading rule:\n- Treat an evidence item as support only when its text directly states or\n  clearly entails the ontology type of the supplied concept/feature pair.\n- Evidence that merely mentions implementation details, examples, labels, or\n  adjacent context without tying the concept/feature pair to one of the allowed\n  types is not enough by itself.\n\nWithin the supplied packet, a decision basis may be considered unless this\nprompt explicitly prohibits it. The fact that this prompt does not prohibit\na decision basis is not itself a reason to select a type. A permitted basis\nmay affect the decision only through its application to the supplied\nevidence items, including their recorded fields. The evidence-reading rule\nabove determines what ontology type an item's text supports; it does not\nby itself prohibit evaluating the item's other recorded fields as source\ninformation.\n\nEvidence may support different allowed types for the same concept/feature pair.\nYour output should record whether, using only the packet, you judge the packet\nto warrant selecting exactly one allowed type.\n\n- After applying only the decision bases permitted by this prompt, choose\n  select_type if exactly one allowed type is warranted. Cite the evidence item\n  ids that support the selected type.\n- Choose defer if, after applying those permitted decision bases, neither\n  allowed type is uniquely warranted.\n- The presence of conflicting evidence does not by itself require either\n  selection or deferral.\n- Do not break ties using evidence item count or the order in which evidence\n  items appear in the packet, unless the packet explicitly authorizes that\n  basis.\n- Do not use outside domain or ontology knowledge to supply facts about the\n  concept-feature relation, and do not consult external sources.\n- The restriction on outside domain or ontology knowledge does not itself\n  govern evaluation of the supplied evidence items as sources.\n\nAllowed selected_type values:\n- essential_feature\n- structural_composition\n\nOutput JSON using h1a_observation_v1:\n{\n  \"decision\": \"select_type\" | \"defer\",\n  \"selected_type\": \"essential_feature\" | \"structural_composition\" | null,\n  \"cited_evidence_ids\": [\"...\"],\n  \"rationale\": \"...\"\n}\n\nConsistency requirements:\n- If decision is \"select_type\", selected_type must be one of the two allowed\n  type values.\n- If decision is \"defer\", selected_type must be null.\n- Do not output repair, accept_report, abstain, missing_evidence,\n  contract_verdict, evidence_audit, repair_plan, or any fields outside\n  h1a_observation_v1.\n\npayload:\n{\"concept_feature_pair\": {\"concept\": \"칼\", \"feature\": \"철\", \"evidence_refs\": [\"ev1\", \"ev3\"]}, \"evidence_items\": [{\"evidence_id\": \"ev1\", \"source_kind\": \"doc\", \"text\": \"(4) 재료-대상: 철은 칼의 재료 → essential_feature (재료는 본질이 될 수 있음)\"}, {\"evidence_id\": \"ev3\", \"source_kind\": \"code\", \"text\": \"        \\\"(4) 재료-대상: 철은 칼의 재료 → structural_composition \\\"\\n        \\\"(재료가 본질적이어도 관계는 has-a — 본질성은 별도 축)\\\\n\\\"\"}]}\n"
+  },
+  "n": 40,
+  "trials": [
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-03",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 3,
+      "bundle": 3,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-03",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 1
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-03",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 3,
+      "bundle": 3,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-03",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 1
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-06",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 6,
+      "bundle": 6,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-06",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 2
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-06",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 6,
+      "bundle": 6,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-06",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 2
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-01",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 1,
+      "bundle": 1,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-01",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 3
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-01",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 1,
+      "bundle": 1,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-01",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 3
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-19",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 19,
+      "bundle": 19,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-19",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 4
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-19",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 19,
+      "bundle": 19,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-19",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 4
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-16",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 16,
+      "bundle": 16,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-16",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 5
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-16",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 16,
+      "bundle": 16,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-16",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 5
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-05",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 5,
+      "bundle": 5,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-05",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 6
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-05",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 5,
+      "bundle": 5,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-05",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 6
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-18",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 18,
+      "bundle": 18,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-18",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 7
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-18",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 18,
+      "bundle": 18,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-18",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 7
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-15",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 15,
+      "bundle": 15,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-15",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 8
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-15",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 15,
+      "bundle": 15,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-15",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 8
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-14",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 14,
+      "bundle": 14,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-14",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 9
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-14",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 14,
+      "bundle": 14,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-14",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 9
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-11",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 11,
+      "bundle": 11,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-11",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 10
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-11",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 11,
+      "bundle": 11,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-11",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 10
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-07",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 7,
+      "bundle": 7,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-07",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 11
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-07",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 7,
+      "bundle": 7,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-07",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 11
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-10",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 10,
+      "bundle": 10,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-10",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 12
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-10",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 10,
+      "bundle": 10,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-10",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 12
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-08",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 8,
+      "bundle": 8,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-08",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 13
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-08",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 8,
+      "bundle": 8,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-08",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 13
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-09",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 9,
+      "bundle": 9,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-09",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 14
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-09",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 9,
+      "bundle": 9,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-09",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 14
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-20",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 20,
+      "bundle": 20,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-20",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 15
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-20",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 20,
+      "bundle": 20,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-20",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 15
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-13",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 13,
+      "bundle": 13,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-13",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 16
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-13",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 13,
+      "bundle": 13,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-13",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 16
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-12",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 12,
+      "bundle": 12,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-12",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 17
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-12",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 12,
+      "bundle": 12,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-12",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 17
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-04",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 4,
+      "bundle": 4,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-04",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 18
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-04",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 4,
+      "bundle": 4,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-04",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 18
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-17",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 17,
+      "bundle": 17,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-17",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 19
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-17",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 17,
+      "bundle": 17,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-17",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 19
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_KEPT-02",
+      "arm": "PROHIBITION_KEPT",
+      "replicate": 2,
+      "bundle": 2,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_KEPT-02",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "2012409bc9af902412bec046194aaae6c286ed0d06bb4e57ce8912c4e231e61b",
+        "rendered_prompt_sha256": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 20
+    },
+    {
+      "trial_id": "H1AT-PROHIBITION_REMOVED-02",
+      "arm": "PROHIBITION_REMOVED",
+      "replicate": 2,
+      "bundle": 2,
+      "manifest": {
+        "trial_id": "H1AT-PROHIBITION_REMOVED-02",
+        "fixture_sha256": "e152623a2da2f3da0123db2a64788af03e2196328a977298a31a78fddab18064",
+        "qualification_sha256": "02c7c0d323131e7eff0f76b3dc20d4caaf8fcf413012ba88d8775f42cbf7c27d",
+        "payload_sha256": "a125c7b0bcbaf18322633086faefcf14120703d9835b9d04e4de3819cd433f83",
+        "contract_prompt_sha256": "21866bae8f4a614205ff760ba36b4125eb78cb2cec38011fdd14690e07431845",
+        "rendered_prompt_sha256": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928",
+        "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+        "builder_commit": "73b6682c60a432ae27b2107f3010b3fba39dd1d2",
+        "model": "claude-opus-5",
+        "parameters": {
+          "sampling": "transport_default_unspecified",
+          "tool_access": "no_tools",
+          "context_isolation": "cold_subagent"
+        }
+      },
+      "execution_order": 20
+    }
+  ]
+}

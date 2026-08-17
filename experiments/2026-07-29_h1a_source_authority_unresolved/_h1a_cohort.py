@@ -153,6 +153,44 @@ ORIGINAL_COHORT = CohortSpec(
 )
 
 
+
+# The typed-scope cohort (D-H1a-12 Q12=F), frozen 2026-08-17 once
+# INDEPENDENT_SEMANTIC_REVIEW_PASSED was set and every other freeze condition
+# passed.
+#
+# WHY A THIRD IDENTITY AND NOT THE REPAIRED COHORT'S
+# `PREREGISTRATION_REPAIRED_COHORT.md` sec 5 fixed `H1A-repaired-fixed-order-v1`
+# / `H1AR` for the D-H1a-10/11 repair, but that cohort was never executed --
+# three independent reviewers returned FREEZE_BLOCKED. D-H1a-12's typed-scope
+# split is a THIRD design, so reusing `H1AR` would label these trials as the
+# repair's, and reusing `H1A` would make them indistinguishable from the
+# preserved 40 that D-H1a-10 ruled non-identifying.
+#
+# `PREREGISTRATION_TYPED_SCOPE_COHORT.md` sec 6 requires that `cohort_id` and
+# the output files be SEPARATE from the existing cohorts but does not fix the
+# strings, so these were chosen to satisfy that and verified by dry-run before
+# any write: no trial_id overlap with the preserved cohort, a distinct seed
+# (which demonstrably yields a different execution order), and a distinct
+# manifest path.
+#
+# `H1AT` does not collide with `H1A` under the prefix checks in this folder --
+# they match on `"H1A-"` with the hyphen, which `H1AT-` does not satisfy.
+#
+# The fixture is deliberately UNCHANGED (`fixture_source_authority.json`, the
+# Q8=B 1-vs-1 form: ev1 doc / ev3 code). Preregistration sec 1 lists it as
+# 불변 and Q9=A keeps L3 in force; the dry-run confirmed
+# `fixture_sha256` matches the preserved cohort's, so the only thing that
+# differs between cohorts is the prompt surface.
+TYPED_SCOPE_COHORT = CohortSpec(
+    cohort_id="h1a-typed-scope-20260817",
+    fixture_path=FIXTURE_PATH,
+    cohort_path=HERE / "cohort_prompts_typed_scope.json",
+    order_seed="H1A-typed-scope-fixed-order-v1",
+    trial_id_prefix="H1AT",
+    n_per_arm=N_PER_ARM,
+)
+
+
 def build_cohort(spec: "CohortSpec | None" = None) -> dict:
     spec = spec or ORIGINAL_COHORT
     fixture = json.loads(spec.fixture_path.read_text(encoding="utf-8"))

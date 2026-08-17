@@ -146,3 +146,68 @@ def test_the_overwrite_guard_is_per_spec_not_only_the_original_path(
     with pytest.raises(cohort.CohortOverwriteRefused, match="qf-test"):
         cohort.freeze(spec)                   # recall: now occupied, must refuse
     assert target.read_bytes() == before
+
+
+# --- the typed-scope cohort's identity (2026-08-17) ------------------------
+
+def test_typed_scope_spec_is_separated_from_the_preserved_cohort():
+    """PREREGISTRATION_TYPED_SCOPE_COHORT.md sec 6 requires cohort_id and the
+    output files to be separate from the existing cohorts. D-H1a-10 Q10.1
+    forbids merging or reusing the preserved one, and an overlapping trial_id
+    is the most silent way to violate that -- results would be
+    indistinguishable after the fact."""
+    spec = cohort.TYPED_SCOPE_COHORT
+    original = cohort.ORIGINAL_COHORT
+
+    assert spec.cohort_id != original.cohort_id
+    assert spec.cohort_path != original.cohort_path
+    assert spec.order_seed != original.order_seed
+    assert spec.trial_id_prefix != original.trial_id_prefix
+    # and distinct from the repaired cohort's preregistered identity, which
+    # was never executed but is spoken for
+    assert spec.order_seed != "H1A-repaired-fixed-order-v1"
+    assert spec.trial_id_prefix != "H1AR"
+
+
+def test_typed_scope_trial_ids_do_not_collide_under_prefix_matching():
+    """`H1AT` shares three characters with `H1A`. The checks in this folder
+    match on `"H1A-"` including the hyphen, so they do not confuse the two --
+    pinned here because a future prefix check written without the hyphen
+    would silently classify these trials as the preserved cohort's."""
+    built = cohort.build_cohort(cohort.TYPED_SCOPE_COHORT)
+    ids = [t["trial_id"] for t in built["trials"]]
+    assert ids and all(i.startswith("H1AT-") for i in ids)
+    assert not any(i.startswith("H1A-") for i in ids)
+
+
+def test_typed_scope_keeps_the_fixture_unchanged():
+    """Preregistration sec 1: the fixture is 불변. If it drifted, the cohort
+    would differ from the preserved one in more than the prompt surface and
+    the contrast would no longer isolate the manipulation."""
+    import json
+    built = cohort.build_cohort(cohort.TYPED_SCOPE_COHORT)
+    preserved = json.loads(
+        (HERE / "cohort_prompts.json").read_text(encoding="utf-8"))
+    assert built["fixture_sha256"] == preserved["fixture_sha256"]
+
+
+def test_typed_scope_builds_forty_trials_twenty_per_arm():
+    built = cohort.build_cohort(cohort.TYPED_SCOPE_COHORT)
+    assert built["n"] == 40
+    per_arm = {}
+    for trial in built["trials"]:
+        per_arm[trial["arm"]] = per_arm.get(trial["arm"], 0) + 1
+    assert per_arm == {"PROHIBITION_KEPT": 20, "PROHIBITION_REMOVED": 20}
+
+
+def test_a_different_seed_actually_changes_the_execution_order():
+    """The separate seed is not decoration -- PREREGISTRATION_REPAIRED_COHORT
+    sec 5 says reusing a seed would let two cohorts' orders coincide and blur
+    their independence."""
+    import json
+    built = cohort.build_cohort(cohort.TYPED_SCOPE_COHORT)
+    preserved = json.loads(
+        (HERE / "cohort_prompts.json").read_text(encoding="utf-8"))
+    new_order = [t["trial_id"].rsplit("-", 1)[1] for t in built["trials"]]
+    old_order = [t["trial_id"].rsplit("-", 1)[1] for t in preserved["trials"]]
+    assert new_order != old_order
