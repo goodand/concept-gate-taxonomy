@@ -105,14 +105,27 @@ def test_post_render_edits_are_caught_by_the_frozen_manifest_hash():
 
     `assert_9` cannot see this by construction. The frozen cohort manifest
     can -- it pins `rendered_prompt_sha256` per trial, so an edited prompt no
-    longer matches what was frozen. Also compiler-independent."""
+    longer matches what was frozen. Also compiler-independent.
+
+    Asserting the FIELD EXISTS would not establish that, which is what this
+    test did in its first form. A present-but-decorative hash is
+    indistinguishable from a working one under that assertion -- the exact
+    defect class this repo has been burned by (assert_5, the forgeable
+    receipts). So the route is exercised: the frozen hash must reproduce from
+    the frozen prompt, and a one-character edit must break it."""
+    surface = _load("surface", "_h1a_surface.py")
     cohort = json.loads((HERE / "cohort_prompts.json").read_text(encoding="utf-8"))
-    manifest = cohort["trials"][0]["manifest"]
-    assert manifest["rendered_prompt_sha256"], (
-        "without a pinned rendered-prompt hash there is no compiler-independent "
-        "route for post-render edits, and the audit_only classification for "
-        "GLOBAL_DEFAULT_PERMISSION would not hold"
+    trial = cohort["trials"][0]
+    frozen_hash = trial["manifest"]["rendered_prompt_sha256"]
+    frozen_prompt = cohort["rendered_prompts"][trial["arm"]]
+
+    # precision: the pinned hash actually describes the pinned prompt
+    assert surface.sha256_of(frozen_prompt) == frozen_hash, (
+        "the manifest hash does not reproduce from the frozen prompt, so it "
+        "certifies nothing"
     )
+    # recall: a post-render edit is detectable through it
+    assert surface.sha256_of(frozen_prompt + " ") != frozen_hash
 
 
 def test_the_compiler_also_catches_it_which_is_why_it_is_redundant_not_useless():
@@ -152,12 +165,17 @@ def test_no_freeze_condition_other_than_the_review_flag_is_unmet():
     template = contract.load_h1a_native_template()
     rendered = {arm: contract.render_arm(template, arm) for arm in contract.ARMS}
 
-    with pytest.raises(policy.FreezeGateBlocked, match="condition 5"):
-        policy.assert_freezable(rendered, contract.LIVENESS_CLAUSE_TEXT,
-                                source_attributes_visible=True,
-                                hard_defer_mapping=False)
-
     original = policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED
+
+    policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED = False
+    try:
+        with pytest.raises(policy.FreezeGateBlocked, match="condition 5"):
+            policy.assert_freezable(rendered, contract.LIVENESS_CLAUSE_TEXT,
+                                    source_attributes_visible=True,
+                                    hard_defer_mapping=False)
+    finally:
+        policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED = original
+
     policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED = True
     try:
         result = policy.assert_freezable(rendered, contract.LIVENESS_CLAUSE_TEXT,

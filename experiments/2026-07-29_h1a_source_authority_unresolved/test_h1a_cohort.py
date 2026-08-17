@@ -57,11 +57,21 @@ def test_freeze_refuses_to_overwrite_the_preserved_cohort():
 
 def test_build_cohort_runs_the_policy_layer_against_the_real_rendered_arms():
     """build_cohort() must call the D-H1a-11 policy layer, not just the two
-    pre-existing contract guards. Condition 5 is unmet by design, so this
-    must currently raise FreezeGateBlocked -- from build_cohort() itself, not
-    only from a test that calls assert_freezable() directly."""
-    with pytest.raises(cohort.policy.FreezeGateBlocked, match="independent semantic review"):
-        cohort.build_cohort()
+    pre-existing contract guards.
+
+    Originally this leaned on condition 5 being unmet by design. The flag was
+    set on 2026-08-17 after the review ran, so the unmet state is reached by
+    patching. What is being proven is unchanged: the FreezeGateBlocked comes
+    from build_cohort() itself, not only from a direct assert_freezable()
+    call -- i.e. the cohort builder really does route through the policy
+    layer."""
+    original = cohort.policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED
+    cohort.policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED = False
+    try:
+        with pytest.raises(cohort.policy.FreezeGateBlocked, match="independent semantic review"):
+            cohort.build_cohort()
+    finally:
+        cohort.policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED = original
 
 
 def test_two_independent_gates_both_block_freeze_right_now():

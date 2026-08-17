@@ -273,3 +273,29 @@ def test_branch_partition_recognises_a_literal_complement():
     assert result["branches_found"] is True
     assert result["literal_complement"] is True
     assert result["requires_reviewer_adjudication"] is False
+
+
+# --- vocabulary that is duplicated because independence forbids sharing ----
+
+def test_the_two_modules_agree_on_the_allowed_by_default_vocabulary():
+    """The compiler cannot import the policy (AST-enforced independence), so
+    it defines its own `allowed_by_default` string. That duplication is forced,
+    not sloppy -- it cannot be removed the way `_git_head` was.
+
+    What CAN be done is make divergence detectable, which is what this test is.
+    Today nothing load-bearing depends on the two strings matching:
+    `expected_graph` compares against `policy.EXPLICITLY_FORBIDDEN`
+    symbolically and maps to the compiler's own PRESENT/ABSENT_VERIFIED. But
+    D-H1a-17 Q17.2's b' representation anchors the canonical on
+    `semantic_role_ref: ALLOWED_BY_DEFAULT`, and once that lands the agreement
+    becomes load-bearing. A rename on either side must fail here rather than
+    silently produce two vocabularies that no longer denote the same role.
+
+    This test lives in the audit module because it is the only one permitted
+    to see both sides."""
+    import _h1a_policy as policy
+    assert policy.ALLOWED_BY_DEFAULT == sc.ALLOWED_BY_DEFAULT, (
+        "the canonical DSL's state vocabulary and the compiler's polarity "
+        "vocabulary have diverged; D-H1a-17 Q17.2 anchors the canonical on "
+        "this shared role name"
+    )

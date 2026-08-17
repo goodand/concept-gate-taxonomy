@@ -1124,7 +1124,34 @@ def assert_deductive_check() -> dict:
 # project's `pass-is-a-conjunction` lesson an unverifiable condition must be
 # named and assigned rather than silently assumed. It stays False until a human
 # records the review outcome, so `assert_freezable` cannot pass on code alone.
-INDEPENDENT_SEMANTIC_REVIEW_PASSED = False
+#
+# 2026-08-17: SET TO TRUE. What this records, precisely:
+#
+#   - The review ran under the encoded protocol (`_h1a_review_protocol.py`),
+#     which scores reviewer capability BEFORE counting any opinion. Five
+#     reviewers declared scopes, took blinded packets mixing mutated and clean
+#     material, and all five qualified: six mutations detected, zero misses,
+#     zero false positives.
+#   - All five then approved on the real artifact. No blocker, no major.
+#     Report: `docs/feedback/h1a_independent_semantic_review_20260816.md`.
+#   - The reviewers found a canonical AUTOMATION coverage gap, not a semantic
+#     error. D-H1a-17 reclassified that gap as non-blocking audit work after a
+#     counterfactual analysis, narrowing D-H1a-16's
+#     `TargetCritical => CanonicalExpectedState` to
+#     `CanonicalAuditCritical => CanonicalExpectedState`.
+#   - The ruling permitted this flag only "assuming no other BLOCKER/MAJOR".
+#     That premise is machine-checkable and was checked, not assumed:
+#     `assert_freezable` blocked on condition 5 alone, and with the flag
+#     patched in memory every other condition passed
+#     (`test_h1a_criticality.py::test_no_freeze_condition_other_than_the_
+#     review_flag_is_unmet` pins it).
+#
+# What this does NOT record: that the canonical model now covers every
+# target-critical family. It does not (D-H1a-17 sec 5 / PREREGISTRATION
+# sec 5h). Three families are certified by routes other than the canonical
+# expected graph, each named in `_h1a_semantic_compiler.CERTIFICATION_PATH`,
+# and the counterfactual for each is measured rather than asserted.
+INDEPENDENT_SEMANTIC_REVIEW_PASSED = True
 
 
 def assert_freezable(

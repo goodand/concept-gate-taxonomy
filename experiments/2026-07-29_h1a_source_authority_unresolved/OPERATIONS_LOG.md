@@ -544,6 +544,80 @@ REMOVED의 absent_verified를 담보하는 유일 carrier인데 compiler가 판�
 
 게이트: H1a 301 passed/1 skipped, 루트 8 passed/0 failed/1 blocked.
 
+### 16. (2026-08-17) D-H1a-17 적용 + **INDEPENDENT_SEMANTIC_REVIEW_PASSED = True**
+
+**D-H1a-17 수령**: Q17=B. `target-critical` 단일 enum이 두 주장을 나르고 있던
+것을 분리 — `causal_semantic_critical`(이 명제가 거짓이면 인과 식별이 깨짐)과
+`canonical_audit_critical`(정본→compiler 경로로도 인증해야 함).
+D-H1a-16의 `TargetCritical ⇒ CanonicalExpectedState`를
+`CanonicalAuditCritical ⇒ CanonicalExpectedState`로 **적용 범위 한정**(무효화
+아님). 세 항목은 `causal_semantic_critical: true` / `canonical_audit_critical:
+false`이고, **후자가 false인 이유는 독립 경로가 이미 존재하기 때문이며 그
+경로가 사라지면 다시 true가 된다.**
+
+**분류를 말로 받지 않고 반사실로 실측했다.** 판정 기준 자체가 반사실("그 검사를
+빼면 잘못된 인과 결론이 통과하는가")이므로 실행 가능하다. 그 과정에서
+**첫 측정이 반증처럼 보였다**: 렌더 *후* 문자열에서 default permission 문장을
+지우면 compiler만 잡고 정책 불변식은 통과한다. 그런데 그것은 위협 모델이
+달랐다 —
+
+| 실패 모드 | compiler 무관 독립 경로 | 실측 |
+|---|---|---|
+| 정본/렌더러 드리프트(현실적) | `assert_9` golden contract | 탐지 O |
+| 렌더 후 문자열 변조 | 코호트 manifest `rendered_prompt_sha256` | 탐지 O |
+
+두 모드 각각에 독립 경로가 있다. 둘 다 `test_h1a_criticality.py`로 고정했다.
+
+**판정문 논거를 강화하는 실측**: `assert_freezable`이 정본 DSL을 직접 읽어
+`removed_target_state_is_allowed_by_default`·`removed_target_state_is_not_unspecified`를
+산출한다. "침묵이 아니라 허가"라는 명제가 semantic compiler 없이도 **이미
+기계 검증**된다 — 판정문이 대비한 "기계 vs 리뷰어"보다 유리하다.
+
+**사용자 승인 조건 — 손코딩 검증 코드 자기 점검**. 승인이 조건부였다: 기존
+실수 재발 여부와 Codex 하네스 대비 부족분을 점검한 뒤 플래그를 켜라.
+점검에서 **내 코드의 실제 결함 2건**이 나왔다:
+
+1. **양성 단언만 있던 테스트**(이 저장소가 반복해 당한 실패 모드).
+   `test_post_render_edits_are_caught_by_the_frozen_manifest_hash`가
+   `rendered_prompt_sha256` **필드의 존재만** 단언했다 — 작동하는 해시와
+   장식용 필드를 구별하지 못한다. 경로를 실제로 행사하도록 고쳤다: 동결
+   해시가 동결 프롬프트에서 재현되는지(정밀), 한 글자 편집이 해시를 깨는지
+   (재현) 둘 다 검사.
+2. **불가피한 중복의 발산 미탐지**. compiler가 `"allowed_by_default"` 문자열을
+   갖는데 이는 `_h1a_policy.ALLOWED_BY_DEFAULT`와 같다. **제거할 수 없다** —
+   compiler는 정책 import가 AST로 금지돼 있다. 그래서 D-7처럼 제거하는 대신
+   **양쪽을 볼 수 있는 audit 모듈에 일치 테스트**를 뒀다. 현재는 무해하지만
+   Q17.2의 b′(`semantic_role_ref: ALLOWED_BY_DEFAULT`)를 구현하면
+   load-bearing이 되므로, 그때 조용히 갈라지지 않게 한다.
+
+F10형(자기 자신과 비교) 재발은 없었다 — `assert_9`의 기대값은 golden **파일**
+이고 변조 대상은 코드 **상수**라 출처가 독립이며, 변조 시 실제로 raise 함을
+확인했다. AST 가드 게이트에도 누락 0건(실험 폴더 가드 28개 전부 음성 테스트
+보유).
+
+**플래그 전환**: `INDEPENDENT_SEMANTIC_REVIEW_PASSED = False → True`.
+조건 11이 요구한 대로 리뷰 보고서 기록과 **같은 커밋**이다. 상수 위 주석에
+무엇이 기록되고 무엇이 기록되지 **않는지** 명시했다 — 이것은 리뷰가 통과했다는
+기록이지 정본이 모든 target-critical family를 덮는다는 기록이 아니다.
+
+**깨진 테스트 3건을 목적 재정의로 처리**했다. 그중 하나는 자기 메시지에
+"이 테스트를 통과시키려고 플래그를 뒤집지 마라"라고 적혀 있었다. 그
+보호 기능을 **삭제하지 않고 더 강한 형태로 이전**했다 —
+`test_the_review_flag_is_only_true_alongside_a_recorded_passing_review`:
+플래그가 True면 리뷰 보고서가 실재하고 pass를 기록해야 한다. 원래 테스트는
+전환을 *지연*시켰을 뿐이지만 이것은 전환을 **아티팩트에 묶는다.**
+나머지 둘(정책 계층 경유 증명, 조건 5 차단)은 patch로 미충족 상태를 만들어
+가드가 여전히 발동함을 유지했다.
+
+게이트: H1a 315 passed/1 skipped, 루트 8 passed/0 failed/1 blocked.
+
+**현재 상태**: `INDEPENDENT_SEMANTIC_REVIEW_PASSED = True`,
+`assert_freezable` 전 조건 통과. **`repaired_cohort_trials` 40건 착수 가능** —
+단 그것은 별도 승인 대상이다. `freeze()`는 여전히 보존 코호트 manifest 때문에
+`CohortOverwriteRefused`를 던지므로, 새 코호트는 자기 `CohortSpec`이 필요하다.
+
+---
+
 ### 15. (2026-08-17) D-H1a-16 수령 + **상위 목적 기준 재상신(Q17)**
 
 **D-H1a-16 수령**: Q16=A(정본 DSL 확장). Wolfram 형식 검사로

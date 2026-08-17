@@ -330,15 +330,46 @@ def test_truth_table_opens_exactly_one_cell():
 # ==========================================================================
 # freeze gate -- conjunction, blocked on the unverifiable condition
 # ==========================================================================
-def test_freeze_is_blocked_until_the_independent_review_is_recorded():
-    assert policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED is False, (
-        "if this flips, the review must have been run and its report committed "
-        "in the same change -- do not flip it to make this test pass"
+def test_freeze_blocks_when_the_review_flag_is_not_set():
+    """The gate's recall. Was written when condition 5 was unmet by design;
+    the flag was set on 2026-08-17 after the review actually ran, so the
+    unmet state is now reached by patching rather than by the module's
+    shipped value. The guard still has to be able to fire."""
+    original = policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED
+    policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED = False
+    try:
+        with pytest.raises(policy.FreezeGateBlocked, match="independent semantic review"):
+            policy.assert_freezable(_repaired_rendered(), Q1,
+                                    source_attributes_visible=True,
+                                    hard_defer_mapping=False)
+    finally:
+        policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED = original
+
+
+def test_the_review_flag_is_only_true_alongside_a_recorded_passing_review():
+    """Replaces the original protection, and strengthens it.
+
+    The old test asserted the flag was False and told the reader "do not flip
+    it to make this test pass". That protection cannot survive the flag being
+    legitimately set, but deleting it would leave nothing standing between a
+    future session and a casual flip. So the protection moves: if the flag is
+    True, a review report must exist and must record that the review passed.
+
+    This is a stronger guard than the original -- the original only delayed the
+    flip, this one ties it to an artifact."""
+    if not policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED:
+        pytest.skip("flag is not set; nothing to substantiate")
+
+    report = (HERE.parent.parent / "docs" / "feedback"
+              / "h1a_independent_semantic_review_20260816.md")
+    assert report.exists(), (
+        "INDEPENDENT_SEMANTIC_REVIEW_PASSED is True but no review report is "
+        "committed. D-H1a-11's condition 5 requires the flag and the report to "
+        "land in the same change."
     )
-    with pytest.raises(policy.FreezeGateBlocked, match="independent semantic review"):
-        policy.assert_freezable(_repaired_rendered(), Q1,
-                                source_attributes_visible=True,
-                                hard_defer_mapping=False)
+    text = report.read_text(encoding="utf-8")
+    for marker in ("condition_11", "condition_12", "5/5"):
+        assert marker in text, f"review report does not record {marker!r}"
 
 
 def test_freeze_gate_runs_the_machine_checkable_conditions_before_failing():
