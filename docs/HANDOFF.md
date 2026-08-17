@@ -1,5 +1,68 @@
 # HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
+- 갱신: **2026-08-17** — 🔓 **FREEZE GATE 열렸다. 40 trial 동결 완료, 실행
+  대기.** 2026-08-05 이후 12일간 막혀 있던 게이트다.
+
+  **바로 할 일**: `cohort_prompts_typed_scope.json`(동결됨, 40 trial)의 렌더
+  프롬프트로 `h1a-decider` 40건 실행 → `_h1a_score.py` 채점.
+  **사용자 승인 필요** — 아직 안 받았다.
+
+  ⚠️ **이 선을 넘으면 복원 불가다.** 여기까지는 전부 복원 가능 구간이었다
+  (`build_cohort()`는 디스크에 쓰지 않고, `freeze()`는 파일 하나다). trial을
+  실행하면 관측이 manifest에 결박되고 trial_id·seed를 되돌릴 수 없다.
+
+  **동결된 코호트 정체**(세 번째 정체다 — 이유는 `_h1a_cohort.TYPED_SCOPE_COHORT`
+  주석):
+  ```
+  cohort_id   h1a-typed-scope-20260817     trial  40 (arm당 20)
+  seed        H1A-typed-scope-fixed-order-v1
+  trial_id    H1AT-{arm}-{replicate:02d}
+  fixture     fixture_source_authority.json (불변, 보존 코호트와 sha256 동일)
+  transport   schema_forced_structured_output   trial_model  claude-opus-5
+  ```
+  `H1AR`(수선 코호트)는 **실행된 적이 없다** — 독립 리뷰 3명 전원
+  FREEZE_BLOCKED. `H1A`는 비식별 판정된 보존 40건이다. 둘 다 재사용하면
+  안 된다. `H1AT`는 `H1A`와 세 글자를 공유하지만 이 폴더의 검사는 하이픈까지
+  매칭하므로 안전하고, **그 사실이 테스트로 고정돼 있다** — 하이픈 없는 prefix
+  검사를 새로 쓰면 이 trial들이 조용히 보존 코호트로 분류된다.
+
+  **`INDEPENDENT_SEMANTIC_REVIEW_PASSED = True`로 전환됐다**(커밋 `73b6682`,
+  리뷰 보고서와 같은 커밋 — 조건 11 요구). 무엇이 기록됐고 무엇이 **안**
+  됐는지는 `_h1a_policy.py` 상수 위 주석이 정본이다. 요약: 리뷰가 통과했다는
+  기록이지 **정본이 모든 target-critical family를 덮는다는 기록이 아니다.**
+
+  ⚠️ **그 플래그의 보호 장치가 이전됐다.** 예전 테스트는 "플래그가 False임"을
+  단언하며 *"이 테스트를 통과시키려고 뒤집지 마라"*라고 적혀 있었다. 정당한
+  전환을 견딜 수 없어 **더 강한 형태로 옮겼다** —
+  `test_the_review_flag_is_only_true_alongside_a_recorded_passing_review`:
+  플래그가 True면 리뷰 보고서가 실재하고 pass를 기록해야 한다. 원래 것은
+  전환을 *지연*시켰을 뿐이지만 이건 **아티팩트에 묶는다.** 지우지 마라.
+
+  **판정 2건 수령·적용**: **D-H1a-16**(Q16=A 정본 확장) → **D-H1a-17**(Q17=B)이
+  그 **적용 범위를 한정**했다(무효화 아님).
+  `TargetCritical ⇒ CanonicalExpectedState`를
+  `CanonicalAuditCritical ⇒ CanonicalExpectedState`로 좁혔다.
+  `target-critical` 단일 enum이 두 주장을 나르고 있던 것을
+  `CAUSAL_SEMANTIC_CRITICAL`(6개) / `CANONICAL_AUDIT_CRITICAL`(**현재 0개**)로
+  분리했고, 각 family가 **어느 경로로** 확정됐는지 `CERTIFICATION_PATH`에
+  기록한다. **0개인 것은 우연적이다** — 독립 경로가 사라지면 다시 채워야 하고,
+  `test_h1a_criticality.py`가 그 반사실을 실측한다.
+
+  **차단하지 않는 미결 3건**(D-H1a-17이 명시적으로 non-blocking 분류):
+  Q16.1 `external_source_retrieval` 별도 claim, Q17.2 b′ typed-reference
+  canonicalization, Q17.1 kernel 추출(제품 자산화).
+
+  **다음 독립 리뷰에 대한 경고 — 반복 실증됐다**: 이번에 4축 적대 검토가
+  하네스 결함을 통째로 놓쳤고, 원인은 **검토 범위를 제작자가 설계한 것**이다.
+  구조적 회귀 finding도 4축이 아니라 lead 재실측에서 나왔다. 그리고 하네스
+  결함은 4축도 재실측도 아니라 **사용자 지시**로 나왔다.
+  `_h1a_review_protocol.py`가 범위 선언·blinding·자격 사전 채점을 코드로
+  강제하지만, **범위 설계 자체는 여전히 제작자 손에 있다.** 상세는
+  `docs/H1A_ISSUE_REGISTER.md` §I.5 메타 항목.
+
+  게이트: H1a **320 passed / 1 skipped**, 루트 **8 passed / 0 failed / 1
+  blocked**(fastmcp 부재 = 판정 보류). owlready2 red는 2026-08-16에 해소됐다
+  (§10.1 승인안 적용). 상세는 `OPERATIONS_LOG.md` §12~§16.
 - 갱신: **2026-08-16(2)** — **D-H1a-14/15 판정 도착·적용 + QF-SELECT 재실행.**
   판정문: `DESIGN_DECISION_H1a_qualification_gate_scope.md`. **Q14=E**(gate
   재설계) / **Q15=G**(QF-SELECT·QF-DEFER **둘 다 non-blocking capability
