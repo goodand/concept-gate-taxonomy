@@ -96,14 +96,20 @@ D-H1a-12 §15가 명시적으로 요구한 문안을 등재한다.
 | 8 | licensed-source-evaluation-path 진리표 | `assert_licensed_path_contrast` | ✅ 자동 |
 | 9 | M4 ceiling 복구 | §5 아래 | ✅ 이 문서로 |
 | 10 | repaired preregistration 갱신 | 이 문서 | ✅ |
-| 11 | 독립 의미 리뷰 재실행 | **기계 검사 불가** | ⬜ |
-| 12 | 리뷰어 전원 freeze 승인 | **기계 검사 불가** | ⬜ |
+| 11 | 독립 의미 리뷰 재실행 | **기계 검사 불가** | ✅ 2026-08-16 (§8.3) |
+| 12 | 리뷰어 전원 freeze 승인 | **기계 검사 불가** | ✅ 2026-08-16 (§8.3) |
 
 조건 11·12는 코드로 검증할 수 없다. `pass-is-a-conjunction` 규율대로
 **검사 불가 조건은 명명하고 담당을 배정한다** —
-`_h1a_policy.py::INDEPENDENT_SEMANTIC_REVIEW_PASSED = False`이고
+`_h1a_policy.py::INDEPENDENT_SEMANTIC_REVIEW_PASSED`이고
 `assert_freezable()`이 그 값이 False인 동안 `FreezeGateBlocked`를 던진다.
 리뷰 보고서를 커밋하는 **같은 커밋에서만** True로 바꾼다.
+
+**2026-08-16 현재 `True`** — 그 조건은 §8.3에 기록됐다. 플래그를 지키는 규율은
+사라지지 않았고 형태가 바뀌었다:
+`test_the_review_flag_is_only_true_alongside_a_recorded_passing_review`가
+플래그를 커밋된 보고서 파일에 결박하므로, 보고서 없이 True인 상태는 테스트가
+거부한다.
 
 ---
 
@@ -599,12 +605,50 @@ ceiling 원인이 될 수 없다 — §11.0). 규범적 내용("동일 modal 범
 ## 7. 보고 규약
 
 - K=1 상한 유지. 일반 모델 성향으로 일반화하지 않는다.
-- **(D-H1a-13 Q13.3로 갱신)** qualification gate(§5a)가 통과한 뒤에만
-  본 코호트 결과를 해석한다. gate 미달이면
-  `result_category: floor_or_ceiling_failure`로 보고하고 **`null_effect`로
-  보고하지 않는다.** 두 arm이 동일 modal 범주라는 사실 자체는(옛 §5, 이제
-  withdrawn) 더 이상 독자적인 해석 근거가 아니다 — qualification gate가
-  그 역할을 대신한다.
+- > ⚠️ **아래 규칙은 D-H1a-14/15(2026-08-16 수령)로 철회됐다** — §5a 본문과
+  > 같은 이유다. 이 절이 갱신되지 않은 채 남아 있던 것을 2026-08-18에
+  > 발견했다. **현행 규범은 §5f의 해석 규약 표다.** 이 문구는 원문 보존
+  > 목적으로만 남긴다.
+  >
+  > ~~**(D-H1a-13 Q13.3로 갱신)** qualification gate(§5a)가 통과한 뒤에만
+  > 본 코호트 결과를 해석한다. gate 미달이면
+  > `result_category: floor_or_ceiling_failure`로 보고하고 **`null_effect`로
+  > 보고하지 않는다.**~~ 두 arm이 동일 modal 범주라는 사실 자체는(옛 §5, 이제
+  > withdrawn) 더 이상 독자적인 해석 근거가 아니다 — qualification gate가
+  > 그 역할을 대신한다.
+  >
+  > **철회 이유**: `floor_or_ceiling_failure`는 2026-08-16에
+  > `_h1a_qualification.py`에서 은퇴한 상수다(`# FLOOR_OR_CEILING_FAILURE
+  > retired 2026-08-16`). D-H1a-14/15가 qualification control을 freeze
+  > 전제조건에서 **비차단 capability diagnostic**으로 재분류했으므로, gate
+  > 미달은 더 이상 결과 전체를 한 범주로 몰아넣는 사건이 아니다 — §5f 표대로
+  > **방향별 해석 제한**이 된다.
+  >
+  > **이 정정의 시점이 중요하다**: 이 절 마지막 줄이 "결과를 본 뒤 이 문서의
+  > 코딩 규칙이나 N을 바꾸지 않는다"고 못박고 있다. 40 trial 실행 **전**,
+  > 관측을 한 건도 읽지 않은 상태에서 정정했다(`trials_typed_scope.json`
+  > 부재로 확인 가능). 실행 후에 발견했다면 고칠 수 없는 항목이었다.
+
+- **(D-H1a-14/15 현행)** capability diagnostics(§5f)는 freeze 전제조건이
+  아니므로 통과 여부가 코호트 해석의 **전제조건이 아니다**. 진단 결과는 §5f
+  해석 규약 표대로 **해당 방향의 대안 설명 배제 가능성만** 좌우한다:
+
+  | 진단 결과 | 이 코호트 결과에 붙는 제한 |
+  |---|---|
+  | 둘 다 통과 | floor·ceiling 대안 설명 모두 독립적으로 약화됨 |
+  | 하나 실패 | null/작은 효과를 그 방향 포화로 설명하는 것을 배제하지 못함. **비-null 효과는 무효화되지 않음** |
+  | 하나 미시행 | 그 방향은 `unknown`. **실패로 취급 금지** |
+
+  현재 진단 상태(§5a 실측): QF-SELECT `passed`(5/5), QF-DEFER
+  `material_unavailable`. 즉 **ceiling 방향은 `unknown`**이므로, 결과가 null에
+  가깝게 나오면 "ceiling 포화가 아니다"라고 주장할 수 없고, 비-null로 나오면
+  그 사실이 결과를 무효화하지 않는다.
+
+- 어떤 진단 결과에서도 다음 문장은 유지된다 —
+  `_h1a_qualification.APPROVED_NULL_EFFECT_SENTENCE`에 상수로 고정된 승인
+  문구이며, 재작성 금지(F6):
+  > A failed qualification gate must not be reported as evidence of a null
+  > treatment effect.
 - **L8(§5b)에 명시된 보고 제한을 지킨다** — 표적 네 축 중 `source_kind`만
   독립 관측되므로, recency·authority·liveness 각각에 대해 개별 효과를
   주장하지 않는다.
@@ -680,3 +724,49 @@ warrant에서 배제)도 공통 템플릿 문장이라 같은 성격이다.
 이것이 D-H1a-11에서 이미 한 번 나온 "이식된 절이 선행사를 잃는다" 패턴의
 재발이며(`evidence-to-knowledge-promoter` 2026-08-01 로그 결함 1번), 이번엔
 판정문이 처방한 문장 자체가 그 결함을 갖고 있다는 점이 다르다.
+
+### 8.3 조건 11·12 충족 — 게이트 개방 (2026-08-17)
+
+§8.1(전송 실패)·§8.2(FREEZE_BLOCKED)로 끝나 있던 이력의 결말이다. 위 두 절만
+읽으면 조건 11·12가 여전히 미충족이고 trial이 0건이어야 한다고 결론하게 되므로
+여기에 기록한다.
+
+| 조건 | 상태 | 근거 |
+|---|---|---|
+| 11 (독립 의미 리뷰) | **충족** | `docs/feedback/h1a_independent_semantic_review_20260816.md` |
+| 12 (리뷰어 자격) | **충족** | blinded mutation pack(`_h1a_mutation_pack.py`) 통과 리뷰어만 판정 계수 |
+
+`_h1a_policy.INDEPENDENT_SEMANTIC_REVIEW_PASSED = True`(2026-08-16 커밋
+`73b6682`). **플래그의 보호 장치는 삭제된 것이 아니라 이전됐다** —
+`test_the_review_flag_is_only_true_alongside_a_recorded_passing_review`가
+플래그를 커밋된 보고서 파일에 결박한다. 예전의 "함부로 뒤집지 마라" 테스트는
+정당한 전환을 견딜 수 없는 형태였고, 그것을 대체한 것이다.
+
+§8.2가 요구한 D-H1a-13 상신은 완료됐고, 그 뒤 D-H1a-14/15(qualification gate
+범위), D-H1a-16(정본 확장), D-H1a-17(D-H1a-16 범위 한정)까지 수령·적용됐다.
+
+**동결 완료**: `cohort_prompts_typed_scope.json`(40 trial, arm당 20),
+sha256 `9c84ef93…`. 동결 인증 증명은
+`cohort_prompts_typed_scope_freeze_proof.json`에 별도 기록(§7의
+`licensed_source_evaluation_path` 항목별 요구를 충족).
+
+**남은 것은 실행뿐이며, 실행은 사용자 승인 사항이다.**
+
+### 8.4 이 문서 자체의 드리프트 (2026-08-18 발견)
+
+동결 게이트가 열린 뒤 실행 직전에 이 문서를 재대조해 찾은 것이다. 셋 다 **관측을
+한 건도 읽기 전에** 처리했다 — §7 마지막 줄이 결과를 본 뒤의 규칙 변경을 금지하므로
+실행 후에는 고칠 수 없는 항목이었다.
+
+| # | 결함 | 처리 |
+|---|---|---|
+| 1 | §7이 은퇴한 `floor_or_ceiling_failure`로 보고하라고 지시 | §7에 철회 표기 + D-H1a-14/15 현행 규범 표로 대체 |
+| 2 | §8이 2026-08-06 FREEZE_BLOCKED에서 끝나 게이트가 아직 막힌 것처럼 읽힘 | §8.3 추가 |
+| 3 | §7이 요구하는 `licensed_source_evaluation_path`가 동결 manifest에 없음 — `build_cohort()`이 `assert_freezable()`의 반환값을 버렸다 | 증명 sidecar 신설 + 채점 경로에 존재·결박 검사 배선 |
+
+3번이 이 중 유일한 코드 결함이고, 형태가 반복이다: **정책 층이 존재하지만 실행
+경로에 없었다**(2026-08-06 blocker와 동형). 이번엔 "검사는 실행됐지만 그 결과가
+디스크에 도달하지 않았다"는 변종이므로, 문구가 아니라 코드로 고정했다 —
+`_h1a_score._assert_the_freeze_proof_is_recorded`가 증명 부재와 manifest 불일치
+양쪽에서 채점을 거부한다.
+
