@@ -110,7 +110,11 @@ def test_a_new_spec_changes_id_prefix_seed_and_n(monkeypatch, tmp_path):
     monkeypatch.setattr(cohort.policy, "INDEPENDENT_SEMANTIC_REVIEW_PASSED", True)
     spec = cohort.CohortSpec(
         cohort_id="qf-test", fixture_path=cohort.FIXTURE_PATH,
-        cohort_path=tmp_path / "qf.json", order_seed="H1A-QF-TEST-v1",
+        cohort_path=tmp_path / "qf.json",
+        raw_path=tmp_path / "qf_raw.json",
+        trials_path=tmp_path / "qf_trials.json",
+        score_path=tmp_path / "qf_score.json",
+        order_seed="H1A-QF-TEST-v1",
         trial_id_prefix="H1AQT", n_per_arm=5, stage_a_replicates=[1, 2, 3, 4, 5],
     )
     built = cohort.build_cohort(spec)
@@ -136,7 +140,11 @@ def test_the_overwrite_guard_is_per_spec_not_only_the_original_path(
     target = tmp_path / "qf.json"
     spec = cohort.CohortSpec(
         cohort_id="qf-test", fixture_path=cohort.FIXTURE_PATH,
-        cohort_path=target, order_seed="H1A-QF-TEST-v1",
+        cohort_path=target,
+        raw_path=tmp_path / "qf_raw.json",
+        trials_path=tmp_path / "qf_trials.json",
+        score_path=tmp_path / "qf_score.json",
+        order_seed="H1A-QF-TEST-v1",
         trial_id_prefix="H1AQT", n_per_arm=5, stage_a_replicates=[1, 2, 3, 4, 5],
     )
     cohort.freeze(spec)                       # precision: free path, must write
@@ -211,3 +219,75 @@ def test_a_different_seed_actually_changes_the_execution_order():
     new_order = [t["trial_id"].rsplit("-", 1)[1] for t in built["trials"]]
     old_order = [t["trial_id"].rsplit("-", 1)[1] for t in preserved["trials"]]
     assert new_order != old_order
+
+
+# --- 2026-08-18: the freeze proof was computed and thrown away ---------------
+
+def test_the_freeze_proof_records_the_item_level_licensed_path(tmp_path) -> None:
+    """PREREGISTRATION_TYPED_SCOPE_COHORT.md §7 requires the item-level values,
+    not a single boolean. A summary verdict cannot reconstruct 대비가 성립한
+    근거, which is what §7 asks to be recoverable after the fact."""
+    proof = cohort.build_freeze_proof(cohort.TYPED_SCOPE_COHORT)
+
+    rows = proof["licensed_source_evaluation_path"]
+    assert set(rows) == set(cohort.contract.ARMS)
+    # The contrast itself: exactly one arm has the licensed path open. If both
+    # or neither did, §5c's replacement predicate would not hold and the freeze
+    # should never have been certified.
+    assert rows["PROHIBITION_REMOVED"]["licensed_path"] is True
+    assert rows["PROHIBITION_KEPT"]["licensed_path"] is False
+    for row in rows.values():
+        assert "source_meta_allowed" in row
+        assert "residual_prohibition" in row
+
+
+def test_the_freeze_proof_is_bound_to_the_manifest_it_certifies() -> None:
+    """A proof that floats free of the manifest proves nothing about it. The
+    recorded hash must be the frozen manifest's actual bytes."""
+    import hashlib
+
+    spec = cohort.TYPED_SCOPE_COHORT
+    proof = cohort.build_freeze_proof(spec)
+    assert proof["cohort_manifest_sha256"] == hashlib.sha256(
+        spec.cohort_path.read_bytes()
+    ).hexdigest()
+    assert proof["cohort_id"] == spec.cohort_id
+
+
+def test_write_freeze_proof_refuses_to_replace_a_recorded_proof(
+    monkeypatch, tmp_path
+) -> None:
+    """Recall for the refusal, same discipline as freeze() and score.main():
+    a recorded proof is evidence about a frozen manifest, so it is not silently
+    replaced. Also precision -- the first write must succeed."""
+    monkeypatch.setattr(cohort.policy, "INDEPENDENT_SEMANTIC_REVIEW_PASSED", True)
+    target = tmp_path / "qf.json"
+    spec = cohort.CohortSpec(
+        cohort_id="qf-test", fixture_path=cohort.FIXTURE_PATH,
+        cohort_path=target,
+        raw_path=tmp_path / "qf_raw.json",
+        trials_path=tmp_path / "qf_trials.json",
+        score_path=tmp_path / "qf_score.json",
+        order_seed="H1A-QF-TEST-v1",
+        trial_id_prefix="H1AQT", n_per_arm=5, stage_a_replicates=[1, 2, 3, 4, 5],
+    )
+    cohort.freeze(spec)
+
+    cohort.write_freeze_proof(spec)               # precision: must write
+    assert spec.freeze_proof_path.exists()
+    before = spec.freeze_proof_path.read_bytes()
+
+    with pytest.raises(cohort.FreezeProofOverwriteRefused, match="qf-test"):
+        cohort.write_freeze_proof(spec)           # recall: must refuse
+    assert spec.freeze_proof_path.read_bytes() == before
+
+
+def test_the_proof_path_is_derived_from_the_manifest_path() -> None:
+    """It is derived, not a separate field, so it cannot name a different
+    cohort than the manifest it sits beside -- which is the whole reason the
+    other three output paths had to be made explicit."""
+    for spec in (cohort.ORIGINAL_COHORT, cohort.TYPED_SCOPE_COHORT):
+        assert spec.freeze_proof_path.parent == spec.cohort_path.parent
+        assert spec.cohort_path.stem in spec.freeze_proof_path.stem
+    assert (cohort.ORIGINAL_COHORT.freeze_proof_path
+            != cohort.TYPED_SCOPE_COHORT.freeze_proof_path)

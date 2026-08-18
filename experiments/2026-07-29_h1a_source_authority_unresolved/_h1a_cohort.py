@@ -31,6 +31,14 @@ FIXTURE_PATH = HERE / "fixture_source_authority.json"
 SCHEMA_PATH = HERE / "h1a_schema.json"
 COHORT_PATH = HERE / "cohort_prompts.json"
 
+# The preserved 2026-08-03 cohort's observation and scored-output paths.
+# Defined here rather than in `_h1a_score.py` so ORIGINAL_COHORT can carry
+# them: the scorer used to own these names as module constants, which is
+# why a second cohort had nowhere to write.
+RAW_PATH = HERE / "trials_raw.json"
+TRIALS_PATH = HERE / "trials.json"
+SCORE_PATH = HERE / "h1a_cohort_score.json"
+
 # The trial subject's system prompt is a model-facing surface, and
 # trial_manifest() does not hash it -- that function is E2.4's frozen copy
 # (three documented deviations, pinned by test_h1a_surface_deviates_from_e2_4_
@@ -123,11 +131,32 @@ class CohortSpec:
     """
 
     def __init__(self, *, cohort_id: str, fixture_path, cohort_path,
+                 raw_path, trials_path, score_path,
                  order_seed: str, trial_id_prefix: str, n_per_arm: int,
                  stage_a_replicates=None):
         self.cohort_id = cohort_id
         self.fixture_path = fixture_path
         self.cohort_path = cohort_path
+        # 2026-08-18: the SCORED-output half of the same separation.
+        #
+        # `_h1a_score.py::main()`'s docstring said the repaired cohort "needs
+        # its own scored-output paths (a cohort_id-qualified path or filename)
+        # ... that wiring is not done", exactly as freeze()'s docstring once
+        # said about the manifest path. The manifest half was wired on
+        # 2026-08-15; this is the other half. Until it existed, a second
+        # cohort's 40 observations had nowhere to be scored to, and the only
+        # thing standing between them and the preserved 2026-08-03 cohort's
+        # `trials.json` / `h1a_cohort_score.json` was main()'s exists() refusal.
+        #
+        # KEYWORD-ONLY WITH NO DEFAULTS, on purpose -- same discipline as
+        # `_h1a_policy.assert_freezable`'s V/H. A default here would point at
+        # whichever cohort was written first, and "a stale default silently
+        # certified/overwrote the preserved artifact" is the precise failure
+        # this folder has now fixed three times (freeze(), main(), the subject
+        # hash guard). A new cohort must state its own output paths.
+        self.raw_path = raw_path
+        self.trials_path = trials_path
+        self.score_path = score_path
         self.order_seed = order_seed
         self.trial_id_prefix = trial_id_prefix
         self.n_per_arm = n_per_arm
@@ -139,6 +168,20 @@ class CohortSpec:
             else list(range(1, 6))
         )
 
+    @property
+    def freeze_proof_path(self):
+        """DERIVED from cohort_path, not a separate field.
+
+        The three output paths above take no defaults because a stale default
+        could point at another cohort's artifact. That hazard does not exist
+        here: this path is a function of `cohort_path`, so it cannot name a
+        different cohort than the manifest it sits beside. Deriving is strictly
+        safer than another required field a caller could get wrong.
+        """
+        return self.cohort_path.with_name(
+            self.cohort_path.stem + "_freeze_proof.json"
+        )
+
 
 # The preserved 2026-08-03 cohort. Values match the module constants above so
 # the two cannot drift; changing either without the other is caught by
@@ -147,6 +190,9 @@ ORIGINAL_COHORT = CohortSpec(
     cohort_id="h1a-original-20260803",
     fixture_path=FIXTURE_PATH,
     cohort_path=COHORT_PATH,
+    raw_path=RAW_PATH,
+    trials_path=TRIALS_PATH,
+    score_path=SCORE_PATH,
     order_seed=ORDER_SEED,
     trial_id_prefix="H1A",
     n_per_arm=N_PER_ARM,
@@ -185,6 +231,9 @@ TYPED_SCOPE_COHORT = CohortSpec(
     cohort_id="h1a-typed-scope-20260817",
     fixture_path=FIXTURE_PATH,
     cohort_path=HERE / "cohort_prompts_typed_scope.json",
+    raw_path=HERE / "trials_raw_typed_scope.json",
+    trials_path=HERE / "trials_typed_scope.json",
+    score_path=HERE / "h1a_cohort_score_typed_scope.json",
     order_seed="H1A-typed-scope-fixed-order-v1",
     trial_id_prefix="H1AT",
     n_per_arm=N_PER_ARM,
@@ -230,14 +279,7 @@ def build_cohort(spec: "CohortSpec | None" = None) -> dict:
     # (INDEPENDENT_SEMANTIC_REVIEW_PASSED = False), this also means
     # build_cohort() cannot produce a manifest until that flag is set --
     # freeze() cannot outrun the freeze gate.
-    policy.assert_freezable(
-        arm_templates,
-        contract.LIVENESS_CLAUSE_TEXT,
-        # D-H1a-12 sec 10: fixture facts this module cannot derive. Stated
-        # explicitly at the call site so a stale default cannot certify.
-        source_attributes_visible=True,
-        hard_defer_mapping=False,
-    )
+    _certify_freezable(arm_templates)
 
     rendered_prompts = {
         arm: surface.render_prompt(arm_templates[arm], model_payload)
@@ -319,6 +361,97 @@ def build_cohort(spec: "CohortSpec | None" = None) -> dict:
 
 class CohortOverwriteRefused(Exception):
     """freeze() would destroy a preserved cohort. Never proceed."""
+
+
+def _certify_freezable(arm_templates: dict[str, str]) -> dict:
+    """The ONE place the freeze gate is invoked, and the one place V and H live.
+
+    `assert_freezable` makes V/H keyword-only with no defaults precisely so a
+    stale default cannot certify a freeze. Two call sites passing them
+    separately would reintroduce that hazard one level up -- they could drift
+    apart and each would still look explicit. So the values are stated once,
+    here, and both the freeze path (`build_cohort`) and the proof-recording
+    path (`build_freeze_proof`) go through this function.
+
+    D-H1a-12 sec 10: these are fixture and shared-prompt facts this module
+    cannot derive. `source_attributes_visible=True` because the fixture exposes
+    source attributes; `hard_defer_mapping=False` because no prompt maps a
+    source attribute to a forced defer.
+    """
+    return policy.assert_freezable(
+        arm_templates,
+        contract.LIVENESS_CLAUSE_TEXT,
+        source_attributes_visible=True,
+        hard_defer_mapping=False,
+    )
+
+
+class FreezeProofOverwriteRefused(Exception):
+    """write_freeze_proof() would destroy an already-recorded proof."""
+
+
+def build_freeze_proof(spec: "CohortSpec | None" = None) -> dict:
+    """The freeze certification, as a recordable artifact.
+
+    WHY THIS EXISTS
+    `build_cohort()` called `assert_freezable()` for its SIDE EFFECT only and
+    discarded the returned proof, so nothing about how the freeze was certified
+    reached disk. But PREREGISTRATION_TYPED_SCOPE_COHORT.md sec 7 requires
+    "`licensed_source_evaluation_path`의 항목별 값을 결과와 함께 기록한다 --
+    대비가 성립한 근거가 무엇이었는지 사후에 재구성 가능해야 한다", and the
+    frozen manifest has no such key (verified 2026-08-18: absent).
+
+    A sidecar rather than a manifest field, deliberately. The typed-scope
+    manifest is already frozen and `freeze()` refuses to overwrite it; adding
+    the key to `build_cohort()`'s output would leave the code and the frozen
+    artifact permanently disagreeing about the manifest's shape, which is a
+    worse defect than the one being fixed. Binding by `cohort_manifest_sha256`
+    gives the same guarantee without rewriting a frozen file.
+
+    Deterministic: every input (the template, the arm renderer, V, H) is frozen,
+    so this recomputes bit-identically to what certified the freeze. The
+    equality is not assumed -- `_certify_freezable` is the single call site both
+    paths use.
+    """
+    spec = spec or ORIGINAL_COHORT
+    template = contract.load_h1a_native_template()
+    arm_templates = {arm: contract.render_arm(template, arm) for arm in contract.ARMS}
+    proof = _certify_freezable(arm_templates)
+
+    manifest_bytes = spec.cohort_path.read_bytes()
+    return {
+        "record_class": "h1a_freeze_proof",
+        "cohort_id": spec.cohort_id,
+        "cohort_manifest": spec.cohort_path.name,
+        # Binds this proof to the exact manifest bytes it certifies. A proof
+        # that floats free of the manifest proves nothing about it.
+        "cohort_manifest_sha256": hashlib.sha256(manifest_bytes).hexdigest(),
+        "recorded_commit": _git_head(),
+        "freeze_conditions": {
+            k: v for k, v in proof.items()
+            if k != "licensed_source_evaluation_path"
+        },
+        "licensed_source_evaluation_path": proof["licensed_source_evaluation_path"],
+    }
+
+
+def write_freeze_proof(spec: "CohortSpec | None" = None) -> dict:
+    """Write the proof beside the manifest it certifies. Fail-closed, per the
+    same discipline as `freeze()` and `_h1a_score.main()`: an existing proof is
+    evidence about a frozen manifest and is not silently replaced."""
+    spec = spec or ORIGINAL_COHORT
+    if spec.freeze_proof_path.exists():
+        raise FreezeProofOverwriteRefused(
+            f"{spec.freeze_proof_path.name} already records how the "
+            f"{spec.cohort_id!r} cohort's freeze was certified. Overwriting it "
+            f"would replace evidence about a frozen manifest. If the manifest "
+            f"itself changed, that is a new cohort with its own spec."
+        )
+    proof = build_freeze_proof(spec)
+    spec.freeze_proof_path.write_text(
+        json.dumps(proof, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    return proof
 
 
 def freeze(spec: "CohortSpec | None" = None) -> dict:
