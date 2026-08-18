@@ -35,6 +35,7 @@ if str(HERE) not in sys.path:
 
 import _coder                    # noqa: E402
 import _h1a_cohort as cohort_mod  # noqa: E402
+import _h1a_cohort_run as cohort_run  # noqa: E402
 
 
 def _load_score():
@@ -79,55 +80,42 @@ def _manifest() -> dict:
     return json.loads(TYPED.cohort_path.read_text(encoding="utf-8"))
 
 
-def _provenance_from(manifest: dict) -> dict:
-    """The provenance a correct run would record, read off the manifest.
-
-    Derived rather than hand-written on purpose: these tests exercise the
-    scoring pipeline, and hand-written values would fail for a reason that has
-    nothing to do with what is under test. The guard's own recall lives in the
-    dedicated negative tests below, where the values are deliberately wrong.
-    """
-    by_arm = {}
-    for trial in manifest["trials"]:
-        by_arm[trial["arm"]] = trial["manifest"]["rendered_prompt_sha256"]
-    return {
-        "transport": manifest["protocol"]["transport"],
-        "trial_model": manifest["protocol"]["trial_model"],
-        "tool_access": manifest["protocol"]["tool_access"],
-        "context_isolation": manifest["protocol"]["context_isolation"],
-        "trial_subject_definition_sha256":
-            manifest["trial_subject_surface"]["definition_sha256"],
-        "decision_schema_sha256":
-            manifest["trials"][0]["manifest"]["decision_schema_sha256"],
-        "rendered_prompt_sha256_by_arm": by_arm,
-    }
-
-
 def _synthetic_raw(kind_for_arm) -> dict:
-    """Schema-shaped observations. Their CONTENT is arbitrary -- what is under
-    test is the bookkeeping around `_coder.code()`, not the coder itself."""
-    manifest = _manifest()
+    """Observations assembled through the REAL runner, not hand-built here.
+
+    `_h1a_cohort_run.build_raw()` is what a live run uses, and it derives the
+    per-arm prompt hashes from the dispatch plan -- the bytes handed to the
+    dispatcher -- rather than reading them back out of the manifest. Building
+    the document by hand here would test a shape that production never
+    produces, and would also make the provenance comparison a check of the
+    manifest against itself (independent review 2026-08-18, finding P2).
+
+    The observation CONTENT is arbitrary: what is under test is the
+    bookkeeping around `_coder.code()`, not the coder.
+    """
+    plan = cohort_run.build_dispatch_plan(TYPED)
     values = _coder.selected_type_values()
-    out = {}
-    for trial in manifest["trials"]:
-        kind = kind_for_arm(trial["arm"])
+    outputs = {}
+    for item in plan["items"]:
+        kind = kind_for_arm(item["arm"])
         if kind == "selection":
-            out[trial["trial_id"]] = {
+            outputs[item["trial_id"]] = {
                 "decision": "select_type", "selected_type": values[0],
                 "cited_evidence_ids": ["ev1"], "rationale": "synthetic",
             }
         elif kind == "deferral":
-            out[trial["trial_id"]] = {
+            outputs[item["trial_id"]] = {
                 "decision": "defer", "selected_type": None,
                 "cited_evidence_ids": ["ev1", "ev3"], "rationale": "synthetic",
             }
         else:
-            out[trial["trial_id"]] = None
-    return {
-        "record_class": "h1a_cohort_raw",
-        "provenance": _provenance_from(manifest),
-        "outputs": out,
-    }
+            outputs[item["trial_id"]] = None
+    return cohort_run.build_raw(
+        plan, outputs,
+        dispatch_script_sha256="0" * 64,   # no dispatch happened in a test
+        run_date="2026-08-18",
+        notes="synthetic observations written by the test suite",
+    )
 
 
 def test_the_typed_scope_cohort_can_be_scored_end_to_end(tmp_path) -> None:
@@ -327,3 +315,158 @@ def test_the_provenance_guard_accepts_a_correct_run(tmp_path) -> None:
         "schema_forced_structured_output")
     assert result["trial_provenance"]["trial_model"] == "claude-opus-5"
     assert result["n_recorded"] == 40
+
+
+# ==========================================================================
+# Independent adversarial review, 2026-08-18 (four ground-truth axes, haiku).
+# Each test below is one surviving finding, pinned so it cannot come back.
+# ==========================================================================
+
+def test_the_frozen_prompts_reproduce_from_the_renderer() -> None:
+    """Findings P2/P3: nothing verified that the frozen `rendered_prompts` are
+    what the renderer actually produces.
+
+    The reviewers were right that no test pinned it, and wrong that it was
+    broken -- measured 2026-08-18, both arms reproduce byte-identically. This
+    test is the difference between those two facts: it makes the agreement
+    checked rather than incidental.
+
+    IF THIS FAILS, the frozen cohort no longer corresponds to the current
+    template. That is information, not a nuisance: the trials the model saw
+    are the frozen bytes, so a divergence means the template moved after the
+    freeze and any claim resting on "the arms differ only by the Q1 clause"
+    must be re-derived. Record the divergence; do not delete the test.
+    """
+    import _h1a_contract as contract
+    import _h1a_surface as surface
+
+    manifest = _manifest()
+    fixture = json.loads(TYPED.fixture_path.read_text(encoding="utf-8"))
+    qualification = surface.qualify_fixture(
+        fixture, cohort_mod.REPO_ROOT, run_tests=False)
+    payload = surface.build_model_payload(fixture, qualification)
+    template = contract.load_h1a_native_template()
+
+    for arm in contract.ARMS:
+        fresh = surface.render_prompt(contract.render_arm(template, arm), payload)
+        frozen = manifest["rendered_prompts"][arm]
+        assert fresh == frozen, (
+            f"{arm}: the frozen prompt is not what the renderer produces now. "
+            f"The trials ran on the frozen bytes, so this divergence must be "
+            f"recorded, not papered over."
+        )
+
+
+def test_outputs_for_trial_ids_outside_the_freeze_are_refused(tmp_path) -> None:
+    """Reviewer D's surviving gap: nothing made the `unexpected` check raise.
+
+    A trial id that is not in the freeze is an observation of something the
+    preregistration never specified. Scoring it would put a number in the
+    results whose provenance is a mystery.
+    """
+    spec = _redirected(tmp_path)
+    doc = _synthetic_raw(lambda arm: "selection")
+    doc["outputs"]["H1AT-PROHIBITION_KEPT-99"] = {
+        "decision": "defer", "selected_type": None,
+        "cited_evidence_ids": [], "rationale": "not in the freeze",
+    }
+    spec.raw_path.write_text(json.dumps(doc), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="not in the freeze"):
+        score.score(spec)
+
+
+def test_an_empty_manifest_does_not_satisfy_the_identity_check(tmp_path) -> None:
+    """Reviewer A finding 1. The prefix check is a comprehension over
+    `trials`, so an empty list made it vacuously true -- a guard that goes
+    silent while still looking present, which is this folder's signature
+    defect."""
+    empty = tmp_path / "empty.json"
+    empty.write_text(json.dumps({"trials": []}), encoding="utf-8")
+    spec = _redirected(tmp_path, cohort_path=empty)
+
+    with pytest.raises(score.CohortIdentityMismatch, match="no trials"):
+        score.score(spec)
+
+
+def test_an_empty_trial_id_prefix_is_refused(tmp_path) -> None:
+    """Reviewer A finding 4. An empty prefix reduces the check to 'starts with
+    a hyphen', which identifies nothing."""
+    spec = _redirected(tmp_path, trial_id_prefix="")
+    with pytest.raises(score.CohortIdentityMismatch, match="empty"):
+        score.score(spec)
+
+
+def test_a_non_mapping_provenance_is_refused_cleanly(tmp_path) -> None:
+    """Reviewer A finding 2. A non-empty string passed the truthiness check
+    and then died on `.get` with an AttributeError -- which reads as a broken
+    checker rather than a rejected input, and an AttributeError is exactly the
+    kind of failure someone 'fixes' by loosening the guard."""
+    spec = _redirected(tmp_path)
+    doc = _synthetic_raw(lambda arm: "selection")
+    doc["provenance"] = "schema_forced_structured_output"
+    spec.raw_path.write_text(json.dumps(doc), encoding="utf-8")
+
+    with pytest.raises(score.RawProvenanceMissing, match="not a mapping"):
+        score.score(spec)
+
+
+def test_a_non_mapping_outputs_block_is_refused_cleanly(tmp_path) -> None:
+    """Reviewer A finding 6. A list reached the `unexpected` check and failed
+    with a message about trial ids, misdescribing the problem."""
+    spec = _redirected(tmp_path)
+    doc = _synthetic_raw(lambda arm: "selection")
+    doc["outputs"] = ["H1AT-PROHIBITION_KEPT-01"]
+    spec.raw_path.write_text(json.dumps(doc), encoding="utf-8")
+
+    with pytest.raises(score.RawProvenanceMissing, match="not a mapping"):
+        score.score(spec)
+
+
+def test_observations_are_bound_to_the_manifest_bytes(tmp_path) -> None:
+    """Findings P1/P4/P5: everything in provenance was the runner's own claim.
+
+    This binding is the one element that is not: the raw file is written after
+    the freeze, by a separate call, from the dispatch plan -- so it cannot
+    agree with a manifest hash it never saw. Recall on both halves."""
+    spec = _redirected(tmp_path)
+
+    doc = _synthetic_raw(lambda arm: "selection")
+    doc["cohort_manifest_sha256"] = "0" * 64
+    spec.raw_path.write_text(json.dumps(doc), encoding="utf-8")
+    with pytest.raises(score.RawProvenanceMissing, match="manifest changed"):
+        score.score(spec)
+
+    doc = _synthetic_raw(lambda arm: "selection")
+    del doc["cohort_manifest_sha256"]
+    spec.raw_path.write_text(json.dumps(doc), encoding="utf-8")
+    with pytest.raises(score.RawProvenanceMissing, match="no `cohort_manifest_sha256`"):
+        score.score(spec)
+
+    doc = _synthetic_raw(lambda arm: "selection")
+    doc["cohort_id"] = "h1a-original-20260803"
+    spec.raw_path.write_text(json.dumps(doc), encoding="utf-8")
+    with pytest.raises(score.RawProvenanceMissing, match="must not be filed"):
+        score.score(spec)
+
+
+def test_the_score_file_says_which_manifest_and_surfaces_it_describes(
+    tmp_path,
+) -> None:
+    """Finding P5. §7 asks that the basis of the contrast be reconstructable
+    afterwards. A score file that does not name the manifest or the surfaces
+    requires the reader to be handed the right manifest and trust it."""
+    spec = _redirected(tmp_path)
+    spec.raw_path.write_text(
+        json.dumps(_synthetic_raw(lambda arm: "selection")), encoding="utf-8")
+    score.main(spec)
+    summary = json.loads(spec.score_path.read_text(encoding="utf-8"))
+
+    assert summary["cohort_manifest_sha256"] == hashlib.sha256(
+        TYPED.cohort_path.read_bytes()).hexdigest()
+    by_arm = summary["rendered_prompt_sha256_by_arm"]
+    assert set(by_arm) == set(cohort_mod.contract.ARMS)
+    assert len(set(by_arm.values())) == 2, (
+        "the two arms must have different surfaces; identical hashes would "
+        "mean the treatment was never applied"
+    )

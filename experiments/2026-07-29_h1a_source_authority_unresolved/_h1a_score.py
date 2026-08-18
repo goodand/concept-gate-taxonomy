@@ -69,6 +69,11 @@ def load_raw(spec=None) -> dict:
     """
     spec = spec or cohort_mod.ORIGINAL_COHORT
     doc = json.loads(spec.raw_path.read_text(encoding="utf-8"))
+    if not isinstance(doc, dict):
+        raise RawProvenanceMissing(
+            f"{spec.raw_path.name} does not contain a JSON object at the top "
+            f"level, so it is not a raw trial-output document"
+        )
     if "outputs" not in doc:
         raise RawProvenanceMissing(
             f"{spec.raw_path.name} has no `outputs` block, so it is the flat "
@@ -76,6 +81,16 @@ def load_raw(spec=None) -> dict:
             f"transport, model or subject the outputs were produced under. "
             f"Preserve it as a historical artifact and re-run through the "
             f"cohort's own transport. Do not delete this check to proceed."
+        )
+    if not isinstance(doc["outputs"], dict):
+        # Independent review 2026-08-18 finding 6: a list here reached the
+        # `unexpected` check and failed with a message about trial ids, which
+        # misdescribes the problem and sends the reader looking in the wrong
+        # place.
+        raise RawProvenanceMissing(
+            f"{spec.raw_path.name}'s `outputs` is "
+            f"{type(doc['outputs']).__name__}, not a mapping of trial_id to "
+            f"output"
         )
     return doc
 
@@ -106,7 +121,8 @@ def score(spec=None) -> dict:
     freeze_proof = _assert_the_freeze_proof_is_recorded(spec)
 
     raw_doc = load_raw(spec)
-    provenance = _assert_raw_provenance_matches_the_manifest(raw_doc, cohort)
+    provenance = _assert_raw_provenance_matches_the_manifest(
+        raw_doc, cohort, spec, spec.cohort_path.read_bytes())
     raw = raw_doc["outputs"]
     expected = {t["trial_id"]: t for t in cohort["trials"]}
     calibration = _assert_instrument_speaks()
@@ -196,6 +212,13 @@ def score(spec=None) -> dict:
         # the score file so a reader need not trust that the run matched the
         # manifest -- the guard above already refused it if it did not.
         "trial_provenance": provenance,
+        # Self-containment (independent review 2026-08-18, finding P5): a
+        # reader of this file alone can tell WHICH manifest and WHICH surfaces
+        # these numbers describe, and check that the manifest they hold is the
+        # right one, without being handed the manifest first.
+        "cohort_manifest_sha256": freeze_proof["cohort_manifest_sha256"],
+        "rendered_prompt_sha256_by_arm":
+            provenance["rendered_prompt_sha256_by_arm"],
         # §7: the item-level values of the licensed source-evaluation path,
         # carried into the results so the basis of the arm contrast is
         # reconstructable from the score file alone.
@@ -242,9 +265,37 @@ class RawProvenanceMissing(Exception):
     """Outputs whose transport, model or subject cannot be established."""
 
 
-def _assert_raw_provenance_matches_the_manifest(raw: dict, cohort: dict) -> dict:
+def _assert_raw_provenance_matches_the_manifest(
+    raw: dict, cohort: dict, spec, manifest_bytes: bytes,
+) -> dict:
     """Outputs may only be scored against the surface, subject and transport
     they were actually produced under.
+
+    WHAT THIS ESTABLISHES AND WHAT IT DOES NOT
+    Stated here rather than left to be inferred, because a checker that reads
+    stronger than it is is worse than no checker (independent review
+    2026-08-18, findings P1/P2/P5).
+
+      ESTABLISHED -- the outputs were produced against THESE manifest bytes
+        (`cohort_manifest_sha256`, written by the runner after the freeze from
+        its own dispatch plan, so it cannot be satisfied by internal
+        consistency), and under this cohort's identity.
+
+      ESTABLISHED -- whatever the runner declares about transport, model,
+        subject and per-arm surfaces AGREES with the frozen manifest. A runner
+        that dispatched a different surface than it planned, or whose
+        declarations contradict the freeze, is refused.
+
+      NOT ESTABLISHED -- that the transport layer honored the model override
+        it was asked for. `transport` and `trial_model` are the runner's
+        report of what it REQUESTED. `_h1a_cohort_run.py` narrows this by
+        recording the sha256 of the persisted dispatch script, so a third
+        party can read what was requested instead of trusting a summary, but
+        no artifact available here proves compliance.
+
+      NOT ESTABLISHED -- that the frozen `rendered_prompts` are what the
+        renderer produces. That is a different proposition, pinned separately
+        by `test_the_frozen_typed_scope_prompts_reproduce_from_the_renderer`.
 
     This is the confirmatory-cohort counterpart of the guard
     `_h1a_qualification_run.py` grew on 2026-08-16, and it did not exist until
@@ -257,7 +308,47 @@ def _assert_raw_provenance_matches_the_manifest(raw: dict, cohort: dict) -> dict
     arms differ by exactly the Q1 clause, so a single hash could match one arm
     and say nothing about the other.
     """
+    # Bind the observations to the exact manifest bytes they were produced
+    # against. This is the one part of provenance that is NOT self-report: the
+    # raw file is written after the manifest is frozen, by a different call,
+    # from the dispatch plan -- so a mismatch here means the outputs were
+    # produced against different bytes than are being scored, and no amount of
+    # internal consistency in the raw file can fake agreement with a hash it
+    # did not see.
+    recorded_id = raw.get("cohort_id")
+    if recorded_id is not None and recorded_id != spec.cohort_id:
+        raise RawProvenanceMissing(
+            f"the raw file declares cohort_id={recorded_id!r} but is being "
+            f"scored as {spec.cohort_id!r}. One cohort's observations must not "
+            f"be filed under another's identity."
+        )
+    recorded_manifest = raw.get("cohort_manifest_sha256")
+    actual_manifest = hashlib.sha256(manifest_bytes).hexdigest()
+    if recorded_manifest is None:
+        raise RawProvenanceMissing(
+            "the raw file records no `cohort_manifest_sha256`, so the outputs "
+            "cannot be tied to the manifest bytes they were produced against. "
+            "That binding is the only non-self-reported element of provenance; "
+            "without it every remaining field is the runner's own claim."
+        )
+    if recorded_manifest != actual_manifest:
+        raise RawProvenanceMissing(
+            f"the outputs were produced against manifest bytes "
+            f"{recorded_manifest} but the manifest being scored hashes to "
+            f"{actual_manifest}. The manifest changed after the trials ran, or "
+            f"these outputs belong to a different freeze."
+        )
+
     provenance = raw.get("provenance")
+    if provenance is not None and not isinstance(provenance, dict):
+        # Independent review 2026-08-18 finding 2: a non-empty string passed
+        # the truthiness check and then died on `.get` with an AttributeError,
+        # which reads like a bug in the checker rather than a refusal of bad
+        # input.
+        raise RawProvenanceMissing(
+            f"`provenance` is {type(provenance).__name__}, not a mapping of "
+            f"provenance field to value"
+        )
     if not provenance:
         raise RawProvenanceMissing(
             "raw trial outputs carry no `provenance` block, so the transport, "
@@ -370,6 +461,21 @@ def _assert_manifest_belongs_to_the_spec(cohort: dict, spec) -> None:
     prefixes would classify every typed-scope trial as a preserved-cohort one.
     HANDOFF.md flags this hazard for exactly this reason.
     """
+    if not spec.trial_id_prefix:
+        raise CohortIdentityMismatch(
+            "the spec carries an empty trial_id_prefix, so the check below "
+            "would reduce to 'starts with a hyphen' and identify nothing"
+        )
+    if not cohort["trials"]:
+        # Independent review 2026-08-18 finding 1: an empty list makes the
+        # comprehension below vacuously true, so a manifest with no trials
+        # passed the identity check. Vacuous truth is exactly how a guard goes
+        # silent while still looking present.
+        raise CohortIdentityMismatch(
+            f"{spec.cohort_path.name} contains no trials, so there is nothing "
+            f"to identify as the {spec.cohort_id!r} cohort's. An empty manifest "
+            f"satisfies any prefix check vacuously."
+        )
     expected = spec.trial_id_prefix + "-"
     wrong = sorted(
         t["trial_id"] for t in cohort["trials"]
