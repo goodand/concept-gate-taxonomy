@@ -1,0 +1,58 @@
+{
+  "record_class": "h1a_freeze_proof",
+  "cohort_id": "h1a-typed-scope-20260817",
+  "cohort_manifest": "cohort_prompts_typed_scope.json",
+  "cohort_manifest_sha256": "9c84ef934b3d69b83c60564858d194b69f133c748b28192039646dfa481e8a2e",
+  "recorded_commit": "da65443b547a8cb4c17b9f5388e984e5ca851e23",
+  "freeze_conditions": {
+    "kept_target_forbidden": true,
+    "removed_target_allowed": true,
+    "target_mechanism_contrast": true,
+    "nontarget_constraints_equal": true,
+    "removed_target_state_is_allowed_by_default": true,
+    "removed_target_state_is_not_unspecified": true,
+    "truth_table": [
+      {
+        "q1_forbids": true,
+        "q7_forbids": true,
+        "m_allowed": false
+      },
+      {
+        "q1_forbids": true,
+        "q7_forbids": false,
+        "m_allowed": false
+      },
+      {
+        "q1_forbids": false,
+        "q7_forbids": true,
+        "m_allowed": false
+      },
+      {
+        "q1_forbids": false,
+        "q7_forbids": false,
+        "m_allowed": true
+      }
+    ],
+    "proof_repair_creates_contrast": true
+  },
+  "licensed_source_evaluation_path": {
+    "PROHIBITION_KEPT": {
+      "arm": "PROHIBITION_KEPT",
+      "source_attributes_visible": true,
+      "source_meta_allowed": false,
+      "domain_ban_subsumes_source_meta": false,
+      "hard_defer_mapping": false,
+      "residual_prohibition": false,
+      "licensed_path": false
+    },
+    "PROHIBITION_REMOVED": {
+      "arm": "PROHIBITION_REMOVED",
+      "source_attributes_visible": true,
+      "source_meta_allowed": true,
+      "domain_ban_subsumes_source_meta": false,
+      "hard_defer_mapping": false,
+      "residual_prohibition": false,
+      "licensed_path": true
+    }
+  }
+}
