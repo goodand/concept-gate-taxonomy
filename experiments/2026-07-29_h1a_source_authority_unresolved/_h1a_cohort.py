@@ -51,6 +51,27 @@ SCORE_PATH = HERE / "h1a_cohort_score.json"
 AGENT_DEFINITION_PATH = Path.home() / ".claude" / "agents" / "h1a-decider.md"
 TRIAL_SUBJECT = "h1a-decider"
 
+# What a raw trial-output file must declare about the conditions its outputs
+# were produced under, shared by the confirmatory cohort and the capability
+# diagnostics so the two cannot drift apart.
+#
+# The 2026-08-15 QF-SELECT run is why this exists. Its outputs were valid and
+# its rendered prompt was byte-correct, but it ran WITHOUT schema forcing and
+# on whatever model the dispatching session happened to use -- and neither
+# fact was recoverable, because the artifact recorded neither. Byte-identity
+# of the prompt was verified and was NOT sufficient: a trial identifies a
+# SUBJECT under a TRANSPORT, not just a prompt.
+#
+# The prompt-hash key is deliberately NOT in this tuple. A diagnostic has one
+# surface (`rendered_prompt_sha256`, a string); the cohort has one per arm
+# (`rendered_prompt_sha256_by_arm`, a mapping). Giving the same key name two
+# value shapes is how a checker ends up comparing a string to a dict and
+# passing because both are truthy.
+SHARED_PROVENANCE_KEYS = (
+    "transport", "trial_model", "tool_access", "context_isolation",
+    "trial_subject_definition_sha256", "decision_schema_sha256",
+)
+
 N_PER_ARM = 20
 ORDER_SEED = "H1A-fixed-order-v1"
 MODEL = "claude-opus-5"

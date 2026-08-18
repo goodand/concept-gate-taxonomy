@@ -75,10 +75,38 @@ def _redirected(tmp_path, **over):
     return cohort_mod.CohortSpec(**base)
 
 
+def _manifest() -> dict:
+    return json.loads(TYPED.cohort_path.read_text(encoding="utf-8"))
+
+
+def _provenance_from(manifest: dict) -> dict:
+    """The provenance a correct run would record, read off the manifest.
+
+    Derived rather than hand-written on purpose: these tests exercise the
+    scoring pipeline, and hand-written values would fail for a reason that has
+    nothing to do with what is under test. The guard's own recall lives in the
+    dedicated negative tests below, where the values are deliberately wrong.
+    """
+    by_arm = {}
+    for trial in manifest["trials"]:
+        by_arm[trial["arm"]] = trial["manifest"]["rendered_prompt_sha256"]
+    return {
+        "transport": manifest["protocol"]["transport"],
+        "trial_model": manifest["protocol"]["trial_model"],
+        "tool_access": manifest["protocol"]["tool_access"],
+        "context_isolation": manifest["protocol"]["context_isolation"],
+        "trial_subject_definition_sha256":
+            manifest["trial_subject_surface"]["definition_sha256"],
+        "decision_schema_sha256":
+            manifest["trials"][0]["manifest"]["decision_schema_sha256"],
+        "rendered_prompt_sha256_by_arm": by_arm,
+    }
+
+
 def _synthetic_raw(kind_for_arm) -> dict:
     """Schema-shaped observations. Their CONTENT is arbitrary -- what is under
     test is the bookkeeping around `_coder.code()`, not the coder itself."""
-    manifest = json.loads(TYPED.cohort_path.read_text(encoding="utf-8"))
+    manifest = _manifest()
     values = _coder.selected_type_values()
     out = {}
     for trial in manifest["trials"]:
@@ -95,7 +123,11 @@ def _synthetic_raw(kind_for_arm) -> dict:
             }
         else:
             out[trial["trial_id"]] = None
-    return out
+    return {
+        "record_class": "h1a_cohort_raw",
+        "provenance": _provenance_from(manifest),
+        "outputs": out,
+    }
 
 
 def test_the_typed_scope_cohort_can_be_scored_end_to_end(tmp_path) -> None:
@@ -215,8 +247,83 @@ def test_a_run_whose_manifest_lacks_a_freeze_proof_cannot_be_scored(
     copied = tmp_path / "cohort_copy.json"
     copied.write_bytes(TYPED.cohort_path.read_bytes())
     spec = _redirected(tmp_path, cohort_path=copied)
-    spec.raw_path.write_text("{}", encoding="utf-8")
+    # A fully valid raw file, so the freeze-proof guard is unambiguously what
+    # fires rather than the shape or provenance one.
+    spec.raw_path.write_text(
+        json.dumps(_synthetic_raw(lambda arm: "selection")), encoding="utf-8")
 
     assert not spec.freeze_proof_path.exists()
     with pytest.raises(score.FreezeProofMissing):
         score.score(spec)
+
+
+# --- 2026-08-18: the confirmatory cohort had no provenance contract at all,
+# while the capability diagnostics had had one since 2026-08-16 ---------------
+
+def test_flat_pre_provenance_raw_files_are_refused(tmp_path) -> None:
+    """Recall. The shape the preserved 2026-08-03 cohort's `trials_raw.json`
+    is in: 40 bare trial ids, nothing about transport or model. Accepting it
+    would mean the confirmatory cohort can be scored with its transport
+    unproven -- the defect that forced the QF-SELECT re-run."""
+    spec = _redirected(tmp_path)
+    doc = _synthetic_raw(lambda arm: "selection")
+    spec.raw_path.write_text(json.dumps(doc["outputs"]), encoding="utf-8")
+
+    with pytest.raises(score.RawProvenanceMissing, match="flat"):
+        score.score(spec)
+
+
+def test_outputs_produced_without_schema_forcing_are_refused(tmp_path) -> None:
+    """The exact 2026-08-15 QF-SELECT failure, one layer over. The outputs are
+    valid and the prompt hashes are right; only the transport is wrong. If
+    this passed, prompt byte-identity would again be mistaken for proof that
+    the subject was identified."""
+    spec = _redirected(tmp_path)
+    doc = _synthetic_raw(lambda arm: "selection")
+    doc["provenance"]["transport"] = "plain_text_prompt"
+    spec.raw_path.write_text(json.dumps(doc), encoding="utf-8")
+
+    with pytest.raises(score.RawProvenanceMissing, match="transport"):
+        score.score(spec)
+
+
+def test_outputs_produced_on_another_model_are_refused(tmp_path) -> None:
+    """The other half of the same 2026-08-15 failure: the agent definition
+    pins no model, so an unrecorded run inherits the dispatching session's."""
+    spec = _redirected(tmp_path)
+    doc = _synthetic_raw(lambda arm: "selection")
+    doc["provenance"]["trial_model"] = "claude-sonnet-5"
+    spec.raw_path.write_text(json.dumps(doc), encoding="utf-8")
+
+    with pytest.raises(score.RawProvenanceMissing, match="trial_model"):
+        score.score(spec)
+
+
+def test_a_prompt_hash_matching_only_one_arm_is_refused(tmp_path) -> None:
+    """Per-arm hashes, not one. The cohort's entire design is that the arms
+    differ by exactly the Q1 clause, so a single hash could match KEPT and say
+    nothing about REMOVED -- and the arm it says nothing about is half the
+    comparison."""
+    spec = _redirected(tmp_path)
+    doc = _synthetic_raw(lambda arm: "selection")
+    by_arm = doc["provenance"]["rendered_prompt_sha256_by_arm"]
+    by_arm["PROHIBITION_REMOVED"] = by_arm["PROHIBITION_KEPT"]
+    spec.raw_path.write_text(json.dumps(doc), encoding="utf-8")
+
+    with pytest.raises(score.RawProvenanceMissing,
+                       match="rendered_prompt_sha256_by_arm"):
+        score.score(spec)
+
+
+def test_the_provenance_guard_accepts_a_correct_run(tmp_path) -> None:
+    """Precision. A guard that raised unconditionally would pass all four
+    recall tests above, and would also make the cohort unscoreable."""
+    spec = _redirected(tmp_path)
+    doc = _synthetic_raw(lambda arm: "selection")
+    spec.raw_path.write_text(json.dumps(doc), encoding="utf-8")
+
+    result = score.score(spec)
+    assert result["trial_provenance"]["transport"] == (
+        "schema_forced_structured_output")
+    assert result["trial_provenance"]["trial_model"] == "claude-opus-5"
+    assert result["n_recorded"] == 40

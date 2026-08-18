@@ -237,9 +237,10 @@ def _assert_recorded_trials_match_the_qualification_surface(manifest: dict) -> N
         )
 
 
-PROVENANCE_KEYS = (
-    "transport", "trial_model", "tool_access", "context_isolation",
-    "trial_subject_definition_sha256", "decision_schema_sha256",
+# Shared with the confirmatory cohort rather than restated (D-7: two
+# hand-maintained copies of the same contract drift). The prompt-hash key is
+# appended here because a diagnostic has exactly one surface.
+PROVENANCE_KEYS = cohort_mod.SHARED_PROVENANCE_KEYS + (
     "rendered_prompt_sha256",
 )
 

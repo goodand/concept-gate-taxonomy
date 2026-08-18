@@ -44,9 +44,40 @@ def load_cohort(spec=None) -> dict:
     return json.loads(spec.cohort_path.read_text(encoding="utf-8"))
 
 
+PROVENANCE_KEYS = cohort_mod.SHARED_PROVENANCE_KEYS + (
+    "rendered_prompt_sha256_by_arm",
+)
+
+
 def load_raw(spec=None) -> dict:
+    """The raw document, provenance block and all -- not just the outputs.
+
+    Shape (`record_class: h1a_cohort_raw`):
+
+        {"record_class": ..., "provenance": {...}, "outputs": {trial_id: out}}
+
+    THE PRESERVED 2026-08-03 COHORT'S FILE IS FLAT AND IS REFUSED.
+    `trials_raw.json` is 40 bare trial-id keys with no provenance, because it
+    predates 2026-08-16. That is the same unrecorded state
+    `h1a_qualification_raw_historical_20260815.json` is in, and OPERATIONS_LOG
+    §11 already registers it. It is not a regression introduced here: that
+    cohort was scored under D-H1a-10, ruled non-identifying, and is PRESERVED
+    rather than re-scored -- `main()` refuses to re-score it on the line above
+    for exactly that reason. Accepting flat files "for compatibility" would
+    mean the confirmatory cohort could be scored with its transport unproven,
+    which is the defect that forced the QF-SELECT re-run.
+    """
     spec = spec or cohort_mod.ORIGINAL_COHORT
-    return json.loads(spec.raw_path.read_text(encoding="utf-8"))
+    doc = json.loads(spec.raw_path.read_text(encoding="utf-8"))
+    if "outputs" not in doc:
+        raise RawProvenanceMissing(
+            f"{spec.raw_path.name} has no `outputs` block, so it is the flat "
+            f"pre-2026-08-16 shape: bare trial ids with no record of the "
+            f"transport, model or subject the outputs were produced under. "
+            f"Preserve it as a historical artifact and re-run through the "
+            f"cohort's own transport. Do not delete this check to proceed."
+        )
+    return doc
 
 
 def _assert_instrument_speaks() -> dict:
@@ -66,10 +97,17 @@ def _assert_instrument_speaks() -> dict:
 def score(spec=None) -> dict:
     spec = spec or cohort_mod.ORIGINAL_COHORT
     cohort = load_cohort(spec)
-    raw = load_raw(spec)
 
+    # ORDER MATTERS. Establish WHICH cohort this manifest is before checking
+    # anything against it: a provenance comparison against the wrong cohort's
+    # manifest is a true statement about the wrong object -- the F10 shape this
+    # folder has already paid for once.
     _assert_manifest_belongs_to_the_spec(cohort, spec)
     freeze_proof = _assert_the_freeze_proof_is_recorded(spec)
+
+    raw_doc = load_raw(spec)
+    provenance = _assert_raw_provenance_matches_the_manifest(raw_doc, cohort)
+    raw = raw_doc["outputs"]
     expected = {t["trial_id"]: t for t in cohort["trials"]}
     calibration = _assert_instrument_speaks()
 
@@ -154,6 +192,10 @@ def score(spec=None) -> dict:
         "model_payload_sha256": cohort["model_payload_sha256"],
         "trial_subject_surface": cohort["trial_subject_surface"],
         "coder_calibration": calibration,
+        # The conditions the outputs were actually produced under. Recorded in
+        # the score file so a reader need not trust that the run matched the
+        # manifest -- the guard above already refused it if it did not.
+        "trial_provenance": provenance,
         # §7: the item-level values of the licensed source-evaluation path,
         # carried into the results so the basis of the arm contrast is
         # reconstructable from the score file alone.
@@ -194,6 +236,83 @@ class CohortIdentityMismatch(Exception):
 
 class FreezeProofMissing(Exception):
     """§7's licensed-path record is absent or describes a different manifest."""
+
+
+class RawProvenanceMissing(Exception):
+    """Outputs whose transport, model or subject cannot be established."""
+
+
+def _assert_raw_provenance_matches_the_manifest(raw: dict, cohort: dict) -> dict:
+    """Outputs may only be scored against the surface, subject and transport
+    they were actually produced under.
+
+    This is the confirmatory-cohort counterpart of the guard
+    `_h1a_qualification_run.py` grew on 2026-08-16, and it did not exist until
+    2026-08-18. The diagnostic half of the harness refused unprovenanced
+    outputs while the half that carries the actual research question accepted
+    them -- the "policy layer is not on the execution path" shape again, this
+    time as "the fix was applied to one of the two paths that needed it".
+
+    Per-arm prompt hashes, not one. The cohort's whole design is that the two
+    arms differ by exactly the Q1 clause, so a single hash could match one arm
+    and say nothing about the other.
+    """
+    provenance = raw.get("provenance")
+    if not provenance:
+        raise RawProvenanceMissing(
+            "raw trial outputs carry no `provenance` block, so the transport, "
+            "trial model and trial-subject surface they were produced under "
+            "cannot be established. `unrecorded` is not `fine` -- that "
+            "inference is what made the 2026-08-15 QF-SELECT outputs "
+            "unusable. Re-run through the cohort's transport."
+        )
+
+    schema_hashes = {t["manifest"]["decision_schema_sha256"]
+                     for t in cohort["trials"]}
+    if len(schema_hashes) != 1:
+        raise RawProvenanceMissing(
+            f"the manifest's trials do not agree on decision_schema_sha256 "
+            f"({sorted(schema_hashes)}), so there is no single schema to check "
+            f"the outputs against"
+        )
+    by_arm = {}
+    for trial in cohort["trials"]:
+        by_arm.setdefault(trial["arm"], set()).add(
+            trial["manifest"]["rendered_prompt_sha256"])
+    for arm, hashes in by_arm.items():
+        if len(hashes) != 1:
+            raise RawProvenanceMissing(
+                f"arm {arm} has {len(hashes)} distinct rendered_prompt_sha256 "
+                f"values in the manifest; the arms must be single surfaces"
+            )
+
+    expected = {
+        "transport": cohort["protocol"]["transport"],
+        "trial_model": cohort["protocol"]["trial_model"],
+        "tool_access": cohort["protocol"]["tool_access"],
+        "context_isolation": cohort["protocol"]["context_isolation"],
+        "trial_subject_definition_sha256":
+            cohort["trial_subject_surface"]["definition_sha256"],
+        "decision_schema_sha256": schema_hashes.pop(),
+        "rendered_prompt_sha256_by_arm": {
+            arm: hashes.copy().pop() for arm, hashes in by_arm.items()
+        },
+    }
+    mismatched = {
+        key: (provenance.get(key), expected[key])
+        for key in PROVENANCE_KEYS
+        if provenance.get(key) != expected[key]
+    }
+    if mismatched:
+        raise RawProvenanceMissing(
+            "raw trial outputs were produced under a different subject, "
+            "surface or transport than this manifest describes; scoring them "
+            "here would attribute one subject's behavior to another. "
+            "Mismatches (recorded -> expected): "
+            + ", ".join(f"{k}: {got!r} -> {want!r}"
+                        for k, (got, want) in sorted(mismatched.items()))
+        )
+    return provenance
 
 
 def _assert_the_freeze_proof_is_recorded(spec) -> dict:
