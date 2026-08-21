@@ -64,14 +64,24 @@ def canonical_sha256(doc: dict | None) -> str | None:
 _FINGERPRINT_KINDS = ("node", "claim", "graph", "obligation_target")
 
 
-def fingerprint(kind: str, doc: dict) -> str:
-    """`<kind>:<sha256>` — 정규화 표현의 identity. 진리값이 아니다(I9)."""
+def _assert_known_fingerprint_kind(kind: str) -> None:
+    """가드를 별도 함수로 뽑은 이유: 이 저장소의 뮤테이션 강제 게이트
+    (test_guard_negative_coverage.py)가 `assert_`/`_assert_` prefix로
+    함수를 스캔한다. `fingerprint()` 안에 raise를 두면 게이트가 보지 못하는
+    사각지대가 된다 — 실측(2026-08-22): `conceptgate/`에는 이 컨벤션을 쓰는
+    함수가 이전까지 0개였다(패키지 전체가 게이트 사각지대). 신규 코드부터
+    바로잡는다."""
     if kind not in _FINGERPRINT_KINDS:
         raise ValueError(
             f"unknown fingerprint kind {kind!r}; add it to _FINGERPRINT_KINDS "
             f"deliberately rather than passing free-form strings -- two "
             f"callers inventing adjacent names is how one identity rule "
             f"becomes several")
+
+
+def fingerprint(kind: str, doc: dict) -> str:
+    """`<kind>:<sha256>` — 정규화 표현의 identity. 진리값이 아니다(I9)."""
+    _assert_known_fingerprint_kind(kind)
     digest = hashlib.sha256(
         kind.encode("utf-8") + b"\x00" + canonical_bytes(doc)).hexdigest()
     return f"{kind}:{digest}"

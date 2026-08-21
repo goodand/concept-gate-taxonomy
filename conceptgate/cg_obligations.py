@@ -392,6 +392,16 @@ def certification_cycle(results: Iterable[ObligationResult]) -> List[str]:
 
 
 # ---------------------------------------------------------------- D7 ------
+def _assert_no_required_allowed_na_overlap(profile: "CertificationProfile") -> None:
+    """같은 이유로 별도 함수로 뽑는다 — 게이트가 `_assert_` prefix로 스캔한다
+    (`conceptgate/cg_identity._assert_known_fingerprint_kind`와 같은 이유)."""
+    overlap = set(profile.required) & set(profile.allowed_na)
+    if overlap:
+        raise ValueError(
+            f"profile {profile.profile_id!r}: {sorted(overlap)} 이 required와 "
+            f"allowed_na에 동시에 있다 — 같은 검사가 필수이면서 면제일 수 없다")
+
+
 @dataclass(frozen=True)
 class CertificationProfile:
     """claim 종류별 인증 요건 (지시 §15). 새 top-level module이 아니라
@@ -407,11 +417,7 @@ class CertificationProfile:
     allowed_na: Tuple[str, ...] = ()
 
     def __post_init__(self):
-        overlap = set(self.required) & set(self.allowed_na)
-        if overlap:
-            raise ValueError(
-                f"profile {self.profile_id!r}: {sorted(overlap)} 이 required와 "
-                f"allowed_na에 동시에 있다 — 같은 검사가 필수이면서 면제일 수 없다")
+        _assert_no_required_allowed_na_overlap(self)
 
 
 # 최초 legacy relation claim profile (지시 §31-E가 요구한 최소 1개).

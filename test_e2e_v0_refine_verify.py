@@ -109,6 +109,15 @@ def test_profile_rejects_required_and_na_overlap():
                              required=("x",), allowed_na=("x",))
 
 
+def test_the_overlap_guard_fires_when_called_directly():
+    """뮤테이션 게이트가 요구하는 직접 호출."""
+    from conceptgate.cg_obligations import _assert_no_required_allowed_na_overlap
+    bad = CertificationProfile("ok", "relation_assertion", required=("x",))
+    object.__setattr__(bad, "allowed_na", ("x",))  # frozen dataclass 우회
+    with pytest.raises(ValueError, match="동시에"):
+        _assert_no_required_allowed_na_overlap(bad)
+
+
 def test_missing_check_is_not_pass():
     """없는 검사 ≠ 통과 — is_certified의 기본값이 UNKNOWN인 이유."""
     prof = CertificationProfile("p", "relation_assertion", required=("a", "b"))

@@ -34,11 +34,16 @@
 
 ```
 cg_identity (신규 잎)     : import 3.2ms, 의존 {hashlib, json} — AST 테스트로 고정
-cg_obligations (537행)    : import 7.2ms, 소비자(이 브랜치) = server.py, 테스트 2
-                            소비자(codex 브랜치) = run_pipeline.py — **가산 변경만** 허용
+cg_obligations (537행)    : import 7.2ms, 소비자(codex 브랜치) = run_pipeline.py
 cg_identity → cg_obligations 방향 edge 금지 (kernel이 판정 계층을 모름)
 cg_obligations → cg_identity 미도입 — v0에선 불필요, 도입 시 단방향만
 ```
+
+**정정 (2026-08-22, 배선 재점검)**: 위 표의 이전 판은 "소비자(이 브랜치) =
+server.py"라고 적었다. **부정확하다** — `server.py`는 `cg_obligations`의
+**기존** 함수(`certify`, `results_from_pipeline` 등)를 소비하지, 이번에
+추가한 D1/D3/D5/D7/anchoring 어느 것도 소비하지 않는다. 아래 §7에서
+사실대로 고친다.
 
 **가산성 검증**: Verdict에 ERROR 추가, ObligationResult 말미 defaulted 필드,
 certify 오류 항목 추가 — 기존 호출 시그니처·직렬화 키 유지. 루트 게이트
@@ -80,3 +85,59 @@ certify 오류 항목 추가 — 기존 호출 시그니처·직렬화 키 유�
 - semantic support의 LLM decider — decider 실물과 함께 registry 등록(YAGNI).
 - guard 게이트 3버전 합류(G31) — 브랜치 합류 작업, 이 파일 수정과 별개.
 - 진동 검출(D6)·Quantifier IR(D4)·capability registry(D8) — 지시 §33 P2/P3.
+
+## 7. 배선 재점검 (2026-08-22, 사용자 지시: "작동 test하면서 배선에 누락된 것은 없는지 점검")
+
+`test_e2e_v0_refine_verify.py`는 신규 primitive끼리의 관통이지 **실제 MCP
+응답 경로 배선**이 아니다 — 파일 자체가 `server.py`를 import하지 않는다
+(확인: `grep -n "^import\|^from" test_e2e_v0_refine_verify.py`에 server
+없음). 이 구별을 놓치면 "테스트가 통과한다"를 "제품에 연결됐다"로 착각한다
+— 이 세션이 반복 등재한 P9(정확한 구현이 실행 경로에 없다)의 형태 그대로다.
+
+### 7.1 확인된 배선 결함 3건
+
+| # | 결함 | 실측 | 심각도 |
+|---|---|---|---|
+| **W1** | D1(ERROR)·D3(cert-cycle)·D7(profile/projection)·anchoring 의무 **넷 다 `server.py`의 실제 obligation 생산 경로(`results_from_pipeline`/`results_from_isa`/`results_from_normalizer`/`results_from_classification`)에서 미사용** | `grep -rn "cg_identity\|LEGACY_RELATION_PROFILE\|certified_projection\|evidence_anchoring" conceptgate/server.py` → 0건 | 기대된 범위(§6 "v0 이후"가 이미 "Refine 수리 계약의 실배선"을 범위 밖으로 명시) — 그러나 §3 의존성 표가 이를 **감췄다**(위 정정) |
+| **W2** | D1의 `Verdict.ERROR`를 실제로 내는 생산자가 없음 — 기존 4개 `results_from_*`는 전부 `on_unavailable=Verdict.UNKNOWN`만 씀 | `grep -n "Verdict.ERROR" conceptgate/cg_obligations.py` → 정의·검사부에만 등장, 생산부 0건 | ERROR 분기(`aggregate`의 FAIL>ERROR>PASS>UNKNOWN)는 **현재 프로덕션 트래픽으로 도달 불가.** 단위 테스트로만 존재 |
+| **W3** | D3의 `certification_cycle()`을 실제로 발동시키는 `depends_on`을 채우는 생산자가 없음 | `grep -n "depends_on=" conceptgate/cg_obligations.py` → 0건(신규 코드 자체 제외) | `certify()`가 항상 빈 의존 그래프에서 순환 검사를 돎 — 검사는 정확하고 테스트됐지만 실전 입력으로는 아직 트리거될 수 없음 |
+
+**W2·W3는 "결함이 있는 검사"가 아니라 "아직 아무도 쓰지 않는 검사"다** — 차이가
+중요하다. 검사 자체는 §5의 뮤테이션(빈 그래프·비어있지 않은 순환 양쪽)으로
+정밀도·재현율이 확인됐다. 없는 것은 **실전 호출자**다.
+
+### 7.2 확인된 배선 결함 1건 — 게이트 사각지대 (더 심각, 즉시 수정함)
+
+| # | 결함 | 실측 | 조치 |
+|---|---|---|---|
+| **W4** | 이번에 작성한 `fingerprint()` 내부 raise와 `CertificationProfile.__post_init__` 내부 raise가 **뮤테이션 강제 게이트(`test_guard_negative_coverage.py`)의 스캔 대상 밖**이었다 — 그 게이트는 `assert_`/`_assert_` prefix 함수만 AST로 훑는다 | `grep -rn "^def assert_\|^def _assert_" conceptgate/*.py` → **패키지 전체에서 0건**(신규 코드 이전). 즉 `conceptgate/`는 이 저장소의 대표 안전장치가 **한 번도 보지 않은 영역**이었다 | `_assert_known_fingerprint_kind`·`_assert_no_required_allowed_na_overlap`로 raise를 **분리 추출**해 즉시 편입. 직접 호출 음성 테스트 2건 추가(`test_the_guard_itself_fires_when_called_directly`, `test_the_overlap_guard_fires_when_called_directly`) — 공개 함수를 거쳐서만 검증하면 그 함수가 나중에 가드 호출을 빼먹어도 다른 경로로 우연히 통과할 수 있다 |
+
+W4는 이번 구현이 만든 결함이 아니라 **저장소에 이미 있던 사각지대**를
+신규 코드가 상속한 것이다. `conceptgate/` 나머지 기존 함수들
+(`cg_normalizer._snapshot_integrity_errors` 등)은 여전히 이 컨벤션 밖이고,
+**그 재명명은 이번 범위 밖**(기존 동작·호출부 변경 없이 이름만 바꾸는
+리팩터는 별도 diff로 분리해야 blast radius가 명확해진다).
+
+### 7.3 재검증
+
+```
+python3 -m pytest test_cg_identity.py test_e2e_v0_refine_verify.py \
+    test_guard_negative_coverage.py -q
+# 33 passed
+python3 scripts/run_gates.py   # 8 passed / 0 failed / 1 blocked (불변)
+```
+
+AST 직접 확인 — 게이트가 이제 두 가드를 실제로 본다:
+
+```
+conceptgate/cg_identity.py     _assert_known_fingerprint_kind
+conceptgate/cg_obligations.py  _assert_no_required_allowed_na_overlap
+```
+
+### 7.4 결론 — v0가 "완결"이 아니라 "primitive 계층"인 이유
+
+W1~W3는 **§6이 이미 범위 밖으로 선언한 것과 같은 경계선**이다(Refine 수리
+루프의 MCP 실배선, Certified-gate authority 전환은 별도 상신). 이번 점검이
+추가한 것은: 그 경계선이 **의존성 표에 정직하게 반영되지 않았다는 사실**
+자체다. W4는 경계선 문제가 아니라 **안전망 자체의 공백**이었고, 이번
+회차에서 즉시 닫았다.

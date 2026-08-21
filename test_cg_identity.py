@@ -50,6 +50,15 @@ def test_free_form_fingerprint_kind_is_refused():
         ci.fingerprint("verdict", {"id": "c17"})
 
 
+def test_the_guard_itself_fires_when_called_directly():
+    """뮤테이션 게이트가 요구하는 직접 호출. `fingerprint()`를 거쳐서만
+    검증하면, `fingerprint()`가 미래에 `_assert_known_fingerprint_kind`
+    호출을 빼먹어도 이 테스트가 여전히 fingerprint() 자체의 다른 경로에서
+    우연히 통과할 수 있다 — 가드를 직접 겨눈다."""
+    with pytest.raises(ValueError, match="unknown fingerprint kind"):
+        ci._assert_known_fingerprint_kind("verdict")
+
+
 def test_unicode_is_stable():
     assert ci.canonical_sha256({"k": "칼의 재료는 철"}) == ci.canonical_sha256(
         {"k": "칼의 재료는 철"})
