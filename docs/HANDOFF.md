@@ -1,15 +1,47 @@
 # HANDOFF — ConceptGate 세션 인수인계 (H 계열: source authority)
 
-- 갱신: **2026-08-17** — 🔓 **FREEZE GATE 열렸다. 40 trial 동결 완료, 실행
-  대기.** 2026-08-05 이후 12일간 막혀 있던 게이트다.
+- 갱신: **2026-08-22** — ✅ **40 TRIAL 실행·채점 완료. 다시 돌리지 마라.**
 
-  **바로 할 일**: `cohort_prompts_typed_scope.json`(동결됨, 40 trial)의 렌더
-  프롬프트로 `h1a-decider` 40건 실행 → `_h1a_score.py` 채점.
-  **사용자 승인 필요** — 아직 안 받았다.
+  ```
+  PROHIBITION_KEPT      selection 0 / deferral 20 / invalid 0
+  PROHIBITION_REMOVED   selection 2 / deferral 18 / invalid 0
+  ```
+  40/40 기록, 전송 실패 0, 완주 replicate 20/20, Stage A 양 arm 통과.
+  산출물: `trials_raw_typed_scope.json` / `trials_typed_scope.json` /
+  `h1a_cohort_score_typed_scope.json`. 실행 기록은 실험 폴더
+  `OPERATIONS_LOG.md` 2026-08-22 절, 보고는
+  `PREREGISTRATION_TYPED_SCOPE_COHORT.md` **§9**가 정본이다.
 
-  ⚠️ **이 선을 넘으면 복원 불가다.** 여기까지는 전부 복원 가능 구간이었다
-  (`build_cohort()`는 디스크에 쓰지 않고, `freeze()`는 파일 하나다). trial을
-  실행하면 관측이 manifest에 결박되고 trial_id·seed를 되돌릴 수 없다.
+  ⚠️ **재실행 금지.** `write_raw()`·`freeze()`·`_h1a_score.main()` 셋 다
+  fail-closed로 거부하지만, **그 거부를 지워서 통과시키지 마라** — 이 폴더는
+  이미 빌더 재실행으로 동결 아티팩트를 파괴한 이력이 있다. 재실행이 필요하면
+  그것은 **자기 spec을 가진 새 코호트**다(네 번째 정체).
+
+  **결과 해석의 상한 — 이걸 모르고 인용하면 틀린다**:
+  - **ceiling 방향은 `unknown`.** QF-SELECT는 5/5 통과했으나 QF-DEFER는
+    `material_unavailable`(미시행). 그래서 2/20이라는 작은 값을 **"ceiling
+    포화가 아니다"로 읽을 수 없다.** 패킷이 금지 여부와 무관하게 deferral을
+    유도할 가능성은 배제되지 않았다. 현행 규범은 사전등록 §5f 표.
+  - `material_unavailable` ≠ `failed`(Q14.2). 진단을 실패로 서술하지 마라.
+  - K=1 서술적·패킷 조건부만. D-H1a-7이 인과 귀속 금지, L8이 축별 주장 금지,
+    L3이 code측 수사적 우위를 권위로 읽는 것 금지.
+
+  **보존 코호트(0/20 대 0/20)와 나란히 두면 방향이 보인다** — 08-03 세션이
+  0/40을 "조작 무효"로 읽지 않고 Q7=E tie-breaker 금지가 양 arm에 남아 있음을
+  찾아 Q10을 상신했고, typed-scope 재설계가 그것을 겨눴으며 REMOVED가 0→2로
+  움직였다. **단, 두 코호트는 프롬프트 표면이 여럿 다르므로 0→2를 특정 절
+  하나에 귀속시킬 수 없고, Q10.1이 병합·풀링을 금지한다.**
+
+  **다음 할 일은 실행이 아니라 판정 상신이다.** 종결 보고 / QF-DEFER 재료
+  확보 후 해석 강화 / 상위 목적(피드백 기반 인과 추론) 이행 중 무엇을 할지는
+  estimand·범위 문제라 외부 판정 채널 대상이며 운영 세션이 정하지 않는다
+  (사전등록 §9.7).
+
+  ⚠️ **실행 로그를 읽을 때의 함정 하나.** 08-03 기록이 "`agents_done: 0` /
+  수십 ms = 아무것도 모델에 도달하지 않음"이라고 경고하는데, 08-22에는
+  **75ms / 0 토큰짜리 재생이 하나 더 있다.** 그건 trial_id 매핑을 복구하기
+  위한 **의도된 캐시 히트**이고 실제 실행은 484.7s / 157k 토큰이다. 두 수치가
+  provenance에 따로 있다 — 재생 수치만 보고 "실행 안 됐다"로 읽지 마라.
 
   **동결된 코호트 정체**(세 번째 정체다 — 이유는 `_h1a_cohort.TYPED_SCOPE_COHORT`
   주석):

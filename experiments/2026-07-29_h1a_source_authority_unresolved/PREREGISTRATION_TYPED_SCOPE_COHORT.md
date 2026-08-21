@@ -770,3 +770,113 @@ sha256 `9c84ef93…`. 동결 인증 증명은
 `_h1a_score._assert_the_freeze_proof_is_recorded`가 증명 부재와 manifest 불일치
 양쪽에서 채점을 거부한다.
 
+
+---
+
+## 9. 결과 (2026-08-22 실행) — §7 규약에 따른 보고
+
+§6·§7이 요구한 형식으로 보고한다. **§7 마지막 줄대로, 이 결과를 본 뒤 이
+문서의 코딩 규칙이나 N을 바꾸지 않았다** — 규칙 정정은 전부 §8.4에 기록된
+2026-08-18, 관측 0건 시점에 끝났다(`trials_typed_scope.json` 부재로 확인
+가능했던 시점).
+
+### 9.1 관측
+
+| arm | selection | deferral | invalid | n |
+|---|---|---|---|---|
+| PROHIBITION_KEPT | 0 | 20 | 0 | 20 |
+| PROHIBITION_REMOVED | **2** | 18 | 0 | 20 |
+
+40/40 기록, 전송 실패 0건, 완주 replicate 20/20, Stage A invalid-rate 게이트
+양 arm 통과(각 0.00).
+
+### 9.2 §7이 요구한 `licensed_source_evaluation_path` 항목별 값
+
+"대비가 성립한 근거가 무엇이었는지 사후에 재구성 가능해야 한다"에 대한 기록.
+`h1a_cohort_score_typed_scope.json`과 `cohort_prompts_typed_scope_freeze_proof.json`
+양쪽에 있고, 후자는 `cohort_manifest_sha256`로 동결 바이트에 결박돼 있다.
+
+| 항목 | PROHIBITION_KEPT | PROHIBITION_REMOVED |
+|---|---|---|
+| `source_attributes_visible` | true | true |
+| `source_meta_allowed` | **false** | **true** |
+| `domain_ban_subsumes_source_meta` | false | false |
+| `hard_defer_mapping` | false | false |
+| `residual_prohibition` | false | false |
+| **`licensed_path`** | **false** | **true** |
+
+정확히 한 arm만 경로가 열려 있다. 둘 다 또는 어느 쪽도 아니었다면 D-H1a-12
+§10의 대체 술어가 성립하지 않으므로 동결이 인증되지 말았어야 한다.
+
+### 9.3 §5f 해석 규약 적용 — 이 결과에 붙는 제한
+
+진단 상태: QF-SELECT `passed`(5/5), QF-DEFER **`material_unavailable`**.
+§5f 표의 "하나 미시행" 행에 해당한다.
+
+- **ceiling 방향은 `unknown`이다.** 따라서 이 near-null 결과를 **"ceiling
+  포화가 아니다"로 보고하지 않는다.** 패킷 자체가 금지 여부와 무관하게
+  deferral을 유도하는 가능성은 측정된 어떤 것으로도 배제되지 않았다.
+- `material_unavailable`은 `failed`가 **아니다**(Q14.2). 진단을 실패로
+  서술하지 않으며, 실패 게이트에 관한 승인 문구
+  (`APPROVED_NULL_EFFECT_SENTENCE`)는 이 경우에 적용되지 않는다 — 적용되는
+  것은 "그 방향은 독립 진단되지 않음(unknown), **실패로 취급 금지**"다.
+- floor 방향은 QF-SELECT 통과로 독립 진단됐으므로, "REMOVED가 select를 전혀
+  못 하는 주체였다"는 대안 설명은 약화된다.
+
+### 9.4 K=1·축별 보고 제한 (§7)
+
+- 서술적·패킷 조건부만. 이 하나의 fixture(칼/철), 이 동결 프롬프트 쌍, 이
+  trial subject, 이 전송에서의 분포다. §0이 다른 패킷·일반 source-authority
+  상황·어느 type이 옳다는 주장으로의 일반화를 금지한다.
+- **D-H1a-7이 인과 귀속을 금지한다.** 0→2를 "금지 절 제거가 selection을
+  야기했다"로 쓰지 않는다.
+- **L8**: 표적 네 축 중 `source_kind`만 독립 관측됐으므로 recency·authority·
+  liveness 각각에 대한 개별 효과를 주장하지 않는다.
+- **L3**: code측 증거의 반박·일반화 절(내용 비대칭, Q9=A)이 주는 수사적
+  우위를 code 권위의 증거로 읽지 않는다.
+
+### 9.5 보존 코호트와의 대비 — 무엇을 말하고 무엇을 말하지 않는가
+
+| 코호트 | KEPT selection | REMOVED selection |
+|---|---|---|
+| `h1a-original-20260803` | 0 / 20 | 0 / 20 |
+| `h1a-typed-scope-20260817` | 0 / 20 | **2 / 20** |
+
+2026-08-03 세션은 0/40이라는 바닥값을 "조작 무효"로 읽지 않고, Q7=E의
+tie-breaker 금지가 **양 arm에 남아 있음**을 찾아 Q10을 상신했다. typed-scope
+재설계(D-H1a-12 Q12=F)가 겨눈 것이 그 절이며, REMOVED가 0에서 2로 움직인 것은
+**그 진단이 옳았다는 방향의 관측**이다.
+
+**말하지 않는 것**: 두 코호트는 fixture는 같지만 프롬프트 표면이 **여럿**
+다르다(typed-scope 재설계 전체). 표면이 하나만 다른 대비가 아니므로 0→2를
+특정 절 하나에 귀속시킬 수 없다. D-H1a-10 Q10.1이 두 코호트의 병합·재사용을
+금지하므로 **풀링하거나 하나의 실험으로 보고하지 않는다** — 나란히 두는 것은
+설계 진단의 방향 확인이지 통계적 비교가 아니다.
+
+### 9.6 실행 provenance (§6 실행 규약 충족 증거)
+
+§6이 요구한 "trial 실행 전 `assert_freezable()` + `assert_licensed_path_contrast(V, H)`
+통과, V·H 명시 전달"은 `_h1a_cohort._certify_freezable()`에서 충족되며
+(`source_attributes_visible=True`, `hard_defer_mapping=False`, 기본값 없음),
+그 결과가 §9.2의 표다.
+
+| 항목 | 값 |
+|---|---|
+| `cohort_manifest_sha256` | `9c84ef93…` |
+| rendered prompt | KEPT `6d945f4e…` / REMOVED `856c3124…` |
+| agent 정의 | `c22287cb…` (발송 직전 live 대조 일치) |
+| `dispatch_script_sha256` | `31ad7b69…` |
+| 스키마 적합 | 40/40 검증, 위반 0 (E2.4 검증기 verbatim, 핀 고정) |
+| trial_id 매핑 | 내용 지문 대조로 **전단사 확인**, 발송 순서 추론 아님 |
+
+**확정되지 않은 것**: 전송 계층이 모델 오버라이드를 준수했는지. per-agent meta
+40개가 `model: opus`를 기록하지만 이는 요청의 기록이며, 준수 자체는 어떤
+아티팩트로도 증명되지 않는다. `parameters.sampling`이 숫자가 아니라
+`transport_default_unspecified`인 것이 같은 이유다.
+
+### 9.7 이 결과로 정하지 않는 것
+
+종결 보고 / QF-DEFER 재료 확보 후 해석 강화 / 상위 목적 이행 중 무엇을 할지는
+**estimand·범위 문제이므로 외부 판정 채널 상신 대상**이다. §5g의 거버넌스 규칙
+(조건을 `freeze_blocker`↔`diagnostic` 사이로 옮기는 것은 외부 판정 필요)과 같은
+성격이고, 운영 세션이 정하지 않는다.

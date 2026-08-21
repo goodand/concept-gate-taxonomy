@@ -1364,3 +1364,160 @@ legitimately uses [it] ... in BOTH arms"라고 코드 주석에 적혀 있고,
   FAIL. `HANDOFF.md` §9·§10.1이 기록한 **기존 결함**이며 이번 변경분은
   `conceptgate/`를 건드리지 않았다(`git status`로 확인).
 - `fastmcp` 미설치 → `test_server.py` BLOCKED(러너가 분리 보고).
+
+---
+
+## 2026-08-22 — typed-scope 코호트 40 trial 실행·채점 (**두 번째 실행**)
+
+2026-08-05 이후 12일간 막혀 있던 freeze gate가 08-17에 열리고, 08-18에 실행
+직전 결함 5건을 닫은 뒤, 사용자 승인으로 실행했다. 형식은 위 2026-08-03
+실행 기록과 같게 맞춘다 — **두 실행을 나란히 읽어야 하는 것이 이번 산출물의
+핵심**이기 때문이다.
+
+### 1. 실행 전에 닫은 것 (08-18, 관측 0건 상태)
+
+실행 승인을 받은 뒤에도 바로 던지지 않고 하네스를 재실측해 5건을 찾았다.
+**전부 실행 후에는 정당하게 고칠 수 없는 항목**이었다.
+
+| # | 결함 | 왜 실행 후엔 못 고치나 |
+|---|---|---|
+| 1 | `_h1a_score.py`가 보존 코호트 경로에 하드와이어 — 두 번째 코호트는 채점할 곳이 없음 | 관측이 디스크에 있는 상태에서 덮어쓰기 거부에 막히고, 그 순간 가장 싸 보이는 수리는 **보존 아티팩트를 지키는 그 가드를 지우는 것** |
+| 2 | 사전등록 §7이 은퇴 상수(`floor_or_ceiling_failure`)로 보고하라 지시 | §7 마지막 줄이 "결과를 본 뒤 코딩 규칙을 바꾸지 않는다"고 금지 |
+| 3 | `build_cohort()`이 `assert_freezable()` 반환값을 버려 §7의 licensed-path 기록 의무에 구현이 없음 | 같은 이유 |
+| 4 | 확증 코호트 raw에 provenance 계약이 아예 없음(진단 쪽은 08-16부터 있었다) | 관측이 **전송·모델에 대해 증명 불가**한 상태로 고정됨 — QF-SELECT 5건을 재실행하게 만든 그 결함 |
+| 5 | 08-18 적대검토(haiku 4축)가 낸 잔여 결함 4건 + 반증 2건 | — |
+
+### 2. 실행
+
+| 항목 | 값 |
+|---|---|
+| transport | Workflow, **20 bundle 순차 × bundle 내 arm 쌍 `parallel()`**, `agentType: h1a-decider`, forced schema, `model: opus` |
+| run id / task id | `wf_cf27f0fa-cbb` / `w9yrxl82y` |
+| 결과 | 40 dispatched / **40 done** / 0 error / 0 skipped / 0 empty |
+| 토큰·시간 | 157,478 subagent tokens / **484.7s** |
+| 전송 실패(P4) | **0건** — 완주 bundle 20/20 |
+| 코더 교정 | 채점 시 **18/18 passed** |
+| 스키마 적합 | **40/40 검증, 위반 0** (E2.4 검증기 verbatim 재사용) |
+
+**08-03과 달리 `parallel()` × 40을 쓰지 않았다.** manifest의
+`randomization.block`이 "bundle (paired replicate index across both arms)"이므로
+40건 동시 실행은 seed가 만드는 blocking을 버리는 것이다. 20 bundle을 순차로,
+bundle 안의 두 arm만 동시로 돌렸다 — 여기서 barrier는 **설계 그 자체**다.
+
+**프롬프트를 스크립트 리터럴로 임베드한 것은 08-03과 같다**(`args`는 문자열로
+도착한다는 skills-catalog 2026-07-30 항목). 다만 이번엔 **Python이 dispatch
+plan에서 스크립트를 생성**했다 — 프롬프트 바이트가 `rendered_prompt_sha256`이
+인증하는 대상이므로, 사람이 옮기는 단계는 그 바이트가 바뀔 수 있는 지점이다.
+
+### 3. trial 신원 복구 — 08-03의 경고가 재확인됐고, 새 실패 모드가 나왔다
+
+위 08-03 기록이 이미 남겼다: **`journal.jsonl`은 content hash로 키를 잡아
+신원 복구에 못 쓴다.** 이번에도 그대로였다(80줄 = started 40 + result 40,
+`key`는 해시, label 없음).
+
+새로 나온 것은 다른 층의 실패다. 스크립트는 `out[trial_id]`로 신원을 반환값에
+실었고 **그건 정상 작동했다**. 문제는 **반환값이 통지 채널에서 잘렸다**는 것
+(40개 rationale ≈ 46KB+). 즉 "신원을 반환값에 싣는다"는 08-03의 해법은
+필요조건이지 충분조건이 아니다.
+
+**해법 — 캐시 재생 + 내용 지문**:
+1. 스크립트의 **agent 호출은 한 글자도 건드리지 않고** 후처리만 지문 맵으로
+   교체(`{trial_id: {decision, selected_type, cited, len, head60, tail60}}`)
+2. `resumeFromRunId`로 재생 → **`subagent_tokens: 0`, `tool_uses: 0`, 75ms**
+   = trial 재실행 0건
+3. journal의 40개 전문 출력에서 같은 지문을 계산해 대조 →
+   **journal 서명 40/40 전부 구별, 지문 40개가 각각 정확히 하나에 대응 = 전단사**
+
+발송 순서 추론으로도 매핑을 만들 수 있었지만 그것은 정황이다. 지문 대조는
+**내용 기반 증명**이고, 전단사 여부를 검사한다.
+
+⚠️ **08-03이 기록한 전송 실패 함정과 혼동하지 마라.** 그 기록은
+"`agents_done: 0` / 수십 ms = 아무것도 모델에 도달하지 않음"이라고 경고한다.
+이번 **재생**은 75ms / 0 토큰인데 이는 **의도된 캐시 히트**다. 실제 실행은
+484.7s / 157k 토큰이며 두 수치가 provenance에 따로 기록돼 있다. 재생 수치만
+보고 "실행되지 않았다"로 읽으면 안 된다.
+
+### 4. 행동 분포 (P5.2 기계 코딩, `rationale` 미열람)
+
+| arm | selection | deferral | invalid |
+|---|---|---|---|
+| PROHIBITION_KEPT | 0 | **20** | 0 |
+| PROHIBITION_REMOVED | **2** | 18 | 0 |
+
+**08-03 보존 코호트와의 대비 — 이것이 이번 실행의 요점이다:**
+
+| 코호트 | KEPT selection | REMOVED selection |
+|---|---|---|
+| `h1a-original-20260803` | 0 / 20 | **0 / 20** |
+| `h1a-typed-scope-20260817` | 0 / 20 | **2 / 20** |
+
+08-03 세션은 0/40이라는 바닥값을 "조작이 효과 없었다"로 읽지 **않고**, Q7=E의
+tie-breaker 금지가 **양 arm에 남아 있음**을 찾아 Q10을 상신했다. typed-scope
+재설계(D-H1a-12 Q12=F)가 겨눈 것이 바로 그 절이다. REMOVED가 0에서 2로
+움직인 것은 **그 진단이 옳았다는 방향의 관측**이다.
+
+**그러나 2/20은 여전히 작고, 여기서 멈춰야 하는 이유가 있다** — §5.
+
+### 5. 보고 제한 — 이 결과로 말할 수 없는 것
+
+- **ceiling 방향은 `unknown`이다.** QF-SELECT는 5/5 통과했지만 QF-DEFER는
+  `material_unavailable`(미시행). 그래서 near-null을 **"ceiling 포화가
+  아니다"로 보고할 수 없다** — 패킷 자체가 금지 여부와 무관하게 deferral을
+  유도하는 가능성은 측정된 어떤 것으로도 배제되지 않았다. 현행 규범은
+  `PREREGISTRATION_TYPED_SCOPE_COHORT.md` §5f 해석 규약 표.
+- `material_unavailable`은 `failed`가 **아니다**(Q14.2). 진단을 실패로
+  서술하면 안 되고, 실패 게이트에 관한 승인 문구도 적용되지 않는다.
+- K=1 서술적·패킷 조건부만(§0). D-H1a-7이 인과 귀속 금지, L8이 축별 주장
+  금지(`source_kind`만 독립 관측), L3이 code측 수사적 우위를 code 권위로
+  읽는 것 금지.
+- 두 코호트 비교는 **동일 fixture·상이 프롬프트 표면**의 대비다. 표면이
+  하나만 다른 것이 아니므로(D-H1a-12가 typed-scope로 재설계), 0→2를 특정
+  절 하나에 귀속시킬 수 없다.
+
+### 6. provenance — 이 세션을 믿지 않고 확인할 수 있는 것
+
+| 항목 | 값 | 무엇을 확정하나 |
+|---|---|---|
+| `cohort_manifest_sha256` | `9c84ef93…` | 관측이 **이 동결 바이트**에 결박 |
+| rendered prompt (arm별) | KEPT `6d945f4e…` / REMOVED `856c3124…` | 두 표면 각각 |
+| agent 정의 | `c22287cb…` | 발송 직전 live 해시 일치 확인 |
+| `dispatch_script_sha256` | `31ad7b69…` | 전송에 **무엇을 요청**했는지 |
+| `dispatch_plan_sha256` | `3ce92c13…` | 발송 대상 목록 |
+| 스키마 적합 | 40/40, 위반 0 | "전부 적합"이 재실행 가능한 사실 |
+| per-agent meta 40개 | `agentType: h1a-decider`, `model: opus` | 주체·모델 오버라이드의 **파일 증거** |
+
+**확정되지 않은 것**: 전송 계층이 모델 오버라이드를 **준수**했는지. 요청은
+파일로 읽히지만 준수는 어떤 아티팩트로도 증명되지 않으며,
+`_h1a_cohort_run.py` docstring이 그렇게 명시한다. 실제보다 강한 것을
+보장하는 것처럼 읽히는 검사기는 없는 검사기보다 나쁘다.
+
+### 7. 산출물
+
+| 파일 | 내용 |
+|---|---|
+| `trials_raw_typed_scope.json` | 40건 원시 출력 + provenance 블록 |
+| `trials_typed_scope.json` | 코딩된 레코드 40건 |
+| `h1a_cohort_score_typed_scope.json` | 채점 요약 (licensed path·provenance 포함) |
+| `_h1a_cohort_run.py` | 실행·영속 계층(신규) + E2.4 검증기 verbatim 사본 |
+| `test_h1a_cohort_run.py` | 15건 — 드리프트 핀 포함 |
+
+### 8. 자기 결함 1건 — 실행이 테스트를 반증했다
+
+`test_scoring_the_typed_scope_cohort_never_touches_the_preserved_one`이
+"실제 출력 파일이 **존재하지 않는다**"를 단언하고 있었다. "이 테스트가 누출을
+안 냈다"를 "코호트가 실행된 적 없다"로 대체한 것이고, 후자는 채점 순간
+거짓이 됐다.
+
+**P1을 잡으려고 쓴 테스트가 P1을 저질렀다** — 참인 명제를 필요한 명제 대신
+단언한 것. 실행 전후 바이트 불변 비교로 교정했고(부재는 `None`으로 기록해
+"전에도 없고 후에도 없음"도 통과), 단언을 지우지 않았다.
+
+### 9. 미결 — 다음 세션
+
+1. 이 결과로 H1a를 **종결 보고**할지, QF-DEFER 재료를 만들어 ceiling 진단을
+   채운 뒤 해석을 강화할지, 상위 목적(피드백 기반 인과 추론)으로 넘어갈지는
+   **estimand·범위 문제이므로 외부 판정 채널 상신 대상**이다. 운영 세션이
+   정하지 않는다.
+2. D-H1a-17이 비차단으로 분류한 3건: Q16.1(`external_source_retrieval` 별도
+   주장), Q17.2 b′(typed-reference 정본화), **Q17.1(kernel/정책 추출을 제품
+   자산으로)**. 상위 목적에 가장 직결되는 것은 Q17.1이다.
