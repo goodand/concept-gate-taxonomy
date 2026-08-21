@@ -1,0 +1,39 @@
+---
+title: "Z1 — 권한 레지스터: 같은 골격, 각 모듈이 무엇을 쓰고 무엇을 못 쓰는가 (§28)"
+---
+flowchart TB
+    classDef src fill:#eceff4,stroke:#4c566a,color:#2e3440
+    classDef refine fill:#d8e6f7,stroke:#2f6db8,color:#173a63
+    classDef graphS fill:#e9e5f4,stroke:#6b5ca5,color:#3b3161
+    classDef verify fill:#fbe8d3,stroke:#c97f2c,color:#6b3f0e
+    classDef cert fill:#ddeedd,stroke:#3d7a44,color:#1e4023
+    classDef derive fill:#e2f0ee,stroke:#2e7d72,color:#173f39
+    classDef evalC fill:#f3e3ee,stroke:#a44a86,color:#5c2249
+    classDef kernel fill:#f4f4f2,stroke:#8a8a86,color:#3c3c3a,stroke-dasharray:6 3
+
+    SRC["Source<br/>읽기 전용 사실"]:::src
+    %% Oracle과 Kernel은 아래쪽에 배치해 가로 폭을 줄인다
+
+    subgraph CYCLE["의미 컴파일 순환 — 쓰기 권한은 정확히 한 곳"]
+        direction LR
+        REF["Refine<br/>graph 쓰기 <b>유일 보유</b><br/>certify X · entail X · oracle X"]:::refine
+        SG["Semantic Graph<br/>iteration마다 immutable revision<br/>revision t → t+1"]:::graphS
+        VER["Verify<br/>graph 쓰기 X<br/>obligation 발행 ○ · 인증 적격 판정 ○"]:::verify
+        REF -->|"revision t+1 생성"| SG
+        SG -->|"snapshot t 읽기"| VER
+        VER -->|"obligation = 수리 힌트<br/>정답 patch 아님 (I11)"| REF
+    end
+
+    CP["Certified Projection<br/>projection only —<br/>profile.required 전부 PASS인 claim만"]:::cert
+    RD["Reason / Derive<br/>Certified만 읽음 · entailment 쓰기 유일 보유"]:::derive
+    EV["Evaluate<br/>predicted IR vs oracle IR"]:::evalC
+    ORC["Oracle"]:::evalC
+
+    SRC --> CYCLE --> CP --> RD --> EV
+    ORC -->|"평가에만"| EV
+    ORC -.->|"X I7: Refine 유입 금지"| REF
+    VER -.-|"X I7: Verify 유입 금지"| ORC
+    linkStyle 8,9 stroke:#c0392b,stroke-width:2.5px,stroke-dasharray:4 4
+
+    KER["Shared Kernel — 표현·정의 공유 ○ / 판단 공유 X (I4)<br/>certify() · choose() · judge() 미보유 (§29)"]:::kernel
+    KER -.-> CYCLE

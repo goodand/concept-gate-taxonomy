@@ -1,0 +1,34 @@
+---
+title: "Z0 — 역할 레지스터: 시스템 전체를 동사 6개로"
+---
+flowchart TB
+    classDef src fill:#eceff4,stroke:#4c566a,color:#2e3440
+    classDef refine fill:#d8e6f7,stroke:#2f6db8,color:#173a63
+    classDef graphS fill:#e9e5f4,stroke:#6b5ca5,color:#3b3161
+    classDef verify fill:#fbe8d3,stroke:#c97f2c,color:#6b3f0e
+    classDef cert fill:#ddeedd,stroke:#3d7a44,color:#1e4023
+    classDef derive fill:#e2f0ee,stroke:#2e7d72,color:#173f39
+    classDef evalC fill:#f3e3ee,stroke:#a44a86,color:#5c2249
+    classDef kernel fill:#f4f4f2,stroke:#8a8a86,color:#3c3c3a,stroke-dasharray:6 3
+
+    SRC["Source"]:::src
+
+    subgraph CYCLE["의미 컴파일 순환"]
+        direction LR
+        REF["Refine<br/><b>proposes</b>"]:::refine
+        SG["Semantic Graph<br/><b>is state</b>"]:::graphS
+        VER["Verify<br/><b>challenges</b>"]:::verify
+        REF --> SG --> VER
+        VER -->|obligations| REF
+    end
+
+    CP["Certified Projection<br/><b>admits</b>"]:::cert
+    RD["Reason / Derive<br/><b>derives</b>"]:::derive
+    EV["Evaluate<br/><b>measures</b>"]:::evalC
+    ORC["Oracle<br/><b>judges</b> — 평가 경계에서만"]:::evalC
+
+    SRC --> CYCLE --> CP --> RD --> EV
+    ORC --> EV
+
+    KER["Shared Semantic Kernel<br/>같은 언어 · 같은 identity — <b>판단은 제공하지 않는다</b>"]:::kernel
+    KER -.-> CYCLE

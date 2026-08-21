@@ -1,0 +1,37 @@
+---
+title: "Z3 — 실체 레지스터: 같은 골격, 무엇이 실재하고 무엇이 delta인가 (gap 분석 §1~§2)"
+---
+flowchart TB
+    classDef src fill:#eceff4,stroke:#4c566a,color:#2e3440
+    classDef refine fill:#d8e6f7,stroke:#2f6db8,color:#173a63
+    classDef graphS fill:#e9e5f4,stroke:#6b5ca5,color:#3b3161
+    classDef verify fill:#fbe8d3,stroke:#c97f2c,color:#6b3f0e
+    classDef cert fill:#ddeedd,stroke:#3d7a44,color:#1e4023
+    classDef derive fill:#e2f0ee,stroke:#2e7d72,color:#173f39
+    classDef evalC fill:#f3e3ee,stroke:#a44a86,color:#5c2249
+    classDef kernel fill:#f4f4f2,stroke:#8a8a86,color:#3c3c3a
+    classDef delta fill:#fdeaea,stroke:#c0392b,color:#7b1d12,stroke-dasharray:5 4
+
+    SRC["Source<br/>= cg_normalizer ○<br/>snapshot·span·sha256 실재"]:::src
+
+    subgraph CYCLE["의미 컴파일 순환 — 루프 계약 자체가 delta"]
+        direction LR
+        REF["Refine<br/>= 클라이언트 LLM + assemble_concepts ○<br/>obligation을 받는 수리 계약 X (E1/E2.2 실증 공백)"]:::refine
+        SG["Semantic Graph<br/>= concept JSON ○<br/>revision/parent/hash <b>D5·D2</b>"]:::delta
+        VER["Verify<br/>= gates 4종 + cg_obligations.certify ○<br/>의미 support 검사 <b>신설</b> · ERROR verdict <b>D1</b>"]:::verify
+        REF --> SG --> VER
+        VER -->|"응답 필드로만 나감 —<br/>수리 입력 경로 없음"| REF
+    end
+
+    CP["Certified Projection<br/>존재 X —<br/>profile <b>D7</b> + filter 함수<br/>(registry seam이 부착점, codex-mcp에만 있음)"]:::delta
+    RD["Reason / Derive<br/>= cg_owl.classify ○<br/>주의: 현재 인증과 무관하게<br/>입력 수용 —<br/>Certified-gate 전환은<br/><b>별도 상신</b>"]:::derive
+    EV["Evaluate<br/>실험 계열에만 실재<br/>(hidden_gold · mutation pack)"]:::evalC
+    ORC["Oracle<br/>O1–O4 · R1/R2 · G1/S1<br/>= yaml manifest<br/>fixture 미구축"]:::delta
+
+    SRC --> CYCLE --> CP --> RD --> EV
+    ORC --> EV
+
+    KER["Shared Kernel<br/>= cg_obligations ○ (Verdict·Assurance·certify)<br/>+ cg_identity.py <b>D2</b><br/>= codex _receipt.canonical_bytes 이식<br/>cert-cycle 검사 <b>D3</b> · capability registry <b>D8</b>"]:::kernel
+    KER -.-> CYCLE
+
+    LEGEND["범례<br/>○ 실재 · <b>D#</b> gap 분석 delta<br/>빨간 점선 = 아직 없음"]:::src

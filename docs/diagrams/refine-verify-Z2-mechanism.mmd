@@ -1,0 +1,48 @@
+---
+title: "Z2 — 기제 레지스터: 같은 골격, 각 계약이 무엇으로 집행되는가"
+---
+flowchart TB
+    classDef src fill:#eceff4,stroke:#4c566a,color:#2e3440
+    classDef refine fill:#d8e6f7,stroke:#2f6db8,color:#173a63
+    classDef graphS fill:#e9e5f4,stroke:#6b5ca5,color:#3b3161
+    classDef verify fill:#fbe8d3,stroke:#c97f2c,color:#6b3f0e
+    classDef cert fill:#ddeedd,stroke:#3d7a44,color:#1e4023
+    classDef derive fill:#e2f0ee,stroke:#2e7d72,color:#173f39
+    classDef evalC fill:#f3e3ee,stroke:#a44a86,color:#5c2249
+    classDef kernel fill:#f4f4f2,stroke:#8a8a86,color:#3c3c3a
+    classDef neg fill:#fdeaea,stroke:#c0392b,color:#7b1d12
+
+    SRC["Source<br/>snapshot · span · sha256"]:::src
+
+    subgraph CYCLE["의미 컴파일 순환"]
+        direction LR
+        REF["Refine<br/>stale obligation 거부:<br/>obligation.graph_revision ≠ snapshot.revision<br/>→ STALE_OBLIGATION"]:::refine
+        SG["Semantic Graph<br/>revision + parent_revision<br/>+ canonical_hash"]:::graphS
+        VER["Verify<br/>check → PASS / FAIL / UNKNOWN / ERROR<br/>FAIL ≠ UNKNOWN ≠ 도구실패(I8)"]:::verify
+        REF -->|"새 revision"| SG
+        SG -->|"snapshot"| VER
+        VER -->|"atomic obligation<br/>{target, check, status,<br/>repairability, graph_revision}"| REF
+    end
+
+    TERM["종료 판정<br/>state_key = hash(canonical graph, obligations)<br/>재등장 → OSCILLATION<br/>불변 → FIXED_POINT · 예산 초과 → BUDGET_EXHAUSTED"]:::graphS
+    CYCLE --- TERM
+
+    CP["Certified Projection<br/>CertificationProfile: claim 종류별 required checks<br/>certification dependency는 acyclic (I10)"]:::cert
+    RD["Reason / Derive<br/>capability registry에 승인된 relation만 (I5)<br/>inconsistency → obligation으로 회송, 직접 수리 X"]:::derive
+    EV["Evaluate<br/>canonical structural match:<br/>operator · nesting · scope · binding"]:::evalC
+    ORC["Oracle<br/>published formal structure"]:::evalC
+
+    SRC --> CYCLE --> CP --> RD --> EV
+    ORC --> EV
+
+    subgraph KER["Shared Semantic Kernel"]
+        direction LR
+        K1["IR types ·<br/>identity/fingerprint"]:::kernel
+        K2["canonical<br/>serialize/hash"]:::kernel
+        K3["제한된 정규화<br/>α-rename ○<br/>quantifier 재배열 X"]:::kernel
+        K4["constraint ·<br/>capability ·<br/>evidence 조회"]:::kernel
+        NEG["negative contract (§29)<br/>certify X judge X repair X<br/>UNKNOWN → PASS 정규화 X (I9)"]:::neg
+        K1 ~~~ K2 ~~~ K3
+        K4 ~~~ NEG
+    end
+    KER -.-> CYCLE
