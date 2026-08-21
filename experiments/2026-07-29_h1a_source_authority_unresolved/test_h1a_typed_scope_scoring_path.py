@@ -209,6 +209,16 @@ def test_scoring_the_typed_scope_cohort_never_touches_the_preserved_one(
               for p in preserved if p.exists()}
     assert len(before) == 4, f"precondition: all four must exist, got {before}"
 
+    # Snapshot the typed-scope cohort's own outputs too. `None` for absent is
+    # deliberate: "absent before and absent after" is as much a pass as
+    # "unchanged", and this test must work both before and after the cohort
+    # has been executed.
+    real_before = {
+        path.name: (hashlib.sha256(path.read_bytes()).hexdigest()
+                    if path.exists() else None)
+        for path in (TYPED.trials_path, TYPED.score_path, TYPED.raw_path)
+    }
+
     spec = _redirected(tmp_path)
     spec.raw_path.write_text(
         json.dumps(_synthetic_raw(lambda arm: "selection")), encoding="utf-8")
@@ -218,13 +228,28 @@ def test_scoring_the_typed_scope_cohort_never_touches_the_preserved_one(
              for p in preserved if p.exists()}
     assert after == before
 
-    # And the typed-scope run must not have created its real outputs either --
-    # this test scores to tmp_path, so a repo-side file means a path leaked.
-    for path in (TYPED.trials_path, TYPED.score_path):
-        assert not path.exists(), (
-            f"{path.name} appeared in the repo during a tmp_path-redirected "
-            f"run, so an output path is still hardwired"
-        )
+    # And this tmp_path-redirected run must not have touched the typed-scope
+    # cohort's REAL outputs either.
+    #
+    # 2026-08-22: this block used to assert those files do not exist, which
+    # conflated "this test leaked nothing" with "the cohort has never run". The
+    # second became false the moment the 40 trials were scored, and the test
+    # failed for a reason that was not a defect. Its own P1 mistake: a true
+    # proposition that was not the necessary one.
+    #
+    # The necessary proposition is that this test changed nothing, so it is
+    # now measured that way -- byte-state before against byte-state after,
+    # which detects a leaked path whether or not the real files exist.
+    real_after = {
+        path.name: (hashlib.sha256(path.read_bytes()).hexdigest()
+                    if path.exists() else None)
+        for path in (TYPED.trials_path, TYPED.score_path, TYPED.raw_path)
+    }
+    assert real_after == real_before, (
+        f"a tmp_path-redirected run changed the cohort's real outputs, so an "
+        f"output path is still hardwired: "
+        f"{ {k for k in real_after if real_before[k] != real_after[k]} }"
+    )
 
 
 def test_a_run_whose_manifest_lacks_a_freeze_proof_cannot_be_scored(
