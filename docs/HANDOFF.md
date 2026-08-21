@@ -48,6 +48,14 @@
   **다음 프로그램**: 재사용 가능한 feedback kernel 추출 → LLM 출력 기반 인과
   추론 아키텍처. 판정문 `next_program.priority`가 그 순서를 고정한다.
 
+  ⚠️ **kernel은 "새로 추출"이 아니다 — 착수 전에
+  [`KERNEL_INTEGRATION_SURVEY.md`](KERNEL_INTEGRATION_SURVEY.md)를 읽어라**
+  (2026-08-22 실측). `conceptgate/cg_obligations.py`가 이미 절반 이상이고
+  Codex 라인(`concept-gate-codex-mcp-wt`)이 이미 소비 중이다. guard 게이트는
+  **세 worktree 세 버전**으로 갈라져 있다 — 그 합류 없이 위에 쌓지 마라.
+  H1a 고유 기여는 semantic 층 3건(compiler / policy audit / blinded
+  qualification)이고, 손 복사 금지·frozen surface 침범 금지 경계가 §6에 있다.
+
   ⚠️ **실행 로그를 읽을 때의 함정 하나.** 08-03 기록이 "`agents_done: 0` /
   수십 ms = 아무것도 모델에 도달하지 않음"이라고 경고하는데, 08-22에는
   **75ms / 0 토큰짜리 재생이 하나 더 있다.** 그건 trial_id 매핑을 복구하기
