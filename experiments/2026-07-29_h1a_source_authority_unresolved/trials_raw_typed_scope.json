@@ -1,0 +1,383 @@
+{
+  "record_class": "h1a_cohort_raw",
+  "cohort_id": "h1a-typed-scope-20260817",
+  "cohort_manifest_sha256": "9c84ef934b3d69b83c60564858d194b69f133c748b28192039646dfa481e8a2e",
+  "provenance": {
+    "transport": "schema_forced_structured_output",
+    "trial_model": "claude-opus-5",
+    "tool_access": "no_tools",
+    "context_isolation": "workflow_cold_subagent",
+    "trial_subject_definition_sha256": "c22287cb7efec728704782f2b6c6376cd8d9b9a105c5900a12ac5969d9f23a7b",
+    "decision_schema_sha256": "9cf761f953f7a67de654b8576de722b0e64cd13d84d032f2337b9bafcf452d83",
+    "rendered_prompt_sha256_by_arm": {
+      "PROHIBITION_KEPT": "6d945f4eced2def6caeca4c90674967f16d4f0a52275d9a99073ff3fb6ef7f3c",
+      "PROHIBITION_REMOVED": "856c312435b62055e61a2f5e06035e3c361c85d1c40a08bb85773209709c8928"
+    },
+    "dispatch_script_sha256": "31ad7b6917f651a6de1382491628e8743962ffb63fe2164a8a8b600907509347",
+    "dispatch_plan_sha256": "3ce92c13872ab6cb9b90e296a8c883990ee373d41b940fbd9ae15e6da5275d19",
+    "run_date": "2026-08-22",
+    "schema_conformance": {
+      "validator": "e2.4_cohort_schema_errors_verbatim",
+      "schema_sha256": "ced2d25ba0fcf8038588ca1b498d502c3a080c4bc3214caf69f5a3c70695213d",
+      "outputs_checked": 40,
+      "transport_failures_skipped": 0,
+      "violations": 0
+    },
+    "notes": "Dispatched 2026-08-22 via Workflow: 20 bundles sequentially, both arms concurrent within each bundle (manifest randomization.block). 40/40 returned, 0 errors. trial_id<->output mapping established by content fingerprint against the workflow journal and verified BIJECTIVE (40 distinct signatures), not inferred from dispatch order. Per-agent meta files independently record agentType=h1a-decider and model=opus for all 40. dispatch_script_sha256 is the script AS DISPATCHED; a later edit changed only post-processing after every agent() call, and the cached replay confirmed no trial re-ran (subagent_tokens=0, 75ms)."
+  },
+  "outputs": {
+    "H1AT-PROHIBITION_KEPT-03": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address the supplied pair (칼/철) directly and each clearly entails an allowed type, but they entail different ones: ev1 (doc) states 철은 칼의 재료 → essential_feature, while ev3 (code) states the same material relation → structural_composition, on the reasoning that materiality being essential does not change the has-a relation. Each item independently satisfies the evidence-reading rule, so neither can be discarded as mere context, example, or implementation detail. The only remaining differentiator would be the relative standing of the two sources (doc vs code — recency, authority, or whether the code path is live), and this prompt explicitly forbids re-adjudicating source liveness or priority. Tie-breaking by item count or packet order is likewise not authorized here. With no permitted basis left to resolve the conflict, exactly one allowed type is not uniquely warranted, so I defer."
+    },
+    "H1AT-PROHIBITION_REMOVED-03": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as the material of 칼) and each directly states an ontology type, so both clear the evidence-reading bar — but they state opposed types. ev1 (source_kind: doc) types the material-object relation as essential_feature, reasoning that a material can be essential. ev3 (source_kind: code) types the same relation as structural_composition, reasoning that even an essential material yields a has-a relation and that essentiality is a separate axis. The two items are not reconcilable as complementary: they assign different single types to the same relation pattern, and ev3's parenthetical explicitly rejects ev1's inference step rather than adding an orthogonal fact. The packet supplies nothing that would make one of them uniquely warranted: there is no recorded precedence, authority, recency, scope, or supersession field distinguishing doc from code, no indication that one item documents the other, and no marker that either is normative for this ontology. Evaluating the items' recorded fields as source information is permitted, but the only differentiating field here is source_kind, and the packet states no ordering over source_kind values; treating \"code\" as authoritative over \"doc\" (or the reverse) would require importing a general engineering heuristic from outside the packet, which is not a fact the packet provides. The remaining asymmetries — item count and packet ordering — are expressly barred as tie-breakers. Conflict alone would not compel deferral if some permitted basis resolved it, but after applying every basis available inside this packet neither essential_feature nor structural_composition is uniquely warranted, so I defer rather than manufacture a resolution."
+    },
+    "H1AT-PROHIBITION_KEPT-06": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and each directly states an ontology type, but they state opposing types: ev1 (doc) asserts essential_feature on the ground that a material can be essential; ev3 (code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Each item independently satisfies the evidence-reading rule, so neither is disqualified on textual grounds. The only remaining way to break the tie would be to rank the two sources against each other — i.e. to decide whether the code string or the doc line is the more authoritative, more current, or still-live statement — and that basis is explicitly prohibited by the prompt. Evidence count and packet ordering are likewise unavailable as tiebreakers, and I may not import outside domain or ontology knowledge to adjudicate whether material-of is essence or composition. With the permitted bases applied, exactly one allowed type is not uniquely warranted, so I defer."
+    },
+    "H1AT-PROHIBITION_REMOVED-06": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an allowed type, so both clear the evidence-reading rule: ev1 (source_kind=doc) states essential_feature on the ground that a material can be essential; ev3 (source_kind=code) states structural_composition on the ground that essentiality is a separate axis from the has-a relation. The two assertions are mutually exclusive for a single feature-type slot, and the packet supplies nothing that resolves between them. Examining the items' other recorded fields does not help: the only differentiator is source_kind (doc vs. code), and the packet contains no statement of precedence between doc-derived and code-derived sources, no recency/authority marker, no indication that one supersedes or was written in response to the other, and no contract or convention text establishing which artifact governs feature typing. ev3's \"본질성은 별도 축\" remark is a substantive rebuttal of ev1's reasoning, but crediting it over ev1 requires adopting ev3's framing as the authoritative one, which is precisely the unresolved question; ev1 equally asserts its own framing. I may not break the tie by evidence count (one each in any case) or packet order, and I may not import outside ontology knowledge about whether material constitution is essence or composition to adjudicate the disagreement. With both allowed types warranted to the same degree and no permitted basis making exactly one uniquely warranted, the correct observation is deferral."
+    },
+    "H1AT-PROHIBITION_KEPT-01": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items directly address the supplied pair (철 as 칼's 재료) and each explicitly assigns an ontology type, but they assign different allowed types: ev1 (source_kind=doc) states essential_feature on the ground that a material can be essential; ev3 (source_kind=code) states structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Both therefore satisfy the evidence-reading rule, so neither type is uniquely warranted on textual grounds. The only field that distinguishes the two items is source_kind (doc vs. code), and using it to prefer one would require judging which source is more authoritative, more recent, or still-live — a basis this prompt explicitly prohibits. Tie-breaking by item count or packet order is likewise not authorized, and outside ontology knowledge about whether a material relation is essential or compositional may not be used to supply the missing fact. With no permitted basis remaining to resolve the conflict, exactly one allowed type is not warranted, so I defer."
+    },
+    "H1AT-PROHIBITION_REMOVED-01": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, so both clear the evidence-reading rule as genuine support — but they state opposite types. ev1 (source_kind: doc) asserts essential_feature on the ground that a material can be essential; ev3 (source_kind: code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Nothing in the packet resolves this: there is no recorded field establishing precedence between source_kind 'doc' and 'code' (no version, timestamp, status, supersession, or authority marker), no statement that one item is normative over the other, and no packet-authorized tie-break. Ranking code above doc (or vice versa) would require importing repository conventions or general ontology reasoning about whether material-of is has-a versus essential, both of which are prohibited here; and I may not break the tie by item count or ordering. Applying only permitted bases, neither allowed type is uniquely warranted, so I defer."
+    },
+    "H1AT-PROHIBITION_KEPT-19": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 칼's 재료) and each directly states an ontology type, but they state different allowed types: ev1 (doc) states essential_feature on the ground that a material can be essential; ev3 (code) states structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Each item on its own satisfies the evidence-reading rule, so the conflict is substantive rather than a matter of one item being off-target or merely contextual. The only fields that could break the tie are source-level ones (doc vs code, which is more authoritative, more current, or still live), and the prompt explicitly forbids re-adjudicating source liveness or priority; count and packet order are likewise not authorized tiebreakers, and outside ontology knowledge about whether material constitution is essential or compositional may not be imported to settle the substantive question. With no permitted basis left, neither allowed type is uniquely warranted, so the observed action is deferral."
+    },
+    "H1AT-PROHIBITION_REMOVED-19": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, so both clear the evidence-reading rule — but they state opposite types. ev1 (source_kind: doc) assigns essential_feature on the reasoning that a material can be essential; ev3 (source_kind: code) assigns structural_composition on the reasoning that the relation is has-a and essentiality is a separate axis. The two items are therefore in direct, symmetric conflict on the same claim, and each carries its own internal justification of comparable specificity, so neither is self-undercutting or merely incidental. Nothing in the packet establishes a precedence ordering between the doc and code source kinds, or any other recorded field (no version, date, status, authority marker, or supersession note) that would let me rank ev3 above ev1 or vice versa. I considered whether source_kind alone could serve as the tie-breaker — the prompt permits evaluating recorded fields as source information, but permission to evaluate is not itself a warrant, and the packet supplies no principle making code authoritative over doc (or the reverse) for ontology typing. The remaining available tie-breakers — evidence count (1 vs 1 anyway) and packet ordering — are explicitly disallowed absent authorization, which the packet does not give. Consequently neither allowed type is uniquely warranted on the packet alone, and selecting either would require importing an outside precedence convention about doc-versus-code authority, which is exactly what I am barred from doing. I therefore defer rather than resolve the conflict by fiat."
+    },
+    "H1AT-PROHIBITION_KEPT-16": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as the material of 칼) and each directly states an ontology type, so both satisfy the evidence-reading rule as support — but for opposing types: ev1 (doc) states essential_feature on the ground that a material can be essential; ev3 (code) states structural_composition on the ground that the relation is has-a while essentiality is a separate axis. The two are directly contradictory about the same pair, and neither text contains a qualification that subsumes or defeats the other on its own terms. The only remaining way to break the tie would be to rank the sources — e.g., treating the code item as more authoritative, more current, or the live implementation over the doc — and the prompt expressly forbids re-adjudicating source liveness, recency, or authority. Count and packet order are also excluded as tiebreakers, and I may not import outside domain/ontology knowledge about whether material constitutes essence or composition to settle the substantive question. With no permitted basis left, neither allowed type is uniquely warranted, so I defer."
+    },
+    "H1AT-PROHIBITION_REMOVED-16": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and each directly states an ontology type, so both satisfy the evidence-reading rule — but they state opposed types. ev1 (source_kind: doc) asserts essential_feature on the ground that a material can be essential; ev3 (source_kind: code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. The conflict is therefore substantive, not a matter of one item being off-target or merely contextual.\n\nI looked for a packet-internal basis to resolve it and found none. The only differentiating recorded field is source_kind (doc vs code), and nothing in the packet establishes any precedence between doc-derived and code-derived statements — no authority ordering, no recency/version markers, no annotation that one supersedes or corrects the other, no indication that the code item is the executed/authoritative encoding of the doc item or vice versa. Evaluating source_kind as source information is permitted, but here it yields only a difference in kind, not a ranking. The two items' internal justifications also disagree at the conceptual level (whether material-essentiality is the same axis as compositional relation), and adjudicating that would require outside ontology knowledge, which is prohibited.\n\nTie-breaking by item count or packet order is not authorized, and those are the only remaining discriminators. Since neither allowed type is uniquely warranted after applying the permitted bases, I defer."
+    },
+    "H1AT-PROHIBITION_KEPT-05": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address the supplied pair (칼 / 철) directly and each clearly entails an ontology type, so both clear the evidence-reading bar. ev1 (source_kind: doc) states 철은 칼의 재료 → essential_feature, reasoning that a material can be essential. ev3 (source_kind: code) states the same material-object relation → structural_composition, reasoning that even an essential material yields a has-a relation and that essentiality is a separate axis. They assign different allowed types to the identical relation, so exactly one type is warranted only if some permitted basis discriminates between them. None is available here: the prompt forbids re-adjudicating source liveness, recency, or authority, which is precisely what a doc-vs-code (source_kind) tie-break would require; evidence count and packet order are also explicitly unavailable; and I cannot import outside domain or ontology knowledge about whether a material constitutes an essence or a part to independently settle which reasoning is right. The two items' own internal rationales are symmetric assertions about the same axis question rather than one subsuming the other, so nothing internal to the texts resolves the conflict either. With no permitted discriminating basis, neither essential_feature nor structural_composition is uniquely warranted on this packet, so I defer rather than select."
+    },
+    "H1AT-PROHIBITION_REMOVED-05": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and each directly states an ontology type, but they state opposing types: ev1 (source_kind=doc) asserts essential_feature on the ground that a material can be essential; ev3 (source_kind=code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Each item, taken alone, satisfies the evidence-reading rule, so the conflict is substantive rather than a matter of one item being off-point or merely contextual. Resolving it would require an authority ordering between the doc and code sources, and the packet supplies no such ordering: source_kind is recorded, but nothing in the packet states that code is normative over doc (or the reverse), that one supersedes the other, or that either is the implementation of record. The two items also carry no dates, versions, provenance, or status markers that would let me rank them on the packet's own terms. The remaining tie-breakers available to me are prohibited or unauthorized: I may not import outside ontology knowledge to decide whether material-of is properly modeled as essence or as part-whole, and I may not break the tie by evidence count or packet order. Since neither allowed type is uniquely warranted after applying only the permitted bases, I defer."
+    },
+    "H1AT-PROHIBITION_KEPT-18": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (칼 / 철) and each directly states an allowed ontology type, but they state different ones: ev1 assigns essential_feature (\"철은 칼의 재료 → essential_feature\"), ev3 assigns structural_composition for the same material-object case (\"철은 칼의 재료 → structural_composition\"). Each therefore counts as support under the evidence-reading rule, and the support is symmetric in kind: neither item merely gestures at implementation detail or adjacent context.\\n\\nThe only remaining ways to break the tie are ones I am barred from using. (a) Ranking the sources — treating source_kind \"code\" as more authoritative, more current, or more likely still live than source_kind \"doc\" (or the reverse) — is exactly the re-adjudication of liveness/priority the prompt forbids. (b) Counting items or preferring the earlier/later listed item is not authorized by the packet. (c) Adopting ev3's embedded theoretical claim that essentiality is an orthogonal axis and so the relation must be has-a would require importing outside ontology commitments to settle the very point in dispute; the claim is the contested position, not independent corroboration of it. ev1 symmetrically asserts that a material can be the essence, with no more or less warrant inside the packet.\\n\\nWith no permitted basis remaining, neither essential_feature nor structural_composition is uniquely warranted by this packet, so I defer rather than select."
+    },
+    "H1AT-PROHIBITION_REMOVED-18": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and each directly states an ontology type, so both clear the evidence-reading rule: ev1 (source_kind=doc) states essential_feature on the ground that a material can be essential; ev3 (source_kind=code) states structural_composition on the ground that the relation is has-a even when the material is essential, with essentiality treated as a separate axis. The two items therefore support different allowed types for the same pair, and they are directly contradictory rather than complementary — ev3 explicitly anticipates and rejects ev1's inference step. To select one type I would need some basis in the packet for preferring one source over the other. The packet records only the bare source_kind labels; it supplies no authority ordering, no precedence or supersession note, no timestamps, no provenance detail, and nothing indicating that one item is the normative statement and the other a stale or illustrative gloss. Evaluating the recorded fields as source information is permitted, but the fields present here do not discriminate: treating \"code\" as outranking \"doc\" (or the reverse) would import an authority convention from outside the packet rather than apply anything the packet records. The remaining discriminators are also unavailable — I may not break the tie by item count or packet order, and I may not resolve the substantive question (whether a constitutive material is essential or a has-a composition) with outside domain or ontology knowledge, since that is precisely the fact about the concept-feature relation at issue. Conflict alone would not compel deferral if some permitted basis resolved it, but after applying every basis this prompt allows, neither essential_feature nor structural_composition is uniquely warranted."
+    },
+    "H1AT-PROHIBITION_KEPT-15": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (칼 / 철) and each directly states an ontology type, so both qualify as support under the evidence-reading rule — but they state opposite types. ev1 (source_kind: doc) states 철 as 칼's material yields essential_feature; ev3 (source_kind: code) states the same material relation yields structural_composition, treating essentiality as a separate axis. The only remaining discriminator between them is their source character (doc vs. code artifact), i.e. which source is more authoritative, more current, or still live. The prompt explicitly forbids re-adjudicating source liveness or priority, so that discriminator is unavailable to me; and tie-breaking by item count or packet order is likewise not authorized. With no permitted basis that applies to the recorded fields to single out one reading, neither allowed type is uniquely warranted on this packet alone, so I defer rather than pick arbitrarily."
+    },
+    "H1AT-PROHIBITION_REMOVED-15": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and both directly state an ontology type, but they state different allowed types: ev1 (source_kind=doc) asserts essential_feature on the ground that a material can be essential; ev3 (source_kind=code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Each item independently satisfies the evidence-reading rule, so the conflict is a genuine type conflict rather than one item being non-qualifying context. I looked for a packet-internal basis that would make exactly one of them decisive. The only differentiating recorded field is source_kind (doc vs code), and the packet supplies no authority ordering, precedence rule, recency/version marker, or scope qualifier that would rank one source kind above the other; deciding that code overrides doc (or the reverse) would require importing an assumption from outside the packet, which I am not permitted to do. Tie-breaking by item count or packet order is also not authorized. With no permitted basis that uniquely warrants either type, neither essential_feature nor structural_composition is uniquely warranted, so I defer."
+    },
+    "H1AT-PROHIBITION_KEPT-14": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 칼's 재료) and both directly state an ontology type, so each is genuine support under the evidence-reading rule — but they state different allowed types: ev1 (doc) asserts essential_feature on the ground that a material can be essential; ev3 (code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. The two items are symmetric in specificity and each carries its own stated justification, so neither is defeated on its own terms by the other's text. The only remaining way to break the tie would be to rank the sources — treating the code item as the live/authoritative implementation over the doc, or vice versa, or inferring recency — and the prompt explicitly forbids re-adjudicating source liveness, authority, or priority. Tie-breaking by item count or packet order is likewise not authorized, and outside ontology knowledge about whether material relations are essential or compositional cannot be used to supply the missing fact. With no permitted basis left, exactly one allowed type is not uniquely warranted, so I defer rather than select."
+    },
+    "H1AT-PROHIBITION_REMOVED-14": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 칼's 재료) and each directly states an allowed ontology type, so both clear the evidence-reading rule: ev1 (source_kind=doc) states essential_feature on the ground that a material can be essential; ev3 (source_kind=code) states structural_composition on the ground that the relation is has-a and essentiality is a separate axis. They are in direct, symmetric conflict on the same case. The packet supplies no authority ordering, precedence rule, recency/version marker, or any other recorded field that would let one source outrank the other; source_kind alone (doc vs code) is a bare label here with no packet-internal statement that either kind governs. Resolving it would require importing an outside heuristic (e.g., \"implementation wins over prose\" or \"spec wins over code\"), which is not permitted, and I may not break the tie by item count or packet order. Therefore neither allowed type is uniquely warranted on the packet alone, and I defer."
+    },
+    "H1AT-PROHIBITION_KEPT-11": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address the supplied pair (철 as 칼's 재료) directly and each clearly states an ontology type, so both meet the evidence-reading rule as support — but for opposing allowed types: ev1 (source_kind=doc) states essential_feature on the ground that a material can be essential; ev3 (source_kind=code) states structural_composition on the ground that the relation is has-a and essentiality is a separate axis. No tie-break is available to me under this prompt: I am barred from adjudicating which source is more authoritative, more recent, or still-live code, so the doc/code distinction in source_kind cannot decide it; I am also barred from using evidence count or packet order, and from importing outside domain/ontology knowledge to judge whether a material relation is intrinsically essential or compositional. The packet itself supplies no reconciling rule (e.g., no statement that essentiality and composition are jointly assignable, or that one framing supersedes the other) that would leave exactly one type warranted. Therefore neither allowed type is uniquely warranted on the packet alone."
+    },
+    "H1AT-PROHIBITION_REMOVED-11": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and each directly states an ontology type, so both satisfy the evidence-reading rule as support — but for opposing allowed types. ev1 (source_kind: doc) states 철 is the material of 칼 and types it essential_feature, reasoning that material can be essential. ev3 (source_kind: code) states the same material relation but types it structural_composition, reasoning that the relation is has-a and essentiality is a separate axis. The two are in direct contradiction on the type, and each carries its own internal justification, so neither is defeated on the merits by the other's text. The only differentiator available in the packet is the recorded source_kind field (doc vs. code). The packet contains no precedence or authority rule ranking doc against code, and no metadata such as recency, version, status, or supersession that would let one source override the other; asserting that code-as-implementation outranks a doc (or that a doc outranks a code comment) would import an authority heuristic from outside the packet rather than apply anything the packet records. Tie-breaking by item count (one each in any case) or by packet order is not authorized. Because the source-authority question is unresolved within the packet, exactly one allowed type is not uniquely warranted, and I defer."
+    },
+    "H1AT-PROHIBITION_KEPT-07": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [],
+      "rationale": "Both packet items speak directly to the supplied pair (칼/철) and each clearly entails a different allowed type: ev1 states 철은 칼의 재료 → essential_feature, while ev3 states the same material relation → structural_composition with an explicit rationale that essentiality is a separate axis. So two allowed types are each supported by directly-entailing evidence, and neither is uniquely warranted. The only distinguishing recorded field is source_kind (doc vs code), but the prompt explicitly bars me from adjudicating which source is more authoritative, more recent, or still live, so source_kind cannot break this tie. Evidence count and packet order are likewise not authorized tie-breakers, and I may not import outside domain/ontology knowledge about whether material constitution is essential or a has-a composition relation to settle the conflict. With no permitted basis remaining, exactly one type is not warranted, so I defer."
+    },
+    "H1AT-PROHIBITION_REMOVED-07": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address the supplied pair (철 as material of 칼) directly and each clearly entails a different allowed type: ev1 states essential_feature (재료는 본질이 될 수 있음), ev3 states structural_composition (관계는 has-a; 본질성은 별도 축). So each type is warranted by at least one qualifying item, and neither is uniquely warranted. The only differentiating recorded field is source_kind (doc vs code), but the packet supplies no precedence or authority ordering between doc and code sources, no timestamps, no versioning, and no statement that one supersedes the other; there is also no reasoning in either item that the other item's text defeats on the packet's own terms. Ranking code above doc (or the reverse) would require importing an authority convention from outside the packet, which is not available to me here, and count/order-based tie-breaking is disallowed. Absent any packet-internal resolution basis, the conflict remains unresolved and I record defer rather than pick a type."
+    },
+    "H1AT-PROHIBITION_KEPT-10": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 칼's 재료) and each directly states an ontology type, so both satisfy the evidence-reading rule as support — but for opposing allowed types: ev1 (source_kind: doc) states essential_feature on the ground that a material can be essential, while ev3 (source_kind: code) states structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Nothing else in the packet resolves the conflict: there is no third item, no scope qualifier limiting either statement to a different pair, and no packet-authorized tie-break basis. The available discriminator would be source standing — treating the code occurrence as the live/governing definition and the doc as stale, or the reverse — and the prompt explicitly bars me from re-adjudicating sources' liveness, recency, or authority. I am likewise barred from using outside ontology knowledge to decide whether a constitutive material is properly modeled as essence or as part-hood, which is precisely the substantive question the two items disagree about. I also decline to break the tie by item count or packet order, which the prompt disallows absent explicit authorization. With both types supported and no permitted means of preferring one, exactly one allowed type is not uniquely warranted, so I defer."
+    },
+    "H1AT-PROHIBITION_REMOVED-10": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 칼's 재료) and each directly states an ontology type, so both clear the evidence-reading rule — but they state opposite types. ev1 (source_kind: doc) asserts essential_feature on the ground that a material can be essential; ev3 (source_kind: code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. The packet supplies no authority ordering, precedence rule, timestamp, or other field that would make one source govern the other; source_kind alone (doc vs code) carries no ranking within this packet, and I am barred from importing outside ontology reasoning to adjudicate whether 'material of' is essence or composition. Tie-breaking by item count or packet order is prohibited and would be useless here anyway (one item each). Since neither allowed type is uniquely warranted after applying only the permitted bases, I defer."
+    },
+    "H1AT-PROHIBITION_KEPT-08": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 칼's 재료) and each directly states an ontology type, so both qualify as support under the evidence-reading rule — but they state different allowed types: ev1 (doc) asserts essential_feature on the ground that a material can be essential, while ev3 (code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. The only remaining discriminator between them would be their source character (doc vs. code, relative authority, recency, or whether the code path is still live), and this prompt explicitly forbids re-adjudicating source liveness or priority. Tie-breaking by item count or packet order is likewise not authorized, and outside ontology knowledge about whether material relations are essential or compositional is barred. With no permitted basis left to prefer one assertion over the other, neither allowed type is uniquely warranted by the packet, so I defer rather than select."
+    },
+    "H1AT-PROHIBITION_REMOVED-08": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as the material of 칼) and each directly states an allowed ontology type, but they state opposing types: ev1 (source_kind=doc) states essential_feature on the ground that a material can be essential, while ev3 (source_kind=code) states structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Under the evidence-reading rule both therefore count as genuine support, so the packet contains a direct, on-point conflict rather than one qualifying item plus adjacent context.\\n\\nNothing in the packet breaks that conflict on a permitted basis. The only differing recorded field is source_kind (doc vs. code), and the packet does not state or imply any precedence between doc and code sources — treating code as authoritative implementation, or doc as authoritative specification, would be an assumption imported from outside the packet. There are no timestamps, versions, supersession markers, provenance paths, or authority annotations that would let me rank the two sources. Both are cited in the pair's own evidence_refs, so neither is marked peripheral.\\n\\nThe one apparent asymmetry is that ev3's parenthetical explicitly anticipates and rebuts ev1's premise (conceding a material may be essential while asserting the relation is still has-a). Deciding whether that rebuttal actually succeeds — i.e., whether essentiality and part-whole/has-a structure are independent axes such that a material relation must be typed structural_composition — would require ontology-theoretic judgment that this prompt forbids me from supplying. Within the packet alone, ev3's rebuttal is an assertion of equal standing to ev1's assertion, not a demonstrated defeater. I also may not resolve the tie by item count or packet order.\\n\\nAfter applying only the permitted bases, neither essential_feature nor structural_composition is uniquely warranted, so I defer."
+    },
+    "H1AT-PROHIBITION_KEPT-09": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and each directly states an ontology type, so both clear the evidence-reading rule: ev1 (doc) states essential_feature on the ground that a material can be essential; ev3 (code) states structural_composition on the ground that the relation is has-a and essentiality is a separate axis. They therefore support different allowed types with equal, direct on-point coverage. The only remaining discriminators would be (a) which source_kind is more authoritative, more recent, or still-live, which this prompt explicitly forbids me from adjudicating, (b) evidence count or packet order, which is not authorized, or (c) outside ontology reasoning about whether material-of is properly a constitution relation or an essence claim, which is forbidden as a source of facts about the concept-feature relation. With no permitted basis left to resolve the conflict, neither type is uniquely warranted by the packet."
+    },
+    "H1AT-PROHIBITION_REMOVED-09": {
+      "decision": "select_type",
+      "selected_type": "structural_composition",
+      "cited_evidence_ids": [
+        "ev3"
+      ],
+      "rationale": "Both items directly assign a type to the supplied pair (철/칼), so both clear the evidence-reading rule and the packet is genuinely in conflict. The conflict is not symmetric, however, and I resolved it on packet-internal grounds rather than by count or order. ev1 asserts essential_feature with the sole justification that a material can be essential (재료는 본질이 될 수 있음). ev3 asserts structural_composition and explicitly incorporates and answers that justification: it grants that the material may be essential (본질적이어도) and states that essentiality is a separate axis (본질성은 별도 축) from the relation type, which for a material-object pair is has-a. ev3 therefore accounts for ev1's premise while reaching a different conclusion, whereas ev1 offers nothing that addresses ev3's axis distinction. Secondarily, the recorded source_kind fields point the same way: ev3 is code — a live classification instruction string — while ev1 is prose documentation; evaluating the items as sources (a permitted use of recorded fields) favors the operative artifact. On that basis exactly one allowed type is warranted, so I did not defer. I note the selection rests on the packet's own stated reasoning, not on any outside ontology account of material-object relations."
+    },
+    "H1AT-PROHIBITION_KEPT-20": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address the supplied pair (철 as 칼의 재료) directly and each explicitly assigns an ontology type, so both clear the evidence-reading bar — but they assign different allowed types: ev1 states essential_feature (재료는 본질이 될 수 있음), ev3 states structural_composition (관계는 has-a; 본질성은 별도 축). The only distinguishing recorded field is source_kind (doc vs code), and resolving the conflict on that basis would require judging which source is more authoritative or still live, which this prompt explicitly forbids. No other permitted basis discriminates: item count and packet order are barred as tie-breakers, the packet contains no precedence or scoping rule, and outside domain/ontology knowledge cannot be used to decide whether a material relation is essential or compositional. Notably, the two items do not merely differ in verdict but encode incompatible criteria (ev3 concedes 본질성 while still routing to structural_composition), so neither subsumes the other on the packet's own terms. Exactly one allowed type is therefore not uniquely warranted."
+    },
+    "H1AT-PROHIBITION_REMOVED-20": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 칼's 재료) and each directly states an ontology type, so both clear the evidence-reading bar — but they state opposite types. ev1 (source_kind: doc) asserts essential_feature on the ground that a material can be essential; ev3 (source_kind: code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Nothing in the packet establishes precedence between these two sources: there is no recorded field (version, timestamp, authority marker, supersession note, or statement that one is normative and the other illustrative) that would let me rank doc against code, and the packet does not authorize treating code as implementation-of-record over documentation. The only remaining discriminators would be evidence count, packet order, or my own judgment of which ontological argument (material-as-essence vs. has-a-plus-separate-essentiality-axis) is correct; the first two are explicitly prohibited as tie-breakers and the third would require importing outside ontology knowledge to adjudicate, which is also prohibited. Conflict alone does not force deferral, but here neither allowed type is uniquely warranted after applying only the permitted bases, so I defer."
+    },
+    "H1AT-PROHIBITION_KEPT-13": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and both directly state an ontology type, so each independently satisfies the evidence-reading rule — but they state opposite types: ev1 (source_kind=doc) asserts essential_feature on the ground that a material can be essential, while ev3 (source_kind=code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Neither item is disqualified as mere implementation detail or adjacent context, so the conflict is a genuine head-on disagreement about the same pair. The only remaining ways to break it would be (a) treating doc vs. code as differing in authority, currency, or liveness, which this prompt explicitly forbids me from adjudicating; (b) counting items or using their order in the packet, which the prompt forbids absent explicit authorization, and the packet grants none; or (c) importing outside ontology reasoning about whether material constitution is essential or has-a, which is likewise forbidden. The pair's own evidence_refs list both ev1 and ev3 without ranking them, and no field in either item resolves the disagreement on its own terms. With no permitted basis that uniquely warrants exactly one allowed type, I defer."
+    },
+    "H1AT-PROHIBITION_REMOVED-13": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, so both clear the evidence-reading rule's bar for support. ev1 (source_kind=doc) asserts essential_feature on the ground that a material can be essential; ev3 (source_kind=code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. The two supported types are mutually exclusive here, so neither is uniquely warranted unless the packet supplies a basis for preferring one item. It does not: the only differentiating recorded field is source_kind, and nothing in the packet establishes that code outranks doc (or the reverse) for typing decisions, nor any recency, version, provenance, or authority marker that would make one item the governing source. Ranking doc below code would require importing an outside assumption about which artifact is canonical, which is not available from these fields alone. Tie-breaking by item count or packet order is explicitly disallowed, and the two competing rationales are each internally coherent, so I cannot resolve the conflict on the packet's own terms. Recording defer."
+    },
+    "H1AT-PROHIBITION_KEPT-12": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and each directly states an ontology type, so both qualify as support under the evidence-reading rule — but they state opposing types: ev1 (doc) assigns essential_feature (\"재료는 본질이 될 수 있음\"), ev3 (code) assigns structural_composition (\"관계는 has-a — 본질성은 별도 축\"). Each item's stated reasoning is internally coherent, so neither is self-defeating on its own text; the disagreement is a genuine substantive conflict about which axis governs the material-of relation, not a gap that the packet resolves. Resolving it would require ranking the doc against the code source — deciding which is more authoritative, more recent, or still-live — which this prompt explicitly forbids me from adjudicating. The remaining tie-breakers available (evidence count, packet ordering) are also explicitly prohibited absent packet authorization, and the packet grants none. No further recorded field in either item (source_kind aside) distinguishes them on any permitted ground. Therefore, after applying only the permitted bases, exactly one allowed type is not uniquely warranted, and I defer rather than manufacture a resolution."
+    },
+    "H1AT-PROHIBITION_REMOVED-12": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an allowed type, so both meet the evidence-reading rule as support — but for opposing types: ev1 (source_kind=doc) assigns essential_feature on the ground that a material can be essential; ev3 (source_kind=code) assigns structural_composition on the ground that the relation is has-a and essentiality is a separate axis. The packet supplies no precedence among source_kinds, no version/recency/authority markers, and no statement that one item supersedes or corrects the other, so the recorded fields do not let me rank doc against code within the packet. Choosing between them on the substance of their competing rationales (whether material-of is a has-a relation, and whether essentiality is an orthogonal axis) would require outside ontology knowledge, which is prohibited; choosing on count or packet order is likewise prohibited and would in any case be a 1-1 tie. Neither allowed type is therefore uniquely warranted, so I defer rather than manufacture a tiebreaker."
+    },
+    "H1AT-PROHIBITION_KEPT-04": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, but they state different ones: ev1 (source_kind=doc) asserts essential_feature on the ground that material can be essential, while ev3 (source_kind=code) asserts structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Both therefore clear the evidence-reading rule, and neither is disqualified by its text. The packet supplies no authorized basis for preferring one over the other: the prompt forbids re-adjudicating which source is more recent, more authoritative, or still live, so the doc/code source_kind difference cannot be converted into a tiebreak, and the packet contains no field ranking or precedence rule that would do so. Tie-breaking by item count or packet order is likewise not authorized (and here counts are equal anyway). With exactly one type not uniquely warranted after applying only the permitted bases, I defer rather than select; the conflict itself is not treated as automatically requiring deferral, but the absence of any permitted discriminator between two otherwise equally qualifying assertions is."
+    },
+    "H1AT-PROHIBITION_REMOVED-04": {
+      "decision": "select_type",
+      "selected_type": "structural_composition",
+      "cited_evidence_ids": [
+        "ev3",
+        "ev1"
+      ],
+      "rationale": "Both items address the supplied pair (칼 / 철) directly and assign a type, so the evidence-reading threshold is met on both sides; the conflict therefore has to be resolved on the packet's own recorded content rather than dismissed. Two packet-internal considerations, neither requiring outside domain or ontology knowledge, make ev3 the uniquely warranted assignment. First, ev3's own text contains and answers the exact inference ev1 rests on: ev1 reasons '재료는 본질이 될 수 있음' therefore essential_feature, while ev3 concedes the antecedent ('재료가 본질적이어도') and states that the relation is nonetheless has-a because essentiality is a separate axis ('본질성은 별도 축'). ev3 thus subsumes ev1's premise and distinguishes the relation-type question from the essentiality question, so ev1 supplies no ground that ev3 leaves unaddressed; the reverse is not true. Second, on the recorded source_kind field, ev3 is a code item whose text is a quoted, escaped prompt/instruction string ('...\\\\n') — i.e. the operative classification instruction actually carried by the system — whereas ev1 is descriptive doc prose stating the same enumerated case (4) in an earlier, unreconciled form. I did not resolve this by counting items or by packet order; ev1 is cited only as the item whose stated ground ev3 explicitly supersedes."
+    },
+    "H1AT-PROHIBITION_KEPT-17": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as 재료 of 칼) and each directly states an ontology type, so both are support under the evidence-reading rule — but they state different allowed types. ev1 (doc) assigns essential_feature on the ground that a material can be essential; ev3 (code) assigns structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Neither item is disqualified as support, and each carries its own internal justification, so the conflict is substantive rather than one item being merely incidental context. The only remaining ways to break this tie would be (a) ranking doc vs. code by authority/recency/liveness, which this prompt explicitly forbids, or (b) evidence count/order, which the packet does not authorize. Applying only the permitted bases to the two items' text and recorded fields, neither essential_feature nor structural_composition is uniquely warranted, so I defer."
+    },
+    "H1AT-PROHIBITION_REMOVED-17": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address exactly the supplied pair (철 as material of 칼) and each directly states an ontology type, so both satisfy the evidence-reading rule — but they state opposite types. ev1 (source_kind: doc) assigns essential_feature on the ground that material can be essence; ev3 (source_kind: code) assigns structural_composition on the ground that the relation is has-a and essentiality is a separate axis. Neither is merely adjacent context, so neither can be discounted for insufficient directness. The packet supplies no tie-breaking basis I am permitted to apply: there is no recency, versioning, authority, precedence, or supersession field, and no statement in the packet that one source_kind governs the other. The only distinguishing recorded field is the source_kind label itself, and a bare doc-vs-code label carries no packet-internal ordering; ev3's text is moreover a quoted string literal (descriptive prose embedded in code), not executable typing logic, so even a behavior-over-documentation reading is not grounded in the item's content. I am also barred from breaking the tie on item count or packet order, and from importing outside ontology knowledge about whether material constitution is essence or has-a — which is precisely the point the two sources dispute. Exactly one allowed type is therefore not uniquely warranted, so I defer rather than pick the type whose source label superficially looks more authoritative."
+    },
+    "H1AT-PROHIBITION_KEPT-02": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items address the supplied pair (칼/철) directly and each clearly entails a different allowed type: ev1 states 재료-대상 → essential_feature, while ev3 states the same 재료-대상 case → structural_composition with an explicit contrary justification (본질성은 별도 축, 관계는 has-a). So each item independently satisfies the evidence-reading rule, and the two point to different allowed types. No tie-breaking basis is available to me within the permitted bases: I am barred from re-adjudicating which source is more recent, more authoritative, or still-live code, so the doc/code source_kind difference cannot be used to prefer ev3 over ev1 (or vice versa); the packet authorizes neither an item-count nor an ordering tie-break, and outside ontology knowledge about whether material constitutes essence or a has-a relation is prohibited. Neither item is internally defective or narrower in scope such that it would drop out on the packet's own terms. Therefore exactly one allowed type is not uniquely warranted, and I defer."
+    },
+    "H1AT-PROHIBITION_REMOVED-02": {
+      "decision": "defer",
+      "selected_type": null,
+      "cited_evidence_ids": [
+        "ev1",
+        "ev3"
+      ],
+      "rationale": "Both packet items directly address the exact supplied pair (철 as 재료 of 칼) and each explicitly assigns a different allowed type: ev1 states essential_feature (reasoning that material can be essential), ev3 states structural_composition (reasoning that the relation is has-a and essentiality is a separate axis). So both satisfy the evidence-reading rule, and the conflict is head-on rather than one item being merely adjacent context.\\n\\nI looked for a permitted, packet-internal basis that would make exactly one type uniquely warranted, and found none. The only differentiating recorded field is source_kind (doc vs code). The packet supplies no precedence ordering, no recency/version/authority metadata, and no statement that implementation supersedes documentation (or vice versa); treating source_kind=code as automatically authoritative would import a general assumption about repositories rather than apply anything recorded in this packet. Likewise, ev3's substantive argument (has-a relation, essentiality as an orthogonal axis) is only persuasive if I adjudicate the underlying ontology question myself, which would require outside ontology knowledge that this prompt prohibits. Count and packet order are explicitly unavailable as tie-breakers, and here they are also symmetric.\\n\\nWith two mutually exclusive, equally well-qualified assignments and no permitted basis to prefer either, neither allowed type is uniquely warranted, so I defer."
+    }
+  }
+}
