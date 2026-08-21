@@ -790,6 +790,34 @@ sha256 `9c84ef93…`. 동결 인증 증명은
 40/40 기록, 전송 실패 0건, 완주 replicate 20/20, Stage A invalid-rate 게이트
 양 arm 통과(각 0.00).
 
+**D-H1a-18 Q18.3이 함께 제시하라고 지정한 항목** (descriptive count/proportion
+으로만 보고하며, p-value를 primary verdict로 승격시키지 않는다):
+
+```text
+2/20 = 10%      (PROHIBITION_REMOVED)
+0/20 = 0%       (PROHIBITION_KEPT)
+N fixed ex ante
+no post-result extension
+```
+
+> 표본이 작아 arm 간 probability difference에 대한 정밀한 추론을 지원하지
+> 않는다. 양측 Fisher exact comparison은 p≈0.487이었다.
+
+**D-H1a-18 Q18.1=(b)가 지정한 주 보고 문구**:
+
+> 이 코호트에서 `PROHIBITION_REMOVED` arm에서만 `select_type`이 관측되었다
+> (2/20 vs 0/20).
+
+확장형:
+
+> 관측 빈도는 REMOVED에서 2/20, KEPT에서 0/20이었다. 이 고정 fixture의 현
+> 코호트에서는 REMOVED에서만 selection이 발생했지만, 표본이 작고 QF-DEFER가
+> 미시행이므로 이를 안정적인 분포 차이나 Q1 제거의 인과 효과로 해석하지 않는다.
+
+⚠️ **"분포가 달라졌다"를 주 보고 문구로 쓰지 않는다** — 판정문이 그 문장이
+population-level inference로 읽히기 쉽다는 이유로 (a)를 기각했다. 연구 질문이
+"달라지는가"로 쓰여 있다는 사실이 그 문형의 사용을 허가하지 않는다.
+
 ### 9.2 §7이 요구한 `licensed_source_evaluation_path` 항목별 값
 
 "대비가 성립한 근거가 무엇이었는지 사후에 재구성 가능해야 한다"에 대한 기록.
@@ -842,10 +870,40 @@ sha256 `9c84ef93…`. 동결 인증 증명은
 | `h1a-original-20260803` | 0 / 20 | 0 / 20 |
 | `h1a-typed-scope-20260817` | 0 / 20 | **2 / 20** |
 
-2026-08-03 세션은 0/40이라는 바닥값을 "조작 무효"로 읽지 않고, Q7=E의
-tie-breaker 금지가 **양 arm에 남아 있음**을 찾아 Q10을 상신했다. typed-scope
-재설계(D-H1a-12 Q12=F)가 겨눈 것이 그 절이며, REMOVED가 0에서 2로 움직인 것은
-**그 진단이 옳았다는 방향의 관측**이다.
+> ⚠️ **2026-08-22 정정 (D-H1a-18 Q18.2=c 적용).** 아래 취소선 문장은 이 판정
+> 수령 **전에** 쓴 것이고, 판정의 조건 3(`0→2가 redesign 때문에 발생했다고 쓰지
+> 않는다`)과 `causal_redesign_attribution: forbidden`에 걸린다. "그 진단이
+> 옳았다는 방향의 관측"은 표현이 약할 뿐 **변화를 재설계의 증거로 쓰는 것**이므로
+> 같은 금지 대상이다. 원문은 무엇이 철회됐는지 남기기 위해 보존한다.
+>
+> ~~2026-08-03 세션은 0/40이라는 바닥값을 "조작 무효"로 읽지 않고, Q7=E의
+> tie-breaker 금지가 양 arm에 남아 있음을 찾아 Q10을 상신했다. typed-scope
+> 재설계(D-H1a-12 Q12=F)가 겨눈 것이 그 절이며, REMOVED가 0에서 2로 움직인 것은
+> 그 진단이 옳았다는 방향의 관측이다.~~
+
+**허용 표현 — D-H1a-18이 직접 제시한 문구를 그대로 쓴다** (운영 세션이 다시
+저작하지 않는다):
+
+> "이전 비식별 표면에서는 양 arm 모두 0/20이었고, 수선된 별도 표면에서는 KEPT 0/20, REMOVED 2/20이 관측됐다. 두 코호트는 병합하지 않으며, 표면 차이가 복수이므로 이 변화 자체를 특정 수정의 효과로 귀속하지 않는다."
+
+D-H1a-18 Q18.2가 부과한 5개 조건:
+
+| # | 조건 | 이 문서의 준수 |
+|---|---|---|
+| 1 | 병합하지 않는다 | 별도 파일·별도 `cohort_id`·별도 채점 산출 경로. 코드가 강제 |
+| 2 | 하나의 effect estimate로 계산하지 않는다 | 두 코호트를 합산한 값은 어디에도 없다 |
+| 3 | "0→2가 redesign 때문"이라고 쓰지 않는다 | 위 정정으로 해소 |
+| 4 | 표면이 여러 곳 다름을 같은 표/문장에 표시 | §9.5 표 아래 문단에 명시 |
+| 5 | 두 코호트의 **지위를 다르게 유지** | 아래 표에 명시 |
+
+| 코호트 | 지위 (D-H1a-18 조건 5) |
+|---|---|
+| `h1a-original-20260803` | `completed_nonidentifying` |
+| `h1a-typed-scope-20260817` | repaired-surface observation |
+
+2026-08-03 세션이 0/40을 "조작 무효"로 읽지 않고 Q7=E의 tie-breaker 금지가 양
+arm에 남아 있음을 찾아 Q10을 상신했다는 **이력 자체**는 사실 기록으로 남긴다.
+그것과 §9.1의 관측을 인과적으로 연결하지 않는 것이 위 조건 3이다.
 
 **말하지 않는 것**: 두 코호트는 fixture는 같지만 프롬프트 표면이 **여럿**
 다르다(typed-scope 재설계 전체). 표면이 하나만 다른 대비가 아니므로 0→2를
@@ -880,3 +938,70 @@ tie-breaker 금지가 **양 arm에 남아 있음**을 찾아 Q10을 상신했다
 **estimand·범위 문제이므로 외부 판정 채널 상신 대상**이다. §5g의 거버넌스 규칙
 (조건을 `freeze_blocker`↔`diagnostic` 사이로 옮기는 것은 외부 판정 필요)과 같은
 성격이고, 운영 세션이 정하지 않는다.
+
+---
+
+## 10. 종결 (D-H1a-18, 2026-08-22)
+
+**Q18 = F = A(서술적 종결) + C(상위 목적 전환).** H1a는 §9를 서술적 보고로
+남기고 종결한다. 추가 주 trial 0건.
+
+판정문이 지정한 최종 기록을 **그대로** 옮긴다 (요약·재작성하지 않는다):
+
+```yaml
+QF_DEFER:
+  status: material_unavailable
+  executed: false
+
+ceiling_diagnostic:
+  status: unknown
+
+experiment_closure:
+  blocked_by_QF_DEFER: false
+```
+
+```yaml
+D-H1a-18:
+  H1a:
+    close: true
+    additional_main_trials: 0
+    current_cohort:
+      report: true
+      causal_attribution: forbidden
+      generalization: forbidden
+  next_program:
+    priority:
+      - reusable_feedback_kernel
+      - LLM_output_based_causal_inference
+    H1a_third_cohort:
+      status: deferred_as_separate_future_experiment
+```
+
+### 10.1 `unknown`을 `false`로 바꾸지 않는다
+
+판정문이 이것만 따로 강조했다. 종결 기록은
+
+> "ceiling이 없었다"
+
+가 **아니라**
+
+> **"ceiling 가능성은 독립적으로 진단되지 않았다."**
+
+로 영구 보존한다. `QF-DEFER`가 미시행인 것은 실패가 아니고(Q14.2), 실패가
+아니라는 사실이 "천장이 없었다"를 함의하지도 않는다. 이 구별이 무너지면
+§9.3의 R1 제한 전체가 무의미해진다.
+
+### 10.2 종결이 소급 변경하지 않는 것
+
+- **D-H1a-7 / R3(인과 귀속 금지)은 유지된다.** 판정문이 명시했다. 장래에
+  component-ablation 실험(요청서 선택지 D)을 별도 설계하면 그 실험의 estimand와
+  귀속 규칙을 새로 판정받을 수 있으나, **현재 H1a의 R3을 소급 변경하지 않는다.**
+- L1~L3·L8·R4~R7 전부 유지.
+- §9.5의 두 코호트 병기는 Q18.2=c의 5개 조건 아래에서만 허용된다.
+
+### 10.3 종결 후 이 문서를 읽는 사람에게
+
+§9가 보고 정본이고 §10이 종결 기록이다. 숫자만 인용하면 틀린다 — **2/20은
+`unknown`인 천장 방향과 p≈0.487을 달고 다녀야 하는 값**이다. 이 실험이 남긴
+재사용 자산은 그 숫자가 아니라 §4·§5의 의무 구조·의미 감사·뮤테이션 규율이며,
+판정문의 `next_program`이 그것을 다음 프로그램의 우선순위로 지정했다.
