@@ -54,10 +54,26 @@
   하고(지시문 §1.1 정신: "판정 어휘를 새로 만들지 않는다"), 다르다면 그 구별이
   문서화돼야 한다. 구현 착수 전 확인 대상으로 등재.
 
-### 검증하지 않은 것 (정직 고지)
+### 검증하지 않은 것 (정직 고지) — **2026-08-22 저장 직후 C축 실측 완료, 아래로 대체**
 
-- yaml의 외부 출처 URL 8건(ACL Anthology·ISO·arXiv·PMB)은 **웹 실측하지
-  않았다.** 적대 검토 C축(출처 검증)의 후속 대상.
+### C축 출처 검증 (2026-08-22, haiku 감사 + 상위 finding 직접 재실측)
+
+| id | 실체 | 제목 필드 |
+|---|---|---|
+| O1 | ✅ **확인** — 초록이 quantifier scope disambiguation 코퍼스임을 명시 (Rasmussen & Schuler, LREC 2020) | ⚠ **부정확** — 실제 제목은 "A Corpus of Encyclopedia Articles with Logical Forms" |
+| O2 | ✅ 확인 (Williamson et al. 2021) | ⚠ 실제: "Intensionalizing Abstract Meaning Representations: Non-Veridicality and Scope" |
+| O3 | ✅ **확인** — 초록: "a controlled dataset of … syllogisms in propositional and modal logic"을 소개 (Wang & Shi, ACL 2025) | ⚠ 부정확 — yaml의 title은 설명어 |
+| R1 | ✅ 확인 (Bentzen, arXiv 1910.01697) | ⚠ 실제: "A Henkin-style completeness proof for the modal logic S5" |
+| R2 | ✅ 확인 | 부제 누락뿐 |
+| G1/S1 | ✅ PMB 정상 운영 | — |
+| O1-supp | ⛔ ISO 페이지 HTTP 403 — **검증 불가(BLOCKED)** | — |
+
+haiku가 O1·O3를 REFUTED로 보고했으나 **직접 재실측으로 실체-확인/제목-부정확으로
+정정**했다(제목 불일치 ≠ 자원 불일치). **설계 담당 확인 항목 2건 추가**:
+① yaml의 `source_authority.title`들을 논문 **verbatim 제목**으로 교체할 것 —
+yaml 자신의 `fixture_template.source_locator`가 source-faithful 표기를
+요구하므로 설명어 제목은 fixture provenance를 감사 불가로 만든다.
+② ISO 24617-12는 paywall 뒤라 fixture 저작 시 접근 수단 필요.
 
 ---
 
