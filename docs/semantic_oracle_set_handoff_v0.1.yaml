@@ -1,0 +1,466 @@
+# Semantic Oracle Set Handoff Manifest
+# Purpose:
+#   Zero-context handoff to an experiment-operations agent.
+#   This file defines the semantic oracle assets, their authority classes,
+#   intended evaluation role, and experiment-isolation constraints.
+#
+# Canonical format: YAML
+# Recommended use:
+#   - Treat this file as the human-auditable source of truth.
+#   - Parse into JSON internally if strict machine validation is required.
+#   - Do NOT expose external_oracle answers to Refine/Verify/model-facing prompts.
+
+schema_version: "semantic_oracle_handoff_v0.1"
+status: "design-confirmed"
+language: "ko"
+project_scope: "semantic compiler E2E evaluation"
+
+purpose:
+  primary: >
+    외부 논문·표준·gold corpus가 제공하는 formal semantic structure를
+    Semantic Compiler의 E2E 평가용 Oracle로 사용한다.
+  non_goal:
+    - "Oracle을 Refine 또는 Verify의 입력으로 사용하지 않는다."
+    - "Oracle을 모델 프롬프트에 정답 힌트로 노출하지 않는다."
+    - "우리 시스템이 만든 projection을 Oracle 자체로 간주하지 않는다."
+    - "embedding similarity 또는 LLM confidence를 semantic truth로 사용하지 않는다."
+
+architecture_invariants:
+  - id: "INV-ORACLE-01"
+    rule: "Oracle does not flow to Refine."
+  - id: "INV-ORACLE-02"
+    rule: "Oracle does not flow to Verify."
+  - id: "INV-ORACLE-03"
+    rule: "Oracle is evaluation-only in the tested run."
+  - id: "INV-ORACLE-04"
+    rule: "Published formal structure is the authority; our projection is the system under test."
+  - id: "INV-ORACLE-05"
+    rule: "Canonicalization may normalize equivalent representation differences, but must never normalize uncertainty into truth."
+  - id: "INV-ORACLE-06"
+    rule: "Semantic interpretation evaluation and downstream reasoner evaluation are separate."
+  - id: "INV-ORACLE-07"
+    rule: "FAIL, UNKNOWN, and runtime ERROR are distinct outcomes."
+
+asset_classes:
+  semantic_oracle_core:
+    description: >
+      자연어/controlled language에서 intended formal semantic structure를
+      선택·구성하는 능력을 직접 평가하는 핵심 Oracle.
+  semantic_oracle_extended:
+    description: >
+      Core보다 표현 구조가 복잡하지만 semantic interpretation 자체를 평가하는 Oracle.
+  reasoner_oracle:
+    description: >
+      이미 formal representation이 주어진 뒤 logical consequence / entailment를 평가.
+      NL interpretation Oracle과 혼합하지 않는다.
+  regression_gold:
+    description: >
+      넓은 semantic coverage를 위한 human-verified gold corpus.
+      초기 E2E acceptance gate와 분리한다.
+  silver:
+    description: >
+      부분적으로 human-corrected 또는 완전 gold보다 assurance가 낮은 regression/evaluation asset.
+
+oracle_sets:
+
+  - oracle_id: "O1"
+    name: "Quantifier Scope"
+    asset_class: "semantic_oracle_core"
+    status: "confirmed"
+    semantic_boundary:
+      - "quantifier_scope"
+      - "generalized_quantifier"
+      - "cardinal_quantifier"
+      - "proportional_quantifier"
+      - "multi_quantifier_scope"
+    representative_distinction:
+      left: "forall x exists y R(x,y)"
+      right: "exists y forall x R(x,y)"
+      relation: "generally_non_equivalent"
+    source_authority:
+      primary:
+        title: "A Corpus of Scope-Disambiguated English Text"
+        authors: "Nathan Rasmussen; William Schuler"
+        year: 2020
+        venue: "LREC 2020"
+        authority_type: "human_annotated_logical_form"
+        formalism: "typed lambda calculus"
+        role: "primary_oracle"
+        url: "https://aclanthology.org/2020.lrec-1.132/"
+      supplementary:
+        title: "QuantML / ISO 24617-12"
+        authority_type: "normative_specification"
+        formalism: "abstract quantification annotation structure with formal semantics"
+        role: "normative_semantic_reference"
+        url: "https://www.iso.org/standard/84273.html"
+    evaluation_target:
+      must_compare:
+        - "operator_type"
+        - "operator_nesting"
+        - "scope_order"
+        - "variable_binding"
+        - "predicate_arguments"
+      must_not_compare_by:
+        - "raw_string_exact_match"
+    notes:
+      - "Alpha-renaming differences must be normalized before comparison."
+      - "Quantifier reordering is NOT a canonicalization operation."
+
+  - oracle_id: "O2"
+    name: "De Re / De Dicto and Intensional Scope"
+    asset_class: "semantic_oracle_core"
+    status: "confirmed"
+    semantic_boundary:
+      - "intensional_scope"
+      - "de_re"
+      - "de_dicto"
+      - "world_sensitive_binding"
+    representative_distinction:
+      left: "exists x BOX P(x)"
+      right: "BOX exists x P(x)"
+      relation: "generally_non_equivalent"
+    source_authority:
+      primary:
+        title: "Intensionality in Abstract Meaning Representation"
+        authors: "Williamson et al."
+        year: 2021
+        authority_type: "published_formal_analysis"
+        formalism: "AMR + simply-typed lambda calculus + world variables"
+        role: "primary_oracle"
+        url: "https://aclanthology.org/2021.law-1.17/"
+    evaluation_target:
+      must_compare:
+        - "operator_nesting"
+        - "scope"
+        - "binding"
+        - "world_variable_structure"
+        - "predicate_arguments"
+    notes:
+      - "Do not encode de_re/de_dicto only as primitive labels if graph topology can represent the distinction."
+      - "Preserve the paper's formal structure and source locator for each fixture."
+
+  - oracle_id: "O3"
+    name: "Modal Scope"
+    asset_class: "semantic_oracle_core"
+    status: "confirmed"
+    semantic_boundary:
+      - "modal_operator"
+      - "modal_scope"
+      - "necessity"
+      - "possibility"
+      - "negated_modality"
+    representative_distinction:
+      left: "BOX(P -> Q)"
+      right: "P -> BOX(Q)"
+      relation: "generally_non_equivalent"
+    source_authority:
+      primary:
+        title: "Controlled Natural Language / Formal Modal Logic Dataset"
+        authors: "Wang & Shi"
+        year: 2025
+        venue: "ACL 2025"
+        authority_type: "formula_generated_controlled_language"
+        formalism: "propositional/modal logical forms"
+        role: "primary_oracle"
+        url: "https://aclanthology.org/2025.acl-long.824/"
+    evaluation_target:
+      must_compare:
+        - "modal_operator_type"
+        - "operator_nesting"
+        - "scope"
+        - "logical_connective_structure"
+    exclusions:
+      - "Do not relabel this source as an unrestricted natural-language S5 oracle."
+      - "Do not infer epistemic/deontic/alethic/ability modal type unless the source explicitly fixes it."
+
+  - oracle_id: "O4"
+    name: "Collective / Distributive"
+    asset_class: "semantic_oracle_extended"
+    status: "confirmed_for_extension"
+    semantic_boundary:
+      - "collective_reading"
+      - "distributive_reading"
+      - "plural_semantics"
+    source_authority:
+      primary:
+        title: "QuantML formal examples and semantics"
+        authority_type: "normative_or_published_formal_example"
+        formalism: "QuantML abstract structure / DRS-style semantics"
+        role: "extended_oracle"
+        url: "https://www.iso.org/standard/84273.html"
+    evaluation_target:
+      must_compare:
+        - "group_or_event_structure"
+        - "distribution_structure"
+        - "participant_binding"
+    rollout:
+      phase: "after O1/O2/O3 core E2E passes"
+
+  - oracle_id: "R1"
+    name: "S5 Reasoner Oracle"
+    asset_class: "reasoner_oracle"
+    status: "confirmed"
+    semantic_boundary:
+      - "formal_modal_reasoning"
+    source_authority:
+      primary:
+        title: "A Formalization of Modal Logic S5 in Lean"
+        authors: "Bentzen"
+        year: 2019
+        authority_type: "machine_checked_logic"
+        formalism: "S5 modal logic formalization in Lean"
+        role: "reasoner_oracle"
+        url: "https://arxiv.org/abs/1910.01697"
+    expected_properties:
+      - id: "T"
+        formula: "BOX P -> P"
+      - id: "4"
+        formula: "BOX P -> BOX BOX P"
+      - id: "5"
+        formula: "DIAMOND P -> BOX DIAMOND P"
+    isolation_rule: >
+      R1 evaluates formal consequence after semantic certification.
+      It is not an NL-to-formal semantic interpretation oracle.
+
+  - oracle_id: "R2"
+    name: "FraCaS / Coq Reasoning Oracle"
+    asset_class: "reasoner_oracle"
+    status: "confirmed"
+    semantic_boundary:
+      - "natural_language_inference_after_formalization"
+      - "quantifier_entailment"
+    source_authority:
+      primary:
+        title: "A Type-Theoretical System for the FraCaS Test Suite"
+        authors: "Bernardy & Chatzikyriakidis"
+        year: 2017
+        authority_type: "formalized_reasoning_benchmark"
+        formalism: "type-theoretical semantics + Coq"
+        role: "reasoner_oracle"
+        url: "https://aclanthology.org/W17-6801/"
+    isolation_rule: >
+      Use to test entailment/reasoning after a formal representation is available.
+      Do not merge its outcome with semantic-compiler certification.
+
+  - oracle_id: "G1"
+    name: "Parallel Meaning Bank Gold"
+    asset_class: "regression_gold"
+    status: "confirmed_for_regression"
+    source_authority:
+      primary:
+        title: "Parallel Meaning Bank"
+        authority_type: "human_verified_gold_corpus"
+        formalism: "DRS / formal meaning representation"
+        role: "broad_semantic_regression"
+        url: "https://pmb.let.rug.nl/"
+    use:
+      - "Broad regression after core semantic Oracle E2E succeeds."
+      - "Do not use PMB Gold as the only initial acceptance gate."
+
+  - oracle_id: "S1"
+    name: "Parallel Meaning Bank Silver"
+    asset_class: "silver"
+    status: "confirmed_for_silver"
+    source_authority:
+      primary:
+        title: "Parallel Meaning Bank"
+        authority_type: "partially_human_corrected_corpus"
+        formalism: "DRS / formal meaning representation"
+        role: "silver_regression"
+        url: "https://pmb.let.rug.nl/"
+    use:
+      - "Coverage and robustness evaluation."
+      - "Keep assurance distinct from PMB Gold."
+
+deferred_oracle_axes:
+  - id: "D1"
+    name: "Modal Type Classification"
+    examples:
+      - "epistemic"
+      - "deontic"
+      - "alethic"
+      - "ability"
+    status: "deferred"
+    reason: >
+      현재 확보한 외부 권위 자료만으로 동일 자연어 surface에서 modality family를
+      일반적으로 gold 판정하는 Core Oracle을 확정하지 않는다.
+
+canonicalization_profile:
+  id: "semantic_oracle_compare_v0"
+  allowed:
+    alpha_rename: true
+    deterministic_ordering: true
+    explicit_alias_normalization: true
+    syntactic_sugar_expansion: true
+  forbidden_in_v0:
+    beta_eta_reduction: false
+    theorem_equivalence: false
+    arbitrary_commutativity: false
+    quantifier_reordering: false
+    semantic_disambiguation: false
+    unknown_to_pass_resolution: false
+
+evaluation_protocol:
+  v1:
+    name: "Canonical Structural Semantic Match"
+    use_for:
+      - "O1"
+      - "O2"
+      - "O3"
+      - "O4"
+    compare:
+      - "operator_type"
+      - "operator_nesting"
+      - "scope"
+      - "binding"
+      - "predicate_arguments"
+    result_enum:
+      - "PASS"
+      - "FAIL"
+      - "UNSCORABLE"
+      - "ERROR"
+  v2:
+    name: "Logical / Model Equivalence"
+    status: "future_extension"
+    possible_engines:
+      - "Wolfram"
+      - "SMT solver"
+      - "theorem prover"
+    rule: >
+      v2 must not silently redefine a v1 mismatch as correct unless the equivalence rule
+      is explicit, versioned, and independently auditable.
+
+experiment_isolation:
+  model_facing_payload:
+    allowed:
+      - "source text required by the experimental condition"
+      - "evidence explicitly assigned to the model-facing arm"
+    forbidden:
+      - "oracle formal representation"
+      - "oracle label"
+      - "accepted interpretation ID"
+      - "rejected interpretation ID"
+      - "expected answer"
+      - "post-hoc evaluator result"
+      - "certifier-only repository state unless the experiment explicitly studies that treatment"
+  refiner_inputs:
+    forbidden:
+      - "oracle answer"
+      - "oracle mismatch diagnostic that reveals the answer"
+  verifier_inputs:
+    forbidden:
+      - "oracle answer"
+      - "oracle accepted interpretation"
+  evaluator_inputs:
+    allowed:
+      - "certified semantic graph"
+      - "predicted canonical IR"
+      - "external oracle formal structure"
+      - "oracle canonical IR"
+      - "source locator/provenance"
+
+authority_types:
+  - id: "NORMATIVE_SPEC"
+    meaning: "표준이 정의한 formal semantics"
+    example: "QuantML / ISO 24617-12"
+  - id: "HUMAN_GOLD"
+    meaning: "사람이 완전히 검증한 corpus meaning representation"
+    example: "PMB Gold"
+  - id: "HUMAN_ANNOTATED_LF"
+    meaning: "문장별 human-annotated logical form"
+    example: "Rasmussen & Schuler"
+  - id: "PUBLISHED_FORMAL_EXAMPLE"
+    meaning: "논문 본문/부록에서 직접 분석한 formal example"
+    example: "Williamson et al.; QuantML worked examples"
+  - id: "FORMULA_GENERATED"
+    meaning: "formal structure를 먼저 고정하고 controlled NL을 생성한 자료"
+    example: "Wang & Shi"
+  - id: "PARTIAL_SILVER"
+    meaning: "부분적으로 human corrected"
+    example: "PMB Silver"
+  - id: "MACHINE_CHECKED_LOGIC"
+    meaning: "proof assistant/theorem prover에서 검증된 formal logic asset"
+    example: "S5/Lean; FraCaS/Coq"
+
+fixture_template:
+  case_id: "O1-example-001"
+  oracle_id: "O1"
+  source:
+    text: "<verbatim source sentence>"
+    language: "en"
+    source_locator:
+      title: "<paper/corpus title>"
+      url: "<source URL>"
+      page_or_item: "<page/example/item ID>"
+  external_oracle:
+    authority_type: "HUMAN_ANNOTATED_LF"
+    formalism: "typed_lambda_calculus"
+    representation_verbatim: "<verbatim or source-faithful formal representation>"
+    accepted_interpretation_id: "<optional internal evaluator-only ID>"
+    competing_interpretations:
+      - id: "<optional>"
+        status: "rejected_by_source_or_gold"
+  system_under_test:
+    predicted_semantic_graph_ref: "<runtime artifact ref>"
+    predicted_canonical_ir_ref: "<runtime artifact ref>"
+  evaluation:
+    protocol: "Canonical Structural Semantic Match"
+    result: null
+    mismatch_dimensions: []
+    diagnostic_visibility:
+      model: false
+      refiner: false
+      verifier: false
+      evaluator: true
+
+recommended_initial_e2e_order:
+  - step: 1
+    oracle_id: "O1"
+    rationale: "Quantifier/scope 구조와 binding을 최소 IR로 검증하기 가장 적합."
+  - step: 2
+    oracle_id: "O2"
+    rationale: "O1의 operator/scope/binding primitive를 intensional world semantics로 확장."
+  - step: 3
+    oracle_id: "O3"
+    rationale: "Modal operator와 logical connective nesting 평가."
+  - step: 4
+    oracle_id: "O4"
+    rationale: "Plural/group/event structure가 필요하므로 Core 이후."
+  - step: 5
+    oracle_id: "R1"
+    rationale: "Semantic certification 이후 reasoner oracle."
+  - step: 6
+    oracle_id: "R2"
+    rationale: "Entailment reasoning 검증."
+  - step: 7
+    oracle_id: "G1"
+    rationale: "Broad regression."
+  - step: 8
+    oracle_id: "S1"
+    rationale: "Silver robustness/coverage."
+
+operator_notes_for_experiment_agent:
+  - >
+    O1/O2/O3의 핵심은 label classification이 아니라 operator nesting,
+    binding, scope structure를 맞추는 것이다.
+  - >
+    de_re/de_dicto를 단순 문자열 label로만 평가하지 말고
+    가능한 경우 formal structure의 scope 차이를 평가한다.
+  - >
+    S5는 semantic interpretation Oracle이 아니라 reasoner Oracle이다.
+  - >
+    동일 fixture에서 Oracle mismatch를 Refine repair trigger로 사용하지 않는다.
+  - >
+    external_oracle.representation_verbatim은 원 출처의 formal structure를 최대한 보존한다.
+    우리 시스템의 canonical representation으로 덮어쓰지 않는다.
+
+handoff_acceptance_checklist:
+  - "[ ] 실험 agent가 O1/O2/O3와 R1/R2의 역할 차이를 이해했다."
+  - "[ ] Oracle 정보가 model-facing prompt에 포함되지 않는다."
+  - "[ ] Oracle 정보가 Refine/Verify 입력에 포함되지 않는다."
+  - "[ ] Published formal structure와 system projection이 별도 필드/파일로 유지된다."
+  - "[ ] alpha-renaming 등 허용된 canonicalization만 적용된다."
+  - "[ ] quantifier reordering/theorem-equivalence를 v0 canonicalizer가 수행하지 않는다."
+  - "[ ] PMB Gold와 PMB Silver의 assurance를 구분한다."
+  - "[ ] semantic FAIL/UNKNOWN과 runtime ERROR를 구분한다."
+  - "[ ] evaluator diagnostic이 같은 run의 semantic repair로 역류하지 않는다."
