@@ -127,7 +127,146 @@
       ]
     }
   ],
-  "provenance": {},
-  "results": [],
-  "qualification_state": ""
+  "provenance": {
+    "adapter_source_sha256": "e0c2d1931bd999a155cf3ac9009c5a73cbe0bf6a95ae00fbc3d56ac9b646a101",
+    "cg_ir_source_sha256": "078f41d9910fc358faa60801405e73b52e458c1479e26271818f94d8280264da",
+    "python_version": "3.13.13"
+  },
+  "results": [
+    {
+      "item_id": "syntax_parse",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "SP-ok-nested",
+          "kind": "adapt_ok",
+          "observed": "ok",
+          "match": true
+        },
+        {
+          "check_id": "SP-ok-inline",
+          "kind": "adapt_ok",
+          "observed": "ok",
+          "match": true
+        },
+        {
+          "check_id": "SP-neg-unbalanced",
+          "kind": "adapt_refused",
+          "observed": "AdapterSyntaxError",
+          "match": true
+        },
+        {
+          "check_id": "SP-neg-empty",
+          "kind": "adapt_refused",
+          "observed": "AdapterSyntaxError",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "alpha_rename_invariance",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "AR-eq-rename",
+          "kind": "hash_eq",
+          "observed": "eq",
+          "match": true
+        },
+        {
+          "check_id": "AR-neg-different-pred",
+          "kind": "hash_ne",
+          "observed": "ne",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "quantifier_reordering_negative_control",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "QR-ne-forall-exists",
+          "kind": "hash_ne",
+          "observed": "ne",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "binding_preservation",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "BP-eq-shadowing",
+          "kind": "hash_eq",
+          "observed": "eq",
+          "match": true
+        },
+        {
+          "check_id": "BP-neg-inner-vs-outer",
+          "kind": "hash_ne",
+          "observed": "ne",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "deterministic_replay",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "DR-replay",
+          "kind": "replay_eq",
+          "observed": "eq",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "output_schema_validity",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "OS-ok-validates",
+          "kind": "adapt_schema_valid",
+          "observed": "valid",
+          "match": true
+        },
+        {
+          "check_id": "OS-neg-lambda-arg-pred",
+          "kind": "adapt_refused",
+          "observed": "AdapterUnsupported",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "closed_form_preservation",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "CF-closed-diff-binders",
+          "kind": "free_vars",
+          "observed": [],
+          "match": true
+        },
+        {
+          "check_id": "CF-closed-capture-risk",
+          "kind": "free_vars",
+          "observed": [],
+          "match": true
+        },
+        {
+          "check_id": "CF-neg-open-stays-open",
+          "kind": "free_vars",
+          "observed": [
+            "x1"
+          ],
+          "match": true
+        }
+      ]
+    }
+  ],
+  "qualification_state": "PASS"
 }
