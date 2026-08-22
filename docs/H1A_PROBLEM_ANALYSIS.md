@@ -820,34 +820,6 @@ G24: 판정 도착 전에 쓴 해석 산문은 **쓸 때는 위반이 아니었�
 
 ---
 
-# 8. 갱신 — 2026-08-22 (§7 이후: v0 구현 ~ Stage 1 성립)
-
-범위: 커밋 `996c0f0`~`277030f` (16건). §7이 "§6 이후 같은 날"이었듯 이 절도
-같은 날의 연속이다 — 이 문서의 최신 상태 서술은 항상 마지막 절이다(§7.7).
-이 절부터 대상이 H1a를 넘어 Refine↔Verify/E2E-v1 프로그램이지만, 패턴 계보
-(P1~P15, M1~M11)가 연속이므로 같은 문서에 잇는다.
-
-## 8.0 규모 delta
-
-| 항목 | §7 시점 | §8 시점 |
-|---|---|---|
-| 외부 왕복 | 지시 1 + manifest 1 | +리뷰 판정(W5 BLOCKER) +D-E2E-v1-19 +조사 요청 발신 1 |
-| 제품 코드 | cg_identity 착륙 | +cg_ir, +cg_evaluate, +certificate 사슬(발급 tool 포함), +ERROR/execution 축 |
-| 실험 | — | E2E-v1 Stage 1 **성립**(8/8), Stage 2 corpus 관문 조사 중 |
-| 테스트 | 176 | **190+실험 3** (게이트 9/0/1) |
-| 위임 실행 | 조사 2 | **조사 5 + 구현 2 + 적대검증 1** (Haiku 프로토콜 정착) |
-
-## 8.1 (1) 신규 이슈
-
-| # | 문제 정의 | 발견 경로 | 해결 | 해결 방법 |
-|---|---|---|---|---|
-| **G37** | v0 primitive 4종이 테스트는 전부 통과하면서 **실제 MCP 경로에 미배선**(W1) — E2E 테스트가 server.py를 import조차 안 함 | 사용자 지시 "작동 test하면서 배선 누락 점검" → 적대 grep | ✅ | 신규 tool `certify_claims` 배선 + 의존성 표의 과장 서술("소비자=server.py") 정정. **P9의 4회차** — 이번엔 내 자신의 당일 코드 |
-| **G38** | `Verdict.ERROR`의 프로덕션 생산자 부재(W2) | 같은 감사 | ✅ (판정 후) | 의도적 미결로 보고 → 판정 (a)-refined → **semantic×execution 두 축** + reasoner 코드 분리 + Dockerfile `required` 선언 |
-| **G39** | `depends_on` 생산자 부재로 순환 검출이 실전 미발동(W3) | 같은 감사 | ⬜ **dormant_by_design** | 검출기 발동을 위해 장식 의존을 만드는 것 자체가 공허 검사 제조 — 판정도 동의 |
-| **G40** | **`conceptgate/` 패키지 전체가 뮤테이션 게이트의 역사적 사각지대**(W4) — `assert_`/`_assert_` 명명 함수 0개라 스캐너가 한 번도 안 봄 | 신규 가드 2개가 스캔 밖임을 발견 → `grep "^def _\?assert_"` 0건 실측 | ✅ (신규분) | raise를 `_assert_*` 함수로 추출 + 직접 호출 음성 테스트. **효과 즉증**: 다음 날 쓴 가드의 음성 테스트 부재를 게이트가 몇 초 안에 거부. 기존 함수 소급 개명은 별도 diff로 유보 |
-| **G41** | **W5 BLOCKER** — `prior_verdicts`의 well-formedness 검증을 authenticity로 착각: 게이트 0회 실행 claim이 조작 문자열만으로 인증됨 | 설계 리뷰 → **공격 재현으로 실증** (`certified==['evil']`) | ✅ | codex receipt 기제 verbatim 재사용(HMAC·host-only
----
-
 # 8. 갱신 — 2026-08-22 (§7 이후: Refine↔Verify v0 → E2E-v1 Stage 1)
 
 §7은 D-H1a-18 종결까지였다. 이 절은 그 다음 프로그램(설계 지시 수령 → v0
@@ -990,3 +962,134 @@ subagent의 NO 판정 — 전부 subagent 산출을 lead가 재실측해 정정�
   분석이 다루지 못한다(무한후퇴). 실무적 종단은 "실측 근거를 남긴다"이지
   "옳음을 보증한다"가 아니다.
 - 이 절도 §7처럼 마지막 절이다 — 최신 상태 서술은 항상 문서 끝.
+
+---
+
+# 9. 갱신 — 2026-08-22 (§8 이후: corpus 확보 → 라이선스 관문 → Oracle Adapter)
+
+§8은 Stage 1 성립까지였다. 이 절은 Stage 2의 재료 관문(corpus 접근·라이선스)
+과 그 해소(D-E2E-v1-20), 그리고 Oracle Adapter 착륙을 잇는다. 범위: 커밋
+`2e11080`~`38e5d4b`(4건) + 이 절 자체의 커밋. 같은 날의 연속이며, 최신 상태
+서술은 항상 마지막 절이다(§7.7).
+
+## 9.0 규모 delta
+
+| 항목 | §8 시점 | §9 시점 |
+|---|---|---|
+| 외부 왕복 | D-E2E-v1-19 수령 | +조사 회신 수령(corpus) +Q20 발신 +D-E2E-v1-20(b+) 수령·적용 |
+| 제품 코드 | cg_ir·cg_evaluate | +`cg_oracle_adapter`(LF→IR), cg_ir에 GQ restriction 확장 |
+| 실험 재료 | corpus 접근 미확정 | **corpus 확보**(OSU wikisem v0.3, 로컬 캐시·repo 밖) + 풀 실측(C6 22건 전부 multi-quantifier) |
+| 테스트 | 190+실험 3 | **220 passed / 4 skipped** (게이트 9/0/1) |
+| 신규 채널 | — | `RESEARCH_REQUEST_*`(조사 agent) / `DESIGN_REQUEST_*`(설계 담당) 접두어 라우팅 확정 |
+
+## 9.1 (1) 신규 이슈
+
+| # | 문제 정의 | 발견 경로 | 검증 근거 | 해결 | 방법 |
+|---|---|---|---|---|---|
+| **G45** | **이 문서 자체의 결함** — §8 커밋(`00114aa`)이 문장 중간에 절단된 §8 초안을 정본 §8 위에 함께 커밋. 같은 헤더 2회, G37~G41이 서로 다른 지시대상에 이중 할당(초안은 W1~W5 기준, 정본은 다른 배열) | §9 작성 전 재독 | 헤더 grep 2건 + 초안 마지막 행이 문장 중간 절단 (M1) | ✅ 이번 커밋 | 초안 1,780자 제거. **문서는 게이트 표면 밖이라 기제가 없다** — append 전 재독이 유일한 검출기였고, 이번엔 우연히 작동했다. P4 10회차(자기 문서 하위형) |
+| **G46** | 내 "논문의 `/dwnload`는 합자 왜곡, 정본은 `/download`"라는 **교정 가설이 틀림** — 내 404 실측은 교정된 철자에 대한 것이었고, 원문 철자는 시도조차 안 했다 | 조사 회신: 원문 철자 그대로 접속 성공 | `.../schulerlab/dwnload` HTTP 200 (조사 agent 실측, lead가 동일 URL 재실측) | ✅ | **원문 철자를 문자 그대로 먼저 시도하고, 교정은 그 다음** — 부재 판정(G41의 "NO")의 뿌리가 내 자동 교정이었다 |
+| **G47** | C-축 감사가 남긴 "CC BY 4.0" 라이선스 표기가 **실측이 아니라 학회 정책 추정**이었음 — PDF 원문은 "licensed under CC-BY-NC"(ELRA) | 조사 회신 검증 중 원문 대조 | PDF 스트림 zlib 해제 → 라이선스 문장 verbatim (M11) | ✅ | P14 절차로 지시문 헤더 정정. P4 9회차(외부 사실 하위형 2회째) + P12(감사 subagent 산출을 원문 대조 없이 저장했던 것) |
+| **G48** | **라이선스 관문** — corpus 배포물에 LICENSE 파일 없음 + 논문 CC-BY-NC ⇒ fixture 원문의 repo 커밋이 불가한데, 사전등록의 fixture_template은 원문 포함을 요구 — 동결 규율과 라이선스가 정면 충돌 | G47에서 연쇄 | template 필드와 CC-BY-NC 조항 대조 | ✅ | Q20 상신 → **D-E2E-v1-20 (b+)**: 원문 대신 commitment 필드(locator+sha256 5종+adapter 해시)만 커밋, 로컬 캐시는 권위 아님(hash-match만, 소진 시 UNAVAILABLE). yaml AMENDMENT 2(union-type template) + ORACLE-08~12 |
+| **G49** | **commitment ≠ correctness** — 오역하는 translator가 오역된 expected IR을 생성해도 무결성 검사(해시 일치)는 전부 통과한다. 커밋 규율이 정답 품질을 전혀 보증하지 않음 | D-20 검증(반례 구성) | wrong-translator가 5-필드 commitment를 전부 유효하게 발급하는 시나리오 구성 (M13) | ✅(계약) | Adapter **자격 5항목을 별도 전제조건으로 분리**(구문 파싱·α-rename 불변·양화 재배열 음성·결박 보존·결정적 재실행) — 무결성 축과 정확성 축을 다른 게이트가 지킨다 |
+| **G50** | `cg_ir`의 단일-body Quantifier가 corpus의 실제 형식(**GQ 2-람다**: `Some (\x RESTR) (\x SCOPE)`)과 구조 불일치 — GQ→FOL 변환은 canonicalization profile이 금지한 정리-동치 재작성 | **계약 동결 전 형식 실측**(M12) | 실 C6 파일 연산자 census: Some 9468·`^` 4172·All 33 | ✅ | Quantifier에 선택적 `restriction` 필드 확장(같은 binder가 restriction·body 모두 지배, canonical에서 존재/위치 구별). 변환이 아니라 **구조 보존** |
+| **G51** | RED 계약 테스트 5종 중 2종(restriction 구별성)이 **구현 전에 이미 통과** — 빨갛지 않은 RED는 계약이 아니다(관측상 공허 테스트와 동일) | RED 실행 시 통과 개수 대조 | 5종 중 2종 사전 통과 관측 | ✅ | RED 시점에 우연 통과를 **기록**하고, 구현 후 뮤테이션(M1: restriction α-rename 제거)으로 해당 테스트가 실제 결박됐음을 사후 실증. P1의 테스트 판 친족 |
+| **G52** | corpus 스모크의 "구문 실패 10건"이 adapter 결함처럼 읽힘 — 실제로는 **내 레코드 재조립 하네스가 빈 표현식을 생산**한 것 | 실패 3건 샘플 재실측 | records 16/19/68 전부 `empty input`, 괄호 균형 0 — adapter에 도달한 입력 자체가 공백 | ✅(진단) | 실패 원인을 adapter가 아니라 스모크 하네스에 귀속. **fixture 선정 시 견고한 레코드 추출기 필요**로 이월. P12 5회차 — 측정 하네스도 측정 대상 |
+
+## 9.2 (2) 재발 증가
+
+### P4 — 8회 → **10회** (G47, G45)
+
+9회차(G47)는 §8이 신설한 "외부 사실 하위형"의 즉각 재발이다 — Render/Java에
+이어 라이선스. 공통 뿌리가 더 정확해졌다: **subagent 감사 산출의 외부 사실
+주장을 원문 대조 없이 문서에 옮겨 적는 순간** P4가 심어진다. 10회차(G45)는
+자기 문서 하위형 — 이 분석 문서 자체가 절단 초안을 품은 채 커밋됐다.
+문서는 게이트 표면 밖이므로 기제가 없고, 유일한 검출기(append 전 재독)는
+우연 작동이었다.
+
+### P12 — 3회 → **5회** (G47, G52)
+
+4회차(G47)는 subagent 산출, 5회차(G52)는 **내 자신의 측정 하네스**다.
+정의를 넓힌다: "subagent 산출이 검증 대상" → **"검증·측정에 쓰인 모든
+산출물(하네스·재조립기·subagent 판정)이 그 자체로 검증 대상"**. G52에서
+어긋난 숫자(10건)를 결함 보고 전에 3건 샘플 재실측한 것이 이 규율의 첫
+자발적 적용이다 — §8까지는 전부 사후 정정이었다.
+
+### P13 — 3회 → **5회**
+
+조사 회신(`RESEARCH_RESULT_o1_corpus_access.md`)과 D-E2E-v1-20 모두 수령
+즉시 verbatim 저장+sha256. 5회 연속 — 절차로 완전히 굳었다.
+
+### P14 — 재발 **0** (절차 2회 가동)
+
+G47 정정과 D-20 어휘("cryptographically committed" ≠ "preregistered")
+재감사 모두 판정 수신 당일 같은 턴에 해당 어휘로 grep 재감사를 수행, 위반
+0. §7에서 태어난 절차가 처음으로 "잡을 것이 없음"을 보고한다 — 단 이것은
+절차가 작동한다는 증거이지 위반이 앞으로 없다는 증거가 아니다.
+
+## 9.3 (5) 반복+근거 압축 정의
+
+| ID | 정의 (갱신) | 재발 | 해결 근거 |
+|---|---|---|---|
+| P4 | 문서가 사실과 어긋남 — 내부 낡음 / 외부 사실(감사 산출 전사) / **자기 문서(초안 잔존)** | 10회 | 외부 사실은 원문 대조 후 전사, 문서는 append 전 재독(기제 없음 — 한계) |
+| P12 | 검증·측정에 쓰인 산출물 전부가 검증 대상 | 5회 | 어긋난 숫자는 보고 전 샘플 재실측(G52에서 첫 자발 적용) |
+| P13 | 적용 정본의 원문 부재 | 5회(전부 준수) | verbatim+sha256 표준 절차 |
+| P1 | 참이지만 필요하지 않은 단언 — **테스트 판: 빨갛지 않은 RED**(G51) | 12회+친족 1 | RED 시점 통과 기록 + 구현 후 뮤테이션 결박 실증 |
+
+## 9.4 (6) 해결 판단 가설·검증
+
+| 이슈 | 반증가능 가설 | 검증 | 결과 |
+|---|---|---|---|
+| G46 | "원문 철자 `/dwnload`는 404다" | 원문 철자 그대로 접속(조사 agent + lead 재실측) | **반증** — 200. 내 교정 가설이 부재 판정의 원인이었음 |
+| G47 | "논문 라이선스는 CC BY 4.0이다" | PDF 스트림 zlib 해제 후 `licen` grep (M11) | **반증** — "licensed under CC-BY-NC" verbatim |
+| corpus 진위 | "받은 파일이 논문의 그 corpus다" | 논문 인용 예문·규모 단서와 파일 내용 fragment 대조 | 일치 — 확보 확정 |
+| G49 | "commitment 필드만으로는 오역 IR을 걸러낼 수 없다" | wrong-translator 반례 구성 (M13) | CONFIRMED → 자격 5항목 분리가 판정에 이미 내장돼 있음을 확인 |
+| adapter | "restriction 결박·미지원 거부가 테스트에 결박됐다" | 뮤테이션 M1(α-rename 제거)·M2(거부 무력화) | 각 1·4개 테스트 실패 — 결박 실증 |
+| 풀 성립 | "v0 부분집합으로 20 fixture 풀이 성립한다" | C6 전수 스모크(131 레코드) | 22건 완전 파싱, **전부** multi-quantifier — 7 tranche 외삽 ~150 |
+| G52 | "구문 실패 10건은 adapter 결함이다" | 실패 3건 입력을 직접 재실측 | **반증** — 전부 empty input(재조립 산물) |
+
+## 9.5 (7) 해결 방법 구체
+
+- **G48 (D-20 b+ 적용)**: fixture는 원문 0바이트 — `{source_locator(corpus/
+  version/artifact/record), text_sha256, lf_sha256, adapter_version+code_hash,
+  canonicalization_profile_hash, expected_ir_sha256}`만 커밋. 로컬 캐시는
+  gitignore·hash-match 전용, 소진 시 execution=UNAVAILABLE(정답 대체 금지).
+  yaml에 union-type template + ORACLE-08~12 불변식 증설. **"판정은 법률
+  자문이 아니다"** 명시 유지.
+- **G50 (restriction 확장)**: forall/exists에 선택적 `restriction`, 같은
+  binder가 restriction과 body를 모두 지배(α-rename 동일 적용), canonical
+  serialization에서 restriction 유무·위치가 구별됨(정리-동치 붕괴 방지).
+  sibling-leak 음성 테스트 포함 5종 신설.
+- **G49·adapter**: `cg_oracle_adapter.adapt(lf)` — 재귀 하강 stdlib 파서,
+  fixture-ID 조회 금지(일반 구문 지향), Equal/Intension/None/Gen/NNORD는
+  `AdapterUnsupported`로 **fail-closed**. ORACLE-10/12는 AST 테스트로 집행
+  (파일 IO 금지·answer-table 상수 금지·Refine/Verify로부터 격리·import
+  화이트리스트). 테스트 LF는 전량 발명 술어(zorble/glim/prax) — corpus
+  문장을 테스트에 넣는 것 자체가 ORACLE-12 위반이므로.
+- **G51**: RED 실행 로그에 사전 통과 테스트를 명기 → 구현 후 그 테스트를
+  겨냥한 뮤테이션으로 결박을 실증. "RED 몇 개가 빨간가"가 계약 품질의
+  선행 지표로 등재.
+- **G45**: 초안 1,780자 제거(이번 커밋). 항구 기제는 없다 — §9.7 한계 참조.
+
+## 9.6 권한·도구 차이 (§8.6 갱신)
+
+| 축 | 확인 사실 | 영향 |
+|---|---|---|
+| 조사 agent(타 workspace) | Wayback CDX/와일드카드 조회가 그쪽 백엔드에서 불가, 직접 URL 실측은 가능. 회신이 "확인 못함"과 "없음"을 구분해 옴 | BLOCKED 어휘 규율이 **프롬프트 이식으로 세션 경계를 넘어 전파됨** — zero-context 요청서에 명시한 효과 |
+| 이 세션 | `curl` 직접 다운로드 가능(4.17MB corpus 확보). WebFetch는 cross-host redirect 미추적 — G46의 내 404도 이 제약 위에서 났음 | 대용량 원자료 확보는 curl, 부재 판정은 redirect 추적 후에만 |
+| 채널 지연 특성 | 저자 문의(사람 회신)는 회신 기대 불가 채널 — 사용자가 설계 담당 판정으로 대체 지시 | **판정 채널 선택 자체가 권한·지연의 함수** — 법률 확인이 아닌 공학 판정으로 범위 명시(D-20이 스스로 한계 고지) |
+| 파일명 접두어 | 사용자가 `RESEARCH_REQUEST_*`를 어느 agent에 줄지 실제로 혼동 | 접두어가 곧 수신자 라우팅 계약임을 확정: RESEARCH_*→조사 agent, DESIGN_*→설계 담당. 문서 첫 줄에도 수신자 명기 |
+| 라이선스와 저장 위치 | CC-BY-NC 원문은 repo(공개 push 대상) 금지, 로컬 스크래치는 허용 | **같은 바이트도 저장 위치에 따라 허용이 갈린다** — 권한 경계가 도구가 아니라 경로에 있음 |
+
+## 9.7 한계
+
+- 풀 외삽 ~150은 C6 단일 tranche 실측(22/131)의 선형 확장 — C1~C7의 구성
+  편차는 미측정. fixture 선정 시 tranche별 실측으로 대체된다.
+- adapter는 **구조 검증만 완료** — expected IR의 의미 정확성은 자격 5항목
+  공식 실행 전 미확립(G49의 분리가 바로 이것을 요구한다).
+- restriction 확장으로 canonicalization profile이 달라졌다 — Stage 2
+  사전등록에 **profile hash 고정이 필수**(D-19 §12: profile 변경은 외부
+  판정 사안이므로, 동결 전 지금이 마지막 무판정 변경 지점).
+- G45의 항구 기제 부재: 문서는 게이트 표면 밖이고, "append 전 재독"은
+  규율이지 기제가 아니다 — P1이 7/7 실패했던 그 형태다. 중복 헤더 검출
+  정도는 기계화 가능하나 이번 범위에선 미구현으로 정직하게 남긴다.
+- 이 절도 마지막 절이다 — 최신 상태 서술은 항상 문서 끝.
