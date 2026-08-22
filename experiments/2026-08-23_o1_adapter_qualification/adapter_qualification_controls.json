@@ -1,0 +1,133 @@
+{
+  "corpus_version": "o1-adapter-qualification-v1",
+  "note": "D-E2E-v1-21 Q21.4 adapter 자격 7항목. 모든 LF는 발명 술어 — corpus 콘텐츠 없음(ORACLE-12). results는 실행기가 기록하며 이 spec은 비운 채 동결된다.",
+  "authority": "DESIGN_DECISION_o1_oracle_unit_and_coverage.md (D-E2E-v1-21 §18-§20)",
+  "items": [
+    {
+      "item_id": "syntax_parse",
+      "checks": [
+        {
+          "check_id": "SP-ok-nested",
+          "kind": "adapt_ok",
+          "lf": "(Some (\\x1 (N-aD:florp e1 x1)) (\\x1 (A-aN:quux x1)))"
+        },
+        {
+          "check_id": "SP-ok-inline",
+          "kind": "adapt_ok",
+          "lf": "(Some (\\x1 N-aD:florp e1 x1) (\\x1 A-aN:quux x1))"
+        },
+        {
+          "check_id": "SP-neg-unbalanced",
+          "kind": "adapt_refused",
+          "lf": "(Some (\\x1 (N-aD:florp e1 x1))",
+          "expected_error": "AdapterSyntaxError"
+        },
+        {
+          "check_id": "SP-neg-empty",
+          "kind": "adapt_refused",
+          "lf": "",
+          "expected_error": "AdapterSyntaxError"
+        }
+      ]
+    },
+    {
+      "item_id": "alpha_rename_invariance",
+      "checks": [
+        {
+          "check_id": "AR-eq-rename",
+          "kind": "hash_eq",
+          "lf_a": "(Some (\\x1 (N-aD:florp e1 x1)) (\\x1 (A-aN:quux x1)))",
+          "lf_b": "(Some (\\x7 (N-aD:florp e1 x7)) (\\x7 (A-aN:quux x7)))"
+        },
+        {
+          "check_id": "AR-neg-different-pred",
+          "kind": "hash_ne",
+          "lf_a": "(Some (\\x1 (N-aD:florp e1 x1)) (\\x1 (A-aN:quux x1)))",
+          "lf_b": "(Some (\\x1 (N-aD:florp e1 x1)) (\\x1 (B-aN-b{A-aN}:mel x1)))"
+        }
+      ]
+    },
+    {
+      "item_id": "quantifier_reordering_negative_control",
+      "checks": [
+        {
+          "check_id": "QR-ne-forall-exists",
+          "kind": "hash_ne",
+          "lf_a": "(All (\\x1 (N-aD:florp x1)) (\\x1 Some (\\y1 (N-aD:tikk y1)) (\\y1 A-aN:quux x1 y1)))",
+          "lf_b": "(Some (\\y1 (N-aD:tikk y1)) (\\y1 All (\\x1 (N-aD:florp x1)) (\\x1 A-aN:quux x1 y1)))"
+        }
+      ]
+    },
+    {
+      "item_id": "binding_preservation",
+      "checks": [
+        {
+          "check_id": "BP-eq-shadowing",
+          "kind": "hash_eq",
+          "lf_a": "(Some (\\x1 (N-aD:florp x1)) (\\x1 Some (\\x1 (N-aD:tikk x1)) (\\x1 A-aN:quux x1)))",
+          "lf_b": "(Some (\\u (N-aD:florp u)) (\\u Some (\\w (N-aD:tikk w)) (\\w A-aN:quux w)))"
+        },
+        {
+          "check_id": "BP-neg-inner-vs-outer",
+          "kind": "hash_ne",
+          "lf_a": "(Some (\\x1 (N-aD:florp x1)) (\\x1 Some (\\y1 (N-aD:tikk y1)) (\\y1 A-aN:quux y1)))",
+          "lf_b": "(Some (\\x1 (N-aD:florp x1)) (\\x1 Some (\\y1 (N-aD:tikk y1)) (\\y1 A-aN:quux x1)))"
+        }
+      ]
+    },
+    {
+      "item_id": "deterministic_replay",
+      "checks": [
+        {
+          "check_id": "DR-replay",
+          "kind": "replay_eq",
+          "lf": "(Some (\\x1 (N-aD:florp e1 x1)) (\\x1 Some (\\y1 (N-aD:tikk y1)) (\\y1 A-aN:quux x1 y1)))"
+        }
+      ]
+    },
+    {
+      "item_id": "output_schema_validity",
+      "checks": [
+        {
+          "check_id": "OS-ok-validates",
+          "kind": "adapt_schema_valid",
+          "lf": "(Some (\\x1 (N-aD:florp e1 x1)) (\\x1 (A-aN:quux x1)))"
+        },
+        {
+          "check_id": "OS-neg-lambda-arg-pred",
+          "kind": "adapt_refused",
+          "lf": "(N-b{N-aD}:mel (\\x9 (N-aD:florp x9)))",
+          "expected_error": "AdapterUnsupported"
+        }
+      ]
+    },
+    {
+      "item_id": "closed_form_preservation",
+      "checks": [
+        {
+          "check_id": "CF-closed-diff-binders",
+          "kind": "free_vars",
+          "lf": "(Some (\\x1 (N-aD:florp x1)) (\\z (A-aN:quux z)))",
+          "expected_free": []
+        },
+        {
+          "check_id": "CF-closed-capture-risk",
+          "kind": "free_vars",
+          "lf": "(Some (\\x1 (N-aD:florp x1)) (\\z Some (\\x1 (N-aD:tikk x1)) (\\x1 (A-aN:quux z))))",
+          "expected_free": []
+        },
+        {
+          "check_id": "CF-neg-open-stays-open",
+          "kind": "free_vars",
+          "lf": "(N-aD:florp x1)",
+          "expected_free": [
+            "x1"
+          ]
+        }
+      ]
+    }
+  ],
+  "provenance": {},
+  "results": [],
+  "qualification_state": ""
+}
