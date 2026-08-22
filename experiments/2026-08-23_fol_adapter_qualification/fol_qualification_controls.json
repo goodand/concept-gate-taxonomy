@@ -171,7 +171,209 @@
       ]
     }
   ],
-  "provenance": {},
-  "results": [],
-  "qualification_state": ""
+  "provenance": {
+    "fol_adapter_source_sha256": "849c046bd25cc7585bbcebd08940e6051fabe8c600344a45f1b3ba50265451f1",
+    "cg_ir_source_sha256": "078f41d9910fc358faa60801405e73b52e458c1479e26271818f94d8280264da",
+    "canonical_core_source_sha256": "1c1eaf3c8ab284c3d65f1288aefc3ec774b40e6f5181ed9fd5902ab4d83a711a",
+    "python_version": "3.13.13"
+  },
+  "results": [
+    {
+      "item_id": "syntax_parse",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "SP-ok",
+          "kind": "adapt_ok",
+          "observed": "ok",
+          "match": true
+        },
+        {
+          "check_id": "SP-neg-empty",
+          "kind": "adapt_refused",
+          "observed": "AdapterSyntaxError",
+          "match": true
+        },
+        {
+          "check_id": "SP-neg-unbalanced",
+          "kind": "adapt_refused",
+          "observed": "AdapterSyntaxError",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "alpha_rename_invariance",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "AR-eq",
+          "kind": "fp_eq",
+          "observed": "eq",
+          "match": true
+        },
+        {
+          "check_id": "AR-neg",
+          "kind": "fp_ne",
+          "observed": "ne",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "quantifier_reordering_negative_control",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "QR-mutA",
+          "kind": "fp_ne",
+          "observed": "ne",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "binding_preservation",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "BP-ne-arg",
+          "kind": "fp_ne",
+          "observed": "ne",
+          "match": true
+        },
+        {
+          "check_id": "BP-entity",
+          "kind": "free_vars",
+          "observed": [],
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "deterministic_replay",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "DR",
+          "kind": "replay_eq",
+          "observed": "eq",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "output_schema_validity",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "OS-ok",
+          "kind": "adapt_schema_valid",
+          "observed": "valid",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "closed_form_preservation",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "CF-closed",
+          "kind": "free_vars",
+          "observed": [],
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "FOL_definitional_lowering_correctness",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "DL-forall-restricted",
+          "kind": "kind_census",
+          "observed": {
+            "root": "forall",
+            "kinds": [
+              "forall",
+              "pred",
+              "var"
+            ]
+          },
+          "match": true
+        },
+        {
+          "check_id": "DL-exists-neutral",
+          "kind": "kind_census",
+          "observed": {
+            "root": "exists",
+            "kinds": [
+              "and",
+              "exists",
+              "pred",
+              "var"
+            ]
+          },
+          "match": true
+        },
+        {
+          "check_id": "DL-desugar-converges",
+          "kind": "desugar_converges",
+          "observed": {
+            "idempotent": true,
+            "root": "forall",
+            "body": "implies"
+          },
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "scope_order_and_unsupported_negative_discrimination",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "SO-mutC-no-crossing",
+          "kind": "kind_census",
+          "observed": {
+            "root": "forall",
+            "kinds": [
+              "exists",
+              "forall",
+              "implies",
+              "pred",
+              "var"
+            ]
+          },
+          "match": true
+        },
+        {
+          "check_id": "SO-neg-or",
+          "kind": "adapt_refused",
+          "observed": "AdapterUnsupported",
+          "match": true
+        },
+        {
+          "check_id": "SO-neg-eq",
+          "kind": "adapt_refused",
+          "observed": "AdapterUnsupported",
+          "match": true
+        },
+        {
+          "check_id": "SO-neg-iff",
+          "kind": "adapt_refused",
+          "observed": "AdapterUnsupported",
+          "match": true
+        },
+        {
+          "check_id": "SO-neg-xor",
+          "kind": "adapt_refused",
+          "observed": "AdapterUnsupported",
+          "match": true
+        }
+      ]
+    }
+  ],
+  "qualification_state": "PASS"
 }
