@@ -26,6 +26,8 @@ from enum import Enum, IntEnum
 from graphlib import CycleError, TopologicalSorter
 from typing import Any, Dict, Iterable, List, Tuple
 
+from . import cg_identity
+
 SCHEMA_VERSION = "0.1.0"
 VERIFIER = {"name": "cg_obligations", "version": SCHEMA_VERSION}
 
@@ -541,3 +543,89 @@ def certify(results: List[ObligationResult],
         ],
         "verifier": VERIFIER,
     }
+
+
+# ================================================== v0 MCP 배선 (2026-08-22) --
+# W1(배선 감사)의 해소: 아래 함수가 v0 primitive 사슬(anchoring → certify →
+# projection + fingerprint + stale)을 하나의 호출로 묶고, server.py의 신규
+# MCP tool `certify_claims`가 이것에 얇게 위임한다. 로직이 여기(순수 함수)에
+# 있는 이유: fastmcp 없는 로컬 환경에서도 테스트 가능해야 한다
+# (test_cg_obligations.py의 OPTIONAL_DEPS 패턴과 같은 제약).
+
+_VERDICT_BY_VALUE = {v.value: v for v in Verdict}
+
+
+def _assert_prior_verdicts_are_well_formed(
+        prior_verdicts: Dict[str, Dict[str, str]] | None) -> None:
+    """신뢰 경계 검증 (hard safety): 호출자가 준 사전 verdict 문자열이
+    Verdict enum 밖이면 거부한다. 모르는 문자열을 UNKNOWN으로 눙치면
+    'pss' 같은 오타가 조용히 인증 탈락 사유가 되어 디버깅 불가가 되고,
+    반대로 관대하게 PASS로 읽으면 세탁이 된다 — 거부가 유일하게 안전하다."""
+    if prior_verdicts is None:
+        return
+    for claim_id, checks in prior_verdicts.items():
+        for check, value in checks.items():
+            if value not in _VERDICT_BY_VALUE:
+                raise ValueError(
+                    f"claim {claim_id!r} check {check!r}: verdict 문자열 "
+                    f"{value!r}은 {sorted(_VERDICT_BY_VALUE)} 밖이다 — "
+                    f"이전 도구 응답의 verdict 값을 그대로 전달하라")
+
+
+def certify_relation_claims(
+        claims: List[Dict[str, Any]],
+        evidence_texts: Dict[str, str],
+        prior_verdicts: Dict[str, Dict[str, str]] | None = None,
+        profile: CertificationProfile = LEGACY_RELATION_PROFILE,
+        current_revision: "str | int | None" = None) -> Dict[str, Any]:
+    """v0 인증 사슬의 단일 진입점 (지시 §25 step 3~6의 배선형).
+
+    이 함수가 **하지 않는 것**을 먼저: 게이트를 재실행하지 않는다.
+    `relation.*`·`source.*` verdict는 이전 도구 응답(run_pipeline /
+    assemble_concepts의 obligations certificate)에서 **호출자가 가져와**
+    `prior_verdicts`로 전달한다 — 같은 검사를 두 번 구현하면 검증된 기제가
+    두 벌이 된다(registry seam의 docstring과 같은 근거). 이 함수가 직접
+    계산하는 것은 `claim.evidence_anchoring` 하나다.
+
+    따라서 `prior_verdicts` 없이 호출하면 (anchoring 외 required가 전부
+    UNKNOWN이므로) **아무 claim도 인증되지 않는 것이 정상**이다 — '검사
+    안 됨'은 '통과'가 아니라는 이 모듈의 원칙 그대로.
+
+    반환 dict는 자기서술적이다: 어떤 profile로 판정했고(claim별 verdict
+    표 포함), 무엇이 stale이고, fingerprint가 무엇인지 — 호출자가 이
+    응답만으로 §7식 재구성을 할 수 있게.
+    """
+    _assert_prior_verdicts_are_well_formed(prior_verdicts)
+    prior_verdicts = prior_verdicts or {}
+
+    anchoring = results_from_claim_anchoring(claims, evidence_texts)
+    anchoring_by_claim = dict(zip((c["id"] for c in claims), anchoring))
+
+    verdicts_by_claim: Dict[str, Dict[str, Verdict]] = {}
+    for c in claims:
+        merged = {check: _VERDICT_BY_VALUE[value]
+                  for check, value in prior_verdicts.get(c["id"], {}).items()}
+        merged["claim.evidence_anchoring"] = anchoring_by_claim[c["id"]].verdict
+        verdicts_by_claim[c["id"]] = merged
+
+    certified = certified_projection(claims, verdicts_by_claim, profile)
+    certificate = certify(anchoring)
+
+    stale = ([] if current_revision is None
+             else stale_obligations(anchoring, current_revision))
+
+    return {
+        "ok": True,
+        "profile": profile.profile_id,
+        "profile_required": list(profile.required),
+        "anchoring_certificate": certificate,
+        "verdicts_by_claim": {
+            cid: {check: v.value for check, v in checks.items()}
+            for cid, checks in verdicts_by_claim.items()},
+        "certified_claim_ids": [c["id"] for c in certified],
+        "stale_anchoring_obligations": stale,
+        "claim_fingerprints": {
+            c["id"]: cg_identity.claim_fingerprint(c) for c in claims},
+        "verifier": VERIFIER,
+    }
+

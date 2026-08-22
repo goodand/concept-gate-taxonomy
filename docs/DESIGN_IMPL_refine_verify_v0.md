@@ -141,3 +141,27 @@ W1~W3는 **§6이 이미 범위 밖으로 선언한 것과 같은 경계선**이
 추가한 것은: 그 경계선이 **의존성 표에 정직하게 반영되지 않았다는 사실**
 자체다. W4는 경계선 문제가 아니라 **안전망 자체의 공백**이었고, 이번
 회차에서 즉시 닫았다.
+
+## 8. W1 배선 (2026-08-22, 사용자 지시로 진행)
+
+§7이 열어둔 배선을 **가산적으로** 닫았다. 기존 도구 동작 변경 0.
+
+| 층 | 내용 |
+|---|---|
+| 순수 본체 | `cg_obligations.certify_relation_claims()` — anchoring 계산 + 호출자 지참 `prior_verdicts` 병합 + profile 인증 + projection + fingerprint(`cg_identity` 단방향 import 도입) + stale 판정. **게이트를 재실행하지 않는다** — relation/source verdict는 이전 도구 응답의 certificate에서 호출자가 가져온다(같은 검사 재구현 = 검증된 기제 두 벌) |
+| 신뢰 경계 | `_assert_prior_verdicts_are_well_formed` — enum 밖 문자열 거부. 관대 해석(→PASS)은 세탁, 침묵 강등(→UNKNOWN)은 디버깅 불가라 거부가 유일하게 안전. **뮤테이션 게이트가 이 가드의 음성 테스트 부재를 즉시 잡았다** — W4 수정이 작동한다는 실증 |
+| MCP 표면 | `server.py`의 신규 `@mcp.tool certify_claims` — 얇은 위임 + 입력 형 검증 + ValueError→구조화 오류 변환({ok:False} 계약) |
+| 검증 | tool 등록 실측(12개 중 존재), tool 함수 직접 호출 3경로(무prior=인증0·전prior=인증·오형=구조화오류), 신규 테스트 5건, 루트 게이트 불변 |
+
+**Render 함의**: 이 tool이 배포되면 zero-context 원격 소비자가 PYTHONPATH
+없이 v0 사슬을 사용할 수 있다(직전 질문의 답이 "배선 후 가능"에서 "배선
+완료, 배포만 남음"으로 바뀜).
+
+### 의도적으로 열어둔 것 (이번에 닫지 않은 이유)
+
+| # | 항목 | 이유 |
+|---|---|---|
+| W2 | `Verdict.ERROR`의 프로덕션 생산자 | `REASONER_UNAVAILABLE`이 crash와 "Java 없음(기본 Render)"을 같은 except에서 잡고, docstring이 "미가용이면 unknown"을 **호스팅 계약으로 문서화**해 뒀다. ERROR로 바꾸면 기본 Render의 기존 응답이 바뀐다 — 가산이 아니라 계약 변경이고 G32(UNKNOWN/UNSCORABLE)와 얽힘. **설계 담당 확인 후 별도 diff** |
+| W3 | `depends_on` 생산자 | 자연스러운 의존이 아직 없다. 검출기를 발동시키려고 장식용 의존을 만들면 그게 P1이다. Refine 수리 루프가 실제 의존을 나를 때 함께 |
+| — | Certified-gate 전환 | authority 변경 — 상신 대상 (gap 분석 §5, 불변) |
+

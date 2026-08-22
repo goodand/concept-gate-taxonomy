@@ -215,3 +215,56 @@ def test_anchoring_with_no_cited_evidence_is_unknown():
              "cited_evidence_ids": []}
     [r] = results_from_claim_anchoring([claim], FIXTURE["evidence"])
     assert r.verdict is Verdict.UNKNOWN
+
+
+# ====================================== 배선(W1 해소): certify_relation_claims
+
+from conceptgate.cg_obligations import (  # noqa: E402
+    _assert_prior_verdicts_are_well_formed, certify_relation_claims,
+)
+
+CLAIMS = [{
+    "id": "c1", "claim_kind": "relation_assertion",
+    "concept": "칼", "feature": "철",
+    "relation": "structural_composition",
+    "cited_evidence_ids": ["ev1"], "graph_revision": 2,
+}]
+EVIDENCE = {"ev1": "문서: 철은 칼의 재료다."}
+
+
+def test_orchestrator_without_prior_verdicts_certifies_nothing():
+    """'검사 안 됨'은 '통과'가 아니다 — prior 없이 anchoring만으로는
+    required의 나머지가 전부 UNKNOWN이므로 인증 0건이 정상이다."""
+    out = certify_relation_claims(CLAIMS, EVIDENCE)
+    assert out["certified_claim_ids"] == []
+    assert out["verdicts_by_claim"]["c1"]["claim.evidence_anchoring"] == "pass"
+
+
+def test_orchestrator_with_full_prior_verdicts_certifies():
+    from conceptgate.cg_obligations import LEGACY_RELATION_PROFILE
+    prior = {"c1": {name: "pass" for name in LEGACY_RELATION_PROFILE.required
+                    if name != "claim.evidence_anchoring"}}
+    out = certify_relation_claims(CLAIMS, EVIDENCE, prior_verdicts=prior)
+    assert out["certified_claim_ids"] == ["c1"]
+    assert out["claim_fingerprints"]["c1"].startswith("claim:")
+
+
+def test_orchestrator_rejects_malformed_prior_verdict_strings():
+    """음성(신뢰 경계): enum 밖 문자열은 UNKNOWN으로 눙치지도, PASS로
+    관대하게 읽지도 않고 거부한다 — 전자는 디버깅 불가, 후자는 세탁."""
+    with pytest.raises(ValueError, match="verdict 문자열"):
+        certify_relation_claims(
+            CLAIMS, EVIDENCE, prior_verdicts={"c1": {"relation.acyclicity": "pss"}})
+
+
+def test_the_prior_verdict_guard_fires_when_called_directly():
+    """뮤테이션 게이트가 요구하는 직접 호출."""
+    with pytest.raises(ValueError, match="verdict 문자열"):
+        _assert_prior_verdicts_are_well_formed({"c1": {"x": "maybe"}})
+
+
+def test_orchestrator_reports_stale_anchoring_against_current_revision():
+    out = certify_relation_claims(CLAIMS, EVIDENCE, current_revision=3)
+    assert out["stale_anchoring_obligations"] == ["claim.evidence_anchoring"]
+    out2 = certify_relation_claims(CLAIMS, EVIDENCE, current_revision=2)
+    assert out2["stale_anchoring_obligations"] == []

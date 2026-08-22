@@ -829,6 +829,56 @@ def classify_owl(owl: dict) -> dict:
         {"ok": True, "stage": "owl-classify", **result})
 
 
+@mcp.tool
+def certify_claims(claims: list, evidence_texts: dict,
+                   prior_verdicts: dict | None = None,
+                   current_revision: str | int | None = None) -> dict:
+    """relation claim들의 인증 사슬 실행 — Refine/Verify v0의 MCP 표면.
+
+    무엇을 하는가: claim별 `claim.evidence_anchoring`(결정론적 어휘 결박)을
+    계산하고, 호출자가 이전 도구 응답에서 가져온 `prior_verdicts`
+    (run_pipeline/assemble_concepts의 obligations certificate에 있는
+    check→verdict 문자열)와 합쳐, `legacy_relation_claim_v0` profile의
+    required 검사가 전부 pass인 claim만 `certified_claim_ids`로 반환한다.
+    claim fingerprint(정규화 표현의 identity — 진리값 아님)와, 
+    `current_revision`을 주면 stale 판정 목록도 함께.
+
+    무엇을 하지 않는가: 게이트를 재실행하지 않는다(같은 검사를 두 번
+    구현하면 검증된 기제가 두 벌이 된다). asserted claim을 수정하지 않는다
+    (projection은 view다). 그래서 `prior_verdicts` 없이 부르면 인증 0건이
+    **정상**이다 — '검사 안 됨'은 '통과'가 아니다.
+
+    입력: claims는 [{id, concept, feature, cited_evidence_ids, ...}],
+    evidence_texts는 {evidence_id: 본문}. prior_verdicts는
+    {claim_id: {check_name: "pass"|"fail"|"unknown"|"error"}} — enum 밖
+    문자열은 거부한다(오타가 조용한 인증 탈락이 되는 것을 막는다).
+    """
+    try:
+        if not isinstance(claims, list) or any(
+                not isinstance(c, dict) or "id" not in c for c in claims):
+            return {"ok": False, "stage": "certify-claims",
+                    "errors": [{"stage": "certify-claims",
+                                "code": "CLAIMS_NOT_OBJECT_LIST",
+                                "detail": "claims must be a list of dicts "
+                                          "each carrying an 'id'"}]}
+        if not isinstance(evidence_texts, dict):
+            return {"ok": False, "stage": "certify-claims",
+                    "errors": [{"stage": "certify-claims",
+                                "code": "EVIDENCE_NOT_OBJECT",
+                                "detail": "evidence_texts must be a dict of "
+                                          "evidence_id to text"}]}
+        return cg_obligations.certify_relation_claims(
+            claims, evidence_texts, prior_verdicts=prior_verdicts,
+            current_revision=current_revision)
+    except ValueError as exc:
+        # 신뢰 경계 거부(prior_verdicts 오형 등)를 구조화 오류로 변환 —
+        # MCP 응답 계약은 raise가 아니라 {ok: False, errors}다.
+        return {"ok": False, "stage": "certify-claims",
+                "errors": [{"stage": "certify-claims",
+                            "code": "INVALID_PRIOR_VERDICTS",
+                            "detail": str(exc)[:300]}]}
+
+
 def _attach_owl_obligations(resp: dict) -> dict:
     """owl.consistent certificate를 classify_owl 응답에 주입.
 
