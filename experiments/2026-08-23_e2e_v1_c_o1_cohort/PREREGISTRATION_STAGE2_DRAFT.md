@@ -24,6 +24,8 @@ Q21.2 b\*)을 통과하고 fixture manifest 20건 + constructor profile hash가
 | retry policy | 사전등록된 mechanical retry 1회(생성 전 인프라 실패만), semantic retry 없음 | D-19 §재실행 |
 | SBN adapter 자격 | **9/9 PASS**(D-22 9항목), 코드 결박 — 변경 시 자동 실효 | `2026-08-23_sbn_adapter_qualification` |
 | WSD 중립화 | `O1_PMB_LEMMA_NO_SENSE_V1`(`_stage2_eval_profile.py`) — 커널 밖, 리허설 실패 형태를 계약으로 재현·소멸 | 준비물, D-22 Q22.3 |
+| 제2 source | **FOLIO v0.0 승인**(D-23 Q23.1) — 다중 양화 ≥5 전담, 단순 양화 control 2~4건은 N 밖 | D-23 |
+| canonical comparison | 비교 전 양측 desugar: `FORALL(x,R,B)→FORALL(x,True,R→B)`, `EXISTS(x,R,B)→EXISTS(x,True,R∧B)` — 정의적, 양화 순서 불변, subject 방언 불변(§10) | D-23 §12 `canonical_comparison`, `_stage2_canonical_core.py` |
 | oracle leakage prohibition | 구조적: dispatch-plan 빌더가 LF를 resolve하지 않음 + 누출 테스트 | 준비물 ③ |
 | no post-result fixture replacement / N increase | 서약 — 위반은 §12 외부 판정 사안 | D-19 §12 |
 | UNSCORABLE 회계 | freeze 전 unsupported=INELIGIBLE(표본 밖) / freeze 후=UNEXPECTED_UNSCORABLE(수용 FAIL) | D-21 §14 |
@@ -33,7 +35,7 @@ Q21.2 b\*)을 통과하고 fixture manifest 20건 + constructor profile hash가
 
 | §11 항목 | 슬롯 |
 |---|---|
-| source locator | PMB 5.1.0 = **QUALIFIED_PARTIAL_SOURCE**(D-22, ≤15건) + `[TBD-SOURCE-2]` 독립 제2 source(≥5건, 다중 양화 gold, PMB 파생 금지 — 조사 위임 예정) |
+| source locator | PMB 5.1.0 = **QUALIFIED_PARTIAL_SOURCE**(D-22, ≤15건) + **FOLIO v0.0 = APPROVED 제2 source**(D-23; train sha256 `008d34b7…`, validation `6922c988…`; manifest에 folio_subset(WikiLogic|HybLogic) 기록 의무 — D-23 §16) |
 | fixture IDs + hashes | `[TBD-MANIFEST]` — commitment 필드만(D-20), 원문 0바이트 |
 | expected canonical IR | `[TBD-EXPECTED-IR-HASHES]` — adapter(자격 7/7 PASS, 코드 결박) 산출의 sha256 |
 | canonicalization profile | `[TBD-PROFILE-HASH]` — D-22 §19: IR constructor와 source encoding profile(PMB_SBN_5_1 ¬∃¬→∀ codec) 분리 기록; 평가측 O1_PMB_LEMMA_NO_SENSE_V1(lemma 정규화, 커널 밖) — constructor 목록에서 유도(②의 단일 출처), manifest와 같은 커밋에서 hash 동결 |
