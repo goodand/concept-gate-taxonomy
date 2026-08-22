@@ -27,6 +27,7 @@ from conceptgate.cg_fixture_resolver import resolve_bytes
 from conceptgate.cg_identity import canonical_sha256
 from conceptgate.cg_evaluate import evaluate
 from _stage2_eval_profile import normalize_predicate_labels
+from _stage2_canonical_core import desugar
 from _stage2_score import score
 
 
@@ -205,8 +206,8 @@ def ingest_outputs(plan_path: Path | str,
                 oracle_ir = expected_irs[case_id]
 
                 # Apply evaluation profile normalization to both sides
-                normalized_predicted = normalize_predicate_labels(predicted_ir)
-                normalized_oracle = normalize_predicate_labels(oracle_ir)
+                normalized_predicted = desugar(normalize_predicate_labels(predicted_ir))
+                normalized_oracle = desugar(normalize_predicate_labels(oracle_ir))
 
                 # Evaluate
                 ev = evaluate(normalized_predicted, normalized_oracle)

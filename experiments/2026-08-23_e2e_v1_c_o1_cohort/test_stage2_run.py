@@ -47,7 +47,9 @@ def put(cache: Path, data: bytes) -> str:
 def world(tmp_path):
     cache = tmp_path / "cache"; cache.mkdir()
     fixtures = [
-        ("R-01", "Every zorble glims.", EX("x", P("zorble.n.01", V("x")))),
+        ("R-01", "Every zorble glims.",
+         EX("x", {"kind": "and", "args": [P("zorble.n.01", V("x")),
+                                          P("glim.a.01", V("x"))]})),
         ("R-02", "Some tikk praxes.",   EX("y", P("tikk.n.01", V("y")))),
     ]
     entries, oracle = [], {}
@@ -151,6 +153,7 @@ def test_ingest_applies_evaluation_profile_both_sides(world):
         for o in outs:
             o["ir"] = json.loads(
                 json.dumps(o["ir"]).replace("zorble.n.01", "zorble")
+                                   .replace("glim.a.01", "glim")
                                    .replace("tikk.n.01", "tikk"))
     res = R.ingest_outputs(
         spec.cohort_path, _outputs(spec, oracle, to_lemma),
@@ -219,3 +222,24 @@ def test_results_overwrite_refused_and_bytes_deterministic(world):
         R.ingest_outputs(spec.cohort_path, _outputs(spec, oracle), exp,
                          results_path=rp, pass_min=2)
     assert rp.read_text() == on_disk, "거부가 파일을 건드리면 안 된다"
+
+
+def test_restricted_subject_converges_with_neutral_oracle(world):
+    """D-23 §5의 수렴이 실행기 경로에서 성립해야 한다: subject가 restricted
+    exists를 내고 oracle이 neutral이어도 desugar 층이 흡수 — pass."""
+    spec, adapter, oracle, tmp = world
+    def restrict(outs):
+        # R-01의 exists(x, True, zorble∧glim)를 restricted 재표현:
+        # exists(x, zorble(x), glim(x)) — §5의 BEFORE 형태
+        for o in outs:
+            ir = o["ir"]
+            if ir["kind"] == "exists" and ir["body"].get("kind") == "and":
+                a, b = ir["body"]["args"]
+                o["ir"] = {"kind": "exists", "var": ir["var"],
+                           "restriction": a, "body": b}
+    res = R.ingest_outputs(
+        spec.cohort_path, _outputs(spec, oracle, restrict),
+        R.derive_expected_irs(spec.manifest_path, spec.cache_dir, adapter),
+        results_path=tmp / "results.json", pass_min=2)
+    rows = {r["case_id"]: r["result"] for r in res["trial_rows"]}
+    assert rows["R-01"] == "pass", rows
