@@ -1126,7 +1126,7 @@ O1 오라클 자체가 v0로 실행 불가임이 확정됐다.
 | **G57 (근본원인)** | **커널 검증기 공백** — `cg_ir.validate_formula`가 `pred`의 인자를 formula로 재귀 검증해서 **인자 자리의 수식(and/exists/pred…)을 유효로 판정**. `free_variables`도 그 노드에서 조용히 공집합 반환 | G56의 개별 검사가 왜 필요한지 되짚다가 | 직접 시험: 9가지 수식 중 8가지가 인자 자리에서 통과(거부는 non-dict뿐) | ✅ | 인자는 **항(var/entity)만** 허용, 위반 시 `PRED_ARG_NOT_TERM`. 이 수정으로 adapter의 개별 검사는 불필요해져 삭제 — **증상이 아니라 원인** |
 | **G58** | G56의 가드가 **관측상 공허** — `validate_formula` 호출을 무력화해도 45건 전부 통과 | lead 뮤테이션 M3 | 뮤테이션 후 `45 passed` (변화 0) | ✅ | 커널을 고치자 같은 뮤테이션이 잡힘(`1 failed`). **P1의 13회차이고 두 번째 커밋 전 차단** |
 | **G59** | 신규 가드 2개(`_check_…`, `_classify_head`)가 **뮤테이션 게이트 스캔 표면 밖** 명명 | 위임 산출 검토 | 게이트 규약 `GUARD_PREFIXES=("assert_","_assert_")` 대조 | ✅ | 거부 경로를 `_assert_head_is_in_v0_scope`로 추출 → **게이트가 음성 테스트 부재를 즉시 거부**(W4 수정의 3회 연속 실증) → 직접 호출 음성 테스트 추가 |
-| **G60 (차단)** | **O1 오라클이 v0로 실행 불가** — ① 단위 불일치: 정본 corpus는 **기사(다문장) 단위 LF**만 공개(LOGIC 131 = 기사, CG 865 = 문장), template은 문장 단위 쌍을 규정 ② 적용범위: 비어있지 않은 121건 중 **v0 범위 내 0건**, `InAnaphorSet`이 **121건 전부**에 등장(1,690회) | 위 수정 후 풀 재측정 | adapter 경유·독립 스캐너 **2경로 일치 0건** | ⬜ **판정 대기** | `DESIGN_REQUEST_o1_oracle_unit_and_coverage.md`(Q21) 상신. §12상 oracle·estimand 변경은 외부 판정 사안 |
+| **G60 (차단)** | **O1 오라클이 v0로 실행 불가** — ① 단위 불일치: 정본 corpus는 **기사(다문장) 단위 LF**만 공개(LOGIC 131 = 기사, CG 865 = 문장), template은 문장 단위 쌍을 규정 ② 적용범위: 비어있지 않은 121건 중 **v0 범위 내 0건**, `InAnaphorSet`이 **121건 전부**에 등장(1,690회) | 위 수정 후 풀 재측정 | adapter 경유·독립 스캐너 **2경로 일치 0건** | ✅ **판정 수신 D-E2E-v1-21**(§10.8) | Q21 상신 → 당일 판정: 문장 단위 유지·source 교체(b\*), wikisem은 ineligible(폐기 아님), fixture 동결 계속 차단, O3 조건부 선행 허용 |
 
 ## 10.2 (2) 재발 증가
 
@@ -1236,3 +1236,32 @@ ORACLE-12 때문에 테스트에 corpus 문장을 넣을 수 없다는 제약은
 - P15는 1회 관측이다. "발명 데이터의 전제 공유"가 재발할지는 다음 계약
   동결에서 검증된다.
 - 이 절도 마지막 절이다 — 최신 상태 서술은 항상 문서 끝.
+
+## 10.8 추기 (같은 날) — D-E2E-v1-21 수신·검증·저장
+
+Q21 판정이 당일 도착했다(설계 담당, Wolfram MCP 형식화 명시). verbatim
+저장: `DESIGN_DECISION_o1_oracle_unit_and_coverage.md` (본문 sha256
+`2b53f1fd…`, P13 7회째 준수). 수신 검증 5건은 그 파일의 "수신 검증 기록"에
+있고, 핵심 하나만 여기 남긴다: 판정의 명제
+`FiveChecksImplyClosedFormPreservation = False`의 반례를 **구성하지 않고
+우리 커밋 이력에서 꺼냈다** — 자격 5항목 스위트가 초록이던 `38e5d4b`의 구
+adapter가 지금도 항목 6(`PRED_ARG_NOT_TERM`)·7(자유변수)을 위반한다.
+G58~G60을 낳은 그 결함들이 이번엔 판정 검증의 실물 반례로 재사용됐다.
+
+§10.7의 "Q21 판정 전까지 전부 차단"은 다음으로 **세분화**됐다:
+
+- **계속 차단**: fixture 20건 동결, constructor profile hash 동결(manifest와
+  함께), Stage 2 사전등록·코호트 — 새 sentence-level source가 적격성
+  6조건(문장 단위 쌍·scope 관련성·v0 완전 표현·외부 저작·≥20건)을 통과할
+  때까지.
+- **해제**: O3를 독립 core-oracle 실험으로 선행하는 것 — 조건부(O1은
+  MATERIAL_BLOCKED로 표기, 통과 간주 금지). D-19의 O1 우선은 철회가 아니라
+  "재료 있을 때의 선호 순서"로 조건화.
+- **확정**: Stage 1 유효(재실행 불요), adapter 자격 5→7 승인, whitelist
+  승인 + 그 내용은 사전등록 정본(확장은 외부 판정 사안), UNSCORABLE 회계
+  (freeze 전 `INELIGIBLE` / freeze 후 `UNEXPECTED_UNSCORABLE`=FAIL),
+  wikisem은 negative/adversarial corpus로 보존.
+
+다음 실행 가능 항목: ① 새 O1 source 후보의 적격성 스캔(2경로 dual-check가
+판정으로 절차화됨 — 불일치 시 FREEZE_BLOCKED) ② adapter 자격 7항목 공식
+실행 기록 ③ 또는 O3 선행 — 어느 쪽이든 사용자 지시 대상.
