@@ -35,3 +35,21 @@ Path A OK 671건 (`pmb_eligibility_scan_pathB.json` + adapter 자격 9/9의
 
 ORDER_SEED: `[TBD-FREEZE-SEED]` — 동결 커밋에서 확정(선별 조작 불가능성의
 증거는 seed가 스캔 결과 커밋 **이후** 정해졌다는 이력 자체다).
+
+---
+
+## FOLIO 층 (제2 source — Q23 판정 조건부, 비구속 추가 2026-08-23)
+
+Q23.1 승인 시 다중 양화 5건의 모집단과 절차:
+
+- **locator 고정**: GitHub v0.0 —
+  `folio-train.jsonl` 787,496B sha256 `008d34b750d31fa7…`,
+  `folio-validation.jsonl` 173,456B sha256 `6922c988ef10987b…`
+  (로컬 캐시 전용, CC-BY-SA-4.0 — 원문은 repo 밖, commitment 필드만 커밋)
+- **모집단 실측**: 혼합 ∀·∃ premise — train 19(그중 ∨·=·⊕ 없음 16),
+  validation 1(clean 1) → **profile-표현 가능 17건**에서 5건 선별
+- 층 술어: 혼합 ∀·∃ ∧ Q23.2-(d) fail-closed 경계 통과 ∧ FOL adapter
+  (판정 후 자격 9항목) Path A OK — Path B는 기호 census 스캐너
+- 순서·seed·`.met` 대응물(record locator = premise의 (example_id, index))은
+  PMB 층과 같은 규율. source-adapter 자격용 단순 양화 control 2~4건은
+  train의 단일-양화 premise에서 별도 추출(N=20 밖, D-22 §15)
