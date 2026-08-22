@@ -22,6 +22,8 @@ Q21.2 b\*)을 통과하고 fixture manifest 20건 + constructor profile hash가
 | direct/certified metrics | UCR(primary)·DirectMatch·Coverage·Yield(전부 분모 N)·P(PASS\|Cert)=secondary·2×2(B=false positive) | `_stage2_score.py` (준비물 ④) |
 | N / acceptance | **N=20, PASS≥16 ∧ multi-quantifier stratum 4/5 ∧ 최종 ERROR=0 ∧ 예상 밖 UNSCORABLE=0** — D-22가 stratum floor·구성 제약(PMB ≤15 + 독립 제2 source ≥5=다중 양화 전담) 추가 | D-19·D-21·**D-22 §2-3·§16** |
 | retry policy | 사전등록된 mechanical retry 1회(생성 전 인프라 실패만), semantic retry 없음 | D-19 §재실행 |
+| SBN adapter 자격 | **9/9 PASS**(D-22 9항목), 코드 결박 — 변경 시 자동 실효 | `2026-08-23_sbn_adapter_qualification` |
+| WSD 중립화 | `O1_PMB_LEMMA_NO_SENSE_V1`(`_stage2_eval_profile.py`) — 커널 밖, 리허설 실패 형태를 계약으로 재현·소멸 | 준비물, D-22 Q22.3 |
 | oracle leakage prohibition | 구조적: dispatch-plan 빌더가 LF를 resolve하지 않음 + 누출 테스트 | 준비물 ③ |
 | no post-result fixture replacement / N increase | 서약 — 위반은 §12 외부 판정 사안 | D-19 §12 |
 | UNSCORABLE 회계 | freeze 전 unsupported=INELIGIBLE(표본 밖) / freeze 후=UNEXPECTED_UNSCORABLE(수용 FAIL) | D-21 §14 |
