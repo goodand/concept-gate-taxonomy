@@ -223,3 +223,38 @@ tool 계층 3경로 실측: 정품 certificate → `certifying`, 손제작 →
 - G32는 판정으로 종결(통일 금지) — 코드 변경 없음, execution 축 신설이
   UNKNOWN/UNSCORABLE 혼동 위험을 구조적으로 낮춤.
 
+## 10. P1 — 실 fixture E2E 관통 (2026-08-22, before_P1 완료 후)
+
+판정 `next.then`의 두 요구를 실측으로 관통했다. **재사용 조사 불필요** —
+필요한 부품(run_pipeline, issue_claim_certificate, certify_relation_claims)이
+전부 방금 착륙했다.
+
+### 10.1 무엇이 P1을 v0 테스트와 다르게 하는가
+
+E2E-v0(`test_e2e_v0_refine_verify.py`)는 합성 claim으로 **primitive끼리의**
+관통을 증명했다. P1(`test_p1_legacy_e2e.py`)은 `server.run_pipeline(DOG_CAT)`
+가 **실제 실행한 게이트**(CompositionGate)의 결과를 서명 certificate에 실어
+`certify_relation_claims`까지 관통시킨다. prior_verdicts를 손으로 짓지
+않는다 — 실 게이트 판정을 그대로 서명한다.
+
+실측 확인: 실 파이프라인이 4 obligation(relation.* 3 + ufo)을 전부
+pass/execution=ok로 낸다 — **W2 execution 축이 실 소비 경로에서 채워진다**.
+
+### 10.2 관통이 증명한 것
+
+| 단계 | 증거 |
+|---|---|
+| 실 게이트 → 서명 certificate → certifying | 실제 relation.* 결과 + 서명만으로 `authority: certifying` (조작 문자열 아님) |
+| candidate/certified/derived provenance 구별 (next.then 2) | lifecycle(candidate) / projection 멤버십(certified) / origin(derived) — **세 축이 서로 다른 필드**(§23/I6). projection이 candidate의 lifecycle을 바꾸지 않음(I3: Verify가 graph writer 아님) |
+| 대조: certificate 없으면 diagnostic_only | 같은 fixture라도 raw 문자열이면 승격 안 됨 — "실 게이트를 돌렸다" ≠ "그 결과를 인증했다" |
+
+### 10.3 남은 것
+
+- Certified-gate authority 전환(cg_owl 입력을 Certified로) — 여전히 별도 상신.
+- source.* obligation을 실 normalizer가 내는 형태로 certificate에 싣는
+  실배선(현재 테스트는 그 자리를 real normalizer의 PASS 형태로 채움) —
+  assemble_concepts와 run_pipeline의 obligations를 한 claim의 certificate로
+  묶는 서버측 orchestration은 다음 회차(MCP 표면 확장).
+
+156 passed / 4 skipped, 루트 8/0/1.
+
