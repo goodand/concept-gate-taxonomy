@@ -20,7 +20,7 @@ Q21.2 b\*)을 통과하고 fixture manifest 20건 + constructor profile hash가
 | PASS/FAIL/UNSCORABLE/ERROR mapping | `cg_evaluate` 4치 경계 (Stage 1 자격 8/8) | Stage 1 |
 | evaluation rules | canonical structural match (`canonicalize_v0` — α-rename만), 차원 귀속 5종 | cg_ir·cg_evaluate |
 | direct/certified metrics | UCR(primary)·DirectMatch·Coverage·Yield(전부 분모 N)·P(PASS\|Cert)=secondary·2×2(B=false positive) | `_stage2_score.py` (준비물 ④) |
-| N / acceptance | **N=20, PASS≥16 ∧ 최종 ERROR=0 ∧ 예상 밖 UNSCORABLE=0** — source 교체로 변경 없음 | D-19·D-21 §11 |
+| N / acceptance | **N=20, PASS≥16 ∧ multi-quantifier stratum 4/5 ∧ 최종 ERROR=0 ∧ 예상 밖 UNSCORABLE=0** — D-22가 stratum floor·구성 제약(PMB ≤15 + 독립 제2 source ≥5=다중 양화 전담) 추가 | D-19·D-21·**D-22 §2-3·§16** |
 | retry policy | 사전등록된 mechanical retry 1회(생성 전 인프라 실패만), semantic retry 없음 | D-19 §재실행 |
 | oracle leakage prohibition | 구조적: dispatch-plan 빌더가 LF를 resolve하지 않음 + 누출 테스트 | 준비물 ③ |
 | no post-result fixture replacement / N increase | 서약 — 위반은 §12 외부 판정 사안 | D-19 §12 |
@@ -31,10 +31,10 @@ Q21.2 b\*)을 통과하고 fixture manifest 20건 + constructor profile hash가
 
 | §11 항목 | 슬롯 |
 |---|---|
-| source locator | `[TBD-SOURCE]` (후보 PMB 5.1.0 — candidate이지 qualified 아님; 단독 수용 source 금지 governance는 별도 상신) |
+| source locator | PMB 5.1.0 = **QUALIFIED_PARTIAL_SOURCE**(D-22, ≤15건) + `[TBD-SOURCE-2]` 독립 제2 source(≥5건, 다중 양화 gold, PMB 파생 금지 — 조사 위임 예정) |
 | fixture IDs + hashes | `[TBD-MANIFEST]` — commitment 필드만(D-20), 원문 0바이트 |
 | expected canonical IR | `[TBD-EXPECTED-IR-HASHES]` — adapter(자격 7/7 PASS, 코드 결박) 산출의 sha256 |
-| canonicalization profile | `[TBD-PROFILE-HASH]` — constructor 목록에서 유도(②의 단일 출처), manifest와 같은 커밋에서 hash 동결 |
+| canonicalization profile | `[TBD-PROFILE-HASH]` — D-22 §19: IR constructor와 source encoding profile(PMB_SBN_5_1 ¬∃¬→∀ codec) 분리 기록; 평가측 O1_PMB_LEMMA_NO_SENSE_V1(lemma 정규화, 커널 밖) — constructor 목록에서 유도(②의 단일 출처), manifest와 같은 커밋에서 hash 동결 |
 | model/version/config | `[TBD-MODEL]` — 프로브는 haiku로 수행했으나 코호트 모델은 동결 시 확정 |
 | qualification vs capability fixture 분리 | `[TBD-SPLIT]` — 적격성 스캔(2경로, 불일치=FREEZE_BLOCKED) 통과 목록에서 분리 |
 
