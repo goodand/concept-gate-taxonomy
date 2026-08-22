@@ -61,8 +61,8 @@ def validate_formula(node: Any) -> list[dict]:
         "entity": {"required": ["name"], "optional": []},
         "var": {"required": ["name"], "optional": []},
         "pred": {"required": ["name", "args"], "optional": []},
-        "forall": {"required": ["var", "body"], "optional": []},
-        "exists": {"required": ["var", "body"], "optional": []},
+        "forall": {"required": ["var", "body"], "optional": ["restriction"]},
+        "exists": {"required": ["var", "body"], "optional": ["restriction"]},
         "box": {"required": ["body"], "optional": []},
         "diamond": {"required": ["body"], "optional": []},
         "implies": {"required": ["left", "right"], "optional": []},
@@ -94,6 +94,10 @@ def validate_formula(node: Any) -> list[dict]:
                 "code": "VAR_NOT_STRING",
                 "detail": f"'var' must be string, got {type(var_val).__name__}"
             })
+        # Validate optional restriction field
+        restriction = node.get("restriction")
+        if restriction is not None:
+            errors.extend(validate_formula(restriction))
         body = node.get("body")
         if body is not None:
             errors.extend(validate_formula(body))
@@ -167,7 +171,11 @@ def _free_variables_helper(formula: dict, bound_vars: set[str]) -> set[str]:
     elif kind in ("forall", "exists"):
         var = formula.get("var")
         body = formula.get("body")
+        restriction = formula.get("restriction")
         new_bound = bound_vars | {var}
+        # Both restriction and body are bound by the same quantifier
+        if restriction:
+            free.update(_free_variables_helper(restriction, new_bound))
         if body:
             free.update(_free_variables_helper(body, new_bound))
 
@@ -252,6 +260,7 @@ def _canonicalize_helper(formula: dict, rename_map: dict[str, str], counter: int
     elif kind in ("forall", "exists"):
         var = formula.get("var")
         body = formula.get("body")
+        restriction = formula.get("restriction")
 
         # Create new canonical name for this variable
         canonical_var = f"?{counter}"
@@ -261,10 +270,18 @@ def _canonicalize_helper(formula: dict, rename_map: dict[str, str], counter: int
         new_rename_map = rename_map.copy()
         new_rename_map[var] = canonical_var
 
+        # Process restriction with new rename_map (if present)
+        new_restriction = None
+        if restriction is not None:
+            new_restriction, new_counter = _canonicalize_helper(restriction, new_rename_map, new_counter)
+
         # Process body with new rename_map
         new_body, final_counter = _canonicalize_helper(body, new_rename_map, new_counter)
 
-        return {"kind": kind, "var": canonical_var, "body": new_body}, final_counter
+        result = {"kind": kind, "var": canonical_var, "body": new_body}
+        if new_restriction is not None:
+            result["restriction"] = new_restriction
+        return result, final_counter
 
     elif kind in ("box", "diamond", "not"):
         body = formula.get("body")

@@ -166,3 +166,50 @@ def test_ir_module_imports_stay_in_kernel():
                  if isinstance(n, ast.ImportFrom) and n.module}
     assert imported <= {"__future__", "cg_identity", "conceptgate.cg_identity",
                         "typing"}, imported
+
+
+# ---------------------------- GQ restriction 확장 (D-E2E-v1-20 후속) -------
+# wikisem 실측: 양화가 2-람다 GQ 형(restriction+scope)이라 Quantifier 노드에
+# 선택적 restriction 필드가 필요하다. GQ→FOL 변환은 정리-동치 재작성이라
+# 금지 — 구조를 보존한다.
+
+def test_quantifier_restriction_is_alpha_renamed_too():
+    f = {"kind": "exists", "var": "x",
+         "restriction": P("R", V("x")), "body": P("S", V("x"))}
+    g = {"kind": "exists", "var": "y",
+         "restriction": P("R", V("y")), "body": P("S", V("y"))}
+    assert cg_ir.canonicalize_v0(f) == cg_ir.canonicalize_v0(g)
+
+
+def test_restriction_and_body_positions_are_distinct():
+    """restriction에 있는 것과 body에 있는 것은 다른 공식이다 — 위치가
+    의미다. 둘을 스왑한 공식과 canonical이 같으면 안 된다."""
+    f = {"kind": "exists", "var": "x",
+         "restriction": P("R", V("x")), "body": P("S", V("x"))}
+    g = {"kind": "exists", "var": "x",
+         "restriction": P("S", V("x")), "body": P("R", V("x"))}
+    assert cg_ir.canonicalize_v0(f) != cg_ir.canonicalize_v0(g)
+
+
+def test_quantifier_without_restriction_stays_valid_and_distinct():
+    """restriction 없는 기존 형태는 계속 유효하고, restriction 있는 것과
+    구별된다 (기존 테스트 전부와의 하위호환이 이 테스트의 절반)."""
+    bare = EXISTS("x", P("S", V("x")))
+    assert cg_ir.validate_formula(bare) == []
+    withr = {"kind": "exists", "var": "x",
+             "restriction": P("R", V("x")), "body": P("S", V("x"))}
+    assert cg_ir.validate_formula(withr) == []
+    assert cg_ir.canonicalize_v0(bare) != cg_ir.canonicalize_v0(withr)
+
+
+def test_malformed_restriction_is_refused():
+    bad = {"kind": "exists", "var": "x",
+           "restriction": {"kind": "pred", "name": "R"},  # args 없음
+           "body": P("S", V("x"))}
+    assert cg_ir.validate_formula(bad)
+
+
+def test_free_variables_include_restriction():
+    f = {"kind": "exists", "var": "x",
+         "restriction": P("R", V("x"), V("free1")), "body": P("S", V("free2"))}
+    assert cg_ir.free_variables(f) == {"free1", "free2"}
