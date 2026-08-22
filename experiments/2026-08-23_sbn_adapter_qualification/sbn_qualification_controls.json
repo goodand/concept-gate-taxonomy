@@ -1,0 +1,182 @@
+{
+  "corpus_version": "sbn-adapter-qualification-v1",
+  "note": "D-E2E-v1-22 9항목. 발명 synset만 — corpus 0바이트(ORACLE-12). results는 실행기가 기록하며 이 spec은 비운 채 동결된다. check kind 어휘: adapt_ok/adapt_refused/adapt_refused_msg/fp_eq/fp_ne/replay_eq/adapt_schema_valid/free_vars/kind_census/round_trip.",
+  "authority": "DESIGN_DECISION_pmb_source_qualification.md (D-E2E-v1-22 §5-§6)",
+  "items": [
+    {
+      "item_id": "syntax_parse",
+      "checks": [
+        {
+          "check_id": "SP-ok",
+          "kind": "adapt_ok",
+          "sbn": "zorble.n.01\nprax.v.02 Agent -1"
+        },
+        {
+          "check_id": "SP-ok-comments",
+          "kind": "adapt_ok",
+          "sbn": "%%% hdr\nzorble.n.01 % words [0-6]"
+        },
+        {
+          "check_id": "SP-neg-empty",
+          "kind": "adapt_refused",
+          "sbn": ""
+        },
+        {
+          "check_id": "SP-neg-malformed",
+          "kind": "adapt_refused",
+          "sbn": "zorble.q.01"
+        }
+      ]
+    },
+    {
+      "item_id": "comment_invariance",
+      "checks": [
+        {
+          "check_id": "CI-eq",
+          "kind": "fp_eq",
+          "sbn_a": "zorble.n.01            % original words [0-6]",
+          "sbn_b": "zorble.n.01"
+        },
+        {
+          "check_id": "CI-neg-structure",
+          "kind": "fp_ne",
+          "sbn_a": "zorble.n.01",
+          "sbn_b": "tikk.n.01"
+        }
+      ]
+    },
+    {
+      "item_id": "quantifier_reordering_negative_control",
+      "checks": [
+        {
+          "check_id": "QR-ne",
+          "kind": "fp_ne",
+          "sbn_a": "            NEGATION <1\nzorble.n.01\n            NEGATION <1\nprax.v.02 Theme -1 Goal +1\ntikk.n.01",
+          "sbn_b": "tikk.n.01\n            NEGATION <1\nzorble.n.01\n            NEGATION <1\nprax.v.02 Theme -1 Goal -2"
+        }
+      ]
+    },
+    {
+      "item_id": "binding_preservation",
+      "checks": [
+        {
+          "check_id": "BP-ne-target",
+          "kind": "fp_ne",
+          "sbn_a": "zorble.n.01\ntikk.n.01\nprax.v.02 Theme -1",
+          "sbn_b": "zorble.n.01\ntikk.n.01\nprax.v.02 Theme -2"
+        },
+        {
+          "check_id": "BP-closed-across-boxes",
+          "kind": "free_vars",
+          "sbn": "            NEGATION <1\nzorble.n.01 NEQ +1\nkrell.n.02  Name \"Vex\"\n            NEGATION <1\nprax.v.02   Theme -2",
+          "expected_free": []
+        }
+      ]
+    },
+    {
+      "item_id": "deterministic_replay",
+      "checks": [
+        {
+          "check_id": "DR",
+          "kind": "replay_eq",
+          "sbn": "            NEGATION <1\nzorble.n.01 NEQ +1\nkrell.n.02  Name \"Vex\"\n            NEGATION <1\nprax.v.02   Theme -2"
+        }
+      ]
+    },
+    {
+      "item_id": "output_schema_validity",
+      "checks": [
+        {
+          "check_id": "OS-ok",
+          "kind": "adapt_schema_valid",
+          "sbn": "zorble.n.01\nprax.v.02 Agent -1 Time +1\ntime.n.08 EQU now"
+        },
+        {
+          "check_id": "OS-neg-unknown-role",
+          "kind": "adapt_refused",
+          "sbn": "zorble.n.01\nprax.v.02 Frobnicates -1"
+        }
+      ]
+    },
+    {
+      "item_id": "closed_form_preservation",
+      "checks": [
+        {
+          "check_id": "CF-closed",
+          "kind": "free_vars",
+          "sbn": "            NEGATION <1\nzorble.n.01 NEQ +1\nkrell.n.02  Name \"Vex\"\n            NEGATION <1\nprax.v.02   Theme -2",
+          "expected_free": []
+        },
+        {
+          "check_id": "CF-neg-donkey",
+          "kind": "adapt_refused_msg",
+          "sbn": "            NEGATION <1\nzorble.n.01 NEQ +1\nkrell.n.02\n            NEGATION <1\nprax.v.02 Theme -1",
+          "expected_in_message": "donkey"
+        }
+      ]
+    },
+    {
+      "item_id": "documented_universal_pattern_decode",
+      "checks": [
+        {
+          "check_id": "UD-forall",
+          "kind": "kind_census",
+          "sbn": "            NEGATION <1\nzorble.n.01 NEQ +1\nkrell.n.02  Name \"Vex\"\n            NEGATION <1\nprax.v.02   Theme -2",
+          "root_kind": "forall",
+          "must_contain": [
+            "forall"
+          ],
+          "must_not_contain": []
+        },
+        {
+          "check_id": "UD-neg-single",
+          "kind": "kind_census",
+          "sbn": "zorble.n.01\n            NEGATION <1\nprax.v.02 Theme -1",
+          "root_kind": "exists",
+          "must_contain": [
+            "not"
+          ],
+          "must_not_contain": [
+            "forall"
+          ]
+        },
+        {
+          "check_id": "UD-neg-empty-restriction",
+          "kind": "kind_census",
+          "sbn": "            NEGATION <1\n            NEGATION <1\nzorble.n.01",
+          "root_kind": "not",
+          "must_contain": [
+            "not"
+          ],
+          "must_not_contain": [
+            "forall"
+          ]
+        }
+      ]
+    },
+    {
+      "item_id": "decode_reencode_round_trip_and_negative_controls",
+      "checks": [
+        {
+          "check_id": "RT-universal",
+          "kind": "round_trip",
+          "sbn": "            NEGATION <1\nzorble.n.01 NEQ +1\nkrell.n.02  Name \"Vex\"\n            NEGATION <1\nprax.v.02   Theme -2"
+        },
+        {
+          "check_id": "RT-ctx-outer-exists",
+          "kind": "kind_census",
+          "sbn": "tikk.n.01\n            NEGATION <1\nzorble.n.01\n            NEGATION <1\nprax.v.02 Theme -1 Goal -2",
+          "root_kind": "exists",
+          "must_contain": [
+            "forall"
+          ],
+          "must_not_contain": [],
+          "note": "짝 패턴은 ∀가 맞되, 바깥 tikk 지시체는 ∀ 밖의 ∃로 남아야 한다 — 복호가 문맥을 삼키지 않음"
+        }
+      ]
+    }
+  ],
+  "provenance": {},
+  "results": [],
+  "qualification_state": ""
+}
