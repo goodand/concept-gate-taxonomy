@@ -206,3 +206,33 @@ QuantML concrete syntax에는 scope를 위한 XML element가 명시되어 있다
 [10]: https://aclanthology.org/2020.isa-1.1/?utm_source=chatgpt.com "Annotation of Quantification: The Current State of ISO 24617-12 - ACL Anthology"
 [11]: https://aclanthology.org/2022.lrec-1.364/?utm_source=chatgpt.com "Quantification Annotation in ISO 24617-12, Second Draft - ACL Anthology"
 [12]: https://aclanthology.org/2023.isa-1.8.pdf "The compositional semantics of QuantML annotations"
+
+---
+
+## 부록 (2026-08-23 실측) — C1~C7 직접 파일 URL 14개
+
+로컬 캐시는 세션별 임시 디렉터리에 있어 세션이 바뀌면 사라진다. 재취득에
+필요한 것은 URL이고, **경로의 날짜 디렉터리는 파일명에서 추론할 수 없다**
+(tranche마다 다르다). 그래서 landing page의 href를 그대로 기록한다 —
+추측하지 않는다(G46: 원문 철자를 자동 교정하려다 부재 판정을 낸 사례).
+
+기준: `https://linguistics.osu.edu` + 아래 경로.
+
+| tranche | logic | cg |
+|---|---|---|
+| C1 | `/sites/default/files/2023-02/wikisemC1.logic__0.txt` | `/sites/default/files/2023-02/wikisemC1.cg_.txt` |
+| C2 | `/sites/default/files/2023-02/wikisemC2.logic_.txt` | `/sites/default/files/2023-02/wikisemC2.cg_.txt` |
+| C3 | `/sites/default/files/2024-11/wikisemC3.logic_.txt` | `/sites/default/files/2024-11/wikisemC3.cg_.txt` |
+| C4 | `/sites/default/files/2024-12/wikisemC4.logic_.txt` | `/sites/default/files/2024-12/wikisemC4.cg_.txt` |
+| C5 | `/sites/default/files/2026-02/wikisemC5.logic_.txt` | `/sites/default/files/2026-02/wikisemC5.cg_.txt` |
+| C6 | `/sites/default/files/2026-03/wikisemC6.logic_.txt` | `/sites/default/files/2026-03/wikisemC6.cg_.txt` |
+| C7 | `/sites/default/files/2026-04/wikisemC7.logic_.txt` | `/sites/default/files/2026-04/wikisemC7.cg_.txt` |
+
+**C1의 logic 파일명이 `logic__0`(밑줄 2개 + `_0`)인 것에 주의** — 다른
+tranche와 규칙이 다르므로 패턴으로 생성하면 404가 난다. `wikisema1-2` /
+`wikisemc1-c2`의 `casp_.toktrees` 파일들(2021-06)도 같은 페이지에 있으나
+v0.2 계열이고 O1 용도가 아니다.
+
+받은 바이트의 동일성 확인용 해시는 `DESIGN_REQUEST_o1_oracle_unit_and_
+coverage.md` §7에 있다(C6 logic·cg 2개). 저장소에는 파일을 담지 않는다
+(D-E2E-v1-20 §Q20.4 — 로컬 캐시는 권위가 아니고 해시 일치 전용).
