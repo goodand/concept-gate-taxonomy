@@ -213,3 +213,62 @@ def test_free_variables_include_restriction():
     f = {"kind": "exists", "var": "x",
          "restriction": P("R", V("x"), V("free1")), "body": P("S", V("free2"))}
     assert cg_ir.free_variables(f) == {"free1", "free2"}
+
+
+# ---------------------------------------------------------------- 2026-08-23
+# 커널 검증기의 공백. `pred`의 인자는 **항**(var/entity)이어야 하는데
+# validate_formula가 인자를 formula로 재귀 검증해서, 인자 자리에 수식이 들어온
+# IR을 유효로 판정했다. 실측 경로: Oracle Adapter가 corpus의 "콜론 태그 술어가
+# 람다를 인자로 받는" 형태를 번역할 때 pred 인자 자리에 수식을 넣었고,
+# 검증기가 통과시켰다. free_variables도 그 노드에서 조용히 공집합을 돌려주므로
+# 닫힘 검사로도 잡히지 않는다 — 즉 무효 IR이 cg_evaluate의
+# `predicate_arguments` 차원 비교까지 유효한 것처럼 흘러간다.
+
+BAD_PRED_ARGS = (
+    {"kind": "and", "args": []},
+    {"kind": "or", "args": []},
+    {"kind": "not", "body": {"kind": "pred", "name": "q", "args": []}},
+    {"kind": "pred", "name": "q", "args": []},
+    {"kind": "exists", "var": "x",
+     "body": {"kind": "pred", "name": "q", "args": []}},
+    {"kind": "forall", "var": "x",
+     "body": {"kind": "pred", "name": "q", "args": []}},
+    {"kind": "box", "body": {"kind": "pred", "name": "q", "args": []}},
+    {"kind": "diamond", "body": {"kind": "pred", "name": "q", "args": []}},
+    {"kind": "implies",
+     "left": {"kind": "pred", "name": "q", "args": []},
+     "right": {"kind": "pred", "name": "r", "args": []}},
+)
+
+
+@pytest.mark.parametrize("bad", BAD_PRED_ARGS, ids=lambda b: b["kind"])
+def test_pred_argument_must_be_a_term(bad):
+    node = {"kind": "pred", "name": "p", "args": [bad]}
+    errors = cg_ir.validate_formula(node)
+    assert errors, f"{bad['kind']} accepted in an argument slot"
+    assert any(e["code"] == "PRED_ARG_NOT_TERM" for e in errors), errors
+
+
+def test_pred_accepts_terms_as_arguments():
+    node = {"kind": "pred", "name": "p", "args": [
+        {"kind": "var", "name": "x"},
+        {"kind": "entity", "name": "socrates"},
+    ]}
+    assert cg_ir.validate_formula(node) == []
+
+
+def test_pred_argument_check_reaches_nested_predicates():
+    """양화 본문 깊숙이 있는 위반도 보고돼야 한다 — 최상위만 보면 실제 번역물이
+    통과한다(실측된 형태가 정확히 중첩이었다)."""
+    node = {"kind": "exists", "var": "x", "body": {
+        "kind": "and", "args": [
+            {"kind": "pred", "name": "p", "args": [{"kind": "var", "name": "x"}]},
+            {"kind": "pred", "name": "q",
+             "args": [{"kind": "and", "args": []}]},
+        ]}}
+    errors = cg_ir.validate_formula(node)
+    assert any(e["code"] == "PRED_ARG_NOT_TERM" for e in errors), errors
+
+
+def test_bad_pred_arg_selection_is_not_empty():
+    assert len(BAD_PRED_ARGS) == 9

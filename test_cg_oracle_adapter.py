@@ -180,3 +180,154 @@ def test_adapter_imports_stay_in_kernel():
                  if isinstance(n, ast.ImportFrom) and n.module}
     assert imported <= {"__future__", "typing", "re",
                         "cg_ir", "conceptgate.cg_ir"}, imported
+
+
+# ============================================================== ROUND 2 ====
+# 2026-08-23. 실 corpus(C6) 전수 실측이 위 계약의 공백 3개를 드러냈다.
+# 위 계약의 LF는 전부 **restriction과 scope가 같은 이름을 결박**했고, 미지원
+# 검사도 최상위 경로에서만 시험됐다. 실제 corpus는 두 조건 모두 위반한다.
+#
+# 실측(2026-08-23, C6 131 레코드):
+#   - 파싱 성공 22건 **전부** 자유변수 12~51개 보유 → 닫힌 문장의 번역이
+#     열린 식. 즉 22건은 "v0 부분집합 안"이 아니라 **조용한 오역**이었다.
+#   - 미지원 연산자(Equal/Intension/None)가 인라인 람다 본문 경로로 통과.
+#   - 콜론 태그 술어가 람다를 인자로 받는 형태가 pred 인자 자리에 수식을
+#     넣어 cg_ir 스키마 무효 IR을 생산.
+# 세 결함 모두 D-E2E-v1-20 ORACLE-11(commitment ≠ correctness)이 지목한 바로
+# 그 실패 — 커밋 전에 잡혔다.
+
+
+def test_quantifier_binds_the_scope_lambda_that_uses_a_different_name():
+    """corpus의 GQ는 restriction과 scope가 서로 다른 이름을 결박한다.
+
+    `Some (\\u R[u]) (\\w S[w])`는 두 람다를 **같은 인자에** 적용한 것이므로
+    결박 변수는 하나다. 이름이 다르다는 이유로 한쪽을 자유변수로 남기면
+    닫힌 문장의 번역이 열린 식이 된다.
+    """
+    ir = oa.adapt(r"(Some (\x1 N-aD:zorble x1) (\z A-aN:glim z))")
+    assert cg_ir.free_variables(ir) == set(), ir
+    assert ir["kind"] == "exists"
+    var = ir["var"]
+    assert ir["restriction"]["args"][0] == {"kind": "var", "name": var}
+    assert ir["body"]["args"][0] == {"kind": "var", "name": var}
+
+
+def test_universal_quantifier_unifies_binders_too():
+    ir = oa.adapt(r"(All (\x1 N-aD:zorble x1) (\y1 A-aN:glim y1))")
+    assert ir["kind"] == "forall"
+    assert cg_ir.free_variables(ir) == set(), ir
+    assert ir["restriction"]["args"][0] == ir["body"]["args"][0]
+
+
+def test_binder_unification_does_not_capture():
+    """scope 본문에 restriction 쪽 이름과 같은 내부 결박이 있으면, 소박한
+    치환은 그 내부 결박이 외부 변수를 포획한다."""
+    ir = oa.adapt(r"(Some (\x1 N-aD:zorble x1) "
+                  r"(\z Some (\x1 N-aD:prax x1) (\x1 A-aN:glim z)))")
+    assert cg_ir.free_variables(ir) == set(), ir
+    outer, inner = ir["var"], ir["body"]["var"]
+    assert outer != inner, (outer, inner)
+    # z는 외곽 양화의 변수였다 — 내부 결박에 잡히지 않고 그대로 보여야 한다.
+    assert ir["body"]["body"]["args"][0] == {"kind": "var", "name": outer}
+
+
+def test_same_binder_name_still_works():
+    """ROUND 1 형태의 회귀 — 이름이 같으면 그대로 하나로 남는다."""
+    ir = oa.adapt(r"(Some (\x1 N-aD:zorble x1) (\x1 A-aN:glim x1))")
+    assert ir["var"] == "x1"
+    assert cg_ir.free_variables(ir) == set()
+
+
+def test_trivial_scope_idiom_still_works():
+    ir = oa.adapt(r"(Some (\x1 N-aD:zorble x1) (\z True))")
+    assert ir["body"] == {"kind": "pred", "name": "True", "args": []}
+    assert cg_ir.free_variables(ir) == set()
+
+
+@pytest.mark.parametrize("head", ["Equal", "Intension", "None", "Gen",
+                                  "NNORD", "InAntecedentSet"])
+def test_unsupported_head_fails_closed_inside_a_lambda_body(head):
+    """실패차단이 최상위 경로에만 있어 인라인 람다 본문 경로로 새어나갔다.
+
+    새어나간 결과는 예외가 아니라 `pred(name="Equal", …)` — 미지원 연산자가
+    이름만 남긴 평범한 술어로 조용히 번역된다.
+    """
+    lf = rf"(Some (\a1 {head} a1 (\v1 N-aD:zorble v1)) (\a1 A-aN:glim a1))"
+    with pytest.raises(oa.AdapterUnsupported):
+        oa.adapt(lf)
+
+
+def test_unknown_head_fails_closed_rather_than_becoming_a_predicate():
+    """blacklist는 아직 보지 못한 구성자를 통과시킨다 — 이 corpus에서 우리가
+    본 것은 7 tranche 중 1개의 일부다. 술어는 corpus의 category-tagged
+    형태(콜론 포함)만 허용하고 나머지 head는 전부 닫는다."""
+    with pytest.raises(oa.AdapterUnsupported):
+        oa.adapt(r"(Frobnicate x1)")
+    with pytest.raises(oa.AdapterUnsupported):
+        oa.adapt(r"(Some (\a1 Frobnicate a1) (\a1 A-aN:glim a1))")
+
+
+def test_discourse_anaphora_marker_is_out_of_v0_scope():
+    """문장 간 공지시 장치를 불투명 술어로 통과시키면 binding 차원 평가가
+    무의미해진다. v0 부분집합에서 명시적으로 제외한다(선언된 범위 축소)."""
+    with pytest.raises(oa.AdapterUnsupported):
+        oa.adapt(r"(InAnaphorSet 1 x101)")
+    with pytest.raises(oa.AdapterUnsupported):
+        oa.adapt(r"(Some (\x1 ^ (N-aD:zorble x1) (InAnaphorSet 1 x1)) "
+                 r"(\x1 A-aN:glim x1))")
+
+
+def test_predicate_taking_a_lambda_argument_fails_closed():
+    """콜론 태그 술어가 람다를 인자로 받는 corpus 형태는 pred의 인자 자리에
+    수식을 넣는다 — cg_ir 스키마상 무효다. adapter가 자기 출력을 검증하지
+    않으면 무효 IR이 그대로 expected_ir로 커밋된다."""
+    with pytest.raises(oa.AdapterUnsupported):
+        oa.adapt(r"(N-b{N-aD}:the (\x112 N-aD:zorble x112))")
+
+
+SUPPORTED_SHAPES = (
+    r"(N-aD:zorble x1)",
+    r"(Some (\x1 N-aD:zorble x1) (\z True))",
+    r"(Some (\x1 N-aD:zorble x1) (\z A-aN:glim z))",
+    r"(All (\x1 N-aD:zorble x1) (\y1 A-aN:glim y1))",
+    r"(^ (N-aD:zorble x1) (A-aN:glim x1) (A-aN:prax x1))",
+    r"(Some (\x1 ^ (N-aD:zorble x1) (A-aN:glim x1)) "
+    r"(\z Some (\e1 B-aN-b{A-aN}:be e1 z) (\z True)))",
+)
+
+
+@pytest.mark.parametrize("lf", SUPPORTED_SHAPES)
+def test_successful_adapt_always_returns_a_valid_cg_ir_formula(lf):
+    """자격 항목 6 — 산출 검증. 성공 반환은 cg_ir 스키마를 만족해야 한다."""
+    ir = oa.adapt(lf)
+    assert cg_ir.validate_formula(ir) == [], (lf, cg_ir.validate_formula(ir))
+
+
+# 위 목록 중 **닫힌** 것만. `(N-aD:zorble x1)`나 `(^ … x1 …)`는 x1이 자유인
+# 열린 식이므로 닫힘 보존의 대상이 아니다 — RED 실행이 이 구별을 강제했다.
+CLOSED_SHAPES = tuple(lf for lf in SUPPORTED_SHAPES if lf.lstrip("(").startswith(("Some", "All")))
+
+
+@pytest.mark.parametrize("lf", CLOSED_SHAPES)
+def test_closed_lf_adapts_to_a_closed_formula(lf):
+    """자격 항목 7 — 닫힘 보존. 이 항목이 있었다면 위 결함은 첫 실측에서
+    잡혔다(실 레코드 22/22가 자유변수를 가졌으므로)."""
+    assert cg_ir.free_variables(oa.adapt(lf)) == set(), lf
+
+
+def test_closed_shapes_selection_is_not_empty():
+    """CLOSED_SHAPES가 조용히 비면 위 검사는 0건을 통과시킨다(공허 통과)."""
+    assert len(CLOSED_SHAPES) == 4, CLOSED_SHAPES
+
+
+def test_assert_head_is_in_v0_scope_refuses_a_head_outside_the_whitelist():
+    """가드 직접 호출 음성 테스트. `adapt()` 경유 테스트만 있으면 이 가드는
+    뮤테이션 게이트의 스캔 표면 안에 있어도 결박이 간접적이다 — 저장소 규약이
+    직접 호출을 요구하는 이유다(docs/HARNESS_KNOWHOW.md §B4a)."""
+    with pytest.raises(oa.AdapterUnsupported):
+        oa._assert_head_is_in_v0_scope("Frobnicate")
+    with pytest.raises(oa.AdapterUnsupported):
+        oa._assert_head_is_in_v0_scope("InAnaphorSet")
+    # 허용 head는 통과해야 한다 — 무조건 거부하는 가드는 파서를 죽인다.
+    for ok in ("Some", "All", "^", "N-aD:zorble"):
+        oa._assert_head_is_in_v0_scope(ok)

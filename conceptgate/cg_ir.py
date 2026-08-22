@@ -137,6 +137,15 @@ def validate_formula(node: Any) -> list[dict]:
                 })
             else:
                 for arg in args:
+                    # Predicate arguments must be TERMS (var or entity)
+                    if isinstance(arg, dict):
+                        arg_kind = arg.get("kind")
+                        if arg_kind not in ("var", "entity"):
+                            errors.append({
+                                "code": "PRED_ARG_NOT_TERM",
+                                "detail": f"predicate argument must be a term (var or entity), not {arg_kind!r}"
+                            })
+                    # Still validate the argument normally (if it is a term)
                     errors.extend(validate_formula(arg))
 
     return errors

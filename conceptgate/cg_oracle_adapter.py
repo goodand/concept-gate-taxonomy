@@ -19,12 +19,24 @@ GQ→FOL 변환(정리-동치)은 하지 않는다 — 2-람다 GQ 형(restricti
 - (\\x REST...) — lambda (REST가 여러 토큰이면 인라인 평탄 형태)
 - True → {"kind":"pred","name":"True","args":[]}
 
-미지원 (fail-closed):
-- 구조 연산자 중 Equal, Intension, None (람다 인자), Gen, NNORD*, InAntecedentSet 등
-- 단, InAnaphorSet 같은 var-arg-only predicate는 일반 pred로 통과
+지원하지 않는 head (fail-closed):
+- Some, All → quantifier로 처리
+- ^ → conjunction으로 처리
+- 콜론을 포함하는 head (e.g., N-aD:zorble) → predicate
+- 모든 다른 head → AdapterUnsupported 예외 발생
+  (Equal, Intension, None, Gen, NNORD*, InAntecedentSet, InAnaphorSet, Qvar,
+  미등록 head 등 모두 실패)
+
+정량화된 람다(Some, All)의 두 람다:
+- 이름이 다르면 capture-free 리네이밍으로 통일한다.
+- 결박 변수는 하나이며, 제한과 본문 모두에 적용된다.
+
+산출 검증:
+- adapt()은 반환 전에 cg_ir.validate_formula()로 IR을 검증한다.
+- 검증 실패는 AdapterUnsupported 예외를 발생시킨다.
 
 예외:
-- AdapterUnsupported: 미지원 구조 연산자 또는 syntax 오류
+- AdapterUnsupported: 미지원 구조 연산자, syntax 오류, 또는 산출 검증 실패
 - AdapterSyntaxError: 괄호 불균형, 빈 입력 등
 """
 from __future__ import annotations
@@ -56,7 +68,7 @@ def adapt(lf: str) -> dict:
 
     Raises:
         AdapterSyntaxError: if syntax is invalid
-        AdapterUnsupported: if construct is not supported
+        AdapterUnsupported: if construct is not supported or output validation fails
     """
     if not lf or not lf.strip():
         raise AdapterSyntaxError("empty input")
@@ -68,7 +80,165 @@ def adapt(lf: str) -> dict:
     result, pos = _parse_expr(tokens, 0)
     if pos != len(tokens):
         raise AdapterSyntaxError(f"unexpected tokens after expression at position {pos}")
+
+    # Validate output against cg_ir schema
+    errors = cg_ir.validate_formula(result)
+    if errors:
+        raise AdapterUnsupported(f"output validation failed: {errors}")
+
     return result
+
+
+def _collect_names(formula: dict) -> set[str]:
+    """Collect all names that occur in a formula tree.
+
+    Names include: var node names, entity node names, and quantifier var fields.
+    """
+    names = set()
+    kind = formula.get("kind")
+
+    if kind == "var":
+        if "name" in formula:
+            names.add(formula["name"])
+    elif kind == "entity":
+        if "name" in formula:
+            names.add(formula["name"])
+    elif kind == "pred":
+        for arg in formula.get("args", []):
+            names.update(_collect_names(arg))
+    elif kind in ("forall", "exists"):
+        if "var" in formula:
+            names.add(formula["var"])
+        if "restriction" in formula:
+            names.update(_collect_names(formula["restriction"]))
+        if "body" in formula:
+            names.update(_collect_names(formula["body"]))
+    elif kind in ("box", "diamond", "not"):
+        if "body" in formula:
+            names.update(_collect_names(formula["body"]))
+    elif kind == "implies":
+        if "left" in formula:
+            names.update(_collect_names(formula["left"]))
+        if "right" in formula:
+            names.update(_collect_names(formula["right"]))
+    elif kind in ("and", "or"):
+        for arg in formula.get("args", []):
+            names.update(_collect_names(arg))
+
+    return names
+
+
+def _rename_free_occurrences(formula: dict, old_name: str, new_name: str,
+                             bound_vars: set[str] | None = None) -> dict:
+    """Rename free occurrences of old_name to new_name in formula.
+
+    A variable occurrence is free if it is not bound by a quantifier
+    at that point in the tree.
+
+    bound_vars: set of variable names currently bound by enclosing quantifiers.
+    Returns a new dict with renames applied; does not modify the input.
+    """
+    if bound_vars is None:
+        bound_vars = set()
+
+    kind = formula.get("kind")
+
+    if kind == "var":
+        name = formula.get("name")
+        if name == old_name and name not in bound_vars:
+            return {"kind": "var", "name": new_name}
+        return formula
+
+    elif kind == "entity":
+        return formula
+
+    elif kind == "pred":
+        new_args = []
+        for arg in formula.get("args", []):
+            new_args.append(_rename_free_occurrences(arg, old_name, new_name, bound_vars))
+        return {"kind": "pred", "name": formula.get("name"), "args": new_args}
+
+    elif kind in ("forall", "exists"):
+        # When descending into a quantifier, add its var to bound_vars
+        var = formula.get("var")
+        new_bound = bound_vars | {var}
+        new_restriction = None
+        if "restriction" in formula:
+            new_restriction = _rename_free_occurrences(
+                formula["restriction"], old_name, new_name, new_bound)
+        new_body = None
+        if "body" in formula:
+            new_body = _rename_free_occurrences(
+                formula["body"], old_name, new_name, new_bound)
+        result = {"kind": kind, "var": var}
+        if new_restriction is not None:
+            result["restriction"] = new_restriction
+        if new_body is not None:
+            result["body"] = new_body
+        return result
+
+    elif kind in ("box", "diamond", "not"):
+        new_body = _rename_free_occurrences(formula.get("body"), old_name, new_name, bound_vars)
+        return {"kind": kind, "body": new_body}
+
+    elif kind == "implies":
+        new_left = _rename_free_occurrences(formula.get("left"), old_name, new_name, bound_vars)
+        new_right = _rename_free_occurrences(formula.get("right"), old_name, new_name, bound_vars)
+        return {"kind": "implies", "left": new_left, "right": new_right}
+
+    elif kind in ("and", "or"):
+        new_args = []
+        for arg in formula.get("args", []):
+            new_args.append(_rename_free_occurrences(arg, old_name, new_name, bound_vars))
+        return {"kind": kind, "args": new_args}
+
+    return formula
+
+
+def _unify_quantifier_binders(restr_var: str, restriction: dict,
+                              body_var: str, body: dict) -> tuple[str, dict, dict]:
+    """Unify two quantifier binders capture-free.
+
+    Args:
+        restr_var: variable name from restriction lambda
+        restriction: parsed restriction formula
+        body_var: variable name from body lambda
+        body: parsed body formula
+
+    Returns:
+        (unified_var, renamed_restriction, renamed_body) where:
+        - unified_var: the single variable that binds both restriction and body
+        - renamed_restriction: restriction with free occurrences of restr_var renamed if needed
+        - renamed_body: body with free occurrences of body_var renamed if needed
+    """
+    if restr_var == body_var:
+        # Same name: nothing to rename
+        return restr_var, restriction, body
+
+    # Collect names in restriction and body
+    names_restriction = _collect_names(restriction)
+    names_body = _collect_names(body)
+
+    # Rule 3: Check if restr_var appears in body
+    if restr_var not in names_body:
+        # restr_var does not occur in scope; use it and rename body_var to restr_var
+        new_body = _rename_free_occurrences(body, body_var, restr_var)
+        return restr_var, restriction, new_body
+
+    # Rule 4: Pick a fresh name that occurs in neither restriction nor body
+    target = restr_var
+    counter = 2
+    all_names = names_restriction | names_body
+    while target in all_names:
+        target = f"{restr_var}_{counter}"
+        counter += 1
+
+    # Rename free occurrences of restr_var to target in restriction
+    new_restriction = _rename_free_occurrences(restriction, restr_var, target)
+    # Rename free occurrences of body_var to target in body
+    new_body = _rename_free_occurrences(body, body_var, target)
+
+    return target, new_restriction, new_body
 
 
 def _tokenize(lf: str) -> list[str]:
@@ -129,6 +299,43 @@ def _parse_expr(tokens: list[str], pos: int) -> tuple[dict, int]:
         return {"kind": "entity", "name": token}, pos + 1
 
 
+def _assert_head_is_in_v0_scope(head: str) -> None:
+    """Guard: raise AdapterUnsupported if head is not in v0 scope.
+
+    Allowed heads: Some, All, ^, True, and any head containing ':'.
+    Raises:
+        AdapterUnsupported: if head is not on the whitelist
+    """
+    if head not in ("Some", "All", "^", "True") and ":" not in head:
+        raise AdapterUnsupported(f"unsupported head: {head}")
+
+
+def _classify_head(head: str) -> str:
+    """Classify head by whitelist rule. Return head kind or raise AdapterUnsupported.
+
+    Returns:
+        One of: "quantifier_some", "quantifier_all", "conjunction",
+                "predicate" (includes True and category-tagged lexical predicates)
+
+    Raises:
+        AdapterUnsupported: if head is not on the whitelist
+    """
+    _assert_head_is_in_v0_scope(head)
+
+    if head == "Some":
+        return "quantifier_some"
+    elif head == "All":
+        return "quantifier_all"
+    elif head == "^":
+        return "conjunction"
+    elif head == "True":
+        return "predicate"
+    else:
+        # head contains ':' (category-tagged predicate)
+        # e.g., N-aD:zorble, B-aN-b{A-aN}:be
+        return "predicate"
+
+
 def _parse_list(tokens: list[str], pos: int) -> tuple[dict, int]:
     """Parse (Head arg1 arg2 ...) or (\\binder REST...).
 
@@ -175,20 +382,16 @@ def _parse_list(tokens: list[str], pos: int) -> tuple[dict, int]:
     head = tokens[pos]
     pos += 1
 
-    # Check for unsupported structural operators that take lambda args
-    # Equal, Intension, None (with lambda), Gen, NNORD*, InAntecedentSet
-    unsupported_ops = {"Equal", "Intension", "None", "Gen",
-                       "NNORD", "NNORDSUP", "InAntecedentSet"}
+    # Classify head with whitelist
+    head_kind = _classify_head(head)
 
     # Handle quantifiers: Some, All
-    if head == "Some":
+    if head_kind == "quantifier_some":
         return _parse_quantifier(tokens, pos, "exists")
-    elif head == "All":
+    elif head_kind == "quantifier_all":
         return _parse_quantifier(tokens, pos, "forall")
-    elif head == "^":
+    elif head_kind == "conjunction":
         return _parse_conjunction(tokens, pos)
-    elif head in unsupported_ops or _is_unsupported_structural_op(head):
-        raise AdapterUnsupported(f"unsupported structural operator: {head}")
     else:
         # Regular predicate application
         return _parse_pred_application(head, tokens, pos)
@@ -198,6 +401,7 @@ def _parse_quantifier(tokens: list[str], pos: int, quantifier_type: str) -> tupl
     """Parse (Some/All (\\x Restr) (\\x Body)).
 
     pos should point after Some/All.
+    Unifies the two lambda binders capture-free if they differ.
     """
     # Parse (\\x Restr)
     if pos >= len(tokens) or tokens[pos] != "(":
@@ -211,9 +415,9 @@ def _parse_quantifier(tokens: list[str], pos: int, quantifier_type: str) -> tupl
 
     body_var, body, pos = _parse_lambda_form(tokens, pos)
 
-    # Variables should match (both binded by same quantifier)
-    # But in canonical form they'll be renamed, so we just use one
-    var = restr_var
+    # Unify the two binders
+    var, restriction, body = _unify_quantifier_binders(
+        restr_var, restriction, body_var, body)
 
     # Expect closing ")"
     if pos >= len(tokens) or tokens[pos] != ")":
@@ -252,8 +456,11 @@ def _parse_lambda_body_content(tokens: list[str], pos: int) -> tuple[dict, int]:
         head = tokens[pos]
         pos += 1
 
+        # Classify head with whitelist
+        head_kind = _classify_head(head)
+
         # Handle inline quantifiers specially
-        if head == "Some":
+        if head_kind == "quantifier_some":
             # Some in lambda body: Some (\\y Restr) (\\y Body)
             # Parse two lambda forms
             if pos >= len(tokens) or tokens[pos] != "(":
@@ -264,14 +471,18 @@ def _parse_lambda_body_content(tokens: list[str], pos: int) -> tuple[dict, int]:
                 raise AdapterSyntaxError(f"expected lambda body in Some at position {pos}")
             body_var, body_expr, pos = _parse_lambda_form(tokens, pos)
 
+            # Unify the two binders
+            var, restriction, body_expr = _unify_quantifier_binders(
+                restr_var, restriction, body_var, body_expr)
+
             body = {
                 "kind": "exists",
-                "var": restr_var,
+                "var": var,
                 "restriction": restriction,
                 "body": body_expr
             }
             return body, pos
-        elif head == "All":
+        elif head_kind == "quantifier_all":
             # All in lambda body: All (\\y Restr) (\\y Body)
             if pos >= len(tokens) or tokens[pos] != "(":
                 raise AdapterSyntaxError(f"expected lambda restriction in All at position {pos}")
@@ -281,14 +492,18 @@ def _parse_lambda_body_content(tokens: list[str], pos: int) -> tuple[dict, int]:
                 raise AdapterSyntaxError(f"expected lambda body in All at position {pos}")
             body_var, body_expr, pos = _parse_lambda_form(tokens, pos)
 
+            # Unify the two binders
+            var, restriction, body_expr = _unify_quantifier_binders(
+                restr_var, restriction, body_var, body_expr)
+
             body = {
                 "kind": "forall",
-                "var": restr_var,
+                "var": var,
                 "restriction": restriction,
                 "body": body_expr
             }
             return body, pos
-        elif head == "^":
+        elif head_kind == "conjunction":
             # Conjunction: ^ arg1 arg2 ...
             args = []
             while pos < len(tokens) and tokens[pos] != ")":
@@ -386,40 +601,3 @@ def _is_variable(token: str) -> bool:
         return False
     # Variables start with lowercase letter
     return token[0].islower()
-
-
-def _is_unsupported_structural_op(head: str) -> bool:
-    """Check if head is an unsupported structural operator.
-
-    Rule: uppercase start + takes lambda args.
-    But avoid false positives like InAnaphorSet (takes only var args).
-    """
-    if not head or not head[0].isupper():
-        return False
-
-    # Known var-arg-only predicates that should pass through
-    var_arg_only = {"InAnaphorSet", "Qvar"}
-
-    if head in var_arg_only:
-        return False
-
-    # All other uppercase-starting heads that aren't explicitly var-arg-only
-    # and aren't the known quantifiers/operators
-    known_pass = {"Some", "All", "True"}
-    if head in known_pass:
-        return False
-
-    # If it's uppercase and not in var_arg_only, assume it's structural
-    # Actually, let's be conservative: only reject if it looks structural
-    # (i.e., we expect it to take lambda arguments)
-
-    # For now, use the explicit list from the spec
-    structural_ops = {"Equal", "Intension", "None", "Gen",
-                      "NNORD", "NNORDSUP", "InAntecedentSet"}
-
-    if head in structural_ops:
-        return True
-
-    # Default: if uppercase and not var-arg-only, might be structural
-    # But be conservative — only reject if explicitly listed
-    return False
