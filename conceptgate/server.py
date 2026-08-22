@@ -905,6 +905,76 @@ def certify_claims(claims: list, evidence_texts: dict,
                             "detail": str(exc)[:300]}]}
 
 
+@mcp.tool
+def issue_claim_certificates(claims: list, bundle: dict) -> dict:
+    """relation claim들에 대한 서명 obligation certificate를 서버가 발급한다.
+
+    W5 수정의 발급 절반이자 P1이 남긴 마지막 공백의 해소. 클라이언트가
+    제공하는 것은 **원문 bundle과 claim**뿐이고, 모든 verdict는 서버
+    in-process 계산에서 나온다: `assemble_concepts`(cg_normalizer) →
+    source.snapshot_hash / source.span_evidence, `run_pipeline` →
+    relation.* / ufo. 클라이언트가 normalizer '응답'을 공급하는 설계는
+    받지 않는다 — 응답 조작이 곧 W5의 재판(laundering)이다.
+
+    발급된 certificate는 claim의 fingerprint와 graph_revision에 결박·서명
+    되며, `certify_claims`의 `prior_certificates`로 그대로 전달하면 된다.
+    검사 실패도 그대로 서명된다 — certificate는 "통과 증명"이 아니라
+    "이 게이트들이 이 판정을 냈다"의 증명이고, 인증 여부는 검증측 profile이
+    정한다. 단 bundle 자체가 조립 실패하면 아무것도 발급하지 않는다 —
+    실패 위에 서명하지 않는다.
+    """
+    if not isinstance(claims, list) or any(
+            not isinstance(c, dict) or "id" not in c for c in claims):
+        return {"ok": False, "stage": "issue-certificates",
+                "errors": [{"stage": "issue-certificates",
+                            "code": "CLAIMS_NOT_OBJECT_LIST",
+                            "detail": "claims must be a list of dicts "
+                                      "each carrying an 'id'"}],
+                "certificates": []}
+    if not isinstance(bundle, dict):
+        return {"ok": False, "stage": "issue-certificates",
+                "errors": [{"stage": "issue-certificates",
+                            "code": "BUNDLE_NOT_OBJECT",
+                            "detail": "bundle must be a dict "
+                                      "(assemble_concepts input shape)"}],
+                "certificates": []}
+
+    assembled = cg_normalizer.assemble_concepts(bundle)
+    if not assembled.get("ok"):
+        # 실패 위에 서명하지 않는다 — 원인 단계를 그대로 통과시킨다.
+        return {"ok": False, "stage": assembled.get("stage"),
+                "errors": assembled.get("errors", []),
+                "certificates": []}
+    source_results = cg_obligations.results_from_normalizer(assembled)
+
+    concepts = assembled["concepts_json"]["concepts"]
+    pipeline = run_pipeline(concepts)
+    # run_pipeline 응답의 obligations는 직렬화 dict다. 같은 in-process
+    # 신뢰 수준에서 live ObligationResult를 다시 계산한다 — server.py:320과
+    # 동일한 두 어댑터를 같은 직렬화 출력에 적용한다.
+    ontoclean_names = set()  # concepts_json 경로는 ontoclean 메타 미보유
+    relation_results = cg_obligations.results_from_pipeline(pipeline)
+    relation_results += cg_obligations.results_from_isa(
+        pipeline.get("dag", {}), ontoclean_names)
+
+    all_results = source_results + relation_results
+    certificates = [
+        cg_obligations.issue_claim_certificate(
+            claim, all_results, issuer_tool="issue_claim_certificates")
+        for claim in claims]
+    return {
+        "ok": True,
+        "certificates": certificates,
+        # 발급 근거의 자기서술 — 어떤 게이트 판정 위에 서명했는지.
+        "gate_summary": {
+            "verdict": cg_obligations.certify(all_results)["verdict"],
+            "execution": cg_obligations.certify(all_results)["execution"],
+            "obligations": sorted({r.obligation for r in all_results}),
+        },
+        "issuer": "issue_claim_certificates",
+    }
+
+
 def _attach_owl_obligations(resp: dict) -> dict:
     """owl.consistent certificate를 classify_owl 응답에 주입.
 

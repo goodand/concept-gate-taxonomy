@@ -258,3 +258,45 @@ pass/execution=ok로 낸다 — **W2 execution 축이 실 소비 경로에서 �
 
 156 passed / 4 skipped, 루트 8/0/1.
 
+## 11. 서버측 certificate 발급 orchestration (2026-08-22, P1 잔여 공백 해소)
+
+지시된 프로토콜로 진행: Haiku(xhigh) 재사용 조사 → **4/5 FOUND, 1단계 중지**
+(부족분은 배선 루프 자체 = 이번 작업의 본체). subtree 0건.
+
+### 11.1 재사용 매핑
+
+| 필요 | 재사용 |
+|---|---|
+| 파이프라인 출력→relation obligation | `results_from_pipeline` + `results_from_isa` (server.py:320과 동일 어댑터 쌍) |
+| 응답 부착 패턴 | `_attach_owl_obligations` 선례 |
+| claim 단위 서명 번들 | `issue_claim_certificate` (직전 회차 착륙분) |
+| source.* in-process 계산 | `cg_normalizer.assemble_concepts` 직접 호출 |
+
+### 11.2 신규 MCP tool `issue_claim_certificates(claims, bundle)`
+
+설계 불변식: **클라이언트는 원문 bundle과 claim만 준다.** 모든 verdict는
+서버 in-process 계산 — 클라이언트가 normalizer '응답'을 공급하는 설계는
+받지 않았다(응답 조작 = W5의 재판). 검사 실패도 그대로 서명된다 —
+certificate는 "통과 증명"이 아니라 "이 게이트들이 이 판정을 냈다"의
+증명이고, 인증 여부는 검증측 profile의 몫. 단 bundle 조립 실패에는 아무것도
+발급하지 않는다(실패 위에 서명하지 않는다).
+
+TDD: RED 5 → GREEN 5 (`test_issue_claim_certificates.py`). 핵심 테스트
+`test_full_loop_with_zero_hand_filled_verdicts` — P1이 손으로 채웠던
+source.* 자리가 사라지고, snapshot→발급→certify_claims 전 구간이 실 계산.
+
+### 11.3 적대 검증 (프로토콜 3단계, Haiku)
+
+공격 5종 실제 시도 — 응답 변조·키 없는 위조·타 claim 재사용·실패 bundle
+우회·혼합 강등 우회 — **5/5 차단, laundering 경로 NO.** lead 재실측에서
+주의점 1건: 공격 스크립트가 초안 3판+최종 1판으로 남아 있었고 초안은 setup
+실패를 포함한다 — **판정 근거는 `adversarial_validation_final.py`이며 lead가
+그 최종본을 정확히 재실행해 5/5 차단을 확증했다** (glob 재실행이 초안을
+잡는 함정을 실측으로 기록).
+
+161 → 166 passed / 4 skipped, 루트 8/0/1.
+
+### 11.4 남은 것 (불변)
+
+Certified-gate authority 전환 — 별도 상신. W3 — dormant_by_design.
+
