@@ -594,6 +594,14 @@ def certify_relation_claims(
     반환 dict는 자기서술적이다: 어떤 profile로 판정했고(claim별 verdict
     표 포함), 무엇이 stale이고, fingerprint가 무엇인지 — 호출자가 이
     응답만으로 §7식 재구성을 할 수 있게.
+
+    ⚠️ W5 BLOCKER (설계 리뷰 2026-08-22, DESIGN_DECISION_refine_verify_v0_review.md):
+    `prior_verdicts`는 **well-formed 검증만 되고 authenticity 검증이 없다** —
+    호출자가 "pass" 문자열을 조작 공급하면 게이트가 실행된 적 없는 claim도
+    인증된다(공격 재현으로 실증). 발급 도구·subject fingerprint·revision에
+    결박된 서명 certificate 검증이 착륙하기 전까지, 이 함수의 반환은
+    `authority: diagnostic_only`다 — `certified_claim_ids`를 권위 있는
+    인증 결과로 소비하지 마라.
     """
     _assert_prior_verdicts_are_well_formed(prior_verdicts)
     prior_verdicts = prior_verdicts or {}
@@ -616,6 +624,9 @@ def certify_relation_claims(
 
     return {
         "ok": True,
+        # W5가 닫히기 전까지의 잠정 지위 (판정문 until_fixed 요구). 수정이
+        # 착륙하면 authenticity 검증 성공 시에만 "certifying"으로 승격한다.
+        "authority": "diagnostic_only",
         "profile": profile.profile_id,
         "profile_required": list(profile.required),
         "anchoring_certificate": certificate,

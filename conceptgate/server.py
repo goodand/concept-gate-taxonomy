@@ -852,6 +852,10 @@ def certify_claims(claims: list, evidence_texts: dict,
     evidence_texts는 {evidence_id: 본문}. prior_verdicts는
     {claim_id: {check_name: "pass"|"fail"|"unknown"|"error"}} — enum 밖
     문자열은 거부한다(오타가 조용한 인증 탈락이 되는 것을 막는다).
+
+    ⚠️ 응답의 `authority: diagnostic_only`가 뜻하는 것: prior_verdicts의
+    **출처 인증이 아직 없다**(W5 BLOCKER). 조작된 "pass" 공급이 가능하므로
+    `certified_claim_ids`는 진단 참고이지 권위 있는 인증이 아니다.
     """
     try:
         if not isinstance(claims, list) or any(

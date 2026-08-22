@@ -81,8 +81,15 @@ W4 수정의 효과는 즉시 실증됐다: 다음 날 쓴 신규 가드(prior v
 ## 6. 설계 담당 확인 대기 3건
 
 ① **W2 — ERROR의 프로덕션 도입 방식.** 현행 reasoner 실패 처리는 진짜
-crash와 "Java 없음(기본 Render 배포)"을 같은 예외 절, 같은 오류 코드로 잡고,
-도구 docstring이 "미가용이면 unknown"을 호스팅 계약으로 문서화하고 있다.
+crash와 의존성 부재를 같은 예외 절, 같은 오류 코드로 잡고, 도구 docstring이
+"미가용이면 unknown"을 호스팅 계약으로 문서화하고 있다.
+> **정정 (2026-08-22, 판정 수령 후 실측)**: 이 절의 최초 판은 ~~"Java
+> 없음(기본 Render 배포)"~~이라고 썼다. **전제 오류** — Dockerfile이
+> `default-jre-headless`를 명시 설치하고 `runtime: docker`인 이유가 바로
+> JRE 확보다. docstring의 "기본 Render"는 네이티브 python 런타임을 가리키는
+> 낡은 서술이었고, 실배포에서 Java 부재는 "예상된 미가용"이 아니라
+> **required dependency unexpectedly missing**이다 — 판정문 §4가 지적한
+> 그대로.
 I8대로 crash→ERROR로 바꾸면 **운영 중인 배포의 기존 응답이 바뀐다.**
 가산이 아니라 계약 변경이므로 회신 후 별도 diff로 진행하겠다.
 질문: (a) crash와 dep-부재를 오류 코드부터 분리한 뒤 crash만 ERROR로,

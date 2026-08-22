@@ -161,7 +161,7 @@ W1~W3는 **§6이 이미 범위 밖으로 선언한 것과 같은 경계선**이
 
 | # | 항목 | 이유 |
 |---|---|---|
-| W2 | `Verdict.ERROR`의 프로덕션 생산자 | `REASONER_UNAVAILABLE`이 crash와 "Java 없음(기본 Render)"을 같은 except에서 잡고, docstring이 "미가용이면 unknown"을 **호스팅 계약으로 문서화**해 뒀다. ERROR로 바꾸면 기본 Render의 기존 응답이 바뀐다 — 가산이 아니라 계약 변경이고 G32(UNKNOWN/UNSCORABLE)와 얽힘. **설계 담당 확인 후 별도 diff** |
+| W2 | `Verdict.ERROR`의 프로덕션 생산자 | `REASONER_UNAVAILABLE`이 crash와 의존성 부재를 같은 except에서 잡음. ~~"Java 없음(기본 Render)"~~ **← 전제 오류로 정정됨** (실배포는 docker+JRE — 리뷰 판정 V2). 판정 회신: **W2=(a)-refined** — semantic_verdict × execution_status 두 축 분리, optional 부재=UNAVAILABLE / required 부재=ERROR / crash=ERROR. 별도 diff로 진행 |
 | W3 | `depends_on` 생산자 | 자연스러운 의존이 아직 없다. 검출기를 발동시키려고 장식용 의존을 만들면 그게 P1이다. Refine 수리 루프가 실제 의존을 나를 때 함께 |
 | — | Certified-gate 전환 | authority 변경 — 상신 대상 (gap 분석 §5, 불변) |
 
