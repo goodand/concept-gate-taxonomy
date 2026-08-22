@@ -1,0 +1,177 @@
+{
+  "corpus_version": "fol-adapter-qualification-v1",
+  "note": "D-E2E-v1-23 §13 9항목. 발명 술어만. check kind 어휘는 SBN판과 동일 + desugar_converges.",
+  "authority": "DESIGN_DECISION_folio_second_source.md (D-E2E-v1-23 §13-§14)",
+  "items": [
+    {
+      "item_id": "syntax_parse",
+      "checks": [
+        {
+          "check_id": "SP-ok",
+          "kind": "adapt_ok",
+          "fol": "∀x (Zorble(x) → Glim(x))"
+        },
+        {
+          "check_id": "SP-neg-empty",
+          "kind": "adapt_refused",
+          "fol": ""
+        },
+        {
+          "check_id": "SP-neg-unbalanced",
+          "kind": "adapt_refused",
+          "fol": "∀x (Zorble(x)"
+        }
+      ]
+    },
+    {
+      "item_id": "alpha_rename_invariance",
+      "checks": [
+        {
+          "check_id": "AR-eq",
+          "kind": "fp_eq",
+          "fol_a": "∀x (Zorble(x) → Glim(x))",
+          "fol_b": "∀u (Zorble(u) → Glim(u))"
+        },
+        {
+          "check_id": "AR-neg",
+          "kind": "fp_ne",
+          "fol_a": "∀x (Zorble(x) → Glim(x))",
+          "fol_b": "∀x (Zorble(x) → Prax(x))"
+        }
+      ]
+    },
+    {
+      "item_id": "quantifier_reordering_negative_control",
+      "checks": [
+        {
+          "check_id": "QR-mutA",
+          "kind": "fp_ne",
+          "fol_a": "∀x ∃y Prax(x, y)",
+          "fol_b": "∃y ∀x Prax(x, y)"
+        }
+      ]
+    },
+    {
+      "item_id": "binding_preservation",
+      "checks": [
+        {
+          "check_id": "BP-ne-arg",
+          "kind": "fp_ne",
+          "fol_a": "∀x ∃y Prax(x, y)",
+          "fol_b": "∀x ∃y Prax(y, x)"
+        },
+        {
+          "check_id": "BP-entity",
+          "kind": "free_vars",
+          "fol": "∀x Prax(x, berlinzorb)",
+          "expected_free": []
+        }
+      ]
+    },
+    {
+      "item_id": "deterministic_replay",
+      "checks": [
+        {
+          "check_id": "DR",
+          "kind": "replay_eq",
+          "fol": "∀x ∃y (Zorble(x) → Prax(x, y))"
+        }
+      ]
+    },
+    {
+      "item_id": "output_schema_validity",
+      "checks": [
+        {
+          "check_id": "OS-ok",
+          "kind": "adapt_schema_valid",
+          "fol": "∀x ∀y (∃z (Tikk(x, z) ∧ Tikk(y, z)) → Prax(x, y))"
+        }
+      ]
+    },
+    {
+      "item_id": "closed_form_preservation",
+      "checks": [
+        {
+          "check_id": "CF-closed",
+          "kind": "free_vars",
+          "fol": "∀x ∃y (Zorble(x) → Prax(x, y))",
+          "expected_free": []
+        }
+      ]
+    },
+    {
+      "item_id": "FOL_definitional_lowering_correctness",
+      "checks": [
+        {
+          "check_id": "DL-forall-restricted",
+          "kind": "kind_census",
+          "fol": "∀x (Zorble(x) → Glim(x))",
+          "root_kind": "forall",
+          "must_contain": [
+            "forall"
+          ],
+          "must_not_contain": [
+            "implies"
+          ],
+          "note": "직하 →는 restriction으로 소비 — implies가 남으면 lowering 실패"
+        },
+        {
+          "check_id": "DL-exists-neutral",
+          "kind": "kind_census",
+          "fol": "∃y (Zorble(y) ∧ Glim(y) ∧ Prax(y))",
+          "root_kind": "exists",
+          "must_contain": [
+            "and"
+          ],
+          "must_not_contain": []
+        },
+        {
+          "check_id": "DL-desugar-converges",
+          "kind": "desugar_converges",
+          "fol": "∀x (Zorble(x) → Glim(x))",
+          "note": "restricted 산출의 desugar == neutral 표기 ∀x φ(→ 그대로)의 desugar"
+        }
+      ]
+    },
+    {
+      "item_id": "scope_order_and_unsupported_negative_discrimination",
+      "checks": [
+        {
+          "check_id": "SO-mutC-no-crossing",
+          "kind": "kind_census",
+          "fol": "∀x ∃y (Zorble(x) → Prax(x, y))",
+          "root_kind": "forall",
+          "must_contain": [
+            "exists",
+            "implies"
+          ],
+          "must_not_contain": [],
+          "note": "→가 exists 안에 남아야 함 — forall restriction으로 이동 금지"
+        },
+        {
+          "check_id": "SO-neg-or",
+          "kind": "adapt_refused",
+          "fol": "∀x (Zorble(x) ∨ Glim(x))"
+        },
+        {
+          "check_id": "SO-neg-eq",
+          "kind": "adapt_refused",
+          "fol": "∃y (y = berlinzorb)"
+        },
+        {
+          "check_id": "SO-neg-iff",
+          "kind": "adapt_refused",
+          "fol": "∀x (Zorble(x) ↔ Glim(x))"
+        },
+        {
+          "check_id": "SO-neg-xor",
+          "kind": "adapt_refused",
+          "fol": "∀x (Zorble(x) ⊕ Glim(x))"
+        }
+      ]
+    }
+  ],
+  "provenance": {},
+  "results": [],
+  "qualification_state": ""
+}
