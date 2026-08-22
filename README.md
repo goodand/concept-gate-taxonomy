@@ -48,13 +48,7 @@ concept-gate-taxonomy/
 │   │                         part_of(BFO:0000050)/has_part(BFO:0000051) 표준 공리
 │   └── scior/             ← git subtree: Scior gUFO rule reference
 │                             RA02/R22, RU01 등 rule metadata 재사용
-├── docs/                  ← Phase A/C 구현·설계 패킷
-└── reference/
-    ├── INTEGRATION_NOTES.md   ← TaxoAdapt 통합 계획 (계약 명세)
-    ├── taxonomy.py            ← TaxoAdapt 원본 (참고용, 실행 안 함)
-    ├── expansion.py           ← TaxoAdapt 원본 (참고용)
-    ├── classification.py      ← TaxoAdapt 원본 (참고용)
-    └── prompts.py             ← TaxoAdapt 원본 (참고용)
+└── docs/                  ← Phase A/C 구현·설계 패킷
 ```
 
 ## 실행 방법
@@ -297,9 +291,9 @@ generate(action)이 raw JSON 문자열을 반환하기만 하면, 나머지(파�
 
 ## QA 에이전트를 위한 검토 지침
 
-1. TaxoAdapt 통합 범위: taxonomy.py::get_siblings()의 부분 이식만 적용됨.
-   reference/의 4개 파일은 pydantic/unidecode/LLM 호출부에 의존하므로
-   import하면 실패합니다 — 정상입니다.
+1. TaxoAdapt 통합 범위: taxonomy.py::get_siblings()의 부분 이식만 적용됨
+   (concept_gate_v7.py 내 주석 표기). 원본 read-only 사본(구 reference/)은
+   2026-08-23 제거 — 출처·라이선스는 THIRD_PARTY_NOTICES.md가 정본.
 
 2. v7에 있어야 / 없어야 하는 것:
    - 있어야 함: ExpansionPlanner, PostDAGSiblingGate, PreDAGSignatureGate,

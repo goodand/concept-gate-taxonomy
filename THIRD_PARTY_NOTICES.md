@@ -2,14 +2,18 @@
 
 이 저장소가 포함하거나 파생한 서드파티 코드/데이터의 출처와 라이선스 고지.
 
-## reference/ — TaxoAdapt (Apache-2.0)
+## TaxoAdapt (Apache-2.0) — `conceptgate/concept_gate_v7.py` 이식분
 
-- 파일: `reference/taxonomy.py`, `reference/expansion.py`, `reference/classification.py`, `reference/prompts.py`
 - 출처: https://github.com/pkargupta/taxoadapt (upstream commit `f7a4212934212e6b132be2c416921958f7c3cd21`)
 - 논문: Kargupta et al., "TaxoAdapt", ACL 2025 — https://aclanthology.org/2025.acl-long.1442/
-- 라이선스: Apache License 2.0 (사본: `licenses/Apache-2.0-taxoadapt.txt`)
-- 변경 여부: **무변경** (upstream과 byte-identical, 참고용 read-only)
-- 실제 이식된 부분: `taxonomy.py::get_siblings()`의 부분 이식이 `concept_gate_v7.py`에 포함됨 (PART B 테스트 대상)
+- 라이선스: Apache License 2.0 (사본: `licenses/Apache-2.0-taxoadapt.txt` — 이식분이 남아 있는 한 유지)
+- 이식된 부분: `taxonomy.py::Node.get_siblings()`의 부분 이식이
+  `concept_gate_v7.py`에 포함됨(파일 내 주석으로 표기, PART B 테스트 대상).
+  그 외 프롬프트 구조·분류 접근을 "참고"로 표기한 곳 2건도 같은 파일에 있음.
+- read-only 원본 사본(구 `reference/` 4파일 + INTEGRATION_NOTES.md)은
+  2026-08-23 제거 — import 0건·통합 완료 후 잔존물이었다. 원문이 필요하면
+  git 이력(추가 커밋 `51a1d7b`) 또는 위 upstream commit에서 복원한다.
+  **이 고지는 사본이 아니라 이식분에 붙는 것이므로 사본 제거 후에도 유지된다.**
 
 ## vendor/obo-relations — OBO Relation Ontology (CC0-1.0)
 
