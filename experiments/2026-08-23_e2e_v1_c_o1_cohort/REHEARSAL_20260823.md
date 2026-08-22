@@ -49,3 +49,26 @@ DirectMatch는 **구조적으로 0**이 된다. 따라서 source 자격 스캔 �
 - certification 축은 certified=False 고정으로 2×2의 C/D열만 관통 — A/B열은
   Verify 파이프라인 연결 시점에 별도 리허설 필요.
 - 재료는 발명 3건 — 20건 규모·실 corpus 어휘에서의 거동은 미측정.
+
+---
+
+## 추기 2 (같은 날) — certification 축 리허설 (A/B열)
+
+이전 리허설은 certified=False 고정이라 2×2의 C/D열만 관통했다. 이번에는
+**진짜 서명 기제**로 A/B열을 채웠다:
+
+- `issue_claim_certificate`(host-only 키, 스크래치 임시 키)로 trial claim
+  2건에 certificate 발급 → `_assert_certificate_grants_verdicts`
+  (authenticity→결박→유효성 — W5 순서 계약)로 검증 통과 후에만
+  certified=True.
+- 정답 1건 + **의도적 오답 1건**(술어 교체)에 둘 다 인증 → 실행기 관통:
+  2×2 = {A:1, **B:1**, C:0, D:0}, `certification_false_positive_ids`에
+  오답 trial이 정확히 지목, Coverage 1.0 / Yield 0.5 / P(pass|cert) 0.5.
+  **최초 제품 지표(B셀)가 실측으로 채워진 첫 기록.**
+
+정직 한계: 게이트 결과는 합성(`source.snapshot_hash` PASS 1건)이다 — 이
+리허설은 **배선**(발급·검증·집계 경로)의 증명이지 인증 의미론의 증명이
+아니다. 본 코호트에서 "Certified"가 IR trial에 대해 정확히 어떤 의무
+집합의 PASS를 뜻하는지는 **사전등록 동결 시 확정할 항목**으로 남는다
+(D-19의 certification-conditioned secondary 정의에 걸리는 마지막 미결 —
+[TBD-CERT-OBLIGATIONS]로 초안에 등재).

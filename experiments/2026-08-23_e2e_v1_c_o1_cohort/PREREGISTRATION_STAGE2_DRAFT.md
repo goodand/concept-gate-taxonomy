@@ -40,6 +40,7 @@ Q21.2 b\*)을 통과하고 fixture manifest 20건 + constructor profile hash가
 | expected canonical IR | `[TBD-EXPECTED-IR-HASHES]` — adapter(자격 7/7 PASS, 코드 결박) 산출의 sha256 |
 | canonicalization profile | `[TBD-PROFILE-HASH]` — D-22 §19: IR constructor와 source encoding profile(PMB_SBN_5_1 ¬∃¬→∀ codec) 분리 기록; 평가측 O1_PMB_LEMMA_NO_SENSE_V1(lemma 정규화, 커널 밖) — constructor 목록에서 유도(②의 단일 출처), manifest와 같은 커밋에서 hash 동결 |
 | model/version/config | `[TBD-MODEL]` — 프로브는 haiku로 수행했으나 코호트 모델은 동결 시 확정 |
+| certified bit의 의무 집합 | `[TBD-CERT-OBLIGATIONS]` — A/B열 배선은 리허설 완료(REHEARSAL 추기 2), 본 코호트의 "Certified" 정의(어느 의무들의 PASS인가)는 동결 시 확정 |
 | qualification vs capability fixture 분리 | `[TBD-SPLIT]` — 적격성 스캔(2경로, 불일치=FREEZE_BLOCKED) 통과 목록에서 분리 |
 
 ## C. 동결 절차 (예고)
