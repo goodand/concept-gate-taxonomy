@@ -165,3 +165,61 @@ W1~W3는 **§6이 이미 범위 밖으로 선언한 것과 같은 경계선**이
 | W3 | `depends_on` 생산자 | 자연스러운 의존이 아직 없다. 검출기를 발동시키려고 장식용 의존을 만들면 그게 P1이다. Refine 수리 루프가 실제 의존을 나를 때 함께 |
 | — | Certified-gate 전환 | authority 변경 — 상신 대상 (gap 분석 §5, 불변) |
 
+## 9. before_P1 큐 구현 (2026-08-22, 리뷰 판정 후)
+
+지시하신 탐색 프로토콜(1 workspace → 2 github → 3 TDD)대로 진행. **1단계에서
+중지** — Haiku(xhigh) 재사용 조사가 8/8 FOUND, 신규 작성 대상 0.
+
+### 9.1 W5 — 서명된 obligation certificate (BLOCKER 해소)
+
+| 부품 | 재사용 출처 | 방식 |
+|---|---|---|
+| HMAC sign/verify + domain 분리 | codex `_receipt.py:109-126` | **verbatim 이식** → `cg_identity.sign`/`verify_signature`(`verify`는 §29 AST 계약 때문에 개명, 본문 동일) |
+| host-only key (O_EXCL·0600·경쟁 안전) | codex `_receipt.py:87-106` | verbatim → `cg_identity.load_or_create_key` |
+| canonical bytes | 이미 이식됨(`cg_identity`) | 그대로 |
+| subject·revision 결박 | 이 모듈의 `claim_fingerprint`·`graph_revision` | 조립 |
+| 손제작 거부 음성 테스트 | codex `test_reviewer_isolation.py:96-104` | 패턴 변용 |
+
+구현: `issue_claim_certificate`(서버측 발급, 키 host-only) +
+`_assert_certificate_grants_verdicts`(authenticity → subject → revision →
+decider/assurance 유효성, **이 순서가 계약** — 서명 깨진 문서의 결박 오류를
+먼저 보고하면 조작 진행도 oracle이 된다). `certify_relation_claims`에
+`prior_certificates` 경로 추가. **authority 승격 규칙**: certificate만으로
+구성된 호출 = `certifying`, raw 문자열이 하나라도 섞이면 `diagnostic_only`
+(가장 약한 입력이 전체 지위를 정함 — fail-closed).
+
+W5 고정 테스트를 판정 지시대로 **뒤집었다**: 이제 두 불변식(raw는 승격 불가,
+손제작 certificate 거부)을 단언한다. TDD 8+3 테스트.
+
+### 9.2 W2 — semantic verdict × execution status 두 축 ((a)-refined)
+
+판정문 §4가 명령한 계약 변경. `ExecutionStatus{OK, UNAVAILABLE, ERROR}` 신설,
+`ObligationResult.execution`(기본 OK — 가산). classify_owl의 단일
+`REASONER_UNAVAILABLE`을 **의존성 부재(`REASONER_DEPENDENCY_UNAVAILABLE`,
+FileNotFoundError)와 실행 실패(`REASONER_RUNTIME_FAILURE`)로 분리**.
+매핑: optional+부재=UNAVAILABLE / required+부재=ERROR / crash=ERROR.
+**Dockerfile이 `CONCEPTGATE_REASONER_REQUIREMENT=required` 선언**(V2 지적 반영
+— docker는 JRE 보장하므로 부재 = unexpectedly missing). `certify()`가 두 축을
+나란히 반환(§5: FAIL이 "reasoner도 죽었다"를 삼키지 않음). TDD 7 테스트.
+
+### 9.3 oracle yaml title 교정
+
+O1/O2/O3/R1의 `title`을 verbatim 서지 제목으로 교체 + anthology_id/arxiv_id
+locator 추가. name(역할)/title(서지)은 이미 분리돼 있어 name 필드 유지.
+
+### 9.4 검증
+
+tool 계층 3경로 실측: 정품 certificate → `certifying`, 손제작 →
+`INVALID_CERTIFICATE` 거부, raw → `diagnostic_only`. 신규 테스트 18건 추가
+(certificate 9 + execution 7 + 뒤집은 고정 2). 전체 145 passed / 4 skipped,
+루트 8/0/1. **뮤테이션 게이트가 새 검증 가드
+(`_assert_certificate_grants_verdicts`)의 직접 음성 테스트 부재를 즉시 요구**
+— 추가함(서명·subject·revision 3거부 직접 겨눔).
+
+### 9.5 여전히 미결 (판정 유지)
+
+- W3(depends_on 생산자) — dormant_by_design.
+- Certified-gate authority 전환 — 별도 상신.
+- G32는 판정으로 종결(통일 금지) — 코드 변경 없음, execution 축 신설이
+  UNKNOWN/UNSCORABLE 혼동 위험을 구조적으로 낮춤.
+

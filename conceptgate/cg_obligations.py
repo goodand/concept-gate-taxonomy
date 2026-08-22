@@ -48,6 +48,34 @@ class Verdict(Enum):
     ERROR = "error"
 
 
+class ExecutionStatus(Enum):
+    """W2 (설계 리뷰 2026-08-22, (a)-refined): 실행 축 — semantic verdict와
+    직교한다. verdict는 "명제가 어떤가", execution은 "검사기가 돌았는가".
+
+      OK          — 검사기가 정상 실행됨 (verdict가 무엇이든)
+      UNAVAILABLE — 배포 프로파일상 optional인 의존성이 없어 못 돎 (예상됨)
+      ERROR       — required 의존성 부재 또는 실행 중 crash/timeout (예상 밖)
+
+    product state의 존재 이유: 단일 enum에 합치면 "ontology inconsistent
+    (semantic=FAIL, execution=OK)"와 "HermiT crash(semantic=UNKNOWN,
+    execution=ERROR)"의 원인 정보가 섞인다 — 판정문 §4·§5.
+    """
+    OK = "ok"
+    UNAVAILABLE = "unavailable"
+    ERROR = "error"
+
+
+# 배포 프로파일이 reasoner를 요구하는가. optional(기본)이면 의존성 부재는
+# UNAVAILABLE(예상된 미가용 — 로컬 개발·게이트의 BLOCKED 의미론과 일치),
+# required면 같은 부재가 ERROR다(docker 배포는 Dockerfile이 JRE를 보장하므로
+# 부재 = unexpectedly missing — 판정문 §4의 V2 지적). Dockerfile이
+# CONCEPTGATE_REASONER_REQUIREMENT=required를 선언한다.
+def reasoner_requirement() -> str:
+    import os
+    value = os.environ.get("CONCEPTGATE_REASONER_REQUIREMENT", "optional")
+    return value if value in ("optional", "required") else "optional"
+
+
 class Assurance(IntEnum):
     PROPOSED = 1
     SOURCE_ANCHORED = 2
@@ -130,6 +158,9 @@ class ObligationResult:
     # 값이 있으면 소비자는 자기 snapshot revision과 대조해 stale을 거부할
     # 수 있다(stale_obligations 참조).
     graph_revision: "str | int | None" = None
+    # W2: 실행 축. 기본 OK — 기존 생산자 전부가 "검사기가 돌았다" 경우이므로
+    # 가산적이다. 미가용/실패 생산자만 명시 설정한다.
+    execution: ExecutionStatus = ExecutionStatus.OK
 
 
 def validate_result(result: ObligationResult,
@@ -192,6 +223,21 @@ def aggregate(results: Iterable[ObligationResult]) -> Verdict:
     if verdicts == {Verdict.PASS}:
         return Verdict.PASS
     return Verdict.UNKNOWN
+
+
+_EXECUTION_SEVERITY = {ExecutionStatus.OK: 0,
+                       ExecutionStatus.UNAVAILABLE: 1,
+                       ExecutionStatus.ERROR: 2}
+
+
+def aggregate_execution(results: Iterable[ObligationResult]) -> ExecutionStatus:
+    """실행 축의 worst-of. 판정문 §5: aggregate가 FAIL을 돌려줘도 "동시에
+    reasoner 하나가 죽었다"는 정보를 버리지 않는다 — 두 축을 나란히 반환."""
+    worst = ExecutionStatus.OK
+    for r in results:
+        if _EXECUTION_SEVERITY[r.execution] > _EXECUTION_SEVERITY[worst]:
+            worst = r.execution
+    return worst
 
 
 def results_from_pipeline(serialized: Dict[str, Any]) -> List[ObligationResult]:
@@ -338,10 +384,24 @@ def results_from_classification(resp: Dict[str, Any]) -> List[ObligationResult]:
     spec = OBLIGATION_REGISTRY["owl.consistent"]
     if not resp.get("ok"):
         codes = [e.get("code") for e in resp.get("errors", [])]
+        # W2 매핑: 의존성 부재(예상 여부는 배포 선언이 정함) vs 실행 실패.
+        dep_absent = any(c in ("OWLREADY2_UNAVAILABLE",
+                               "REASONER_DEPENDENCY_UNAVAILABLE")
+                         for c in codes)
+        runtime_failure = any(c == "REASONER_RUNTIME_FAILURE" for c in codes)
+        if runtime_failure:
+            execution = ExecutionStatus.ERROR
+        elif dep_absent:
+            execution = (ExecutionStatus.ERROR
+                         if reasoner_requirement() == "required"
+                         else ExecutionStatus.UNAVAILABLE)
+        else:
+            execution = ExecutionStatus.OK  # 입력 오류 등 — 검사기 탓 아님
         return [ObligationResult(
             "owl.consistent", spec.on_unavailable, Assurance.PROPOSED,
             DeciderKind.REASONER,
-            reason=f"decider 미실행: {codes or 'unknown'}")]
+            reason=f"decider 미실행: {codes or 'unknown'}",
+            execution=execution)]
     unsat = resp.get("unsatisfiable") or []
     if unsat:
         return [ObligationResult(
@@ -532,13 +592,16 @@ def certify(results: List[ObligationResult],
     return {
         "ok": verdict is Verdict.PASS,
         "verdict": verdict.value,
+        # W2: 실행 축을 나란히 — verdict가 원인 정보를 삼키지 않게.
+        "execution": aggregate_execution(results).value,
         "errors": errors,
         "results": [
             {"obligation": r.obligation, "verdict": r.verdict.value,
              "assurance": r.assurance.name, "decider": r.decider.value,
              "evidence": r.evidence, "reason": r.reason,
              "depends_on": list(r.depends_on),
-             "graph_revision": r.graph_revision}
+             "graph_revision": r.graph_revision,
+             "execution": r.execution.value}
             for r in results
         ],
         "verifier": VERIFIER,
@@ -553,6 +616,97 @@ def certify(results: List[ObligationResult],
 # (test_cg_obligations.py의 OPTIONAL_DEPS 패턴과 같은 제약).
 
 _VERDICT_BY_VALUE = {v.value: v for v in Verdict}
+
+# ------------------------------------------- W5: 서명된 obligation certificate
+# 설계 리뷰(2026-08-22) required_fix의 구현. 부품은 전부 재사용:
+# canonical/HMAC/키는 cg_identity(← codex _receipt.py verbatim), 결박 어휘는
+# 이 모듈의 fingerprint·graph_revision, 유효성은 validate_result.
+
+CERTIFICATE_DOMAIN = "obligation-certificate"
+CERTIFICATE_SCHEMA = "obligation_certificate_v0"
+
+
+class CertificateError(Exception):
+    """certificate의 authenticity/결박/유효성 위반 — fail-closed 거부."""
+
+
+def issue_claim_certificate(claim: Dict[str, Any],
+                            results: List[ObligationResult],
+                            *, issuer_tool: str,
+                            key_path=None) -> Dict[str, Any]:
+    """claim 하나에 대한 게이트 결과를 서명된 certificate로 발급.
+
+    발급 주체는 **게이트를 실제로 실행한 서버측 코드**다 — MCP client가
+    자기 결과를 발급하는 경로는 없다(키가 host-only라 접근 불가).
+    subject_fingerprint와 graph_revision이 몸체에 들어가 서명되므로,
+    다른 claim·다른 revision으로의 재사용이 서명 검증 없이도 아니라
+    **서명 검증으로** 막힌다.
+    """
+    key = cg_identity.load_or_create_key(
+        key_path or cg_identity.default_key_path())
+    body = {
+        "schema": CERTIFICATE_SCHEMA,
+        "issuer": {"tool": issuer_tool, "verifier": VERIFIER},
+        "subject_fingerprint": cg_identity.claim_fingerprint(claim),
+        "graph_revision": claim.get("graph_revision"),
+        "results": [
+            {"obligation": r.obligation, "verdict": r.verdict.value,
+             "assurance": r.assurance.name, "decider": r.decider.value,
+             "evidence": r.evidence, "reason": r.reason,
+             "graph_revision": r.graph_revision}
+            for r in results],
+    }
+    return {**body, "signature": cg_identity.sign(
+        body, key, domain=CERTIFICATE_DOMAIN)}
+
+
+def _assert_certificate_grants_verdicts(
+        cert: Dict[str, Any], claim: Dict[str, Any], key: bytes,
+        registry: Dict[str, ObligationSpec] | None = None
+) -> Dict[str, Verdict]:
+    """authenticity → 결박 → 유효성 순서로 검사하고, 통과 시에만
+    certificate가 나르는 {obligation: Verdict}를 돌려준다.
+
+    순서가 계약이다: 서명이 깨진 문서의 '결박 오류'를 먼저 보고하면
+    공격자에게 조작 진행도를 알려주는 oracle이 된다 — authenticity 먼저.
+    """
+    if not cg_identity.verify_signature(cert, key, domain=CERTIFICATE_DOMAIN):
+        raise CertificateError(
+            "certificate signature is absent or does not verify -- a "
+            "hand-written or edited-after-signing document is refused "
+            "(host-only key; the caller cannot manufacture this)")
+    if cert.get("subject_fingerprint") != cg_identity.claim_fingerprint(claim):
+        raise CertificateError(
+            f"certificate subject {cert.get('subject_fingerprint')!r} does "
+            f"not match this claim's fingerprint -- a certificate issued for "
+            f"another claim cannot be replayed here (subject binding)")
+    if cert.get("graph_revision") != claim.get("graph_revision"):
+        raise CertificateError(
+            f"certificate revision {cert.get('graph_revision')!r} != claim "
+            f"revision {claim.get('graph_revision')!r} -- stale certificate "
+            f"(revision binding)")
+    granted: Dict[str, Verdict] = {}
+    for row in cert.get("results", []):
+        try:
+            rebuilt = ObligationResult(
+                row["obligation"], _VERDICT_BY_VALUE[row["verdict"]],
+                Assurance[row["assurance"]], DeciderKind(row["decider"]),
+                evidence=row.get("evidence", ""),
+                reason=row.get("reason", ""),
+                graph_revision=row.get("graph_revision"))
+        except (KeyError, ValueError) as exc:
+            raise CertificateError(
+                f"certificate result row is not well-formed: {exc!r}") from exc
+        violations = validate_result(rebuilt, registry)
+        if violations:
+            raise CertificateError(
+                f"signed result violates obligation invariants "
+                f"{[v['code'] for v in violations]} -- a signature proves "
+                f"origin, not authority: "
+                f"{rebuilt.obligation} by {rebuilt.decider.value}")
+        granted[rebuilt.obligation] = rebuilt.verdict
+    return granted
+
 
 
 def _assert_prior_verdicts_are_well_formed(
@@ -576,8 +730,10 @@ def certify_relation_claims(
         claims: List[Dict[str, Any]],
         evidence_texts: Dict[str, str],
         prior_verdicts: Dict[str, Dict[str, str]] | None = None,
+        prior_certificates: List[Dict[str, Any]] | None = None,
         profile: CertificationProfile = LEGACY_RELATION_PROFILE,
-        current_revision: "str | int | None" = None) -> Dict[str, Any]:
+        current_revision: "str | int | None" = None,
+        key_path=None) -> Dict[str, Any]:
     """v0 인증 사슬의 단일 진입점 (지시 §25 step 3~6의 배선형).
 
     이 함수가 **하지 않는 것**을 먼저: 게이트를 재실행하지 않는다.
@@ -595,26 +751,51 @@ def certify_relation_claims(
     표 포함), 무엇이 stale이고, fingerprint가 무엇인지 — 호출자가 이
     응답만으로 §7식 재구성을 할 수 있게.
 
-    ⚠️ W5 BLOCKER (설계 리뷰 2026-08-22, DESIGN_DECISION_refine_verify_v0_review.md):
-    `prior_verdicts`는 **well-formed 검증만 되고 authenticity 검증이 없다** —
-    호출자가 "pass" 문자열을 조작 공급하면 게이트가 실행된 적 없는 claim도
-    인증된다(공격 재현으로 실증). 발급 도구·subject fingerprint·revision에
-    결박된 서명 certificate 검증이 착륙하기 전까지, 이 함수의 반환은
-    `authority: diagnostic_only`다 — `certified_claim_ids`를 권위 있는
-    인증 결과로 소비하지 마라.
+    W5 수정 (2026-08-22): 두 입력 경로의 지위가 다르다.
+    `prior_certificates`(서명 문서)는 authenticity → subject/revision 결박 →
+    decider/assurance 유효성 검증을 전부 통과해야 하며, 그 경로만으로 구성된
+    호출이 `authority: certifying`이다. raw `prior_verdicts` 문자열은
+    하위호환으로 받되 결과는 영구히 `diagnostic_only` — 미인증 입력이 섞인
+    호출도 마찬가지다(가장 약한 입력이 전체 지위를 정한다).
     """
     _assert_prior_verdicts_are_well_formed(prior_verdicts)
     prior_verdicts = prior_verdicts or {}
+
+    # W5 수정: 인증된 경로. certificate는 authenticity → 결박 → 유효성을
+    # 전부 통과해야 하고, 하나라도 위반이면 호출 전체가 CertificateError로
+    # 거부된다(fail-closed — 위조 인증서를 조용히 건너뛰면 공격자가 유효한
+    # 것만 남을 때까지 재시도한다).
+    authenticated: Dict[str, Dict[str, Verdict]] = {}
+    if prior_certificates:
+        key = cg_identity.load_or_create_key(
+            key_path or cg_identity.default_key_path())
+        fp_to_claim = {cg_identity.claim_fingerprint(c): c for c in claims}
+        for cert in prior_certificates:
+            subject = fp_to_claim.get(cert.get("subject_fingerprint"))
+            if subject is None:
+                raise CertificateError(
+                    f"certificate subject {cert.get('subject_fingerprint')!r} "
+                    f"matches none of the presented claims (subject binding)")
+            granted = _assert_certificate_grants_verdicts(cert, subject, key)
+            authenticated.setdefault(subject["id"], {}).update(granted)
 
     anchoring = results_from_claim_anchoring(claims, evidence_texts)
     anchoring_by_claim = dict(zip((c["id"] for c in claims), anchoring))
 
     verdicts_by_claim: Dict[str, Dict[str, Verdict]] = {}
     for c in claims:
-        merged = {check: _VERDICT_BY_VALUE[value]
-                  for check, value in prior_verdicts.get(c["id"], {}).items()}
+        merged = dict(authenticated.get(c["id"], {}))
+        merged.update({check: _VERDICT_BY_VALUE[value]
+                       for check, value in prior_verdicts.get(c["id"], {}).items()})
         merged["claim.evidence_anchoring"] = anchoring_by_claim[c["id"]].verdict
         verdicts_by_claim[c["id"]] = merged
+
+    # authority: 가장 약한 입력이 전체 지위를 정한다. raw 문자열이 하나라도
+    # 섞이면 diagnostic_only — 미인증 입력이 인증에 기여한 결과를 "certifying"
+    # 이라 부르는 순간 W5가 한 칸 옆에서 재현된다.
+    authority = ("certifying"
+                 if authenticated and not prior_verdicts
+                 else "diagnostic_only")
 
     certified = certified_projection(claims, verdicts_by_claim, profile)
     certificate = certify(anchoring)
@@ -624,9 +805,9 @@ def certify_relation_claims(
 
     return {
         "ok": True,
-        # W5가 닫히기 전까지의 잠정 지위 (판정문 until_fixed 요구). 수정이
-        # 착륙하면 authenticity 검증 성공 시에만 "certifying"으로 승격한다.
-        "authority": "diagnostic_only",
+        # W5 수정 착륙(2026-08-22): 인증된 certificate만으로 구성된 호출은
+        # "certifying", raw 문자열이 하나라도 섞이면 "diagnostic_only".
+        "authority": authority,
         "profile": profile.profile_id,
         "profile_required": list(profile.required),
         "anchoring_certificate": certificate,

@@ -26,7 +26,11 @@ semantic adjudication). 이 계약은 `test_cg_identity.py`의 AST 검사가
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
+import os
+import secrets
+from pathlib import Path
 
 SCHEMA_VERSION = "0.1.0"
 
@@ -101,3 +105,79 @@ def graph_fingerprint(graph: dict) -> str:
 
 def obligation_target_fingerprint(target: dict) -> str:
     return fingerprint("obligation_target", target)
+
+
+# ------------------------------------------------------ authentication ----
+# W5 수정 (설계 리뷰 2026-08-22). 아래 세 함수는 codex 라인 `_receipt.py`
+# (round 21, finding #1)에서 **본문 그대로** 가져왔다 — 그 라운드가 실측한
+# 결함("자기 공개 내용의 공개 해시는 아무것도 인증하지 않는다 — 손으로 쓴
+# receipt가 수락됐다")이 정확히 W5의 형태였고, 해법도 이미 검증돼 있었다.
+#
+# 서명이 막는 것과 못 막는 것 (원본의 정직 고지 유지):
+#   막는다 — 키를 읽을 수 없는 호출자(MCP client/LLM)의 certificate 조작,
+#            손으로 쓴 문서, 서명 후 편집.
+#   못 막는다 — 이 호스트 파일시스템에 읽기 접근이 있는 주체. 키는 파일이다.
+# 이 한계를 실제보다 강하게 서술하지 마라.
+
+KEY_BYTES = 32
+
+
+def default_key_path() -> Path:
+    """host-only 서명 키의 기본 위치. 테스트·배포는 key_path 인자/환경변수로
+    주입한다(codex 선례: reviewer_runner.py:598-604 "key_path exists so a
+    test can present a different key")."""
+    env = os.environ.get("CONCEPTGATE_KEY_PATH")
+    if env:
+        return Path(env)
+    return Path.home() / ".conceptgate" / "host.key"
+
+
+def load_or_create_key(path: Path) -> bytes:
+    """The host-only signing key, created on first use with mode 0600.
+
+    O_EXCL, not `if not path.exists()`: two launchers starting together would
+    otherwise both pass the check and the second would overwrite the key the
+    first had already signed with, invalidating a receipt nobody edited.
+    (verbatim from _receipt.py)
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    except FileExistsError:
+        key = path.read_bytes()
+        if len(key) != KEY_BYTES:
+            raise ValueError(
+                f"{path.name} is {len(key)} bytes, expected {KEY_BYTES}; "
+                "refusing to sign with a truncated key") from None
+        return key
+    with os.fdopen(fd, "wb") as fh:
+        key = secrets.token_bytes(KEY_BYTES)
+        fh.write(key)
+    return key
+
+
+def sign(body: dict, key: bytes, *, domain: str) -> str:
+    """HMAC-SHA256 over the canonical body, namespaced by `domain`.
+
+    `domain` keeps an isolation receipt from ever validating as some other
+    kind of receipt signed with the same key -- the two have different
+    meanings and must not be substitutable. (verbatim from _receipt.py)
+    """
+    msg = domain.encode("utf-8") + b"\x00" + canonical_bytes(body)
+    return hmac.new(key, msg, hashlib.sha256).hexdigest()
+
+
+def verify_signature(doc: dict, key: bytes, *, domain: str,
+                     field: str = "signature") -> bool:
+    """True when `doc[field]` is this key's signature over the rest of `doc`.
+
+    (원본 이름 `verify`에서 개명 — 이 모듈의 §29 AST 부정 계약이 판단형
+    이름을 금지하는데 `verify` 단독은 판정으로 오독될 여지가 있어,
+    서명 검증임이 이름에 드러나게 했다. 본문은 verbatim.)
+    """
+    presented = doc.get(field)
+    if not isinstance(presented, str):
+        return False
+    body = {k: v for k, v in doc.items() if k != field}
+    return hmac.compare_digest(sign(body, key, domain=domain), presented)
+

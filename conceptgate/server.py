@@ -818,12 +818,23 @@ def classify_owl(owl: dict) -> dict:
                          "detail": str(exc)}]})
     try:
         result = cg_owl.classify(world, onto)
+    except FileNotFoundError as exc:
+        # W2 (판정 §4): 의존성 부재와 실행 실패를 한 코드로 잡지 않는다.
+        # `java` 바이너리 부재는 FileNotFoundError로 드러난다 — 예상 여부는
+        # 배포 선언(CONCEPTGATE_REASONER_REQUIREMENT)이 정하고, obligation의
+        # execution 축이 그 판정을 나른다. (이 코드 분리는 판정문이 명령한
+        # 계약 변경이다 — 이전 단일 코드 REASONER_UNAVAILABLE의 후신.)
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-classify",
+             "errors": [{"stage": "owl-classify",
+                         "code": "REASONER_DEPENDENCY_UNAVAILABLE",
+                         "detail": f"java 실행 파일 부재: {str(exc)[:200]}"}]})
     except Exception as exc:
         return _attach_owl_obligations(
             {"ok": False, "stage": "owl-classify",
              "errors": [{"stage": "owl-classify",
-                         "code": "REASONER_UNAVAILABLE",
-                         "detail": f"HermiT 실행 실패 (Java 필요): "
+                         "code": "REASONER_RUNTIME_FAILURE",
+                         "detail": f"HermiT 실행 중 실패(crash/timeout): "
                                    f"{str(exc)[:200]}"}]})
     return _attach_owl_obligations(
         {"ok": True, "stage": "owl-classify", **result})
@@ -832,6 +843,7 @@ def classify_owl(owl: dict) -> dict:
 @mcp.tool
 def certify_claims(claims: list, evidence_texts: dict,
                    prior_verdicts: dict | None = None,
+                   prior_certificates: list | None = None,
                    current_revision: str | int | None = None) -> dict:
     """relation claim들의 인증 사슬 실행 — Refine/Verify v0의 MCP 표면.
 
@@ -853,9 +865,13 @@ def certify_claims(claims: list, evidence_texts: dict,
     {claim_id: {check_name: "pass"|"fail"|"unknown"|"error"}} — enum 밖
     문자열은 거부한다(오타가 조용한 인증 탈락이 되는 것을 막는다).
 
-    ⚠️ 응답의 `authority: diagnostic_only`가 뜻하는 것: prior_verdicts의
-    **출처 인증이 아직 없다**(W5 BLOCKER). 조작된 "pass" 공급이 가능하므로
-    `certified_claim_ids`는 진단 참고이지 권위 있는 인증이 아니다.
+    authority 두 경로 (W5 수정, 2026-08-22): `prior_certificates`(서버가
+    `issue_claim_certificate`로 발급한 서명 문서)만으로 구성된 호출은
+    `authority: certifying` — 서명·subject fingerprint·revision 결박·
+    decider/assurance 유효성이 전부 검증된 뒤에만이다. raw `prior_verdicts`
+    문자열이 하나라도 섞이면 `diagnostic_only` — 미인증 입력은 어떤 조합
+    으로도 권위를 얻지 못한다. 조작·변조·오결박 certificate는
+    INVALID_CERTIFICATE로 거부된다.
     """
     try:
         if not isinstance(claims, list) or any(
@@ -873,7 +889,13 @@ def certify_claims(claims: list, evidence_texts: dict,
                                           "evidence_id to text"}]}
         return cg_obligations.certify_relation_claims(
             claims, evidence_texts, prior_verdicts=prior_verdicts,
+            prior_certificates=prior_certificates,
             current_revision=current_revision)
+    except cg_obligations.CertificateError as exc:
+        return {"ok": False, "stage": "certify-claims",
+                "errors": [{"stage": "certify-claims",
+                            "code": "INVALID_CERTIFICATE",
+                            "detail": str(exc)[:300]}]}
     except ValueError as exc:
         # 신뢰 경계 거부(prior_verdicts 오형 등)를 구조화 오류로 변환 —
         # MCP 응답 계약은 raise가 아니라 {ok: False, errors}다.

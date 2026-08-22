@@ -10,6 +10,10 @@
 #   - Parse into JSON internally if strict machine validation is required.
 #   - Do NOT expose external_oracle answers to Refine/Verify/model-facing prompts.
 
+# AMENDMENT 2026-08-22 (DESIGN_DECISION_refine_verify_v0_review.md §7이 명령):
+#   source_authority.title 4건(O1/O2/O3/R1)이 설명어였던 것을 논문의 verbatim
+#   서지 제목으로 교체. 역할 이름은 각 oracle의 name 필드가 이미 담당한다.
+#   재현 가능한 locator(anthology_id/arxiv_id) 추가. 그 외 무변경.
 schema_version: "semantic_oracle_handoff_v0.1"
 status: "design-confirmed"
 language: "ko"
@@ -79,7 +83,8 @@ oracle_sets:
       relation: "generally_non_equivalent"
     source_authority:
       primary:
-        title: "A Corpus of Scope-Disambiguated English Text"
+        title: "A Corpus of Encyclopedia Articles with Logical Forms"
+        anthology_id: "2020.lrec-1.132"
         authors: "Nathan Rasmussen; William Schuler"
         year: 2020
         venue: "LREC 2020"
@@ -121,7 +126,8 @@ oracle_sets:
       relation: "generally_non_equivalent"
     source_authority:
       primary:
-        title: "Intensionality in Abstract Meaning Representation"
+        title: "Intensionalizing Abstract Meaning Representations: Non-Veridicality and Scope"
+        anthology_id: "2021.law-1.17"
         authors: "Williamson et al."
         year: 2021
         authority_type: "published_formal_analysis"
@@ -155,7 +161,8 @@ oracle_sets:
       relation: "generally_non_equivalent"
     source_authority:
       primary:
-        title: "Controlled Natural Language / Formal Modal Logic Dataset"
+        title: "Logical forms complement probability in understanding language model (and human) performance"
+        anthology_id: "2025.acl-long.824"
         authors: "Wang & Shi"
         year: 2025
         venue: "ACL 2025"
@@ -204,7 +211,8 @@ oracle_sets:
       - "formal_modal_reasoning"
     source_authority:
       primary:
-        title: "A Formalization of Modal Logic S5 in Lean"
+        title: "A Henkin-style completeness proof for the modal logic S5"
+        arxiv_id: "1910.01697"
         authors: "Bentzen"
         year: 2019
         authority_type: "machine_checked_logic"

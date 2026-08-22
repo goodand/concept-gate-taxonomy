@@ -27,6 +27,11 @@ COPY vendor/ ./vendor/
 COPY THIRD_PARTY_NOTICES.md ./
 COPY licenses/ ./licenses/
 
+# 이 이미지는 JRE를 보장하므로 reasoner는 required다 — 부재는
+# "예상된 미가용(UNAVAILABLE)"이 아니라 ERROR(unexpectedly missing).
+# 판정문 §4의 reasoner_capability 선언 (W2).
+ENV CONCEPTGATE_REASONER_REQUIREMENT=required
+
 ENV PYTHONUNBUFFERED=1 \
     MCP_TRANSPORT=http \
     PORT=8000

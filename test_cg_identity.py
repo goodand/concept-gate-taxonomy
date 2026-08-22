@@ -95,4 +95,7 @@ def test_kernel_module_imports_no_judgment_modules():
         node.module for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom) and node.module
     }
-    assert imported <= {"hashlib", "json", "__future__"}, imported
+    # W5 수정으로 서명 primitive가 이식되며 hmac/os/secrets/pathlib 추가 —
+    # 전부 stdlib이고 판정 모듈은 여전히 금지.
+    assert imported <= {"hashlib", "json", "hmac", "os", "secrets",
+                        "pathlib", "__future__"}, imported

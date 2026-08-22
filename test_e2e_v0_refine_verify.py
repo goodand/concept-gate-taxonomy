@@ -270,26 +270,32 @@ def test_orchestrator_reports_stale_anchoring_against_current_revision():
     assert out2["stale_anchoring_obligations"] == []
 
 
-def test_w5_laundering_reproduces_until_fixed():
-    """W5 BLOCKER의 고정 재현 (설계 리뷰 2026-08-22).
+def test_w5_is_fixed_fabrication_cannot_reach_certifying_authority():
+    """W5 BLOCKER — 수정 착륙으로 뒤집힌 고정 테스트 (2026-08-22).
 
-    이 테스트는 결함을 **문서화**한다: 게이트가 한 번도 실행되지 않은 claim이
-    조작된 전부-pass prior만으로 인증된다. authenticity 검증이 착륙하면 이
-    테스트를 뒤집는 것(조작 prior → 거부)이 수정 완료의 정의다 — 그때까지
-    응답의 authority는 diagnostic_only여야 한다. 이 테스트를 지우는 것으로
-    W5를 '해소'하지 마라.
+    원판은 결함을 문서화했다: 조작된 전부-pass prior가 게이트 미실행 claim을
+    인증했다. 수정 후의 불변식은 두 개다 — (1) raw 문자열 경로는 무엇을
+    공급하든 authority가 diagnostic_only를 벗어날 수 없고, (2) 서명 없는
+    조작 certificate는 아예 거부된다. 이 테스트를 지우는 것으로 회귀를
+    '해소'하지 마라 — 이 두 불변식이 무너지면 laundering이 돌아온 것이다.
     """
-    from conceptgate.cg_obligations import LEGACY_RELATION_PROFILE
+    from conceptgate.cg_obligations import (
+        CertificateError, LEGACY_RELATION_PROFILE)
     claims = [{"id": "evil", "claim_kind": "relation_assertion",
                "concept": "납", "feature": "금",
                "relation": "structural_composition",
                "cited_evidence_ids": ["e1"]}]
     ev = {"e1": "납과 금이 언급된 아무 문장"}
+
+    # 불변식 1: raw 문자열은 결코 certifying에 도달하지 못한다
     fabricated = {"evil": {n: "pass" for n in LEGACY_RELATION_PROFILE.required
                            if n != "claim.evidence_anchoring"}}
     out = certify_relation_claims(claims, ev, prior_verdicts=fabricated)
-    assert out["certified_claim_ids"] == ["evil"], (
-        "W5가 더 이상 재현되지 않는다 — authenticity 검증이 착륙했다면 이 "
-        "테스트를 '조작 prior 거부' 단언으로 뒤집고 authority 승격 로직을 "
-        "함께 검증하라")
     assert out["authority"] == "diagnostic_only"
+
+    # 불변식 2: 손제작 certificate는 거부된다
+    forged = {"schema": "obligation_certificate_v0",
+              "subject_fingerprint": "claim:" + "0" * 64,
+              "graph_revision": None, "results": []}
+    with pytest.raises(CertificateError):
+        certify_relation_claims(claims, ev, prior_certificates=[forged])
