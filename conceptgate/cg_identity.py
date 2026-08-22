@@ -65,7 +65,7 @@ def canonical_sha256(doc: dict | None) -> str | None:
 # node fingerprint가 우연히 claim fingerprint로 검증되는 대체 가능성을
 # 구조적으로 없앤다. 같은 내용이라도 kind가 다르면 fingerprint가 다르다.
 
-_FINGERPRINT_KINDS = ("node", "claim", "graph", "obligation_target")
+_FINGERPRINT_KINDS = ("node", "claim", "graph", "obligation_target", "formula")
 
 
 def _assert_known_fingerprint_kind(kind: str) -> None:
