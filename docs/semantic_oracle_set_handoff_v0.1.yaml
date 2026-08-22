@@ -10,6 +10,12 @@
 #   - Parse into JSON internally if strict machine validation is required.
 #   - Do NOT expose external_oracle answers to Refine/Verify/model-facing prompts.
 
+# AMENDMENT 2 2026-08-22 (D-E2E-v1-20이 승인·문안 제공):
+#   fixture_template의 source.text / external_oracle.representation_verbatim을
+#   inline_verbatim 전용에서 union-type(inline_verbatim | sha256_pinned_external)
+#   으로 개정. architecture_invariants에 ORACLE-08~12 추가. 근거: O1 corpus의
+#   재배포 조건 미확정(LICENSE 부재 + 논문 CC-BY-NC) — 판정 원문은
+#   DESIGN_DECISION_o1_fixture_licensing.md.
 # AMENDMENT 2026-08-22 (DESIGN_DECISION_refine_verify_v0_review.md §7이 명령):
 #   source_authority.title 4건(O1/O2/O3/R1)이 설명어였던 것을 논문의 verbatim
 #   서지 제목으로 교체. 역할 이름은 각 oracle의 name 필드가 이미 담당한다.
@@ -44,6 +50,17 @@ architecture_invariants:
     rule: "Semantic interpretation evaluation and downstream reasoner evaluation are separate."
   - id: "INV-ORACLE-07"
     rule: "FAIL, UNKNOWN, and runtime ERROR are distinct outcomes."
+  # D-E2E-v1-20 신설 (2026-08-22)
+  - id: "INV-ORACLE-08"
+    rule: "External oracle artifacts need not be stored in the repository when redistribution is not authorized or is unclear, but their exact bytes MUST be cryptographically committed before execution."
+  - id: "INV-ORACLE-09"
+    rule: "Availability is not identity: failure to retrieve an artifact does not change fixture identity. A retrieved or cached artifact may be used only if its bytes match the preregistered hash."
+  - id: "INV-ORACLE-10"
+    rule: "A deterministic Oracle Adapter may translate published formal representations into project canonical IR, but it MUST NOT be imported by or provide semantic judgments to Refine or Verify."
+  - id: "INV-ORACLE-11"
+    rule: "Commitment is not correctness: a matching expected-IR hash proves consistency with the preregistered oracle transformation, not its semantic correctness. Oracle Adapter qualification is a separate prerequisite."
+  - id: "INV-ORACLE-12"
+    rule: "Oracle Adapter source code, tests, and fixtures MUST NOT embed corpus sentences, logical forms, or fixture-ID-to-answer lookup tables except where redistribution is separately authorized."
 
 asset_classes:
   semantic_oracle_core:
@@ -390,20 +407,36 @@ authority_types:
     meaning: "proof assistant/theorem prover에서 검증된 formal logic asset"
     example: "S5/Lean; FraCaS/Coq"
 
+# fixture_template — D-E2E-v1-20 개정. normative text (판정 원문 verbatim):
+#   "Oracle fixture source text and source formal representation SHOULD be
+#    stored verbatim when redistribution is authorized. When redistribution
+#    authorization is absent, unclear, or intentionally excluded by experiment
+#    policy, either field MAY instead be represented by a SHA-256-pinned
+#    external reference. A pinned external reference MUST identify the source
+#    artifact and record locator and MUST fail closed if retrieved bytes do
+#    not match the preregistered hash."
 fixture_template:
   case_id: "O1-example-001"
   oracle_id: "O1"
   source:
-    text: "<verbatim source sentence>"
     language: "en"
     source_locator:
-      title: "<paper/corpus title>"
-      url: "<source URL>"
-      page_or_item: "<page/example/item ID>"
+      corpus_id: "<corpus>"
+      corpus_version: "<version>"
+      artifact: "<file>"
+      record_locator: "<stable record/line identifier>"
+      retrieval_urls: ["<resolver URL — identity 아님>"]
+    content:
+      mode: "inline_verbatim | sha256_pinned_external"
+      text: null            # mode=inline_verbatim일 때만
+      text_sha256: "<sha256>"  # 항상 요구
   external_oracle:
     authority_type: "HUMAN_ANNOTATED_LF"
     formalism: "typed_lambda_calculus"
-    representation_verbatim: "<verbatim or source-faithful formal representation>"
+    representation:
+      mode: "inline_verbatim | sha256_pinned_external"
+      representation_verbatim: null   # mode=inline_verbatim일 때만
+      representation_sha256: "<sha256>"  # 항상 요구
     accepted_interpretation_id: "<optional internal evaluator-only ID>"
     competing_interpretations:
       - id: "<optional>"
