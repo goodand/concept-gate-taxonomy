@@ -17,3 +17,7 @@ uv.lock
 dist/
 build/
 *.egg-info/
+
+# D-E2E-v1-20 §Q20.4: oracle fixture의 로컬 content-addressed 캐시.
+# 캐시는 권위가 아니고(해시 대조 전용) 커밋되면 corpus 재배포가 된다.
+.oracle_cache/
