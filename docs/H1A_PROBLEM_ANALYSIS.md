@@ -817,3 +817,176 @@ G24: 판정 도착 전에 쓴 해석 산문은 **쓸 때는 위반이 아니었�
   재독"은 별도 확립 필요.
 - §6.7의 "결과 미확인"은 이 절이 승계했다 — **이 문서의 최신 상태 서술은
   항상 마지막 절이다.**
+
+---
+
+# 8. 갱신 — 2026-08-22 (§7 이후: v0 구현 ~ Stage 1 성립)
+
+범위: 커밋 `996c0f0`~`277030f` (16건). §7이 "§6 이후 같은 날"이었듯 이 절도
+같은 날의 연속이다 — 이 문서의 최신 상태 서술은 항상 마지막 절이다(§7.7).
+이 절부터 대상이 H1a를 넘어 Refine↔Verify/E2E-v1 프로그램이지만, 패턴 계보
+(P1~P15, M1~M11)가 연속이므로 같은 문서에 잇는다.
+
+## 8.0 규모 delta
+
+| 항목 | §7 시점 | §8 시점 |
+|---|---|---|
+| 외부 왕복 | 지시 1 + manifest 1 | +리뷰 판정(W5 BLOCKER) +D-E2E-v1-19 +조사 요청 발신 1 |
+| 제품 코드 | cg_identity 착륙 | +cg_ir, +cg_evaluate, +certificate 사슬(발급 tool 포함), +ERROR/execution 축 |
+| 실험 | — | E2E-v1 Stage 1 **성립**(8/8), Stage 2 corpus 관문 조사 중 |
+| 테스트 | 176 | **190+실험 3** (게이트 9/0/1) |
+| 위임 실행 | 조사 2 | **조사 5 + 구현 2 + 적대검증 1** (Haiku 프로토콜 정착) |
+
+## 8.1 (1) 신규 이슈
+
+| # | 문제 정의 | 발견 경로 | 해결 | 해결 방법 |
+|---|---|---|---|---|
+| **G37** | v0 primitive 4종이 테스트는 전부 통과하면서 **실제 MCP 경로에 미배선**(W1) — E2E 테스트가 server.py를 import조차 안 함 | 사용자 지시 "작동 test하면서 배선 누락 점검" → 적대 grep | ✅ | 신규 tool `certify_claims` 배선 + 의존성 표의 과장 서술("소비자=server.py") 정정. **P9의 4회차** — 이번엔 내 자신의 당일 코드 |
+| **G38** | `Verdict.ERROR`의 프로덕션 생산자 부재(W2) | 같은 감사 | ✅ (판정 후) | 의도적 미결로 보고 → 판정 (a)-refined → **semantic×execution 두 축** + reasoner 코드 분리 + Dockerfile `required` 선언 |
+| **G39** | `depends_on` 생산자 부재로 순환 검출이 실전 미발동(W3) | 같은 감사 | ⬜ **dormant_by_design** | 검출기 발동을 위해 장식 의존을 만드는 것 자체가 공허 검사 제조 — 판정도 동의 |
+| **G40** | **`conceptgate/` 패키지 전체가 뮤테이션 게이트의 역사적 사각지대**(W4) — `assert_`/`_assert_` 명명 함수 0개라 스캐너가 한 번도 안 봄 | 신규 가드 2개가 스캔 밖임을 발견 → `grep "^def _\?assert_"` 0건 실측 | ✅ (신규분) | raise를 `_assert_*` 함수로 추출 + 직접 호출 음성 테스트. **효과 즉증**: 다음 날 쓴 가드의 음성 테스트 부재를 게이트가 몇 초 안에 거부. 기존 함수 소급 개명은 별도 diff로 유보 |
+| **G41** | **W5 BLOCKER** — `prior_verdicts`의 well-formedness 검증을 authenticity로 착각: 게이트 0회 실행 claim이 조작 문자열만으로 인증됨 | 설계 리뷰 → **공격 재현으로 실증** (`certified==['evil']`) | ✅ | codex receipt 기제 verbatim 재사용(HMAC·host-only
+---
+
+# 8. 갱신 — 2026-08-22 (§7 이후: Refine↔Verify v0 → E2E-v1 Stage 1)
+
+§7은 D-H1a-18 종결까지였다. 이 절은 그 다음 프로그램(설계 지시 수령 → v0
+구현 → W5 BLOCKER 사이클 → E2E-v1 판정 → IR → Stage 1)을 잇는다. 범위:
+커밋 `996c0f0`~`277030f`(16건). 시간순은 각 `DESIGN_*` 문서에, 이 절은
+패턴 단면이다.
+
+## 8.0 규모 delta
+
+| 항목 | §7 | §8 |
+|---|---|---|
+| 외부 판정/지시 | ~D-H1a-18 | +아키텍처 지시 · v0 리뷰(W5) · D-E2E-v1-19 |
+| 제품 코드 신설 | — | `cg_identity` · `cg_ir` · `cg_evaluate` (전부 잎/커널) |
+| subagent 위임 | 검토 위주 | **조사(xhigh)·구현(medium)·적대검증 반복 위임** — 프로토콜화 |
+| 실험 | H1a 종결 | E2E-v1 Stage 1 성립(계측 자격 8/8) |
+
+## 8.1 (1) 신규 이슈
+
+| # | 문제 정의 | 발견 경로 | 검증 근거 | 해결 | 방법 |
+|---|---|---|---|---|---|
+| **G37** | v0 primitive 4종이 실 MCP 경로에 **미배선**(테스트 통과 ≠ 배선) | 사용자 지시 "배선 점검" → 자기 grep | `grep cg_identity server.py` 0건 (M2) | ✅ | `certify_claims` tool 신설. **P9의 반복이나, 이번엔 사용자 지시가 촉발** |
+| **G38** | 신규 가드 2종이 뮤테이션 게이트 **스캔 표면 밖**(명명 규약 불일치) — `conceptgate/` 전체가 역사적 사각지대(`assert_` 함수 0개) | 배선 점검 중 | `grep "^def _assert_" conceptgate/*.py` 0건 (M1) | ✅ | `_assert_` 함수로 추출. **다음 회차 신규 가드를 게이트가 즉시 거부**해 W4 수정의 작동을 실증 |
+| **G39 (BLOCKER)** | `certify_claims`가 **well-formedness를 authenticity로 착각** — 조작 prior 문자열만으로 게이트 미실행 claim이 인증됨 | 설계 담당 리뷰 → 내가 **공격 재현** | `certified_claim_ids==['evil']` 실증 (M3) | ✅ | 서명 certificate(codex `_receipt` verbatim 재사용) + authenticity→subject→revision→validity 순서. raw는 영구 diagnostic_only |
+| **G40** | 진행 보고의 "Java 없음(기본 Render)" 전제가 **Dockerfile과 모순** | 리뷰 판정 V2 | Dockerfile `default-jre-headless` 실측 (M1) | ✅ | P14 정정 2곳. **판정자가 내 문서의 사실 오류를 잡음** — 자기감사의 한계 |
+| **G41** | O1 corpus **접근 불가** 판정을 subagent가 "NO"로 냄 | 관문 조사 | lead가 PDF 스트림 직접 해제 → 배포처 문장 verbatim 발견 (M1+M2) | 🔶 진행 | subagent 부재 판정 **뒤집음**(2회차). 조사 프롬프트에 단서 이식 |
+| **G42** | 재사용 조사 subagent가 "h1a-decider 재사용, 새 agent 불필요"로 오판 | 조사 보고 lead 재실측 | h1a-decider는 select_type/defer 출력, IR 아님 (M1) | ✅(예방) | 새 agent+스키마 필요로 정정. **estimand가 다르면 스키마도 다르다** |
+| **G43** | 뮤테이션 재실행이 glob으로 **초안 스크립트**를 잡음(적대검증 판정 근거 오염 위험) | 적대검증 재실측 | `_final.py` 아닌 초안 실행 관측 | ✅ | 최종본 명시 재실행. **검증 하네스의 초안/최종 모호성**을 함정 등재 |
+| **G44** | cwd 리셋으로 실험폴더 `test_protocol.py`가 예정된 미기록 실패를 냄(게이트 1 failed) | 뮤테이션 실행 중 | `git status` 위치 확인 | ✅ | repo 루트 명시. 이 실패는 결함이 아니라 **동결/결과 분리 규율의 정상 동작** |
+
+### 8.1.1 신규 방법 — subagent 프로토콜의 3층 분리
+
+이 기간에 사용자가 탐색 프로토콜을 명문화했다(조사 xhigh → github xhigh →
+TDD+구현 medium). 실측된 효용:
+
+- **조사(xhigh)**: 5회 위임, 그중 **3회 lead 재실측이 오판을 정정**
+  (G41 corpus-NO, G42 agent 재사용, 그리고 canonical_bytes "미확인"). 조사는
+  후보를 넓히지만 **부재·동일성 판정은 lead 재실측이 필수**.
+- **구현(medium)**: 2회(`cg_ir`, `cg_evaluate`). 계약(RED)이 고정돼 있으면
+  medium으로 충분. 단 **뮤테이션은 lead가** — `cg_ir`에서 계약 공백 1건
+  (sibling scope leak) 발견.
+- **적대검증(medium)**: 공격 5종 실제 실행. 5/5 차단이되 **하네스 자체가
+  재실측 대상**(G43).
+
+## 8.2 (2) 재발 증가
+
+### P1 — 11회 → **12회**, 그리고 **첫 커밋 전 차단**
+
+12회차(G38 근처, `certification_cycle`의 `static_order()` 미소비 = 공허한
+검출기)는 이전 11회와 결정적으로 다르다: **뮤테이션 게이트가 커밋 전에
+잡았다.** 이전 P1은 전부 커밋 후(리뷰어·후속 세션) 발견이었다. W4 수정으로
+`conceptgate/`가 게이트 표면에 들어온 직접 효과다.
+
+### P4 — 7회 → **8회** (G40)
+
+8회차는 **판정자가 잡았다**(내 진행 보고의 Render 전제 오류). P4의 대응책이
+"전이 후 서술 문서 순회"였는데, 이번은 그 순회로도 못 잡은 것 — **문서가
+외부 사실(배포 설정)과 어긋난 경우**는 내부 순회로 안 잡히고 외부 대조가
+필요하다. P4의 하위형이 하나 늘었다.
+
+### P9 — 3회+예방1 → **4회** (G37)
+
+4회차는 배선 누락이 다시 났으나 **사용자 지시가 촉발**했다는 점이 다르다.
+"테스트 통과 ≠ 실행 경로 배선"을 스스로 점검하지 않고 사용자가 "배선
+점검"을 지시해서 발견했다 — P9의 자기탐지는 여전히 약하다.
+
+### P13 — 2회 → **3회** (판정문 verbatim 저장)
+
+D-E2E-v1-19를 트랜스크립트에서 verbatim 추출·저장(M10). 이제 판정 수령 시
+**즉시 verbatim 저장 + sha256**이 표준 절차로 굳었다(3회 연속 적용).
+
+### P12 (적대검증 하네스도 검증 대상) — 1회 → **3회**
+
+08-18 리뷰어 하네스 결함, G43 초안 스크립트 오염, 그리고 corpus 조사
+subagent의 NO 판정 — 전부 subagent 산출을 lead가 재실측해 정정했다.
+**재현 3회로 패턴 확립**: subagent의 판정은 근거이지 결론이 아니다.
+
+## 8.3 (5) 반복+근거 압축 정의
+
+| ID | 정의 (갱신) | 재발 | 해결 근거 |
+|---|---|---|---|
+| P1 | 참이지만 필요하지 않은 명제 단언 (자기비교/존재만/공허참/**generator 미소비**) | 12회 | 뮤테이션 게이트 — **첫 커밋 전 차단** 달성 |
+| P4 | 문서가 자기 상태를 잘못 서술 — 내부 전이 후 낡음 + **외부 사실과 어긋남**(신규 하위형) | 8회 | 전이 후 순회 + 외부 대조(판정자가 잡은 8회차) |
+| P9 | 정확한 구현이 실행 경로에 없다 | 4회 | grep(자기탐지 약함, 사용자 지시 의존) |
+| P12 | subagent 산출(판정 포함)이 검증 대상 | 3회 | lead 재실측 — 부재·동일성·적대검증 전부 |
+| P13 | 적용 정본의 원문 부재 | 3회 | verbatim 추출+sha256이 표준 절차화 |
+
+## 8.4 (6) 해결 판단 가설·검증
+
+| 이슈 | 반증가능 가설 | 검증 | 결과 |
+|---|---|---|---|
+| G39 | "조작 prior만으로 게이트 미실행 claim이 인증된다" | 공격 스크립트 실제 실행 | CONFIRMED → 수정 후 뒤집힌 고정 테스트 |
+| G39 수정 | "위조·오subject·구revision·무효·raw혼합 5종이 전부 거부된다" | 적대 subagent 5종 공격 + lead 최종본 재실행 | 5/5 차단 |
+| G41 | "corpus 배포처가 실재한다" | 논문 PDF 스트림 직접 해제 grep | 배포 문장 verbatim 발견 → subagent NO 반증 |
+| cg_ir | "정규화가 금지 재작성을 하지 않는다" | 뮤테이션 3종(capture/α/scope-copy) | 3/3 잡힘, 단 sibling leak 계약 공백 발견·강화 |
+| Stage 1 | "계측기가 8범주를 재현 가능하게 분류한다" | control 8종 결과-비움 선동결 후 실행 | 8/8, 재실행 전 필드 일치(결정성) |
+| D-E2E-v1-19 | "16/20 하한이 0.599" 등 통계 5건 | Python 독립 재계산 | 5/5 일치 |
+
+**핵심 규율 추가**: **부재 판정과 subagent 판정은 lead 재실측 전까지 잠정**
+(P12). 이 기간 조사 subagent의 판정 3건이 재실측으로 뒤집혔다 — 넓히는
+것은 subagent, 확정하는 것은 lead.
+
+## 8.5 (7) 해결 방법 구체
+
+- **G39 (W5)**: `cg_identity`에 `sign`/`verify_signature`(§29 때문에 개명)/
+  `load_or_create_key`(O_EXCL·0600) verbatim 이식. `cg_obligations.
+  issue_claim_certificate`(subject fingerprint+graph_revision 서명) +
+  `_assert_certificate_grants_verdicts`(authenticity→subject→revision→validity,
+  **이 순서가 계약** — 서명 깨진 문서의 결박 오류 우선 보고는 조작 진행도
+  oracle). authority: certificate-only=certifying, raw 혼합=diagnostic_only.
+- **G38 (W4)**: raise를 `_assert_known_fingerprint_kind`·`_assert_no_required_
+  allowed_na_overlap`로 추출 + 직접 호출 음성 테스트. 기존 `conceptgate/`
+  함수 재명명은 별도 diff로 분리(blast radius 명확화).
+- **cg_ir**: dict formula, `canonicalize_v0`=capture-avoiding α-rename만
+  (bound→`?N`, 자유변수 `?` prefix는 예약 거부). §29 부정계약 AST 집행
+  (simplify/equival/entail… 이름 금지 + import 화이트리스트).
+- **cg_evaluate**: 4치 경계(oracle결함→UNSCORABLE / predicted비정형→FAIL /
+  비dict·crash→ERROR 캡처 / 정상→차원별 비교). 양방향 격리 AST(Evaluate가
+  Verify 어휘 import 금지 + Refine/Verify가 Evaluate import 금지).
+- **Stage 1**: control 8종을 **results 비운 채 선동결**(H1a `record_calibration`
+  규율), 실행기가 기록, `test_protocol.py`는 **결과 커밋에** 넣어 동결 커밋
+  게이트 보호. 양방향 게이트(기록 상태 + 라이브 재실행).
+- **subagent 프로토콜**: 조사 xhigh → github xhigh → TDD+medium 구현.
+  각 위임 후 lead 재실측을 **의무화**(P12).
+
+## 8.6 권한·도구 차이 (§7.6 갱신)
+
+| 축 | 확인 사실 | 영향 |
+|---|---|---|
+| subagent 모델 티어 | 조사는 xhigh, 구현·적대검증은 medium으로 위임 — 사용자가 프로토콜로 명문화 | 비용/품질 트레이드오프가 규약이 됨. 단 **판정은 tier 무관 lead 재실측** |
+| PDF 처리 | 이 환경에 `pdftoppm` 미설치 → Read의 PDF 렌더 불가. stdlib zlib로 스트림 직접 해제로 우회 | 외부 자료 실측 시 도구 부재를 우회 수단으로 넘음 |
+| 웹 | WebFetch는 cross-host redirect를 따라가지 않음(재호출 필요), 404를 명확히 보고 | 부재 판정에 유용 — 404는 확정, redirect는 추적 |
+| 조사 위임 대상 | 사용자가 "다른 workspace의 조사용 agent"를 별도 보유 | `RESEARCH_REQUEST_*`는 그 agent용, `DESIGN_REQUEST_*`는 설계 담당용 — 파일명 접두어가 수신자를 구별 |
+| corpus 접근 | 정본 corpus가 기관 서버 하위 경로에 있고 정확한 URL 미확정 | 외부 정본 의존 실험은 **자료 접근성 자체가 관문** — 손저작 우회 금지 |
+
+## 8.7 한계
+
+- G41(corpus)은 미해결 진행형 — 외부 조사 결과에 의존. 접근 불가 확정 시
+  oracle 변경은 §12상 외부 판정(Q20) 사안.
+- P12를 "3회로 확립"이라 했으나, lead 재실측이 **또** 틀릴 가능성은 이
+  분석이 다루지 못한다(무한후퇴). 실무적 종단은 "실측 근거를 남긴다"이지
+  "옳음을 보증한다"가 아니다.
+- 이 절도 §7처럼 마지막 절이다 — 최신 상태 서술은 항상 문서 끝.
