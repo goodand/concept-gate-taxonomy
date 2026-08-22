@@ -80,3 +80,36 @@ box가 비었거나 body-NEG가 없으면 forall로 복호하지 않는다; code
 
 1~7은 wikisem판과 동형(입력만 SBN). 8 = §4 codec의 결정 복호. 9 = 복호
 왕복(forall → 참조 SBN 재인코딩 → α-동치) + §4 음성 판별 3종.
+
+---
+
+## 7. 추기 (같은 날) — 구현 착륙과 Path A↔B 대조 결과
+
+`conceptgate/cg_sbn_adapter.py` 착륙 (계약 26 테스트, TDD, Haiku 구현 +
+Main 보수 1건). lead 뮤테이션 4/4 결박 — 그중 **donkey 가드가 관측상
+공허**로 적발됐다(무력화해도 최종 닫힘 검사가 같은 입력을 거부): 가드를
+지우는 대신 **계약이 오류 메시지("donkey")를 결박**해 관측 가능하게 했다 —
+귀속 정보가 UNSCORABLE 회계에 필요하므로 잉여가 아니라는 판단. 이후 같은
+뮤테이션이 잡힌다.
+
+Path A(실 adapter) 전수 스모크, 후보 695건:
+
+| 결과 | 1차 | 인용 병합 수정 후 |
+|---|---|---|
+| OK (유효·닫힘 IR) | 654 | **671** |
+| UNSUPPORTED | 23 | 24 |
+| SYNTAX | 18 | **0** |
+
+- 1차의 SYNTAX 18건 전원이 **여러 단어 인용 상수**("United States" 류) —
+  스펙 NAME_CONSTANT_PATTERN의 열린-따옴표 대안을 계약이 누락했던 것.
+  계약 2건 추가(RED) 후 두 짝짓기 루프 모두 수정(같은 루프가 이중 패스에
+  중복 존재 — 첫 주입이 count 검사로 차단된 덕에 한쪽만 고치는 사고 예방).
+- 잔여 UNSUPPORTED 24 = donkey 결박(v0 밖, 정당) ~16 + 미등재 소문자 bare
+  상수(us/italy/…) ~5 + 기타 — 전부 명시 거부이며 INELIGIBLE 처리 대상.
+- **2경로 대조(D-21 §15)**: Path B 짝 NEGATION 187(=178+9) ↔ Path A forall
+  169 + donkey 16 + 빈-restriction 2 = 187. **불일치 0 — 차이 전량 원인
+  귀속.** FREEZE_BLOCKED 아님.
+
+풀 최종: OK 671건(그중 forall 재료 169) ≫ PMB 몫 15건. 남은 것: 자격
+9항목 공식 실행(8·9 항목의 왕복·음성 판별 하네스), fixture 선별과 동결은
+제2 source 회신 후.
