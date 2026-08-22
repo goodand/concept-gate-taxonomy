@@ -14,6 +14,11 @@ Acceptance criteria (D-E2E-v1-21-confirmed): PASS≥16 ∧ final ERROR=0 ∧ une
 Why CertifiedCorrectYield uses N as denominator: dividing by certified_count would
 allow a certifier that certifies almost nothing to appear perfect. The yield must be
 held against the full preregistered set to expose certification sparsity.
+
+Stratum floor addition (D-E2E-v1-22 §3·§16): When stratum_floors is provided,
+acceptance additionally checks that each named stratum meets its pass minimum.
+This prevents silent evasion by under-supplying rows within a stratum (§3 counterexample:
+15 PMB passes + 1 multi_quantifier pass out of 5 = 16/20 PASS overall, but fails floor).
 """
 from __future__ import annotations
 
@@ -25,7 +30,7 @@ def _assert_trial_rows_wellformed(trials: list[dict], n_preregistered: int) -> N
     - Row count does not match n_preregistered (silent row loss is denominator manipulation)
     - Duplicate trial_id
     - Unknown result vocabulary
-    - Missing required keys
+    - Missing required keys (stratum is optional)
     """
     if len(trials) != n_preregistered:
         raise ValueError(
@@ -37,7 +42,7 @@ def _assert_trial_rows_wellformed(trials: list[dict], n_preregistered: int) -> N
     seen_ids = set()
 
     for trial in trials:
-        # Check for missing keys
+        # Check for missing required keys (stratum is optional)
         if not required_keys.issubset(trial.keys()):
             missing = required_keys - set(trial.keys())
             raise ValueError(f"Missing keys in trial: {missing}")
@@ -57,18 +62,25 @@ def _assert_trial_rows_wellformed(trials: list[dict], n_preregistered: int) -> N
 def score(
     trials: list[dict],
     n_preregistered: int,
-    pass_min: int
+    pass_min: int,
+    stratum_floors: dict | None = None
 ) -> dict:
-    """Score trials according to D-E2E-v1-19 and D-E2E-v1-21.
+    """Score trials according to D-E2E-v1-19, D-E2E-v1-21, and D-E2E-v1-22.
 
     Args:
-        trials: List of trial dicts with trial_id, result, certified, unscorable_expected.
+        trials: List of trial dicts with trial_id, result, certified, unscorable_expected,
+                and optional stratum (string or None).
         n_preregistered: Expected number of trials (denominator for all metrics).
         pass_min: Minimum passing trials required for acceptance.
+        stratum_floors: Optional dict mapping stratum name -> (n_min, pass_min) tuple.
+                        When provided, acceptance additionally requires each named
+                        stratum to have at least n_min rows with pass_min passes (§3 floor).
+                        Absence of rows for a named stratum raises ValueError (silent evasion).
 
     Returns:
         Dict with counts, metrics, two_by_two, certification_false_positive_ids,
-        acceptance, and parameters.
+        acceptance, parameters, and optionally strata.
+        When stratum_floors is None, acceptance and parameters retain ROUND 1 shape exactly.
     """
     # Guard
     _assert_trial_rows_wellformed(trials, n_preregistered)
@@ -143,7 +155,7 @@ def score(
 
     certification_false_positive_ids = sorted(b_ids)
 
-    # Acceptance criteria
+    # Acceptance criteria (ROUND 1)
     error_count = counts["error"]
     pass_min_met = pass_count >= pass_min
     no_final_error = error_count == 0
@@ -155,20 +167,87 @@ def score(
             no_unexpected_unscorable = False
             break
 
-    acceptance = {
-        "pass_min_met": pass_min_met,
-        "no_final_error": no_final_error,
-        "no_unexpected_unscorable": no_unexpected_unscorable,
-        "accepted": pass_min_met and no_final_error and no_unexpected_unscorable,
-    }
+    # Stratum floor logic (ROUND 2)
+    strata = None
+    stratum_floors_met = None
+
+    if stratum_floors is not None:
+        # Count rows and passes per stratum
+        stratum_counts = {}
+        stratum_passes = {}
+
+        for trial in trials:
+            stratum = trial.get("stratum")  # None if absent
+            result = trial["result"]
+
+            if stratum not in stratum_counts:
+                stratum_counts[stratum] = 0
+                stratum_passes[stratum] = 0
+
+            stratum_counts[stratum] += 1
+            if result == "pass":
+                stratum_passes[stratum] += 1
+
+        # Build strata dict for named strata only
+        strata = {}
+        stratum_floors_met = True
+
+        for stratum_name, (n_min, pass_min_stratum) in stratum_floors.items():
+            n_actual = stratum_counts.get(stratum_name, 0)
+
+            # Raise if declared stratum has insufficient rows
+            if n_actual < n_min:
+                raise ValueError(
+                    f"Stratum '{stratum_name}' has {n_actual} rows, "
+                    f"expected at least {n_min} (silent evasion)"
+                )
+
+            pass_actual = stratum_passes.get(stratum_name, 0)
+
+            strata[stratum_name] = {
+                "n": n_actual,
+                "pass": pass_actual,
+            }
+
+            if pass_actual < pass_min_stratum:
+                stratum_floors_met = False
+
+    # Build acceptance dict
+    if stratum_floors is not None:
+        # ROUND 2: include stratum_floors_met
+        acceptance = {
+            "pass_min_met": pass_min_met,
+            "no_final_error": no_final_error,
+            "no_unexpected_unscorable": no_unexpected_unscorable,
+            "stratum_floors_met": stratum_floors_met,
+            "accepted": (pass_min_met and no_final_error and
+                        no_unexpected_unscorable and stratum_floors_met),
+        }
+    else:
+        # ROUND 1: exact previous shape (no stratum_floors_met)
+        acceptance = {
+            "pass_min_met": pass_min_met,
+            "no_final_error": no_final_error,
+            "no_unexpected_unscorable": no_unexpected_unscorable,
+            "accepted": pass_min_met and no_final_error and no_unexpected_unscorable,
+        }
 
     # Parameters
-    parameters = {
-        "n_preregistered": n_preregistered,
-        "pass_min": pass_min,
-    }
+    if stratum_floors is not None:
+        parameters = {
+            "n_preregistered": n_preregistered,
+            "pass_min": pass_min,
+            "stratum_floors": stratum_floors,
+        }
+    else:
+        # ROUND 1: exact previous shape (no stratum_floors key)
+        parameters = {
+            "n_preregistered": n_preregistered,
+            "pass_min": pass_min,
+        }
 
-    return {
+    # Build result dict
+    result_dict = {
         "counts": counts,
         "metrics": metrics,
         "two_by_two": two_by_two,
@@ -176,3 +255,9 @@ def score(
         "acceptance": acceptance,
         "parameters": parameters,
     }
+
+    # Add strata only if stratum_floors was provided
+    if strata is not None:
+        result_dict["strata"] = strata
+
+    return result_dict

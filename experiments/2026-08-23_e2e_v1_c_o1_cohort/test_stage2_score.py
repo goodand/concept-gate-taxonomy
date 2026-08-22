@@ -124,3 +124,67 @@ def test_report_records_its_own_parameters():
     out = S.score([T("a", "pass")], n_preregistered=1, pass_min=1)
     assert out["parameters"] == {"n_preregistered": 1, "pass_min": 1}
     assert out["counts"]["pass"] == 1
+
+
+# ============================================================== ROUND 2 ====
+# D-E2E-v1-22 §3·§16: 수용에 stratum floor 추가 — multi_quantifier N=5,
+# PASS_min=4. 필요성의 반례(15 PMB PASS + multi 1/5 → 전체 16/20 PASS)는
+# 판정 수신 검증 V2에서 이 모듈로 실측했다. 기존 시그니처의 무-floor 호출은
+# 정확히 이전과 같아야 한다(ROUND 1 테스트 전부 불변).
+
+
+def TS(tid, result, stratum=None, certified=False):
+    return {"trial_id": tid, "result": result, "certified": certified,
+            "unscorable_expected": False, "stratum": stratum}
+
+
+def _mixed(multi_pass):
+    """PMB 15 전부 PASS + multi 5건 중 multi_pass개 PASS."""
+    rows = [TS(f"p{i}", "pass", "PMB") for i in range(15)]
+    rows += [TS(f"m{i}", "pass", "multi_quantifier") for i in range(multi_pass)]
+    rows += [TS(f"mf{i}", "fail", "multi_quantifier")
+             for i in range(5 - multi_pass)]
+    return rows
+
+
+def test_ruling_counterexample_now_fails_with_stratum_floor():
+    """D-22 §3의 반례 그대로: 전체 16/20인데 multi 1/5 → floor가 잡아야 한다."""
+    out = S.score(_mixed(1), n_preregistered=20, pass_min=16,
+                  stratum_floors={"multi_quantifier": (5, 4)})
+    assert out["metrics"]["UCR"] == pytest.approx(16 / 20)
+    assert out["acceptance"]["stratum_floors_met"] is False
+    assert out["acceptance"]["accepted"] is False
+
+
+def test_floor_met_at_four_of_five():
+    out = S.score(_mixed(4), n_preregistered=20, pass_min=16,
+                  stratum_floors={"multi_quantifier": (5, 4)})
+    assert out["acceptance"]["stratum_floors_met"] is True
+    assert out["acceptance"]["accepted"] is True
+    assert out["strata"]["multi_quantifier"] == {"n": 5, "pass": 4}
+
+
+def test_missing_stratum_rows_refused():
+    """floor가 선언된 stratum의 행이 N_min보다 적으면 조용한 회피다 — 거부."""
+    rows = [TS(f"p{i}", "pass", "PMB") for i in range(17)] + [
+        TS(f"m{i}", "pass", "multi_quantifier") for i in range(3)]
+    with pytest.raises(ValueError):
+        S.score(rows, n_preregistered=20, pass_min=16,
+                stratum_floors={"multi_quantifier": (5, 4)})
+
+
+def test_no_floor_call_is_byte_identical_to_round_one_behaviour():
+    rows = [TS("a", "pass"), TS("b", "fail")]
+    out = S.score(rows, n_preregistered=2, pass_min=1)
+    assert out["acceptance"] == {"pass_min_met": True, "no_final_error": True,
+                                 "no_unexpected_unscorable": True,
+                                 "accepted": True}, (
+        "floor 미지정 호출의 acceptance 형태가 ROUND 1과 달라졌다")
+
+
+def test_stratum_floor_parameters_are_recorded():
+    out = S.score(_mixed(4), n_preregistered=20, pass_min=16,
+                  stratum_floors={"multi_quantifier": (5, 4)})
+    assert out["parameters"]["stratum_floors"] == {
+        "multi_quantifier": [5, 4]} or out["parameters"]["stratum_floors"] == {
+        "multi_quantifier": (5, 4)}
