@@ -61,6 +61,7 @@
 | id | 실체 | 제목 필드 |
 |---|---|---|
 | O1 | ✅ **확인** — 초록이 quantifier scope disambiguation 코퍼스임을 명시 (Rasmussen & Schuler, LREC 2020) | ⚠ **부정확** — 실제 제목은 "A Corpus of Encyclopedia Articles with Logical Forms" |
+| | > **정정 (2026-08-22, corpus 확보 조사 후)**: 이 표의 최초 판은 O1을 ~~CC BY 4.0~~으로 적었다(Anthology 정책 가정). **논문 PDF 원문은 "licensed under CC-BY-NC"(ELRA)** — 로컬 PDF 스트림 추출로 실측. corpus 데이터 자체는 별도 LICENSE 부재. 재배포 조건은 미확정(RESEARCH_RESULT_o1_corpus_access.md) | |
 | O2 | ✅ 확인 (Williamson et al. 2021) | ⚠ 실제: "Intensionalizing Abstract Meaning Representations: Non-Veridicality and Scope" |
 | O3 | ✅ **확인** — 초록: "a controlled dataset of … syllogisms in propositional and modal logic"을 소개 (Wang & Shi, ACL 2025) | ⚠ 부정확 — yaml의 title은 설명어 |
 | R1 | ✅ 확인 (Bentzen, arXiv 1910.01697) | ⚠ 실제: "A Henkin-style completeness proof for the modal logic S5" |
