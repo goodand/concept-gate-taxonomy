@@ -8,39 +8,350 @@
     "error": "evaluator 실행 실패 — raise가 아니라 기록"
   },
   "controls": [
-    {"control_id": "S1-PASS-1", "expected": "pass",
-     "why": "α-변이 — 정규화의 존재 이유",
-     "predicted": {"kind": "forall", "var": "x", "body": {"kind": "exists", "var": "y", "body": {"kind": "pred", "name": "R", "args": [{"kind": "var", "name": "x"}, {"kind": "var", "name": "y"}]}}},
-     "oracle":    {"kind": "forall", "var": "a", "body": {"kind": "exists", "var": "b", "body": {"kind": "pred", "name": "R", "args": [{"kind": "var", "name": "a"}, {"kind": "var", "name": "b"}]}}}},
-    {"control_id": "S1-PASS-2", "expected": "pass",
-     "why": "modal+logical 결합 동일 구조 (shadowing 포함)",
-     "predicted": {"kind": "forall", "var": "x", "body": {"kind": "and", "args": [{"kind": "box", "body": {"kind": "pred", "name": "P", "args": [{"kind": "var", "name": "x"}]}}, {"kind": "forall", "var": "x", "body": {"kind": "pred", "name": "Q", "args": [{"kind": "var", "name": "x"}]}}]}},
-     "oracle":    {"kind": "forall", "var": "u", "body": {"kind": "and", "args": [{"kind": "box", "body": {"kind": "pred", "name": "P", "args": [{"kind": "var", "name": "u"}]}}, {"kind": "forall", "var": "w", "body": {"kind": "pred", "name": "Q", "args": [{"kind": "var", "name": "w"}]}}]}}},
-    {"control_id": "S1-FAIL-1", "expected": "fail",
-     "why": "quantifier 순서 교환 — 재배열은 정규화가 아니라 의미 변경",
-     "predicted": {"kind": "forall", "var": "x", "body": {"kind": "exists", "var": "y", "body": {"kind": "pred", "name": "R", "args": [{"kind": "var", "name": "x"}, {"kind": "var", "name": "y"}]}}},
-     "oracle":    {"kind": "exists", "var": "y", "body": {"kind": "forall", "var": "x", "body": {"kind": "pred", "name": "R", "args": [{"kind": "var", "name": "x"}, {"kind": "var", "name": "y"}]}}}},
-    {"control_id": "S1-FAIL-2", "expected": "fail",
-     "why": "modal scope 차이 — □(P→Q) vs P→□Q",
-     "predicted": {"kind": "box", "body": {"kind": "implies", "left": {"kind": "pred", "name": "P", "args": []}, "right": {"kind": "pred", "name": "Q", "args": []}}},
-     "oracle":    {"kind": "implies", "left": {"kind": "pred", "name": "P", "args": []}, "right": {"kind": "box", "body": {"kind": "pred", "name": "Q", "args": []}}}},
-    {"control_id": "S1-UNSC-1", "expected": "unscorable",
-     "why": "oracle이 v1 IR로 비정형(pred에 args 부재) — 측정 계약 실패",
-     "predicted": {"kind": "pred", "name": "P", "args": []},
-     "oracle":    {"kind": "pred", "name": "P"}},
-    {"control_id": "S1-UNSC-2", "expected": "unscorable",
-     "why": "oracle 자유변수가 예약 네임스페이스(?0) 침범",
-     "predicted": {"kind": "pred", "name": "P", "args": []},
-     "oracle":    {"kind": "pred", "name": "P", "args": [{"kind": "var", "name": "?0"}]}},
-    {"control_id": "S1-ERR-1", "expected": "error",
-     "why": "evaluator 경계: predicted가 dict 아님",
-     "predicted": null,
-     "oracle":    {"kind": "pred", "name": "P", "args": []}},
-    {"control_id": "S1-ERR-2", "expected": "error",
-     "why": "evaluator 경계: oracle이 dict 아님",
-     "predicted": {"kind": "pred", "name": "P", "args": []},
-     "oracle":    "forall x P(x)"}
+    {
+      "control_id": "S1-PASS-1",
+      "expected": "pass",
+      "why": "α-변이 — 정규화의 존재 이유",
+      "predicted": {
+        "kind": "forall",
+        "var": "x",
+        "body": {
+          "kind": "exists",
+          "var": "y",
+          "body": {
+            "kind": "pred",
+            "name": "R",
+            "args": [
+              {
+                "kind": "var",
+                "name": "x"
+              },
+              {
+                "kind": "var",
+                "name": "y"
+              }
+            ]
+          }
+        }
+      },
+      "oracle": {
+        "kind": "forall",
+        "var": "a",
+        "body": {
+          "kind": "exists",
+          "var": "b",
+          "body": {
+            "kind": "pred",
+            "name": "R",
+            "args": [
+              {
+                "kind": "var",
+                "name": "a"
+              },
+              {
+                "kind": "var",
+                "name": "b"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "control_id": "S1-PASS-2",
+      "expected": "pass",
+      "why": "modal+logical 결합 동일 구조 (shadowing 포함)",
+      "predicted": {
+        "kind": "forall",
+        "var": "x",
+        "body": {
+          "kind": "and",
+          "args": [
+            {
+              "kind": "box",
+              "body": {
+                "kind": "pred",
+                "name": "P",
+                "args": [
+                  {
+                    "kind": "var",
+                    "name": "x"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "forall",
+              "var": "x",
+              "body": {
+                "kind": "pred",
+                "name": "Q",
+                "args": [
+                  {
+                    "kind": "var",
+                    "name": "x"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "oracle": {
+        "kind": "forall",
+        "var": "u",
+        "body": {
+          "kind": "and",
+          "args": [
+            {
+              "kind": "box",
+              "body": {
+                "kind": "pred",
+                "name": "P",
+                "args": [
+                  {
+                    "kind": "var",
+                    "name": "u"
+                  }
+                ]
+              }
+            },
+            {
+              "kind": "forall",
+              "var": "w",
+              "body": {
+                "kind": "pred",
+                "name": "Q",
+                "args": [
+                  {
+                    "kind": "var",
+                    "name": "w"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "control_id": "S1-FAIL-1",
+      "expected": "fail",
+      "why": "quantifier 순서 교환 — 재배열은 정규화가 아니라 의미 변경",
+      "predicted": {
+        "kind": "forall",
+        "var": "x",
+        "body": {
+          "kind": "exists",
+          "var": "y",
+          "body": {
+            "kind": "pred",
+            "name": "R",
+            "args": [
+              {
+                "kind": "var",
+                "name": "x"
+              },
+              {
+                "kind": "var",
+                "name": "y"
+              }
+            ]
+          }
+        }
+      },
+      "oracle": {
+        "kind": "exists",
+        "var": "y",
+        "body": {
+          "kind": "forall",
+          "var": "x",
+          "body": {
+            "kind": "pred",
+            "name": "R",
+            "args": [
+              {
+                "kind": "var",
+                "name": "x"
+              },
+              {
+                "kind": "var",
+                "name": "y"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "control_id": "S1-FAIL-2",
+      "expected": "fail",
+      "why": "modal scope 차이 — □(P→Q) vs P→□Q",
+      "predicted": {
+        "kind": "box",
+        "body": {
+          "kind": "implies",
+          "left": {
+            "kind": "pred",
+            "name": "P",
+            "args": []
+          },
+          "right": {
+            "kind": "pred",
+            "name": "Q",
+            "args": []
+          }
+        }
+      },
+      "oracle": {
+        "kind": "implies",
+        "left": {
+          "kind": "pred",
+          "name": "P",
+          "args": []
+        },
+        "right": {
+          "kind": "box",
+          "body": {
+            "kind": "pred",
+            "name": "Q",
+            "args": []
+          }
+        }
+      }
+    },
+    {
+      "control_id": "S1-UNSC-1",
+      "expected": "unscorable",
+      "why": "oracle이 v1 IR로 비정형(pred에 args 부재) — 측정 계약 실패",
+      "predicted": {
+        "kind": "pred",
+        "name": "P",
+        "args": []
+      },
+      "oracle": {
+        "kind": "pred",
+        "name": "P"
+      }
+    },
+    {
+      "control_id": "S1-UNSC-2",
+      "expected": "unscorable",
+      "why": "oracle 자유변수가 예약 네임스페이스(?0) 침범",
+      "predicted": {
+        "kind": "pred",
+        "name": "P",
+        "args": []
+      },
+      "oracle": {
+        "kind": "pred",
+        "name": "P",
+        "args": [
+          {
+            "kind": "var",
+            "name": "?0"
+          }
+        ]
+      }
+    },
+    {
+      "control_id": "S1-ERR-1",
+      "expected": "error",
+      "why": "evaluator 경계: predicted가 dict 아님",
+      "predicted": null,
+      "oracle": {
+        "kind": "pred",
+        "name": "P",
+        "args": []
+      }
+    },
+    {
+      "control_id": "S1-ERR-2",
+      "expected": "error",
+      "why": "evaluator 경계: oracle이 dict 아님",
+      "predicted": {
+        "kind": "pred",
+        "name": "P",
+        "args": []
+      },
+      "oracle": "forall x P(x)"
+    }
   ],
-  "results": [],
-  "qualification_state": "not_yet_run"
+  "results": [
+    {
+      "control_id": "S1-PASS-1",
+      "expected": "pass",
+      "observed": "pass",
+      "match": true,
+      "detail": {}
+    },
+    {
+      "control_id": "S1-PASS-2",
+      "expected": "pass",
+      "observed": "pass",
+      "match": true,
+      "detail": {}
+    },
+    {
+      "control_id": "S1-FAIL-1",
+      "expected": "fail",
+      "observed": "fail",
+      "match": true,
+      "detail": {
+        "mismatch_dimensions": [
+          "operator_type"
+        ],
+        "reason": "Predicted and oracle formulas differ in: {'operator_type'}"
+      }
+    },
+    {
+      "control_id": "S1-FAIL-2",
+      "expected": "fail",
+      "observed": "fail",
+      "match": true,
+      "detail": {
+        "mismatch_dimensions": [
+          "operator_type"
+        ],
+        "reason": "Predicted and oracle formulas differ in: {'operator_type'}"
+      }
+    },
+    {
+      "control_id": "S1-UNSC-1",
+      "expected": "unscorable",
+      "observed": "unscorable",
+      "match": true,
+      "detail": {
+        "reason": "Oracle formula is invalid: [{'code': 'MISSING_ARGS', 'detail': \"kind 'pred' requires field 'args'\"}]"
+      }
+    },
+    {
+      "control_id": "S1-UNSC-2",
+      "expected": "unscorable",
+      "observed": "unscorable",
+      "match": true,
+      "detail": {
+        "reason": "Oracle contains free variables in reserved namespace (?-prefixed)"
+      }
+    },
+    {
+      "control_id": "S1-ERR-1",
+      "expected": "error",
+      "observed": "error",
+      "match": true,
+      "detail": {
+        "reason": "Both inputs must be dicts; got NoneType and dict"
+      }
+    },
+    {
+      "control_id": "S1-ERR-2",
+      "expected": "error",
+      "observed": "error",
+      "match": true,
+      "detail": {
+        "reason": "Both inputs must be dicts; got dict and str"
+      }
+    }
+  ],
+  "qualification_state": "PASS"
 }
