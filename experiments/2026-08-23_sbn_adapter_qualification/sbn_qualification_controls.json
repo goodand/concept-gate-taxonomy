@@ -176,7 +176,219 @@
       ]
     }
   ],
-  "provenance": {},
-  "results": [],
-  "qualification_state": ""
+  "provenance": {
+    "sbn_adapter_source_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+    "cg_ir_source_sha256": "078f41d9910fc358faa60801405e73b52e458c1479e26271818f94d8280264da",
+    "python_version": "3.13.13"
+  },
+  "results": [
+    {
+      "item_id": "syntax_parse",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "SP-ok",
+          "kind": "adapt_ok",
+          "observed": "ok",
+          "match": true
+        },
+        {
+          "check_id": "SP-ok-comments",
+          "kind": "adapt_ok",
+          "observed": "ok",
+          "match": true
+        },
+        {
+          "check_id": "SP-neg-empty",
+          "kind": "adapt_refused",
+          "observed": "AdapterSyntaxError",
+          "match": true
+        },
+        {
+          "check_id": "SP-neg-malformed",
+          "kind": "adapt_refused",
+          "observed": "AdapterSyntaxError",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "comment_invariance",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "CI-eq",
+          "kind": "fp_eq",
+          "observed": "eq",
+          "match": true
+        },
+        {
+          "check_id": "CI-neg-structure",
+          "kind": "fp_ne",
+          "observed": "ne",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "quantifier_reordering_negative_control",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "QR-ne",
+          "kind": "fp_ne",
+          "observed": "ne",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "binding_preservation",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "BP-ne-target",
+          "kind": "fp_ne",
+          "observed": "ne",
+          "match": true
+        },
+        {
+          "check_id": "BP-closed-across-boxes",
+          "kind": "free_vars",
+          "observed": [],
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "deterministic_replay",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "DR",
+          "kind": "replay_eq",
+          "observed": "eq",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "output_schema_validity",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "OS-ok",
+          "kind": "adapt_schema_valid",
+          "observed": "valid",
+          "match": true
+        },
+        {
+          "check_id": "OS-neg-unknown-role",
+          "kind": "adapt_refused",
+          "observed": "AdapterUnsupported",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "closed_form_preservation",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "CF-closed",
+          "kind": "free_vars",
+          "observed": [],
+          "match": true
+        },
+        {
+          "check_id": "CF-neg-donkey",
+          "kind": "adapt_refused_msg",
+          "observed": "AdapterUnsupported: body references restriction variable x1 (not the universal variable); donkey binding not supported",
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "documented_universal_pattern_decode",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "UD-forall",
+          "kind": "kind_census",
+          "observed": {
+            "root": "forall",
+            "kinds": [
+              "and",
+              "entity",
+              "exists",
+              "forall",
+              "pred",
+              "var"
+            ]
+          },
+          "match": true
+        },
+        {
+          "check_id": "UD-neg-single",
+          "kind": "kind_census",
+          "observed": {
+            "root": "exists",
+            "kinds": [
+              "and",
+              "exists",
+              "not",
+              "pred",
+              "var"
+            ]
+          },
+          "match": true
+        },
+        {
+          "check_id": "UD-neg-empty-restriction",
+          "kind": "kind_census",
+          "observed": {
+            "root": "not",
+            "kinds": [
+              "exists",
+              "not",
+              "pred",
+              "var"
+            ]
+          },
+          "match": true
+        }
+      ]
+    },
+    {
+      "item_id": "decode_reencode_round_trip_and_negative_controls",
+      "item_pass": true,
+      "checks": [
+        {
+          "check_id": "RT-universal",
+          "kind": "round_trip",
+          "observed": {
+            "reencoded": 5,
+            "fp_equal": true
+          },
+          "match": true
+        },
+        {
+          "check_id": "RT-ctx-outer-exists",
+          "kind": "kind_census",
+          "observed": {
+            "root": "exists",
+            "kinds": [
+              "and",
+              "exists",
+              "forall",
+              "pred",
+              "var"
+            ]
+          },
+          "match": true
+        }
+      ]
+    }
+  ],
+  "qualification_state": "PASS"
 }
