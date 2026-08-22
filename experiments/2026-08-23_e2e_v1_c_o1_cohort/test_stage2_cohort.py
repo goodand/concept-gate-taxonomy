@@ -135,7 +135,10 @@ def test_plan_pins_subject_schema_and_template(world):
     raw = (Path.home() / ".claude" / "agents" / "o1-compiler.md").read_text()
     assert subj["definition_sha256"] == hashlib.sha256(raw.encode()).hexdigest()
     assert "tools: []" in raw
-    schema = cg_ir_schema.formula_json_schema()
+    # 2026-08-23 리허설 실측: API가 tool input_schema root의 조합자를
+    # 불허해 dispatch는 {"formula": ...} 봉투를 강제한다 — plan에는 실제로
+    # 강제되는 그 스키마(봉투)가 실린다.
+    schema = cg_ir_schema.dispatch_envelope_schema()
     assert prov["output_schema"] == schema
     assert prov["output_schema_sha256"] == hashlib.sha256(
         json.dumps(schema, sort_keys=True, ensure_ascii=False).encode()).hexdigest()

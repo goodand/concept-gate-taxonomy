@@ -22,7 +22,7 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[1]))
 
 from conceptgate.cg_fixture_resolver import resolve_bytes, _assert_commitment_entry_complete
-from conceptgate.cg_ir_schema import formula_json_schema, V0_O1_CONSTRUCTORS
+from conceptgate.cg_ir_schema import dispatch_envelope_schema, V0_O1_CONSTRUCTORS
 
 
 class CohortSpec(NamedTuple):
@@ -109,7 +109,7 @@ def build_cohort(spec: CohortSpec) -> dict:
 
     # Load template and schema
     template = load_template()
-    schema = formula_json_schema()
+    schema = dispatch_envelope_schema()
 
     # Deterministic seeded order: sort by sha256(f"{order_seed}:{case_id}") hex
     entries_with_sort_keys = []

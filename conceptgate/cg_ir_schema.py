@@ -184,7 +184,6 @@ def formula_json_schema(constructors: tuple[str, ...] = V0_O1_CONSTRUCTORS) -> d
     formula_one_of = list(schema_branches.values())
 
     schema = {
-        "$schema": "https://json-schema.org/draft/2020-12/schema",
         "$defs": {
             "term": {
                 "oneOf": [
@@ -212,7 +211,33 @@ def formula_json_schema(constructors: tuple[str, ...] = V0_O1_CONSTRUCTORS) -> d
                 "oneOf": formula_one_of,
             },
         },
-        "$ref": "#/$defs/formula",
+        # 실측된 dispatch 계약 2건(2026-08-23 리허설): ① $schema 메타 참조는
+        # 하네스 검증기가 해석 못 함 — 방출하지 않는다. ② API가 tool
+        # input_schema의 root "type"을 요구 — bare $ref root는 400. formula의
+        # 모든 구성자가 object이므로 type:object + allOf($ref)는 의미 불변.
+        "type": "object",
+        "allOf": [{"$ref": "#/$defs/formula"}],
     }
 
     return schema
+
+
+def dispatch_envelope_schema(
+        constructors: "tuple[str, ...]" = V0_O1_CONSTRUCTORS) -> dict:
+    """schema-forced dispatch용 봉투: {"formula": <formula>}.
+
+    실측된 API 계약(2026-08-23 리허설 3건째): tool input_schema의 root에
+    oneOf/allOf/anyOf가 올 수 없다. formula는 본질적으로 oneOf이므로 root에
+    직접 둘 수 없고, 단일 property 봉투로 감싼다. 실행기는 "formula" 키를
+    벗겨 순수 IR을 얻는다. formula_json_schema는 그대로 순수 IR 검증
+    (자격 항목 6, 커널 대조)에 쓰인다 — 두 함수가 같은 constructor 목록에서
+    유도되므로 어긋날 수 없다.
+    """
+    inner = formula_json_schema(constructors)
+    return {
+        "type": "object",
+        "properties": {"formula": {"$ref": "#/$defs/formula"}},
+        "required": ["formula"],
+        "additionalProperties": False,
+        "$defs": inner["$defs"],
+    }

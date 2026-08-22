@@ -167,3 +167,43 @@ def test_schema_module_imports_stay_pure():
     imported |= {n.module for n in ast.walk(tree)
                  if isinstance(n, ast.ImportFrom) and n.module}
     assert imported <= {"__future__", "typing"}, imported
+
+
+def test_schema_carries_no_meta_schema_reference():
+    """실측(2026-08-23 리허설): dispatch 하네스의 스키마 검증기가
+    `$schema: draft/2020-12` 메타 참조를 해석하지 못해 3 trial 전부
+    dispatch 전에 죽었다. 메타 키는 jsonschema 검증에 불필요하고, dispatch용
+    사본에서만 벗기면 등록 아티팩트와 갈라진다(드리프트) — 방출하지 않는 것이
+    단일 아티팩트를 지킨다."""
+    assert "$schema" not in sch.formula_json_schema()
+
+
+def test_schema_root_declares_type_object():
+    """실측 2건째(2026-08-23 리허설): dispatch가 스키마를 tool input_schema로
+    싸는데 API가 root의 "type" 필드를 요구한다(400: input_schema.type Field
+    required). bare $ref root는 전송 자체가 안 된다. formula는 모든 구성자가
+    object이므로 root를 type:object + allOf($ref)로 두면 의미 불변이다."""
+    s = sch.formula_json_schema()
+    assert s.get("type") == "object"
+    assert s.get("allOf") == [{"$ref": "#/$defs/formula"}]
+
+
+def test_dispatch_envelope_wraps_formula_for_the_tool_api():
+    """실측 3건째(2026-08-23 리허설): API가 tool input_schema의 **root에
+    oneOf/allOf/anyOf를 불허**한다(400). formula는 본질적으로 oneOf라 root에
+    올 수 없다 — dispatch는 {"formula": <formula>} 봉투로 강제하고 실행기가
+    벗긴다. 봉투는 dispatch 전용이고, formula 스키마 자체(자격 항목 6·커널
+    대조용)는 별도로 남는다 — 하나로 합치면 순수 IR 검증이 깨진다."""
+    env = sch.dispatch_envelope_schema()
+    assert env["type"] == "object"
+    assert set(env) & {"oneOf", "allOf", "anyOf"} == set()
+    assert env["required"] == ["formula"]
+    assert env["additionalProperties"] is False
+    ir = {"kind": "forall", "var": "x",
+          "restriction": P("zorble", "x"), "body": P("glims", "x")}
+    assert valid({"formula": ir}, env)
+    assert not valid(ir, env)                       # 봉투 없이 통과 금지
+    assert not valid({"formula": ir, "note": 1}, env)  # 곁채널 금지
+    # 봉투 내부는 formula 스키마와 같은 경계를 지킨다
+    bad = {"formula": {"kind": "forall", "var": "x", "body": P("g", "x")}}
+    assert not valid(bad, env)
