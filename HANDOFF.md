@@ -4,6 +4,17 @@
 중심**이다 — 상태 서술의 정본은 아래 문서들이고, 여기 중복 기재하지 않는다
 (P4 예방). 이 문서에만 있는 것은 §3 "다음 실행 절차"뿐이다.
 
+## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
+
+```yaml
+state_code: FROZEN_AWAITING_EXECUTION_APPROVAL
+next_action_code: DISPATCH_FOLIO_ADAPTER_CONTROLS   # §3-2 — 본 코호트보다 먼저
+stop_condition_codes:
+  - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
+  - NO_FROZEN_SURFACE_EDITS              # §4 — 동결 표면 수정은 D-19 §12 외부 판정 사안
+authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2.md
+```
+
 ## 1. 현재 상태 한 줄
 
 **Stage 2 (E2E-v1-C) 동결 완료(`f57ae12`) — 코호트 실행 승인 대기.**
