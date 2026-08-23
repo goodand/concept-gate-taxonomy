@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: Q29_SUBMITTED_AND_ROUND3_SUBMITTED   # 병행: 방언 기수 지위·MRS 채택 판정 + Redwoods locator 조사
-next_action_code: AWAIT_Q29_AND_ROUND3   # docs/DESIGN_REQUEST_cardinal_dialect_and_mrs_source.md (판정) + docs/RESEARCH_REQUEST_mrs_redwoods_round3.md (조사) — 둘 다 전달 대기
+state_code: RULING_D29_RECEIVED_AWAITING_MATERIAL   # 방언 8종 설계 승인(count·prop) — 재료 0/3·0/1로 freeze BLOCKED
+next_action_code: IMPLEMENT_COUNT_PROP_THEN_AWAIT_ROUND3   # D-29: count(eq|ge|le|gt|lt)·prop(most) constructor + MRS_COUNT_PROJECTION_V1 계약은 재료와 독립 구현 가능; Redwoods locator는 3차 조사 대기
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안

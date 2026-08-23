@@ -8,7 +8,49 @@
 - 후속: 회신을 운영 세션이 검증 후 적격성은 별도 기계 실측.
   **조사에게 적격성 판정을 청하지 않는다** — 사실 확인만.
 
-## 0. ★ 배제된 source 목록 — 다시 제안하지 마라
+## 0. ★ Prior Rulings / Excluded Sources — 다시 제안하지 마라
+
+> **판정 D-E2E-v1-29 Q29.4로 이 절이 필수화됐다.** 단순 blacklist가 아니라
+> source별로 `status / 판정 id / 사유 / scope / reopen 조건`을 기록한다 —
+> 과거 배제가 영원한 금지가 되어 새 release를 자동 배제하는 반대 오류도
+> 막기 위해서다. **reopen 조건이 충족된 경우에만** 재검토 대상이 된다.
+
+```yaml
+prior_source_rulings:
+  wikisem:
+    status: EXCLUDED
+    ruling: D-E2E-v1-21
+    scope: O1_v1_sentence_level_acceptance
+    reasons: [article_level_LF, sentence_level_alignment_absent,
+              O1_v0_coverage_zero, discourse_operators_outside_profile]
+    reopen_only_if: [upstream_publishes_sentence_level_aligned_LF,
+                     materially_different_version]
+  amr_bp_amrnews:
+    status: EXCLUDED
+    scope: O1_v1 (English only)
+    reasons: [language_mismatch_portuguese, amr_does_not_represent_scope]
+    reopen_only_if: [english_release_with_scope_representation]
+  amr_3_0_english:
+    status: EXCLUDED
+    reasons: [amr_normative_doc_states_no_quantifier_scope]
+    reopen_only_if: [scope_layer_added_upstream]
+  fracas:
+    status: EXCLUDED
+    reasons: [gold_is_inference_label_not_formal_MR]
+    reopen_only_if: [formal_MR_layer_published]
+  pmb_and_derivatives:
+    status: IN_USE_SEPARATE_CHAIN
+    reasons: [already_primary_source, derivatives_violate_independence]
+  folio_v0_0:
+    status: IN_USE
+    scope: multi_quantifier_stratum
+  qure_gqg_gqnli_udeplambda_qald:
+    status: EXCLUDED_PENDING_EVIDENCE
+    reasons: [no_sentence_level_full_formal_MR_evidence]
+    reopen_only_if: [full_MR_gold_locator_provided]
+```
+
+아래 표는 위 스키마의 사람용 서술이다.
 
 **이 절은 3차에 신설됐다.** 2차 회신이 유력 후보로 제시한 자원 하나가
 우리 선행 설계 판정으로 **이미 부적격 처리된 것**이었고, 그 원인은 우리가
