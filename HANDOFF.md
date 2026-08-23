@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: BLOCKED_UNTIL_RULING_Q25   # control 2/3 → 코호트 미실행; oracle granularity 상신
-next_action_code: AWAIT_Q25_RULING   # docs/DESIGN_REQUEST_oracle_granularity.md 판정 대기
+state_code: RULING_D26_RECEIVED_AWAITING_V4_IMPLEMENTATION   # implies 추가 승인·도달성 진단 강등·V4 재동결 명령
+next_action_code: IMPLEMENT_V4_FREEZE   # D-26: implies 방언 6종·자격 P7/P8·SAT gate V2 개정·multi 17에서 selector 재실행·V3=ABORTED_PRE_FREEZE 기록
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
