@@ -45,6 +45,16 @@ QUANTIFICATIONAL_PRONOUNS = {
     "one", "who", "whom", "whose", "none"}
 
 SUPPORTED_QUANTIFIER_LEXICON = ("all", "every", "each", "some", "no")
+
+# D-28 Q28.2 G1: 비례 판별. bare `\bmost\b`는 폐기 — 최상급을 잡는다.
+# 인정 형태: `most of …` / `most + 복수명사`. 최상급(`the most ADJ …`,
+# `most ADJ`)은 배제한다. V1 동결 파일 freeze_stage2.pmb_stratum은 불변
+# 보존하며, 이 정정 술어가 후속 동결의 정본이다.
+_MOST_OF = re.compile(r"\bmost\s+of\b", re.I)
+_MOST_NOMINAL = re.compile(r"\bmost\s+[a-z]+\b", re.I)
+# 최상급의 표지는 한정사 `the`다(`the most beautiful …`). 복수형 `-s` 판별로
+# 구분하려던 첫 시도는 people/children 같은 불규칙 복수를 놓쳤다(실측).
+_SUPERLATIVE_MOST = re.compile(r"\bthe\s+most\b", re.I)
 UNSUPPORTED_QUANTIFIER_LEXICON = ("few", "fewer", "several", "many", "most",
                                   "both", "either", "neither")
 KNOWN_IDIOMS = ("anything but", "all right", "at all", "all of a sudden",
@@ -52,7 +62,10 @@ KNOWN_IDIOMS = ("anything but", "all right", "at all", "all of a sudden",
 
 
 def _tokens(sentence: str) -> list:
-    return re.findall(r"[A-Za-z']+", sentence)
+    """아포스트로피를 **경계로** 분리한다 — `She's`가 한 토큰이 되면 lexicon
+    검사가 `she`를 놓친다(D-28 Gate C 실측 누출). 소유격 `John's`도 같은
+    이유로 `John`이 드러나야 고유명 검사에 걸린다."""
+    return re.findall(r"[A-Za-z]+", sentence)
 
 
 def has_excluded_participant(sentence: str) -> bool:
@@ -133,3 +146,19 @@ def control_eligible(case_id: str, sentence: str, oracle_ir: dict) -> tuple:
     if not ok:
         return False, f"projection:{why}"
     return True, "ok"
+
+
+def is_proportional(sentence: str) -> bool:
+    """비례 양화 문장인가 (D-28 Q28.2 G1 정정 술어).
+
+    `most of …` 는 무조건 인정. `the most …`는 최상급이므로 배제. 그 외
+    `most + 명사`는 비례로 인정한다. **알려진 근사의 한계**: 한정사 없는
+    최상급(`most talented students`)은 통과한다 — 드물고, Gate C(사람의
+    재료 감사)가 최종 방어선이다. 첫 시도는 복수형 `-s`로 구분하려 했으나
+    people/children 같은 불규칙 복수를 놓쳤다(실측).
+    """
+    if _MOST_OF.search(sentence):
+        return True
+    if _SUPERLATIVE_MOST.search(sentence):
+        return False          # `the most …` = 최상급
+    return bool(_MOST_NOMINAL.search(sentence))

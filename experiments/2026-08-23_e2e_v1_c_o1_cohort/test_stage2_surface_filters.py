@@ -67,6 +67,13 @@ def test_proper_names_mid_sentence_are_excluded():
     assert sf.has_excluded_participant("Apples are sweet.") is False   # 문두 대문자
 
 
+def test_sentence_initial_possessive_proper_name_is_the_same_leak():
+    """`John's book is red.` — 소유격을 분리해 John을 드러내도 **문두**라
+    고유명 검사(toks[1:])에서 빠진다. 축약형 수정과 별개인 기존 누출이며
+    PMB에서는 SBN `Name` role 병용으로 봉합한다."""
+    assert sf.has_excluded_participant("John's book is red.") is False
+
+
 def test_sentence_initial_proper_name_is_a_documented_leak():
     """근사의 알려진 한계: 문두 고유명("Tom laughed.")은 문두 대문자 규칙과
     구별할 수 없어 통과한다. tagger 의존을 피한 대가이며 **과잉 통과**
@@ -140,3 +147,37 @@ def test_control_profile_is_documented_as_not_representative():
     """판정 §17: control은 모집단 대표 표본이 아님이 명문화돼야 한다."""
     assert "representative" in sf.__doc__.lower()
     assert "sanity" in sf.__doc__.lower()
+
+
+# ---- 실측 누출 수정 (D-28 §20 Gate C가 드러낸 필터 결함) ----
+
+@pytest.mark.parametrize("sent", [
+    "She's at most 20 years old.",      # 축약형 — 초기 토큰화가 놓쳤다
+    "He'll pay tomorrow.",
+    "They're all here.",
+    "The book is John's.",              # 문중 소유격 고유명 — 토큰 분리로 John이 드러난다
+])
+def test_contracted_forms_are_caught(sent):
+    assert sf.has_excluded_participant(sent) is True
+
+
+# ---- D-28 Q28.2 G1: 비례 분류기 정정 ----
+
+def test_proportional_rejects_superlative_most():
+    """bare \\bmost\\b 금지 — 'the most beautiful'은 최상급이지 비례 양화가
+    아니다(V1~V4 네 동결이 이 오류로 잘못된 fixture를 통과시켰다)."""
+    assert sf.is_proportional("The most beautiful flowers have the sharpest thorns.") is False
+    assert sf.is_proportional("She is the most talented.") is False
+
+
+@pytest.mark.parametrize("sent", [
+    "Most of the students passed.",
+    "Most people like music.",
+    "Most cats sleep a lot.",
+])
+def test_proportional_accepts_quantificational_most(sent):
+    assert sf.is_proportional(sent) is True
+
+
+def test_proportional_does_not_fire_without_most():
+    assert sf.is_proportional("All humans eat.") is False
