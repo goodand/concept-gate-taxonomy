@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: RULING_D27_RECEIVED_AWAITING_V5   # curry 정규화·PMB 대명사 제외·control 2층 게이트 → V5 재동결
-next_action_code: IMPLEMENT_V5_FREEZE   # D-27: curry 정규화(닫힌 표)·PMB 표면 필터 재census(15 미만이면 BLOCKED)·control 2층 술어·길이 상한 사전 확정
+state_code: V5_HALTED_AWAITING_Q28   # fixture 실물 READ가 신호 소실·층 술어 결함 3건 적발
+next_action_code: AWAIT_Q28_RULING   # docs/DESIGN_REQUEST_pmb_projection_signal_loss.md — G3 본문 소실·G1 최상급 오분류·G2 기수 층 표현불가·Gate C 제안
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안

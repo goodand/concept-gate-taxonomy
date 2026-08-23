@@ -231,3 +231,78 @@ def test_p8_implication_position_discriminated():
                  EX("y", P("b", V("y")), P("c", V("x"), V("y"))))
     assert not same(proj.project_scope_for_case("FOLIO-p8t", folio_form),
                     proj.project_scope_for_case("FOLIO-p8t", natural))
+
+
+# ---- D-E2E-v1-27 Q27.1(c): O1_LOCAL_IDIOM_NORMALIZATION_V1 (curry만) ----
+
+def test_curry_normalization_profile_identity():
+    assert proj.IDIOM_NORMALIZATION_ID == "O1_LOCAL_IDIOM_NORMALIZATION_V1"
+
+
+def test_curry_pair_converges_after_normalization():
+    """판정 §3-4: `(A∧B)→C` ↔ `A→(B→C)`, 정본형은 uncurried.
+    구현 전 실측에서 이 쌍의 signature가 불일치였다(D-27 검증 기록 V3a) —
+    이 계약이 그 회귀를 고정한다."""
+    IMP = lambda l, r: {"kind": "implies", "left": l, "right": r}
+    unc = FA("x", T, IMP(AND(P("a", V("x")), P("b", V("x"))), P("c", V("x"))))
+    cur = FA("x", T, IMP(P("a", V("x")), IMP(P("b", V("x")), P("c", V("x")))))
+    assert same(proj.project_scope_for_case("FOLIO-c1", unc),
+                proj.project_scope_for_case("FOLIO-c1", cur))
+
+
+def test_curry_normalization_reaches_uncurried_canonical_form():
+    IMP = lambda l, r: {"kind": "implies", "left": l, "right": r}
+    out = proj.normalize_local_idioms(
+        IMP(P("a", V("x")), IMP(P("b", V("x")), P("c", V("x")))))
+    assert out["kind"] == "implies"
+    assert out["left"]["kind"] == "and"                 # 정본 = uncurried
+    assert [a["name"] for a in out["left"]["args"]] == ["a", "b"]
+    assert out["right"]["name"] == "c"
+
+
+def test_curry_normalization_is_idempotent_and_pure():
+    import copy
+    IMP = lambda l, r: {"kind": "implies", "left": l, "right": r}
+    f = IMP(P("a", V("x")), IMP(P("b", V("x")), IMP(P("c", V("x")), P("d", V("x")))))
+    snap = copy.deepcopy(f)
+    once = proj.normalize_local_idioms(f)
+    assert f == snap
+    assert proj.normalize_local_idioms(once) == once
+    assert [a["name"] for a in once["left"]["args"]] == ["a", "b", "c"]
+
+
+def test_curry_does_not_cross_quantifier_boundary():
+    """판정 §3: 양화 경계 교차 금지 — 함의 오른쪽이 양화면 접지 않는다."""
+    IMP = lambda l, r: {"kind": "implies", "left": l, "right": r}
+    f = IMP(P("a", V("x")), EX("y", T, IMP(P("b", V("y")), P("c", V("y")))))
+    out = proj.normalize_local_idioms(f)
+    assert out["left"]["kind"] == "pred"        # and로 합쳐지지 않았다
+    assert out["right"]["kind"] == "exists"
+
+
+def test_curry_does_not_cross_negation_boundary():
+    IMP = lambda l, r: {"kind": "implies", "left": l, "right": r}
+    f = IMP(P("a", V("x")), NOT(IMP(P("b", V("x")), P("c", V("x")))))
+    out = proj.normalize_local_idioms(f)
+    assert out["left"]["kind"] == "pred"
+    assert out["right"]["kind"] == "not"
+
+
+def test_neg_exists_vs_forall_neg_still_distinct():
+    """판정 §5: `¬∃ ↔ ∀¬`는 **불허** — scored 양화 종류를 바꾸므로
+    정규화가 이 둘을 합치면 안 된다(음성 계약)."""
+    a = NOT(EX("x", P("r", V("x")), P("b", V("x"))))
+    b = FA("x", P("r", V("x")), NOT(P("b", V("x"))))
+    assert not same(proj.project_scope_for_case("PMB-n1", a),
+                    proj.project_scope_for_case("PMB-n1", b))
+
+
+def test_folio_control_500p4_shape_now_converges():
+    """실측 회귀: CTRL4-03이 fail한 형태(gold 연접 전제 vs subject curried)."""
+    IMP = lambda l, r: {"kind": "implies", "left": l, "right": r}
+    gold = FA("x", T, IMP(AND(P("Horse", V("x")), P("Racing", V("x"))),
+                          P("Racehorse", V("x"))))
+    subj = FA("x", P("horse", V("x")),
+              IMP(P("in_race", V("x")), P("racehorse", V("x"))))
+    assert same(proj.project_scope_for_case("FOLIO-500p4", gold),
+                proj.project_scope_for_case("FOLIO-500p4", subj))

@@ -29,6 +29,7 @@ from typing import Any
 from _stage2_canonical_core import desugar
 
 PROJECTION_PROFILE_ID = "O1_SCOPE_PROJECTION_V1"
+IDIOM_NORMALIZATION_ID = "O1_LOCAL_IDIOM_NORMALIZATION_V1"
 
 # D-E2E-v1-26 Q26.1: subject 방언 V4 = O1_V1 + implies (측정 언어 복구 —
 # estimand 불변). 재타이핑 금지: V1 목록은 freeze_stage2가 정본.
@@ -82,13 +83,67 @@ def _scaffold_vars(formula: dict) -> set:
 _TRUE_PRED = {"kind": "pred", "name": RESERVED, "args": []}
 
 
+def normalize_local_idioms(formula: dict) -> dict:
+    """닫힌 열거 표 기반 국소 관용구 정규화 (D-E2E-v1-27 Q27.1(c)).
+
+    허용된 쌍은 **정확히 하나** — curry:
+        implies(A, implies(B, C))  →  implies(and(A, B), C)   (정본 = uncurried)
+    진리표 전수로 동치 확인됨(8/8, D-27 수신 검증 V1).
+
+    경계 제약(판정 §3): 같은 국소 Boolean region 안에서만 접는다 — 함의의
+    오른쪽이 양화(forall/exists)나 부정이면 접지 않는다. 양화 재배열·부정
+    이동·일반 정리 동치는 계속 금지다. 즉 열린 동치 엔진이 아니라 **닫힌
+    관용구 표**다(판정 §6).
+
+    `¬∃ ↔ ∀¬`는 **의도적으로 제외**한다: 논리적으로는 동치지만 scored
+    quantifier type을 exists→forall로 바꾸므로, 합치면 "quantifier type is
+    scored" 계약을 부분 철회하는 것이 된다(판정 §5). 음성 계약이 이를 고정.
+
+    순수·idempotent. 중첩 curry는 반복 적용으로 정본형에 수렴한다.
+    """
+    return _uncurry(copy.deepcopy(formula))
+
+
+def _conjuncts(node: Any) -> list:
+    if isinstance(node, dict) and node.get("kind") == "and":
+        return list(node["args"])
+    return [node]
+
+
+def _uncurry(node: Any):
+    if not isinstance(node, dict):
+        return node
+    kind = node.get("kind")
+    if kind == "implies":
+        left = _uncurry(node["left"])
+        right = _uncurry(node["right"])
+        # 국소 Boolean region 안에서만: right가 implies일 때만 접는다
+        if isinstance(right, dict) and right.get("kind") == "implies":
+            merged = _conjuncts(left) + _conjuncts(right["left"])
+            return _uncurry({"kind": "implies",
+                             "left": {"kind": "and", "args": merged}
+                                     if len(merged) > 1 else merged[0],
+                             "right": right["right"]})
+        return {"kind": "implies", "left": left, "right": right}
+    if kind in ("forall", "exists"):
+        return {"kind": kind, "var": node["var"],
+                "restriction": _uncurry(node["restriction"]),
+                "body": _uncurry(node["body"])}
+    if kind == "not":
+        return {"kind": "not", "body": _uncurry(node["body"])}
+    if kind == "and":
+        return {"kind": "and", "args": [_uncurry(a) for a in node["args"]]}
+    return node
+
+
 def project_scope_for_case(case_id: str, formula: dict) -> dict:
     """source(case_id 접두어)별 정책으로 scope signature를 반환한다.
 
     순수 함수: 입력 무변이(desugar가 이미 새 트리를 반환), idempotent.
     미지 접두어는 거부한다 — codec dispatch와 같은 fail-closed 규율.
     """
-    work = desugar(formula)  # idempotent; 입력을 변이하지 않는다
+    # desugar → 국소 관용구 정규화 → source별 투영 (전부 idempotent, 무변이)
+    work = normalize_local_idioms(desugar(formula))
     if case_id.startswith("PMB-"):
         return _project_pmb(work)
     if case_id.startswith("FOLIO-"):
