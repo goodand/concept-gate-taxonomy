@@ -2,7 +2,7 @@
 
 Metric definitions are D-E2E-v1-19 verbatim (§UCR·§8·§9):
   UCR = PASS / N_preregistered            (primary)
-  DirectMatch = DirectPASS / N
+  O1ScopeMatch = DirectPASS / N  (D-25 §8 개명; V2까지의 이름은 DirectMatch)
   CertificationCoverage = Certified / N
   CertifiedCorrectYield = (Certified ∧ PASS) / N   ← denominator is N, not Certified
   P(PASS|Certified)                        (secondary diagnostic ONLY)
@@ -103,7 +103,10 @@ def score(
     pass_count = counts["pass"]
 
     ucr = pass_count / n_preregistered
-    direct_match = pass_count / n_preregistered
+    # D-E2E-v1-25 §8: DirectMatch → O1ScopeMatch 개명. 산식 불변(PASS/N) —
+    # "무엇의 일치인가"가 바뀌었다: V3부터 비교는 O1_SCOPE_PROJECTION_V1을
+    # 통과한 scope signature 사이에서 일어난다(배선은 _stage2_run).
+    o1_scope_match = pass_count / n_preregistered
     cert_coverage = certified_count / n_preregistered
     certified_correct_yield = certified_pass_count / n_preregistered
     p_pass_given_certified = (
@@ -114,7 +117,7 @@ def score(
 
     metrics = {
         "UCR": ucr,
-        "DirectMatch": direct_match,
+        "O1ScopeMatch": o1_scope_match,
         "CertificationCoverage": cert_coverage,
         "CertifiedCorrectYield": certified_correct_yield,
         "P_pass_given_certified": p_pass_given_certified,

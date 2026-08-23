@@ -43,7 +43,10 @@ def test_metric_denominators_are_n_preregistered():
               T("c", "pass"), T("d", "fail")]
     out = S.score(trials, n_preregistered=4, pass_min=1)
     m = out["metrics"]
-    assert m["DirectMatch"] == pytest.approx(2 / 4)
+    # D-E2E-v1-25 §8: primary metric 개명 — 비교가 projection 위에서 일어나므로
+    # "full IR direct match"라는 이름이 더는 정확하지 않다. 산식은 불변(PASS/N).
+    assert m["O1ScopeMatch"] == pytest.approx(2 / 4)
+    assert "DirectMatch" not in m
     assert m["CertificationCoverage"] == pytest.approx(2 / 4)
     assert m["CertifiedCorrectYield"] == pytest.approx(1 / 4)
     assert m["P_pass_given_certified"] == pytest.approx(1 / 2)
