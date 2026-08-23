@@ -31,7 +31,12 @@ BOX_OPS = frozenset({
     "NEGATION", "POSSIBILITY", "NECESSITY", "ATTRIBUTION", "CONDITION",
     "CONSEQUENCE", "ALTERNATION", "CONTINUATION", "CONTRAST", "EXPLANATION",
     "NARRATION", "COMMENTARY", "RESULT", "SOURCE", "PRECONDITION",
-    "CONJUNCTION", "ANA"})
+    "CONJUNCTION", "ELABORATION"})
+# 적대검증(2026-08-23): ANA는 sbn_spec.py 기준 DRS_OPERATORS(비교/역할 계급)
+# 이지 box 연산자가 아니다 — 초기 census의 오분류 잔재를 스펙 권위로 정렬.
+# ELABORATION은 NEW_BOX_INDICATORS 소속인데 누락돼 있었다. 현행 후보 695에
+# 두 토큰 모두 0건이라 산출물 무영향(재스캔으로 확증), 그러나 목록 발산은
+# Path A/B가 후보 밖 문서에서 어긋날 잠재 원인이므로 봉합한다.
 DET = re.compile(r"\b(every|each|all|everyone|everybody|everything|no one|"
                  r"nobody|nothing|none|most|both|some|any|anyone|anything|"
                  r"few|many|several)\b", re.I)

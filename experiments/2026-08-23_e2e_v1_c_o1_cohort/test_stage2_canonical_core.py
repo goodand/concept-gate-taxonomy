@@ -99,3 +99,10 @@ def test_pure_module():
     imported |= {n.module for n in ast.walk(tree)
                  if isinstance(n, ast.ImportFrom) and n.module}
     assert imported <= {"__future__", "typing", "copy"}, imported
+
+
+def test_non_dict_input_refused():
+    """적대검증: desugar가 비-dict를 조용히 반환하던 타입 구멍 — 거부로."""
+    for bad in ("```json", 42, None, ["x"]):
+        with pytest.raises(TypeError):
+            core.desugar(bad)

@@ -243,3 +243,36 @@ def test_restricted_subject_converges_with_neutral_oracle(world):
         results_path=tmp / "results.json", pass_min=2)
     rows = {r["case_id"]: r["result"] for r in res["trial_rows"]}
     assert rows["R-01"] == "pass", rows
+
+
+# ============================================================== ROUND 3 ====
+# 적대검증(2026-08-23) 회계 공격자의 확정 발견 수리: 유령 trial의 certified
+# bit 묵살(오탈자가 조용히 미인증이 됨), expected-unscorable 지정 불가
+# (D-21 §14의 '예상된 UNSCORABLE' 회계가 배선상 도달 불가), stratum 미전파.
+
+
+def test_ghost_certified_ids_refused(world):
+    spec, adapter, oracle, tmp = world
+    exp = R.derive_expected_irs(spec.manifest_path, spec.cache_dir, adapter)
+    with pytest.raises(ValueError):
+        R.ingest_outputs(spec.cohort_path, _outputs(spec, oracle), exp,
+                         results_path=tmp / "rg.json", pass_min=2,
+                         certified={"GHOST-99": True})
+
+
+def test_expected_unscorable_and_stratum_maps_reach_rows(world):
+    spec, adapter, oracle, tmp = world
+    exp = R.derive_expected_irs(spec.manifest_path, spec.cache_dir, adapter)
+    plan = json.loads(spec.cohort_path.read_text())
+    tid0 = plan["trials"][0]["trial_id"]; tid1 = plan["trials"][1]["trial_id"]
+    res = R.ingest_outputs(
+        spec.cohort_path, _outputs(spec, oracle), exp,
+        results_path=tmp / "rs.json", pass_min=1,
+        expected_unscorable={tid0: True},
+        strata={tid0: "PMB", tid1: "multi_quantifier"},
+        stratum_floors={"multi_quantifier": (1, 1)})
+    assert res["report"]["strata"]["multi_quantifier"]["n"] == 1
+    with pytest.raises(ValueError):
+        R.ingest_outputs(spec.cohort_path, _outputs(spec, oracle), exp,
+                         results_path=tmp / "rs2.json", pass_min=1,
+                         expected_unscorable={"GHOST": True})

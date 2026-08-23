@@ -37,6 +37,11 @@ def desugar(formula: dict) -> dict:
     Returns:
         A desugared formula dict (logically equivalent, syntactically normalized).
     """
+    if not isinstance(formula, dict):
+        # 적대검증(2026-08-23): 비-dict 조용 통과는 타입 구멍 —
+        # 실행기 상류가 걸러도 이 층 자체가 자기 계약을 지켜야 한다.
+        raise TypeError(f"desugar expects a formula dict, got "
+                        f"{type(formula).__name__}")
     # Deep copy to ensure no mutation
     working = copy.deepcopy(formula)
 

@@ -2,16 +2,16 @@
   "population_doc_dirs": 12053,
   "counts": {
     "determiner_bearing": 870,
-    "eligible_candidates": 695,
-    "universal_lexicon": 224,
+    "eligible_candidates": 709,
+    "universal_lexicon": 227,
     "negation_line_histogram": {
-      "0": 319,
-      "1": 189,
-      "2": 178,
+      "0": 327,
+      "1": 190,
+      "2": 183,
       "3": 9
     },
     "subcorpus": {
-      "Tatoeba": 645,
+      "Tatoeba": 659,
       "TREC2003": 12,
       "INTERSECT": 10,
       "DISEQuA": 10,
@@ -1320,6 +1320,14 @@
       "sbn_sha256": "24ee6f31483dbc187b9a35be0ed806067df5e51b9870e47bbc088edb8cc8e39e"
     },
     {
+      "doc": "p12/d1413",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 0,
+      "universal_lexicon": false,
+      "text_sha256": "3f836713c3f2959a14f35418f43af73ecaaf24650d41a1845cfc5cd7156fce3a",
+      "sbn_sha256": "e13d72076996b272ff6ffc2840987314d378cb07473e2daae34b6386770bb35a"
+    },
+    {
       "doc": "p12/d1918",
       "subcorpus": "Tatoeba",
       "negation_lines": 0,
@@ -1334,6 +1342,14 @@
       "universal_lexicon": false,
       "text_sha256": "d478931dfa0df6f320aa098fd433dbb1a378c6e698e3680c520f9f3fda5e928a",
       "sbn_sha256": "506fbd7d569e9bd83b713452a5e5de2057dd7fe00a8a183fbe188bdedd1fe212"
+    },
+    {
+      "doc": "p12/d2381",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 0,
+      "universal_lexicon": false,
+      "text_sha256": "c8938377fee334e2e56fe08faa143987c9e1cc0c1a3f7d4263410caef25e975e",
+      "sbn_sha256": "53d30fe349810dd3ab208f006e596a56bfb34435dead2301b719e3a42a0f7af3"
     },
     {
       "doc": "p12/d2513",
@@ -1536,6 +1552,14 @@
       "sbn_sha256": "f3ce7490257413c2c5e45a213b647cf5edbb59730376df7eb5be19a24b3186fe"
     },
     {
+      "doc": "p14/d2233",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 0,
+      "universal_lexicon": false,
+      "text_sha256": "6afb13ecb72936f7031503fbac2c402868167d92727c86ff4efdf13c48ca0e04",
+      "sbn_sha256": "f49a19fcf5548a88cbc39f000d302d9c68895a4b211fa687dba8a752d4fd943e"
+    },
+    {
       "doc": "p14/d2394",
       "subcorpus": "Tatoeba",
       "negation_lines": 2,
@@ -1656,6 +1680,14 @@
       "sbn_sha256": "f45a553206eb0f9cc2e22319d49beccf219b913f02e29379b064dcabd65e1756"
     },
     {
+      "doc": "p17/d2120",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 0,
+      "universal_lexicon": false,
+      "text_sha256": "5e49982f4c806edee50ab16342026134c3f7fef5b3b4fd08e1dea68a32c26a94",
+      "sbn_sha256": "2c72d37c72980e725636494d7e9a8e51690a1ee4d9a9be5f2ff5ad8daedeae0a"
+    },
+    {
       "doc": "p17/d2168",
       "subcorpus": "Tatoeba",
       "negation_lines": 1,
@@ -1670,6 +1702,14 @@
       "universal_lexicon": true,
       "text_sha256": "81ee5234d856abbccf4d6c8602023ab46ba36f546b7a010de0f49e3892b84107",
       "sbn_sha256": "e86b3fba30b11d88f63bd6cddf0645b155bb3ab608dd24c908789021e77c3f49"
+    },
+    {
+      "doc": "p17/d2614",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 0,
+      "universal_lexicon": false,
+      "text_sha256": "c82a2ec96695fbe6108e614a1f5f1d1ce9583be9426a3a6712b548a261deb45a",
+      "sbn_sha256": "61f708c90e99cd054aa14859edc385052b17b58765e548092bbf028fee810d14"
     },
     {
       "doc": "p17/d2746",
@@ -1742,6 +1782,14 @@
       "universal_lexicon": false,
       "text_sha256": "20611b1dc5ce52751f2b6840880955e8cf91caff775f9970f31b4116ddb2f79e",
       "sbn_sha256": "ea76f08a5d2cf36fc9557083b1f682140af9428fa711a058ee1e6e5fa78b261e"
+    },
+    {
+      "doc": "p19/d0830",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 2,
+      "universal_lexicon": true,
+      "text_sha256": "fb75583b1edaf62b256cb8dc686ab3fdfb7981ba3570d8dceb800f92e8b6c85c",
+      "sbn_sha256": "78e09c7de8b8f2d5cdcd434e7b3fdca61af7dedcc4dba297b8bc10f803339208"
     },
     {
       "doc": "p19/d2195",
@@ -2600,6 +2648,14 @@
       "sbn_sha256": "d538a4f09b1dbcf8cffddf4fa44303ede951554b779bc0f5c0db1de68f02ae9d"
     },
     {
+      "doc": "p32/d1803",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 0,
+      "universal_lexicon": false,
+      "text_sha256": "d747e735d8cce93c65f0abe44eeabde6da8b750149a504731312b8cd734d2006",
+      "sbn_sha256": "9ad6defdec74b8c1a1aff6bb459dfc657e7b5bbdb5ec949d27626832d607e00e"
+    },
+    {
       "doc": "p32/d2086",
       "subcorpus": "Tatoeba",
       "negation_lines": 1,
@@ -3000,6 +3056,14 @@
       "sbn_sha256": "ccb0767faf82e5de8dcef0dafcb3c7c5de8e91ae6aacb1ff36c195fb3a825568"
     },
     {
+      "doc": "p39/d2795",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 0,
+      "universal_lexicon": false,
+      "text_sha256": "268ad2927c0b9b9e74b491d3ba24f3681177599457066918a3a2481957c38aa7",
+      "sbn_sha256": "a8870b64b68f78767dcfa41f4e957a00a9453066ac075994d2ed65add9b3b6cc"
+    },
+    {
       "doc": "p39/d2984",
       "subcorpus": "Tatoeba",
       "negation_lines": 2,
@@ -3046,6 +3110,14 @@
       "universal_lexicon": false,
       "text_sha256": "842465f47c71586b794fe4e40aa9be277e0c7f3f6de046d71ddc45e1520d62ff",
       "sbn_sha256": "d5410efda34e3dcb67d7f050de30521b65f40fbbd518d7396e2659e8e2bbca9f"
+    },
+    {
+      "doc": "p40/d1464",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 1,
+      "universal_lexicon": false,
+      "text_sha256": "0acaba1bc89a1fddeb9e44133d2f9e270c766152a69a08c20a769a8a51ef67d2",
+      "sbn_sha256": "d3ed9ce51c0de788a4b9ec26ddb4429b79c0692e3e8fb54509e6083c31938189"
     },
     {
       "doc": "p40/d1506",
@@ -3302,6 +3374,14 @@
       "universal_lexicon": true,
       "text_sha256": "35f2339dee2b17446f2e19e29019db4ec7ce14c7433da8820c216b08cb7272d1",
       "sbn_sha256": "0bbe5194ef979756bf904ec7b07571907d3c381446cc5eb1713ebe2b8a33333f"
+    },
+    {
+      "doc": "p45/d3235",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 2,
+      "universal_lexicon": true,
+      "text_sha256": "856174c26c4d8ac2fac30f51c60a13e4d255f8895c263aac2b332449645ddfbc",
+      "sbn_sha256": "70bd3036c5febdd7a8c38978593a6780528cd0eb5c4074875f7ab04fdd853db8"
     },
     {
       "doc": "p46/d1396",
@@ -3736,6 +3816,14 @@
       "sbn_sha256": "53a95fa55de09f4b50b58e7f2b653794069b84ac48303f4a515a0f2caac4aaec"
     },
     {
+      "doc": "p55/d0872",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 2,
+      "universal_lexicon": true,
+      "text_sha256": "3d2617cacbb5b1c8da376a4dbd3e3c87549167ef772a72920895b3aee7775ff6",
+      "sbn_sha256": "021a3abf957f5dcb1ab87b7cc309ddfb377a8f0b95e943646db3285e89502dde"
+    },
+    {
       "doc": "p55/d1774",
       "subcorpus": "Tatoeba",
       "negation_lines": 0,
@@ -3870,6 +3958,14 @@
       "universal_lexicon": false,
       "text_sha256": "8c62918b12ed34813aba888a514614e0efdc51778369d32638ac507152d7bf5e",
       "sbn_sha256": "9d6aa6837d0c394485c9f35878e17abf5d709d0022e9278e7a477a84a7df3d32"
+    },
+    {
+      "doc": "p59/d3477",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 0,
+      "universal_lexicon": false,
+      "text_sha256": "bfa9a47a47b612bdfc3e3feac85e96313eed1840f11d03ab5dd858c6211b00b6",
+      "sbn_sha256": "499c9e13c7511a85a887be11bcd2eebc6111c488b75e2b8c6ece300caa760efe"
     },
     {
       "doc": "p60/d1396",
@@ -4600,6 +4696,14 @@
       "sbn_sha256": "05480de3697b1af23869c5efb22ff4df16b62f0b5f55094197f70045c8d6d13f"
     },
     {
+      "doc": "p77/d2173",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 2,
+      "universal_lexicon": false,
+      "text_sha256": "b8a44570ca82bb8cbbe15d112f172923351af4891fbed521e4ada1784df3583a",
+      "sbn_sha256": "1b5c6cb271e64e9afed4e396fd7bb070908bd7e89d7857ea2633e7142f5bb11f"
+    },
+    {
       "doc": "p77/d2530",
       "subcorpus": "Tatoeba",
       "negation_lines": 0,
@@ -4654,6 +4758,14 @@
       "universal_lexicon": false,
       "text_sha256": "56a6f4157ef158e71020d9be41e31d721e525fba590da7fc376aa1f9ea4ad4e6",
       "sbn_sha256": "96e0e36807122835d4ae1a612a44b3ac3677607fbd817b63f959de97ce332192"
+    },
+    {
+      "doc": "p79/d1465",
+      "subcorpus": "Tatoeba",
+      "negation_lines": 2,
+      "universal_lexicon": false,
+      "text_sha256": "651fc51e29af168242d2bfe5d6f901463974623ffee0de4689f6743989d6d949",
+      "sbn_sha256": "a76797155a86ffc5ab91b45d6bc8d19ecb4465ae871cf6e2a33a85ce3522cd5a"
     },
     {
       "doc": "p79/d2358",

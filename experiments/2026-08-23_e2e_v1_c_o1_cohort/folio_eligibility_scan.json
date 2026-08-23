@@ -814,51 +814,6 @@
     },
     {
       "file": "folio-train.jsonl",
-      "example_id": 1013,
-      "premise_index": 0,
-      "story_id": 378,
-      "folio_source_field": "hyb",
-      "text_sha256": "0c503a23df5cc86802575885c0eba7b04bfd99a7c46a36382ebc7fdfeecb7639",
-      "fol_sha256": "cc6aae59696040a186d2881f814286b3e31f4fb5891d9e9be6261520fc32f7e8"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 1013,
-      "premise_index": 1,
-      "story_id": 378,
-      "folio_source_field": "hyb",
-      "text_sha256": "7c6f07333c869d1e8e8036fbcb8fabe5bd439cd3932dedf65abd6aed6643b485",
-      "fol_sha256": "9657a884f9869855d2fb2877378f96fc117f993c75f4e4771a9f52c4c1ed791c"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 1013,
-      "premise_index": 2,
-      "story_id": 378,
-      "folio_source_field": "hyb",
-      "text_sha256": "37443f6a99daf35f26b090670e4701c033586a46aa47173610f2c1876a4b3fa0",
-      "fol_sha256": "768d75b53b1e016e37c5b85a2a920495ea52bab7d3ba0d4b401241191ec5c39a"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 1013,
-      "premise_index": 3,
-      "story_id": 378,
-      "folio_source_field": "hyb",
-      "text_sha256": "6ad8117571a23ef6ea31a47fef3f892f65a92768fcd098ae5363def03e00f02e",
-      "fol_sha256": "c4f257b80beb11ebdd39eebba63541d91795f7de3d41e93a3307b510af7dbe1e"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 1013,
-      "premise_index": 4,
-      "story_id": 378,
-      "folio_source_field": "hyb",
-      "text_sha256": "4c92d98fd3fcdf913c2b73e0b4b71ee0c292b7c9da21c4354ac0c21f8c529308",
-      "fol_sha256": "809f4bad3be233598959e783264aa76591dcbe670efc1f5c905f1834fe1a8dc6"
-    },
-    {
-      "file": "folio-train.jsonl",
       "example_id": 1073,
       "premise_index": 2,
       "story_id": 395,
@@ -3685,15 +3640,6 @@
     },
     {
       "file": "folio-train.jsonl",
-      "example_id": 464,
-      "premise_index": 2,
-      "story_id": 161,
-      "folio_source_field": "wiki",
-      "text_sha256": "aac82443811717c72a19f04333aa40f6ff4251f5a33a08f071999ae94e7071c7",
-      "fol_sha256": "31bf46feaf9bc75b9e2d522c152c7b88c7c63774389ccb67a8bf247a4eb0f26c"
-    },
-    {
-      "file": "folio-train.jsonl",
       "example_id": 621,
       "premise_index": 0,
       "story_id": 216,
@@ -4771,78 +4717,6 @@
       "folio_source_field": "wiki",
       "text_sha256": "8cecfc7eb2f4a5da71d5cd8f4e831696ac47e94714fa1d2289fbf4d3bec7676b",
       "fol_sha256": "41134a5409e72c18ee21d80bb977d5aaa2f6dc7e78944742c0df86dc02b327a3"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 989,
-      "premise_index": 0,
-      "story_id": 370,
-      "folio_source_field": "hyb",
-      "text_sha256": "80bed6fd95dcde8f2965444a4f820bd21210fab7a3d292186dd79433bef509a7",
-      "fol_sha256": "ab785fcc2432701b6e6b95c3fba89d0aa04dfe2d4784796bc3f45f57cc9a45ce"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 989,
-      "premise_index": 1,
-      "story_id": 370,
-      "folio_source_field": "hyb",
-      "text_sha256": "c3ca7e5942b4776a8ea080cba1335029c9a669de926e0d69c60092e64a4302aa",
-      "fol_sha256": "bde6696ff158820d95f8d7c7ae066efd6b34f33fe46b3c157a581a96a19ac92b"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 989,
-      "premise_index": 2,
-      "story_id": 370,
-      "folio_source_field": "hyb",
-      "text_sha256": "b7d5b67e46c473328902474abc5ed6edd506859c7b2df51f52e6a0b87c6b59ec",
-      "fol_sha256": "b3bd18b6e5246bc680e313df7878d46b0dbfebc6deaed4ba18d26484cf231037"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 989,
-      "premise_index": 3,
-      "story_id": 370,
-      "folio_source_field": "hyb",
-      "text_sha256": "891583a655596be644b28cca815af4f63909cd98f35f18e54a6ebff860da914d",
-      "fol_sha256": "bfb4244d31945f50ecb75f76925f4f1d1a0c58dad195c46cb5cc3fbd16eb2f2e"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 989,
-      "premise_index": 4,
-      "story_id": 370,
-      "folio_source_field": "hyb",
-      "text_sha256": "466b1a4b8f9fc08dac0a7ea3e45a73ab47a0c36948aeda9378d4bfd24383a6cb",
-      "fol_sha256": "903c05b5aa11672db8154e0926f74b6f69bc2ba0414c41524124d38e0bbfad89"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 1028,
-      "premise_index": 0,
-      "story_id": 383,
-      "folio_source_field": "hyb",
-      "text_sha256": "e44f74423a97f5febb4b98fdc2178ceaeb5dca62c1beaa596935f23cec14cf7c",
-      "fol_sha256": "2a202c668711624a18b0ef7d61dc5e513caf36cb42b0338481279ad199636e45"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 1028,
-      "premise_index": 2,
-      "story_id": 383,
-      "folio_source_field": "hyb",
-      "text_sha256": "89a182fd48904a3d2b00176bf0bcccce13367d8c817e5a30cc69cc3ab9b1ce98",
-      "fol_sha256": "172373cefce18e80d7d5ffefe32096a71f839529d8a40f87d8009fa7ef1da8f9"
-    },
-    {
-      "file": "folio-train.jsonl",
-      "example_id": 1028,
-      "premise_index": 3,
-      "story_id": 383,
-      "folio_source_field": "hyb",
-      "text_sha256": "9987d6e354fd8284aa7eec4b52dfe47caf04ba4a325943b95f0ab1524e9c52d6",
-      "fol_sha256": "fa2a297e9eddaabebbbd6cb284d8f3a06ef0ac48f812f8eb9ca56370f64fcd9f"
     },
     {
       "file": "folio-train.jsonl",
@@ -8952,6 +8826,61 @@
   "mismatches": [
     {
       "file": "folio-train.jsonl",
+      "example_id": 1013,
+      "premise_index": 0,
+      "story_id": 378,
+      "folio_source_field": "hyb",
+      "text_sha256": "0c503a23df5cc86802575885c0eba7b04bfd99a7c46a36382ebc7fdfeecb7639",
+      "fol_sha256": "cc6aae59696040a186d2881f814286b3e31f4fb5891d9e9be6261520fc32f7e8",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 1013,
+      "premise_index": 1,
+      "story_id": 378,
+      "folio_source_field": "hyb",
+      "text_sha256": "7c6f07333c869d1e8e8036fbcb8fabe5bd439cd3932dedf65abd6aed6643b485",
+      "fol_sha256": "9657a884f9869855d2fb2877378f96fc117f993c75f4e4771a9f52c4c1ed791c",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 1013,
+      "premise_index": 2,
+      "story_id": 378,
+      "folio_source_field": "hyb",
+      "text_sha256": "37443f6a99daf35f26b090670e4701c033586a46aa47173610f2c1876a4b3fa0",
+      "fol_sha256": "768d75b53b1e016e37c5b85a2a920495ea52bab7d3ba0d4b401241191ec5c39a",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 1013,
+      "premise_index": 3,
+      "story_id": 378,
+      "folio_source_field": "hyb",
+      "text_sha256": "6ad8117571a23ef6ea31a47fef3f892f65a92768fcd098ae5363def03e00f02e",
+      "fol_sha256": "c4f257b80beb11ebdd39eebba63541d91795f7de3d41e93a3307b510af7dbe1e",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 1013,
+      "premise_index": 4,
+      "story_id": 378,
+      "folio_source_field": "hyb",
+      "text_sha256": "4c92d98fd3fcdf913c2b73e0b4b71ee0c292b7c9da21c4354ac0c21f8c529308",
+      "fol_sha256": "809f4bad3be233598959e783264aa76591dcbe670efc1f5c905f1834fe1a8dc6",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
       "example_id": 1073,
       "premise_index": 0,
       "story_id": 395,
@@ -9007,6 +8936,17 @@
     },
     {
       "file": "folio-train.jsonl",
+      "example_id": 464,
+      "premise_index": 2,
+      "story_id": 161,
+      "folio_source_field": "wiki",
+      "text_sha256": "aac82443811717c72a19f04333aa40f6ff4251f5a33a08f071999ae94e7071c7",
+      "fol_sha256": "31bf46feaf9bc75b9e2d522c152c7b88c7c63774389ccb67a8bf247a4eb0f26c",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
       "example_id": 1046,
       "premise_index": 4,
       "story_id": 389,
@@ -9035,6 +8975,94 @@
       "folio_source_field": "hyb",
       "text_sha256": "b407158a62c78396dc9c16ea9b0a7a134c161a41dd22237831dfb9dac765971b",
       "fol_sha256": "89287db0c71f6fb6fa230130c18f6390329695980069ec9f778ab0e1e7e1199b",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 989,
+      "premise_index": 0,
+      "story_id": 370,
+      "folio_source_field": "hyb",
+      "text_sha256": "80bed6fd95dcde8f2965444a4f820bd21210fab7a3d292186dd79433bef509a7",
+      "fol_sha256": "ab785fcc2432701b6e6b95c3fba89d0aa04dfe2d4784796bc3f45f57cc9a45ce",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 989,
+      "premise_index": 1,
+      "story_id": 370,
+      "folio_source_field": "hyb",
+      "text_sha256": "c3ca7e5942b4776a8ea080cba1335029c9a669de926e0d69c60092e64a4302aa",
+      "fol_sha256": "bde6696ff158820d95f8d7c7ae066efd6b34f33fe46b3c157a581a96a19ac92b",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 989,
+      "premise_index": 2,
+      "story_id": 370,
+      "folio_source_field": "hyb",
+      "text_sha256": "b7d5b67e46c473328902474abc5ed6edd506859c7b2df51f52e6a0b87c6b59ec",
+      "fol_sha256": "b3bd18b6e5246bc680e313df7878d46b0dbfebc6deaed4ba18d26484cf231037",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 989,
+      "premise_index": 3,
+      "story_id": 370,
+      "folio_source_field": "hyb",
+      "text_sha256": "891583a655596be644b28cca815af4f63909cd98f35f18e54a6ebff860da914d",
+      "fol_sha256": "bfb4244d31945f50ecb75f76925f4f1d1a0c58dad195c46cb5cc3fbd16eb2f2e",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 989,
+      "premise_index": 4,
+      "story_id": 370,
+      "folio_source_field": "hyb",
+      "text_sha256": "466b1a4b8f9fc08dac0a7ea3e45a73ab47a0c36948aeda9378d4bfd24383a6cb",
+      "fol_sha256": "903c05b5aa11672db8154e0926f74b6f69bc2ba0414c41524124d38e0bbfad89",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 1028,
+      "premise_index": 0,
+      "story_id": 383,
+      "folio_source_field": "hyb",
+      "text_sha256": "e44f74423a97f5febb4b98fdc2178ceaeb5dca62c1beaa596935f23cec14cf7c",
+      "fol_sha256": "2a202c668711624a18b0ef7d61dc5e513caf36cb42b0338481279ad199636e45",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 1028,
+      "premise_index": 2,
+      "story_id": 383,
+      "folio_source_field": "hyb",
+      "text_sha256": "89a182fd48904a3d2b00176bf0bcccce13367d8c817e5a30cc69cc3ab9b1ce98",
+      "fol_sha256": "172373cefce18e80d7d5ffefe32096a71f839529d8a40f87d8009fa7ef1da8f9",
+      "path_a": "syntax",
+      "path_b": "single"
+    },
+    {
+      "file": "folio-train.jsonl",
+      "example_id": 1028,
+      "premise_index": 3,
+      "story_id": 383,
+      "folio_source_field": "hyb",
+      "text_sha256": "9987d6e354fd8284aa7eec4b52dfe47caf04ba4a325943b95f0ab1524e9c52d6",
+      "fol_sha256": "fa2a297e9eddaabebbbd6cb284d8f3a06ef0ac48f812f8eb9ca56370f64fcd9f",
       "path_a": "syntax",
       "path_b": "single"
     },
@@ -9118,11 +9146,11 @@
   ],
   "counts": {
     "path_a": {
-      "single": 977,
+      "single": 963,
       "ineligible_operator": 279,
-      "other": 696,
+      "other": 692,
       "multi_mixed": 17,
-      "syntax": 38
+      "syntax": 56
     },
     "path_b": {
       "single": 992,
@@ -9131,7 +9159,7 @@
       "multi_mixed": 17
     },
     "agreed_multi_mixed": 17,
-    "agreed_single_controls": 977,
-    "mismatches": 15
+    "agreed_single_controls": 963,
+    "mismatches": 29
   }
 }

@@ -135,7 +135,9 @@ def ingest_outputs(plan_path: Path | str,
                    results_path: Path | str,
                    pass_min: int,
                    stratum_floors: dict | None = None,
-                   certified: dict | None = None) -> dict:
+                   certified: dict | None = None,
+                   expected_unscorable: dict | None = None,
+                   strata: dict | None = None) -> dict:
     """Ingest subject outputs, evaluate, score, and write results.
 
     Validates:
@@ -165,6 +167,16 @@ def ingest_outputs(plan_path: Path | str,
     # Build trial_id → output map and validate
     output_map = {}
     plan_trial_ids = {t["trial_id"] for t in plan_trials}
+
+    # 적대검증(2026-08-23): 유령 trial_id를 나르는 map은 오탈자 신호 —
+    # 조용한 미인증/미지정이 되기 전에 거부한다.
+    for name, mp in (("certified", certified),
+                     ("expected_unscorable", expected_unscorable),
+                     ("strata", strata)):
+        if mp:
+            ghosts = set(mp) - plan_trial_ids
+            if ghosts:
+                raise ValueError(f"{name} names unknown trial_ids: {sorted(ghosts)}")
 
     for output in outputs:
         trial_id = output["trial_id"]
@@ -224,7 +236,10 @@ def ingest_outputs(plan_path: Path | str,
             row["certified"] = False
 
         # Mark unscorable as expected (none are expected in this implementation)
-        row["unscorable_expected"] = False
+        row["unscorable_expected"] = bool(
+            expected_unscorable.get(trial_id)) if expected_unscorable else False
+        if strata and trial_id in strata:
+            row["stratum"] = strata[trial_id]
 
         trial_rows.append(row)
 

@@ -85,6 +85,13 @@ def run_check(check: dict) -> dict:
                   and all(k not in ks for k in check["must_not_contain"]))
             row["observed"] = {"root": ir.get("kind"), "kinds": sorted(ks)}
             row["match"] = ok
+        elif kind == "neutral_exists":
+            ir = fa.adapt_fol(check["fol"])
+            true_pred = {"kind": "pred", "name": "True", "args": []}
+            row["observed"] = {"root": ir.get("kind"),
+                               "restriction_is_true": ir.get("restriction") == true_pred}
+            row["match"] = (ir.get("kind") == "exists"
+                            and ir.get("restriction") == true_pred)
         elif kind == "desugar_converges":
             restricted = fa.adapt_fol(check["fol"])
             # neutral 대조: 같은 식의 lowering을 desugar가 되돌린 core와,

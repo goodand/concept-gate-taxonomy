@@ -1,6 +1,6 @@
 {
-  "corpus_version": "fol-adapter-qualification-v1",
-  "note": "D-E2E-v1-23 §13 9항목. 발명 술어만. check kind 어휘는 SBN판과 동일 + desugar_converges.",
+  "corpus_version": "fol-adapter-qualification-v2",
+  "note": "D-E2E-v1-23 §13 9항목. 발명 술어만. check kind 어휘는 SBN판과 동일 + desugar_converges. v2(2026-08-23 적대검증 반영): item8에 Mutation-B 직접 검사(neutral_exists — restriction=True 단언), item9에 Mutation-A 복제(D-23 §13의 '반드시 포함' 문언 충족), 신규 음성 2건(무괄호 scope 이탈·열린 스키마 식 거부 — F1 수리의 결박).",
   "authority": "DESIGN_DECISION_folio_second_source.md (D-E2E-v1-23 §13-§14)",
   "items": [
     {
@@ -130,6 +130,12 @@
           "kind": "desugar_converges",
           "fol": "∀x (Zorble(x) → Glim(x))",
           "note": "restricted 산출의 desugar == neutral 표기 ∀x φ(→ 그대로)의 desugar"
+        },
+        {
+          "check_id": "DL-mutB-no-arbitrary-split",
+          "kind": "neutral_exists",
+          "fol": "∃y (Zorble(y) ∧ Glim(y) ∧ Prax(y))",
+          "note": "D-23 §14 Mutation B: restriction이 True가 아니면 임의 분할 = FAIL"
         }
       ]
     },
@@ -167,14 +173,32 @@
           "check_id": "SO-neg-xor",
           "kind": "adapt_refused",
           "fol": "∀x (Zorble(x) ⊕ Glim(x))"
+        },
+        {
+          "check_id": "SO-mutA-order",
+          "kind": "fp_ne",
+          "fol_a": "∀x ∃y Prax(x, y)",
+          "fol_b": "∃y ∀x Prax(x, y)",
+          "note": "D-23 §13 item9 '반드시 포함' — item3과 중복이나 문언 충족"
+        },
+        {
+          "check_id": "SO-neg-scope-escape",
+          "kind": "adapt_refused",
+          "fol": "∀x Zorble(x) → Glim(x)",
+          "note": "적대검증 F1: 무괄호 scope 이탈 — entity 강등 아닌 거부"
+        },
+        {
+          "check_id": "SO-neg-open-schema",
+          "kind": "adapt_refused",
+          "fol": "¬(Zorble(k) ∧ Glim(k)) → Prax(k)"
         }
       ]
     }
   ],
   "provenance": {
-    "fol_adapter_source_sha256": "849c046bd25cc7585bbcebd08940e6051fabe8c600344a45f1b3ba50265451f1",
+    "fol_adapter_source_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
     "cg_ir_source_sha256": "078f41d9910fc358faa60801405e73b52e458c1479e26271818f94d8280264da",
-    "canonical_core_source_sha256": "1c1eaf3c8ab284c3d65f1288aefc3ec774b40e6f5181ed9fd5902ab4d83a711a",
+    "canonical_core_source_sha256": "6ac24f52b2dc6af12d37439fe7c846e4262cbdb9ddb105a9d7e548a4ecc6e168",
     "python_version": "3.13.13"
   },
   "results": [
@@ -326,6 +350,15 @@
             "body": "implies"
           },
           "match": true
+        },
+        {
+          "check_id": "DL-mutB-no-arbitrary-split",
+          "kind": "neutral_exists",
+          "observed": {
+            "root": "exists",
+            "restriction_is_true": true
+          },
+          "match": true
         }
       ]
     },
@@ -370,6 +403,24 @@
           "check_id": "SO-neg-xor",
           "kind": "adapt_refused",
           "observed": "AdapterUnsupported",
+          "match": true
+        },
+        {
+          "check_id": "SO-mutA-order",
+          "kind": "fp_ne",
+          "observed": "ne",
+          "match": true
+        },
+        {
+          "check_id": "SO-neg-scope-escape",
+          "kind": "adapt_refused",
+          "observed": "AdapterSyntaxError",
+          "match": true
+        },
+        {
+          "check_id": "SO-neg-open-schema",
+          "kind": "adapt_refused",
+          "observed": "AdapterSyntaxError",
           "match": true
         }
       ]

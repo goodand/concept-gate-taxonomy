@@ -276,6 +276,14 @@ class ParserWithScope:
         if name in self.bound_vars:
             return {"kind": "var", "name": name}
         else:
+            if len(name) == 1 and name.islower():
+                # 적대검증 F1(2026-08-23): 비결박 단일 소문자는 양화 scope
+                # 이탈 신호다 — entity로 강등하면 "구성상 닫힘"이 공허해진다.
+                # 실측: 무괄호 (∀xP)→Q(x) 39건, 열린 스키마 식 40건 전부 이
+                # 규칙이 잡는다. 다중문자 상수(berlinzorb)는 그대로 entity.
+                raise AdapterSyntaxError(
+                    f"unbound single-letter identifier {name!r}: "
+                    f"likely quantifier scope escape; refusing")
             return {"kind": "entity", "name": name}
 
 

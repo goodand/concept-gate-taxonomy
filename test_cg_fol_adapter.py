@@ -168,3 +168,39 @@ def test_fol_adapter_not_imported_by_refine_or_verify():
                  "cg_sbn_adapter.py", "cg_fixture_resolver.py"):
         src = (root / name).read_text(encoding="utf-8")
         assert "cg_fol_adapter" not in src, f"{name} imports the fol adapter"
+
+
+# ============================================================== ROUND 2 ====
+# 2026-08-23 적대 검증(Haiku xhigh, 근거축 분리 4공격자)의 확정 발견 수리.
+# F1(BLOCKER, 2공격자 수렴): 무괄호 `∀x P(x) → Q(x)`가 (∀xP)→Q로 파싱되며
+# RHS의 x가 **entity로 조용히 강등** — "구성상 닫힘"이 공허해진다. 실데이터
+# 실측: 이 형태가 6,323 premise 중 39건(배포 밖 아님), 비결박 단일 소문자
+# 40건은 전부 실제 열린 식. 반면 alice류 다중문자 상수는 정당(공격자
+# sub-finding은 반박됨). 수리: **비결박 단일 소문자 식별자 = 거부**(scope
+# 이탈 신호), 다중문자는 entity 유지.
+
+
+def test_unbound_single_letter_identifier_is_refused():
+    """무괄호 함정의 정확한 형태 — RHS x가 entity가 되는 대신 거부돼야 한다."""
+    with pytest.raises((fa.AdapterSyntaxError, fa.AdapterUnsupported)):
+        fa.adapt_fol("∀x Zorble(x) → Glim(x)")
+
+
+def test_free_schematic_letter_is_refused():
+    """실데이터의 열린 식 형태(¬(A(k)∧B(k))→C(k)) — entity화가 아니라 거부."""
+    with pytest.raises((fa.AdapterSyntaxError, fa.AdapterUnsupported)):
+        fa.adapt_fol("¬(Zorble(k) ∧ Glim(k)) → Prax(k)")
+
+
+def test_multichar_constants_still_entities():
+    """다중문자 소문자 상수는 항 규칙 그대로 — 공격자 alice sub-finding의 반박 유지."""
+    ir = fa.adapt_fol("∀x Prax(x, berlinzorb)")
+    ents = []
+    def walk(n):
+        if isinstance(n, dict):
+            if n.get("kind") == "entity": ents.append(n["name"])
+            for v in n.values(): walk(v)
+        elif isinstance(n, list):
+            for v in n: walk(v)
+    walk(ir)
+    assert ents == ["berlinzorb"]
