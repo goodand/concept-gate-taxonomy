@@ -79,20 +79,43 @@ def test_profile_v4_recomputable_and_has_implies_dialect():
     assert "diagnostic_only" in labels["status"]
 
 
-def test_contract_hashes_bind_live_modules():
-    """코드 결박: 측정 경로 모듈을 고치면 이 게이트가 동결 실효를 알린다."""
+# 동결 계보의 현재 상태. V4의 코드 결박은 "V4가 현행 동결일 때만" 유효하다 —
+# D-27(curry 정규화·표면 필터) 구현으로 측정 경로 모듈이 바뀌었으므로 V4는
+# 실효됐고 V5는 아직 동결되지 않았다. 이 공백은 숨기지 않고 주장한다:
+# 이 상태에서 코호트를 실행하면 어떤 동결도 결과를 규정하지 못한다.
+FREEZE_STATE = "V4_SUPERSEDED_BY_D27_IMPLEMENTATION__V5_PENDING"
+
+
+def test_v4_code_binding_state_is_asserted_not_hidden():
+    """V4 contract_hashes가 라이브와 어긋났다면 그것은 결함이 아니라
+    **동결 실효 사실**이다 — 다만 그 사실이 명시돼 있어야 한다.
+
+    V4가 현행이면 라이브와 일치해야 하고, superseded면 어긋나 있어야 한다
+    (어긋나지 않았다면 FREEZE_STATE 선언이 거짓이다)."""
     _, v4 = _load()
     ch = v4["contract_hashes"]
-    for key, rel in (("canonicalization_core_sha256", "_stage2_canonical_core.py"),
-                     ("projection_module_sha256", "_stage2_scope_projection.py"),
-                     ("satisfiability_module_sha256", "_stage2_satisfiability.py"),
-                     ("eval_profile_module_sha256", "_stage2_eval_profile.py")):
-        live = hashlib.sha256((HERE / rel).read_bytes()).hexdigest()
-        assert ch[key] == live, f"{rel} 변경 — V4 동결 실효 (재자격·재동결 필요)"
-    assert ch["prompt_template_v4_sha256"] == hashlib.sha256(
-        (HERE / "stage2_prompt_template_v4.md").read_bytes()).hexdigest()
-    assert ch["dispatch_schema_sha256"] == canonical_sha256(
-        dispatch_envelope_schema(("forall", "exists", "and", "pred", "not", "implies")))
+    pairs = (("canonicalization_core_sha256", "_stage2_canonical_core.py"),
+             ("projection_module_sha256", "_stage2_scope_projection.py"),
+             ("satisfiability_module_sha256", "_stage2_satisfiability.py"),
+             ("eval_profile_module_sha256", "_stage2_eval_profile.py"))
+    drift = [rel for key, rel in pairs
+             if ch[key] != hashlib.sha256((HERE / rel).read_bytes()).hexdigest()]
+    if FREEZE_STATE.startswith("V4_CURRENT"):
+        assert not drift, f"V4가 현행인데 실효: {drift}"
+    else:
+        assert drift, ("FREEZE_STATE가 superseded를 선언했는데 라이브가 V4와 "
+                       "동일하다 — 선언이 거짓이거나 게이트가 공허하다")
+
+
+def test_no_cohort_may_run_while_freeze_is_superseded():
+    """실효 상태에서 코호트 결과 파일이 생겨 있으면 안 된다 —
+    어떤 동결도 그 결과를 규정하지 못하므로 해석 불가다."""
+    if FREEZE_STATE.startswith("V4_CURRENT"):
+        return
+    for name in ("stage2_results.json", "stage2_results_v4.json",
+                 "stage2_cohort_results.json"):
+        assert not (HERE / name).exists(), (
+            f"{name}: 동결 실효 상태에서 코호트 결과가 존재한다")
 
 
 def test_all_v4_fixtures_satisfiable_from_cache():
@@ -141,3 +164,14 @@ def test_diff_gate_catches_pmb_swap():
             if x["case_id"].startswith("PMB-"))
            if any(e.get(f) != p2[cid].get(f) for f in INVARIANT_FIELDS)]
     assert bad, "바꿔치기가 잡히지 않으면 이 게이트는 공허하다"
+
+
+def test_v4_template_and_schema_hashes_still_bind():
+    """template·dispatch schema는 코드 모듈이 아니라 불변 artifact다 —
+    D-27 구현과 무관하게 V4 값이 계속 맞아야 한다(실효 대상 아님)."""
+    _, v4 = _load()
+    ch = v4["contract_hashes"]
+    assert ch["prompt_template_v4_sha256"] == hashlib.sha256(
+        (HERE / "stage2_prompt_template_v4.md").read_bytes()).hexdigest()
+    assert ch["dispatch_schema_sha256"] == canonical_sha256(
+        dispatch_envelope_schema(("forall", "exists", "and", "pred", "not", "implies")))
