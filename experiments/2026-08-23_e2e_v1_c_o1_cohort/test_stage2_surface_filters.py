@@ -181,3 +181,15 @@ def test_proportional_accepts_quantificational_most(sent):
 
 def test_proportional_does_not_fire_without_most():
     assert sf.is_proportional("All humans eat.") is False
+
+
+@pytest.mark.parametrize("sent", [
+    "He paid at most ten thousand dollars.",     # `at most` = 상한 기수, 비례 아님
+    "She's at most 20 years old.",
+    "What was Aaron Copland's most famous piece of music?",  # 소유격 최상급
+    "Her most valuable possession is a ring.",
+])
+def test_proportional_rejects_at_most_and_possessive_superlative(sent):
+    """실물 대조에서 드러난 오탐 2종 — `at most`(상한 기수)와 소유격
+    최상급(`X's most ADJ`)은 비례 양화가 아니다."""
+    assert sf.is_proportional(sent) is False

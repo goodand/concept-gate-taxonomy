@@ -54,7 +54,10 @@ _MOST_OF = re.compile(r"\bmost\s+of\b", re.I)
 _MOST_NOMINAL = re.compile(r"\bmost\s+[a-z]+\b", re.I)
 # 최상급의 표지는 한정사 `the`다(`the most beautiful …`). 복수형 `-s` 판별로
 # 구분하려던 첫 시도는 people/children 같은 불규칙 복수를 놓쳤다(실측).
-_SUPERLATIVE_MOST = re.compile(r"\bthe\s+most\b", re.I)
+# 최상급 표지: 한정사 `the` 또는 소유격(`Copland's most`, `her most`).
+_SUPERLATIVE_MOST = re.compile(r"(?:\bthe\s+most\b|'s\s+most\b|\b(?:his|her|its|their|my|your|our)\s+most\b)", re.I)
+# `at most`는 상한 기수 표현이지 비례가 아니다(실물 대조에서 오탐 확인).
+_AT_MOST = re.compile(r"\bat\s+most\b", re.I)
 UNSUPPORTED_QUANTIFIER_LEXICON = ("few", "fewer", "several", "many", "most",
                                   "both", "either", "neither")
 KNOWN_IDIOMS = ("anything but", "all right", "at all", "all of a sudden",
@@ -151,14 +154,17 @@ def control_eligible(case_id: str, sentence: str, oracle_ir: dict) -> tuple:
 def is_proportional(sentence: str) -> bool:
     """비례 양화 문장인가 (D-28 Q28.2 G1 정정 술어).
 
-    `most of …` 는 무조건 인정. `the most …`는 최상급이므로 배제. 그 외
+    `at most N`(상한 기수)은 먼저 배제한다. `most of …`는 인정. 최상급
+    표지(`the most …`, `X's most …`, `her most …`)는 배제. 그 외
     `most + 명사`는 비례로 인정한다. **알려진 근사의 한계**: 한정사 없는
     최상급(`most talented students`)은 통과한다 — 드물고, Gate C(사람의
     재료 감사)가 최종 방어선이다. 첫 시도는 복수형 `-s`로 구분하려 했으나
     people/children 같은 불규칙 복수를 놓쳤다(실측).
     """
+    if _AT_MOST.search(sentence):
+        return False          # 상한 기수 (`at most N`)
     if _MOST_OF.search(sentence):
         return True
     if _SUPERLATIVE_MOST.search(sentence):
-        return False          # `the most …` = 최상급
+        return False          # 최상급 (`the most …`, `X's most …`)
     return bool(_MOST_NOMINAL.search(sentence))
