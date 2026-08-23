@@ -1,5 +1,10 @@
 # HANDOFF — codex/h1-source-authority (2026-08-23, Stage 2 동결 직후)
 
+프로젝트 식별자: **concept-gate-h1** (worktree `concept-gate-h1-wt`,
+branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability cohort).
+이 handoff가 이 프로젝트의 현재 상태(state), 다음 행동(next action),
+정지 조건(stop conditions)의 유일한 진입점이다.
+
 이 worktree의 HANDOFF가 정본이다(main repo 것 아님). **이 문서는 포인터
 중심**이다 — 상태 서술의 정본은 아래 문서들이고, 여기 중복 기재하지 않는다
 (P4 예방). 이 문서에만 있는 것은 §3 "다음 실행 절차"뿐이다.
@@ -7,19 +12,26 @@
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: FROZEN_AWAITING_EXECUTION_APPROVAL
-next_action_code: DISPATCH_FOLIO_ADAPTER_CONTROLS   # §3-2 — 본 코호트보다 먼저
+state_code: REFROZEN_V2_AWAITING_EXECUTION_APPROVAL   # D-E2E-v1-24 amendment 적용
+next_action_code: DISPATCH_FOLIO_ADAPTER_CONTROLS   # §3-2 — 본 코호트보다 먼저 (V2 기준)
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
-  - NO_FROZEN_SURFACE_EDITS              # §4 — 동결 표면 수정은 D-19 §12 외부 판정 사안
-authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2.md
+  - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
+authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2_V2.md
+# 코드별 authority 근거절 — 위 코드를 주장할 때는 아래 절을 인용하라:
+#   state_code             ← PREREGISTRATION_STAGE2_V2.md AMENDMENT 1 (V1은 SUPERSEDED_PRE_EXECUTION으로 보존)
+#   next_action_code       ← PREREGISTRATION_STAGE2_V2.md PART I adapter control 절 (control 3건 선행)
+#   NO_COHORT_WITHOUT_USER_APPROVAL ← CLAUDE.md "## 실행 승인" 절 (저장소 전역 운영 규칙 — 사전등록은 실행 허가가 아니다)
+#   NO_FROZEN_SURFACE_EDITS         ← PREREGISTRATION_STAGE2_V2.md (D-19 §12; 개정은 D-24 §9 amendment 절차로만)
 ```
 
 ## 1. 현재 상태 한 줄
 
-**Stage 2 (E2E-v1-C) 동결 완료(`f57ae12`) — 코호트 실행 승인 대기.**
-fixture 20건(PMB 15 + FOLIO 5) + adapter control 3건이 사전등록됐고,
-이후 fixture/N/임계값/지표/profile 변경은 D-19 §12 외부 판정 사안이다.
+**Stage 2 재동결 V2 (D-E2E-v1-24 amendment) — 코호트 실행 승인 대기.**
+smoke가 적발한 B1(FOLIO 라벨 규약)을 판정대로 수리: FOLIO codec + 도달성
+적격 술어 + FOLIO 두 stratum 재선별(`stage2_fixture_manifest_v2.json`).
+V1(f57ae12)은 SUPERSEDED_PRE_EXECUTION으로 바이트 보존(게이트가 감시).
+코호트 결과 0건 관측 상태의 수정이다. 실행은 V2 manifest 기준.
 
 ## 2. 정본 지도 (읽는 순서)
 
@@ -32,6 +44,7 @@ fixture 20건(PMB 15 + FOLIO 5) + adapter control 3건이 사전등록됐고,
 | 외부 판정 사슬 | `docs/DESIGN_DECISION_*` — D-19(실험 구조)·D-20(commitment)·D-21(oracle 교체)·D-22(PMB 부분자격+stratum floor)·D-23(FOLIO+FOL codec). 전부 verbatim+sha256, 말미에 수신 검증 기록 |
 | adapter 자격(코드 결박) | `experiments/2026-08-23_{o1,sbn,fol}_adapter_qualification/` — 각 test_protocol이 코드 해시를 라이브와 대조: **adapter·비교층을 고치면 자격이 자동 실효**된다 |
 | 적대 검증 결과 | `docs/ADVERSARIAL_VALIDATION_20260823.md` |
+| 이 handoff가 실제로 복원 가능한가 | `docs/HANDOFF_EVALUATION_20260823.md` — zero-context 평가기 실측(3/3 accepted) + 발견된 결함 2건과 수리 + 남은 한계 4건 |
 | 실행 기제 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/_stage2_{cohort,run,score,eval_profile,canonical_core}.py` + `conceptgate/cg_{sbn,fol}_adapter.py`, `cg_fixture_resolver.py` |
 
 ## 3. 다음 실행 절차 (사용자 승인 후 — 이 문서의 유일한 고유 내용)

@@ -42,3 +42,27 @@ python3 <scratchpad>/kroki_client.py render <file>.mmd <file>.svg
 
 글리프 주의: kroki PNG/SVG 폰트에 ✕(U+2715)·✅·⚠ 가 없어 tofu가 된다 —
 ASCII `X`, `○`(U+25CB), "주의:"를 쓴다 (2026-08-22 실측).
+
+## 추상화 시 남기는 특성의 우선순위 (사용자 규약, 2026-08-23)
+
+아키텍처 변경안은 **mcp-kroki graphviz 렌더 → SVG READ → 평가**로 표현을
+검증한다. **가장 추상화된 그래프(L0)를 먼저 완료·검증한 뒤**에만 다음
+레벨을 구체화한다(drill-down 순서, 레벨 간 골격은 위 Semantic Zoom 규약대로
+불변). 실증: D-E2E-v1-24 amendment 설계에서 L2 구체화 단계가 "PMB verbatim
+복사 ↔ 신규 profile_hash" 모순을 실행 전에 적발했다 — L0·L1에서는 보이지
+않던 결함이다.
+
+추상화 단계에서 **남기는(살아남는) 특성의 우선순위**:
+
+| 순위 | 남기는 것 | 근거 예시 |
+|---|---|---|
+| (0) | 절대 불변인 것 (never modified) | 동결 커밋·SEED·N·임계값 |
+| (1) | 궁극 목적·대상 — **상위 목적의 상위 목적을 재귀 추론**해 얻는다 | `concept-gate-taxonomy/docs/HANDOFF_EXPERIMENT_PURPOSE_HIERARCHY.md` (직접 목적→상위→상위의 상위 표) |
+| (2) | expected_output | 산출물·상태 전이의 종점 |
+| (3) | possible_conditions | 분기 조건 (BLOCKED·게이트 실패 등) |
+| (4) | 기계 판정 가능한 확실성 (규칙 기반) | 해시 대조·결정론 선별 |
+
+기본 레지스터는 **input-task-output**이다 — 실물 예시: 워크스페이스 루트
+`diagrams/01-architecture.mmd`(`IN["입력: …"]` → 과제 대역 → `OUT["출력: …"]`),
+`diagrams/03-stage-pipeline.mmd`. 우선순위 (0)~(4)에서 탈락한 세부는 하위
+레벨(Z1~Z3)로 내려보내고, L0에는 위 표의 특성만 남긴다.
