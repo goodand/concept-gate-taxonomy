@@ -1,0 +1,510 @@
+{
+  "manifest_version": "e2e-v1-c-fixtures-v2",
+  "amendment": {
+    "ruling": "D-E2E-v1-24",
+    "supersedes": "stage2_fixture_manifest.json (V1, freeze commit f57ae12)",
+    "v1_status": "SUPERSEDED_PRE_EXECUTION",
+    "defect": "B1 — FOLIO predicate label convention gap (smoke test, pre-execution; no cohort outcomes observed)"
+  },
+  "order_seed": "E2EV1C-freeze-20260823-v1",
+  "profile": {
+    "id": "O1_V1",
+    "constructors": [
+      "forall",
+      "exists",
+      "and",
+      "pred",
+      "not"
+    ],
+    "canonicalizer": "cg_ir.canonicalize_v0 (capture-avoiding alpha-rename only)",
+    "comparison_core": {
+      "desugar": "FORALL(x,R,B)->FORALL(x,True,implies(R,B)); EXISTS(x,R,B)->EXISTS(x,True,and(R,B)) (D-23 §12)",
+      "predicate_labels": {
+        "PMB": "O1_PMB_LEMMA_NO_SENSE_V1",
+        "FOLIO": "FOLIO_LABEL_LOWERCASE_V1"
+      }
+    },
+    "source_encoding_profiles": {
+      "PMB_SBN_5_1": "paired NEGATION -> forall (documented codec, D-22 Q22.2)",
+      "FOLIO_FOL_V0": "implication-under-forall lowering; neutral exists (D-23 §12)"
+    }
+  },
+  "profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+  "selection_inputs": {
+    "pmb_scan_sha256": "e6a2617a729ee3a7bfe4ac5859be2f86be78924e7b66efeb2ab6ae795cc8b9bd",
+    "folio_scan_sha256": "93eea2262a6ec9b9e279711998a964ff511feac080c01f28d641f46cf807495f",
+    "folio_reachability_scan_v2_sha256": "1c74ade646d614a84b28dbcb8db8145ea9fd51580aca8fc02af8837059defb13"
+  },
+  "strata_counts": {
+    "proportional": 1,
+    "quantifier_negation_scope": 4,
+    "single_universal": 4,
+    "cardinal": 3,
+    "single_existential": 3,
+    "multi_quantifier": 5
+  },
+  "entries": [
+    {
+      "case_id": "PMB-p09-d2243",
+      "stratum": "proportional",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p09/d2243/en.drs.sbn",
+        "record_locator": "p09/d2243",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "71242929858939724ac427e87991f550c6777bfe413ae16d6fb46f83e45fbb3a",
+      "lf_sha256": "e7f473cffb6db9918b2ce84407136fd734e80c56e6084cd80f98341804f5dc1e",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "dacd371c2d28c6e5bb35dcd5f496a91da0f5b19644225b0d15df87288bad48b1"
+    },
+    {
+      "case_id": "PMB-p06-d1718",
+      "stratum": "quantifier_negation_scope",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p06/d1718/en.drs.sbn",
+        "record_locator": "p06/d1718",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "b1db1661044347835b090b6980c599093ea977e0a4bbe253f160a3d8c32ff3e2",
+      "lf_sha256": "3e9ce7ae4518cc146d7db6b9b1a7aaeaf82439f9f2577829026d4373041abba7",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "0d18b9db258da01f4183a6c0662f9dc14c036be5029c3051abd53ca9341cdb9b"
+    },
+    {
+      "case_id": "PMB-p15-d0787",
+      "stratum": "quantifier_negation_scope",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p15/d0787/en.drs.sbn",
+        "record_locator": "p15/d0787",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "07722cec299d64093490ef56c0b31bcaba8b5bcef55feb83ec1cbc2829f24f6e",
+      "lf_sha256": "4cd303f24ca1b405551c3d7f033cc7ba8009fb8d041543db03bbfad89197aa8b",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "77ea90e47561630ef3fee7482e28fc7d51dee208a4a5378aae3d561b898a36f4"
+    },
+    {
+      "case_id": "PMB-p93-d1717",
+      "stratum": "quantifier_negation_scope",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p93/d1717/en.drs.sbn",
+        "record_locator": "p93/d1717",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "85322005bccdc968256a45a30da890d02cea76f9cc25712ecb5f7567ecbb301b",
+      "lf_sha256": "ccc6ea326de8da765075e73c5e710227d84407cf758e11268e322a3dbdddc9da",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "95f45d93a113e3b92fec966dd940a69a964d2adcdfe59ab3bd4e75ae13b33573"
+    },
+    {
+      "case_id": "PMB-p76-d2248",
+      "stratum": "quantifier_negation_scope",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p76/d2248/en.drs.sbn",
+        "record_locator": "p76/d2248",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "49b1153663e01c6896d5c1a3f103d0ea14c2ece1c9c3060ca96f41f8fa36ebf7",
+      "lf_sha256": "595ada039de15a8415e1589bef7546d99eb977fb6457810f0965d7510d898914",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "7b9cffe3d99417bcd2489673f2fbd6ab1553b4f6b140761507e809f56722657c"
+    },
+    {
+      "case_id": "PMB-p43-d3444",
+      "stratum": "single_universal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p43/d3444/en.drs.sbn",
+        "record_locator": "p43/d3444",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "08e991b2ce09cbd901e895cf23a5645663a2f63700192811be4275cf459e6a36",
+      "lf_sha256": "59b05dc93437db2f54b655d705c4dee655c7a7995a6e556acb19691d4a3cb5e8",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "e43121adf5f0cd14d21c1769628093d357e632c95ec234b6eab99b2e4dd17b96"
+    },
+    {
+      "case_id": "PMB-p00-d1686",
+      "stratum": "single_universal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p00/d1686/en.drs.sbn",
+        "record_locator": "p00/d1686",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "9debeb12815afb8be72de4ff8f4de4d33b96e52fb24176840080e2419c523ed8",
+      "lf_sha256": "7fd17be23d9483f423948ecd37adc6b2a068a988cdd9116591b0688bdbdfc339",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "04a4cfda2f1a623f9a58da94046991e92fa33bc08221063fc8f5e4fc51aadff8"
+    },
+    {
+      "case_id": "PMB-p00-d1657",
+      "stratum": "single_universal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p00/d1657/en.drs.sbn",
+        "record_locator": "p00/d1657",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "5f5f6d0c9f54b5dc68ebdbbd9d032e37792cb18021415867eb2594d3bb09f86b",
+      "lf_sha256": "5c1987ef880d78b603acb84e3ad8abf3a4f8a71ac0bae3888dd666ab8b102654",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "3317712b6f9d43c3b0add3b9685216136fa735aa35b95db7eca79cccc4effaa7"
+    },
+    {
+      "case_id": "PMB-p36-d2853",
+      "stratum": "single_universal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p36/d2853/en.drs.sbn",
+        "record_locator": "p36/d2853",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "cdd56fdd94e9fe9114ad068bfb74616f279625ca22ab6fed8fa655aaa1b34c8e",
+      "lf_sha256": "635d907551b3acb35eb1b8ba844955197ba2bb3d033d92cca967773338227128",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "e859f37e821f4e2be7f3b8da2f54ea4c4a5f5aa15747d28ffb69f7469821c459"
+    },
+    {
+      "case_id": "PMB-p69-d1730",
+      "stratum": "cardinal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p69/d1730/en.drs.sbn",
+        "record_locator": "p69/d1730",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "02cdaf89eaa20b5e6ea67342da69a33c8cbd6a224faa0216a73057376d092af3",
+      "lf_sha256": "848b8afa7506330c48d3a4b5ec57f4dc96ce7ec161947bfd222701758a47bf01",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "b945d77b2fe5b640a2edc8c9692d261f77539ab4f4be58d4259d6ea82247cc40"
+    },
+    {
+      "case_id": "PMB-p36-d3354",
+      "stratum": "cardinal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p36/d3354/en.drs.sbn",
+        "record_locator": "p36/d3354",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "6d1ace3e8ab951eef126ad122fd2bae76976dec026de86346d33c54ba16821d7",
+      "lf_sha256": "e01bff51ff3d4ea92c4a1097e47b563c0523c22f4e33f9e0897f6da14f22e090",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "2900d9921c28dbf9c53cc42fd5569a9a2728914c7db69d1c372cbec5a6cc11e9"
+    },
+    {
+      "case_id": "PMB-p43-d3167",
+      "stratum": "cardinal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p43/d3167/en.drs.sbn",
+        "record_locator": "p43/d3167",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "845ec271198daa277bd00851c1ede1b95810be03d6bee597eedcf286f26dd7c0",
+      "lf_sha256": "9a25733b2e75e76de8f0ce04450747e054b609cb51e9f01def1eaf637ce5b5e5",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "8a3b794376fbf3f6c987ac2dbdc07260733c68e6699befc9befc28678f490df3"
+    },
+    {
+      "case_id": "PMB-p00-d2298",
+      "stratum": "single_existential",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p00/d2298/en.drs.sbn",
+        "record_locator": "p00/d2298",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "ac068849888b4f43d43e8c0499cd51e0cd549b068145963edb2c2d6037396dee",
+      "lf_sha256": "f93aa7c55fbd4c750b36f44a264382a4367f984c56a52535240b0a60349862c8",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "775d1b9ab8f796b99493f30932ba4e0f0f4c19c07b5c354c6baee58d8039455a"
+    },
+    {
+      "case_id": "PMB-p05-d1463",
+      "stratum": "single_existential",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p05/d1463/en.drs.sbn",
+        "record_locator": "p05/d1463",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "e9b8370357a5060445fcdb7461354acf3a643a61b428f67bc7f27de63de34aed",
+      "lf_sha256": "d403c2db457bdaa29e9a68d45e13d3bb9e5043604e5842fb69f2cc8f193165eb",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "99d5f167ab0c4559ea1d0c18fa459bbc1a5cb368b49357d4bfa4492612ac77c9"
+    },
+    {
+      "case_id": "PMB-p87-d1860",
+      "stratum": "single_existential",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p87/d1860/en.drs.sbn",
+        "record_locator": "p87/d1860",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "11e253781e81678a6e81841c08b8cc54cc402c5e99d2e6a8430554e7485aff2e",
+      "lf_sha256": "634de83f066ed1c6cf5478a9dafa422073e353477748feef17d8ed5abe5749fc",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "9b4f06244b7c7d3c623293d6996286267f15dc08e34f6c0636542d51fff012d3"
+    },
+    {
+      "case_id": "FOLIO-142p1",
+      "stratum": "multi_quantifier",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=142;premise=1",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "b7599de68c480caa13d6f615bd040fa5cbc144204a98c753e7fab07fce43c70a",
+      "lf_sha256": "5ab6601179f20ad171ca0f45697bca85c7f1e3f33e620bc33dffbc389556cbd1",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "61e7807e6f7d65b181586fdb2707cb2daba11160edc806d60ac280f6388ae232"
+    },
+    {
+      "case_id": "FOLIO-695p1",
+      "stratum": "multi_quantifier",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=695;premise=1",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "5c5f75fcfce4b61671fe21125a4aae3a4ddee139c42219616f28cf3dba31a3d7",
+      "lf_sha256": "23628ee271d3cadc78624dcce730de6783db0a138f1d64d927ead7c0caeb54c1",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "3fab32cef88546fe33158b38ca613abce4ade0725137c47fd5c4ad6dfe21d52b"
+    },
+    {
+      "case_id": "FOLIO-404p0",
+      "stratum": "multi_quantifier",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=404;premise=0",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "7378baef000c9ca4f7c3decf33b8b04e03dcb1d0b8ba14e6ae0e6e86f2f5e9f3",
+      "lf_sha256": "97e995b208a3b76fa0e9baea6549a8201af3eedc7518f63d45c568652b716d0b",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "b5cf3bb16c0474b9bc73469d60106223f892eb1fb396cfbdd4c9533418d8185a"
+    },
+    {
+      "case_id": "FOLIO-376p4",
+      "stratum": "multi_quantifier",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=376;premise=4",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "b5fd5d1d9411b1df1320fccf7de0652dac3cf4ff71a2e2a731178efa69c69c19",
+      "lf_sha256": "19e961214a262d6003e450281568c81a543ad5acedcd8b58c53b44bbf8730d99",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "f846deb92d91d901521bb68f233b8edd9ca5152aeb809ae7cabcfb9c672ce120"
+    },
+    {
+      "case_id": "FOLIO-598p4",
+      "stratum": "multi_quantifier",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=598;premise=4",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "cbaef6306ccc891753d377415969f8434f0765fa330a1c67e19990954b3bae7c",
+      "lf_sha256": "7742444dc2be24fb9257d84edf6aac6c1709f7c5f048ce22129a8c9252b93964",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "7b07ad39e59f6a69da71de89a348fd466e810f627880785ad3101065cccd213d"
+    }
+  ],
+  "folio_simple_controls": [
+    {
+      "case_id": "FOLIO-175p1",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=175;premise=1",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "c0cd28f493ee5334e1d32c2c378ae91dde394c6224d1e55b94ece30b998e88ba",
+      "lf_sha256": "e50f9fe24bc020f42e7185c2a76bacefdb4854887ccead64487d71709c780d0e",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "06e7dee1a6ec40192709240de68ed17764be7703a33c4b1625bb3ffd86aad6dd"
+    },
+    {
+      "case_id": "FOLIO-1377p0",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=1377;premise=0",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "HybLogic",
+      "text_sha256": "8dd97f77a299302fd62c2b18ec8b2dc326889d73716b21b4fb60a3f0968846aa",
+      "lf_sha256": "85ccc26ba16961f508dcd9d142c2628314799a20c9ae0332f3f92078ab6bda75",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "468bd564fcac6669c8e0558cedfa6acbadfc53c685eeb9b1d8acba4447b5c39b"
+    },
+    {
+      "case_id": "FOLIO-1420p2",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=1420;premise=2",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "HybLogic",
+      "text_sha256": "08a21707601fa9ef881863adc1371cdfe1e62199183db31eb643db2f3fd6644b",
+      "lf_sha256": "902a9f3616e0862ccc14115e24ecc0faba8b6fa19a1ee47dcd7d321ced44c961",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "6091525125d8889baff9e21db3d96f52bbdc4e276c623163883a58b67c9fec48"
+    }
+  ]
+}
