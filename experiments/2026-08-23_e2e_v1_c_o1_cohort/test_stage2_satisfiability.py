@@ -40,7 +40,8 @@ DAVIDSONIAN = NOT(FA("x0", P("child.n.01", V("x0")),
 
 
 def test_gate_identity():
-    assert sat.GATE_ID == "MEASUREMENT_SATISFIABILITY_V1"
+    # V1 → V2: D-E2E-v1-26 §14 (도달성 required 제거·diagnostic화)
+    assert sat.GATE_ID == "MEASUREMENT_SATISFIABILITY_V2"
 
 
 def test_pmb_davidsonian_oracle_is_satisfiable_under_v3():
@@ -88,3 +89,32 @@ def test_unknown_prefix_refuses():
     import pytest
     with pytest.raises(ValueError):
         sat.check_oracle_ir("WIKISEM-1", FA("x", T, P("a", V("x"))))
+
+
+# ---- D-E2E-v1-26: gate V2 개정 ----
+
+def test_gate_v2_identity_and_reachability_is_diagnostic():
+    """§14: GATE_ID V2, 도달성은 required가 아니라 diagnostic 필드."""
+    assert sat.GATE_ID == "MEASUREMENT_SATISFIABILITY_V2"
+    rec = sat.check_oracle_ir("PMB-p15-t", DAVIDSONIAN)
+    assert "predicate_label_reachability" not in rec["checks"]
+    assert "diagnostic" in rec       # 진단 구획은 존재 (내용은 별도 채움 가능)
+
+
+def test_implies_under_exists_is_now_satisfiable():
+    """D-26의 핵심 효과: V1 게이트가 UNSAT이던 ∃-아래-함의 형태가 SAT."""
+    IMP = lambda l, r: {"kind": "implies", "left": l, "right": r}
+    f = FA("x", T, EX("y", T, IMP(AND(P("Aa", V("x")), P("Bb", V("y"))),
+                                  P("Cc", V("x"), V("y")))))
+    rec = sat.check_oracle_ir("FOLIO-d26t", f)
+    assert rec["verdict"] == "SATISFIABLE", rec
+
+
+def test_schema_rejects_malformed_implies():
+    """D-26 §7: schema 검증의 implies branch — left/right 누락은 거부."""
+    import jsonschema, pytest as _pt
+    bad = {"kind": "implies", "left": P("a", V("x"))}   # right 누락
+    f = FA("x", T, bad)
+    sig_schema = sat._SCHEMA
+    with _pt.raises(jsonschema.ValidationError):
+        jsonschema.validate(f, sig_schema)

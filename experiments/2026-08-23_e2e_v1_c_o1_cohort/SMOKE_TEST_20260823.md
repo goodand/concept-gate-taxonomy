@@ -160,3 +160,32 @@ profile hash `c9d22d5c…`) 후 S1~S3을 V2 구성으로 재실행했다.
 고정됐다. desugar가 중립 제한식을 `name=="True"` 문자열로 식별하므로
 codec이 예약 토큰을 보존해야 한다는 함정은 조사·위임 모두 못 봤고 lead
 재실측이 잡아 계약화했다(`test_folio_preserves_reserved_true_token`).
+
+---
+
+## 추기 2 (같은 날) — V4 재동결 후 smoke 재실행 (D-25·D-26 적용 검증)
+
+V4(방언 6종 +implies, O1ScopeMatch=projection 위 exact match, SAT gate V2,
+FOLIO selector 재실행, PMB projection control 3 신설, profile hash
+`15b01b4b…`)로 S1~S3 재실행:
+
+| 층 | 결과 |
+|---|---|
+| S1 | PASS — 왕복 26/26(코호트 20 + control 6), drift 0, profile 자기 일관 |
+| S2 | PASS 15/15 — **implies 분지가 schema·template에 실재**(live 이력 없던 constructor) |
+| S3 | PASS — live 5/5 봉투 준수(∃-scope 함의 재료 SMK-05 포함), O1ScopeMatch 지표 산출, overwrite 거부 |
+
+채점 내용(발명 재료 — 파이프라인 검증 목적): pass 2 / fail 3, **fail 전부
+operator_type(scope topology)** — 라벨·granularity 잡음 0. V2 대비 차등:
+같은 재료의 실패 원인이 predicate_arguments(라벨)에서 순수 scope 신호로
+이동 완료. subject는 implies가 주어져도 SMK-05를 제한식 ∀-형으로 컴파일해
+gold의 ∃-scope 함의와 갈렸다 — D-26 §2가 예고한 "이제 측정 가능해진
+estimand" 그 자체다.
+
+계보 기록: V3는 artifact 생성 전 SAT gate에 차단(ABORTED_PRE_FREEZE).
+FOLIO in-N 재선별(적격 16, 식별자 부재 1건 기계 제외)이 **V1의 원 선별과
+우연히 일치** — V2의 도달성 선별만이 우회로였다(D-26 §16 "우연히 동일"
+경로). 게이트: 13/0/1, cohort 실험 128 tests. 탐색 사다리 각주: projection·
+SAT·V4 freeze의 공백은 이 실험의 동결 계약(판정 retain/exclude 목록)에
+결박된 고유 로직이라 subtree 단계는 YAGNI로 생략(이전 codec 라운드와 동일
+판단), witness 렌더러 포함 전부 기존 모듈 확장으로 해소.

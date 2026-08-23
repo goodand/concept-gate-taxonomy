@@ -362,3 +362,81 @@ def test_ingest_refuses_unknown_source_prefix(world):
     with pytest.raises(ValueError):
         R.ingest_outputs(spec2.cohort_path, outs, expected,
                          results_path=tmp / "res_bad.json", pass_min=3)
+
+
+# ------------------- D-25 §8: 채점 = projection 위 exact match 축 ----------
+
+
+def test_ingest_scores_on_projected_signatures(world):
+    """PMB davidsonian oracle vs 자연 subject: full IR은 불일치지만 scope
+    signature는 동일 → **pass** (V2에서 15/15를 죽인 F3의 회귀 계약)."""
+    spec, adapter, oracle, tmp = world
+    import _stage2_cohort as C2
+    m = json.loads(spec.manifest_path.read_text())
+    davids = {"kind": "not", "body":
+              {"kind": "forall", "var": "x0",
+               "restriction": P("child.n.01", V("x0")),
+               "body": EX("x2", {"kind": "and", "args": [
+                   P("apple.n.01", V("x2")),
+                   EX("x1", {"kind": "and", "args": [
+                       P("like.v.03", V("x1")),
+                       P("Experiencer", V("x1"), V("x0")),
+                       P("Stimulus", V("x1"), V("x2"))]})]})}}
+    # (위 EX는 이 파일 관례: 제한 True 고정 2인자)
+    lfb = b"(invented-lf PMB-DAV-1)"
+    m["entries"].append({
+        "case_id": "PMB-DAV-1",
+        "source_locator": {"corpus_id": "inv", "corpus_version": "v0",
+                           "artifact": "none", "record_locator": "PMB-DAV-1",
+                           "retrieval_urls": []},
+        "text_sha256": put(spec.cache_dir, b"Not all children like apples."),
+        "lf_sha256": put(spec.cache_dir, lfb),
+        "adapter_version": "inv-handmade",
+        "adapter_code_sha256": "0" * 64,
+        "canonicalization_profile_hash": "1" * 64,
+        "expected_ir_sha256": canonical_sha256(davids)})
+    mp = tmp / "manifest_dav.json"
+    mp.write_text(json.dumps(m, ensure_ascii=False))
+    spec2 = C2.CohortSpec(mp, tmp / "plan_dav.json", spec.cache_dir,
+                          "RUN-dav", "DV", "claude-haiku-4-5-20251001")
+    C2.write_cohort(spec2)
+    oracle2 = dict(oracle); oracle2["PMB-DAV-1"] = davids
+    def adapter2(lf):
+        cid = lf.decode().split()[-1].rstrip(")")
+        return oracle2[cid]
+    expected = R.derive_expected_irs(mp, spec.cache_dir, adapter2)
+    plan = json.loads(spec2.cohort_path.read_text())
+    natural = {"kind": "not", "body":
+               {"kind": "forall", "var": "x",
+                "restriction": P("child", V("x")),
+                "body": {"kind": "exists", "var": "y",
+                         "restriction": P("apple", V("y")),
+                         "body": P("like", V("x"), V("y"))}}}
+    outs = []
+    for t in plan["trials"]:
+        ir = natural if t["case_id"] == "PMB-DAV-1" \
+            else json.loads(json.dumps(oracle2[t["case_id"]]))
+        outs.append({"trial_id": t["trial_id"], "ir": ir})
+    res = R.ingest_outputs(spec2.cohort_path, outs, expected,
+                           results_path=tmp / "res_dav.json", pass_min=3)
+    by_case = {r["case_id"]: r for r in res["trial_rows"]}
+    assert by_case["PMB-DAV-1"]["result"] == "pass"        # projection 위 채점
+    # 진단 축: full-IR 라벨 비교는 별도 필드로 남는다 (D-25 §16)
+    diag = by_case["PMB-DAV-1"]["diagnostic_label_identity"]
+    assert diag["result"] == "fail"                        # 라벨·granularity 차이
+    assert res["report"]["metrics"].get("O1ScopeMatch") is not None
+
+
+def test_projection_scoring_still_fails_wrong_scope(world):
+    """projection이 잘못된 scope까지 통과시키면 공허 — ¬∀ vs ∀¬는 fail."""
+    spec, adapter, oracle, tmp = world
+    plan = json.loads(spec.cohort_path.read_text())
+    expected = R.derive_expected_irs(spec.manifest_path, spec.cache_dir, adapter)
+    outs = []
+    for t in plan["trials"]:
+        good = json.loads(json.dumps(oracle[t["case_id"]]))
+        outs.append({"trial_id": t["trial_id"],
+                     "ir": {"kind": "not", "body": good}})   # 부정 하나 얹기
+    res = R.ingest_outputs(spec.cohort_path, outs, expected,
+                           results_path=tmp / "res_neg.json", pass_min=2)
+    assert all(r["result"] == "fail" for r in res["trial_rows"])

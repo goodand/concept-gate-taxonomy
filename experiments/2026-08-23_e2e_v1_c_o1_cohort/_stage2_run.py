@@ -27,6 +27,7 @@ from conceptgate.cg_fixture_resolver import resolve_bytes
 from conceptgate.cg_identity import canonical_sha256
 from conceptgate.cg_evaluate import evaluate
 from _stage2_eval_profile import normalize_labels_for_case
+from _stage2_scope_projection import project_scope_for_case
 from _stage2_canonical_core import desugar
 from _stage2_score import score
 
@@ -217,21 +218,24 @@ def ingest_outputs(plan_path: Path | str,
                 predicted_ir = output["ir"]
                 oracle_ir = expected_irs[case_id]
 
-                # 평가 profile 정규화 — source(case_id 접두어)별 codec을
-                # 양측에 동일하게 적용 (D-E2E-v1-24 Q24.1: PMB=synset→lemma,
-                # FOLIO=소문자화만; 교차 적용은 dispatch가 구조적으로 차단)
-                normalized_predicted = desugar(
-                    normalize_labels_for_case(case_id, predicted_ir))
-                normalized_oracle = desugar(
-                    normalize_labels_for_case(case_id, oracle_ir))
-
-                # Evaluate
-                ev = evaluate(normalized_predicted, normalized_oracle)
+                # 채점 = O1ScopeMatch (D-25 §8): 양측을 O1_SCOPE_PROJECTION
+                # 으로 투영한 signature 사이 exact structural match. 투영은
+                # desugar를 내장하고 라벨을 익명화하므로 codec과 무관하다.
+                ev = evaluate(project_scope_for_case(case_id, predicted_ir),
+                              project_scope_for_case(case_id, oracle_ir))
                 row["result"] = ev["result"]
-
-                # Keep mismatch_dimensions if present (for fail/unscorable)
                 if "mismatch_dimensions" in ev:
                     row["mismatch_dimensions"] = ev["mismatch_dimensions"]
+
+                # 진단 축 (D-25 §16: predicate_label_identity = DIAGNOSTIC_ONLY)
+                # — 기존 full-IR 비교(codec+desugar)를 별도 필드로 보존한다.
+                # 채점에 절대 관여하지 않는다.
+                dv = evaluate(
+                    desugar(normalize_labels_for_case(case_id, predicted_ir)),
+                    desugar(normalize_labels_for_case(case_id, oracle_ir)))
+                row["diagnostic_label_identity"] = {
+                    "result": dv["result"],
+                    "mismatch_dimensions": sorted(dv.get("mismatch_dimensions", []))}
 
         # Add certification flag
         if certified and trial_id in certified:

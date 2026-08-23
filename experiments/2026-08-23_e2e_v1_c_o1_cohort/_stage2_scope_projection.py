@@ -30,6 +30,11 @@ from _stage2_canonical_core import desugar
 
 PROJECTION_PROFILE_ID = "O1_SCOPE_PROJECTION_V1"
 
+# D-E2E-v1-26 Q26.1: subject 방언 V4 = O1_V1 + implies (측정 언어 복구 —
+# estimand 불변). 재타이핑 금지: V1 목록은 freeze_stage2가 정본.
+from freeze_stage2 import O1_V1_CONSTRUCTORS as _V1
+DIALECT_V4_CONSTRUCTORS = tuple(_V1) + ("implies",)
+
 SLOT = "□"          # 익명 술어 라벨 (라벨 어휘는 채점 밖 — 판정 §13)
 RESERVED = "True"   # desugar의 중립 제한식 토큰 — 절대 익명화하지 않는다
 

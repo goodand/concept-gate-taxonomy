@@ -207,3 +207,31 @@ def test_default_profile_unchanged(world):
     plan = C.build_cohort(world)
     assert plan["provenance"]["constructor_profile"] == list(
         cg_ir_schema.V0_O1_CONSTRUCTORS)
+
+
+# ---- D-E2E-v1-26: V4 template (implies 방언) ----
+
+def test_v4_template_adds_exactly_one_implies_line():
+    """V4 template = V1 + implies constructor 1행, 그 외 diff 0 (D-26 §3 —
+    semantic hint 금지). V1 파일은 바이트 불변."""
+    v1 = C.load_template()
+    v4 = C.load_template(HERE / "stage2_prompt_template_v4.md")
+    assert '{"kind": "implies", "left": <formula>, "right": <formula>}' in v4
+    assert '"implies"' not in v1
+    diff = [l for l in v4.splitlines() if l not in v1.splitlines()]
+    assert diff == ['- {"kind": "implies", "left": <formula>, "right": <formula>}']
+
+
+def test_cohort_spec_template_file_flows_into_plan(world, tmp_path):
+    """CohortSpec.template_file 지정 시 그 template로 렌더·pin — 미지정은 V1."""
+    import hashlib as _h
+    spec0 = world                     # 이 파일의 world는 spec 단일 반환
+    m = spec0.manifest_path
+    spec = C.CohortSpec(m, tmp_path / "p.json", spec0.cache_dir,
+                        "RUN-v4t", "T4", "claude-haiku-4-5-20251001",
+                        template_file=str(HERE / "stage2_prompt_template_v4.md"))
+    plan = C.write_cohort(spec)
+    tpl = C.load_template(HERE / "stage2_prompt_template_v4.md")
+    assert plan["provenance"]["prompt_template_sha256"] == \
+        _h.sha256(tpl.encode()).hexdigest()
+    assert all('"implies"' in t["prompt"] for t in plan["trials"])

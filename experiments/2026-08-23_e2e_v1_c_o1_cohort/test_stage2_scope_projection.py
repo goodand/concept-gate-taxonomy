@@ -206,3 +206,28 @@ def test_empty_and_is_pruned_not_left_dangling():
 # 만들고 project(witness)==project(oracle) 왕복으로 검증한다. 초판 계약이
 # 두 역할을 한 산출물에 요구해 위임 구현이 undesugar hack으로 우회했던
 # 이력이 있다 — 그 요구는 여기서 제거됐다.
+
+
+# ---- D-E2E-v1-26 자격 P7·P8 (implies 방언 확장 후) ----
+
+def test_p7_implication_under_exists_roundtrips():
+    """P7: ∃ 아래 함의가 projection→witness→재projection 왕복에서 같은
+    위치에 남는다 (D-26 §7 — 6종 방언에서 witness는 signature 그대로)."""
+    import _stage2_satisfiability as sat
+    IMP = lambda l, r: {"kind": "implies", "left": l, "right": r}
+    f = FA("x", T, EX("y", T, IMP(P("A", V("x")), P("B", V("y")))))
+    sig = proj.project_scope_for_case("FOLIO-p7t", f)
+    w = sat.render_witness(sig)
+    assert '"implies"' in json.dumps(w)                      # 위치 보존(소실 금지)
+    assert same(proj.project_scope_for_case("FOLIO-p7t", w), sig)
+
+
+def test_p8_implication_position_discriminated():
+    """P8: ∀→∃→→ 와 ∀→→→∃ 는 왕복 후에도 다른 signature (104 반례 쌍)."""
+    IMP = lambda l, r: {"kind": "implies", "left": l, "right": r}
+    folio_form = FA("x", T, EX("y", T, IMP(AND(P("a", V("x")), P("b", V("y"))),
+                                           P("c", V("x"), V("y")))))
+    natural = FA("x", P("a", V("x")),
+                 EX("y", P("b", V("y")), P("c", V("x"), V("y"))))
+    assert not same(proj.project_scope_for_case("FOLIO-p8t", folio_form),
+                    proj.project_scope_for_case("FOLIO-p8t", natural))

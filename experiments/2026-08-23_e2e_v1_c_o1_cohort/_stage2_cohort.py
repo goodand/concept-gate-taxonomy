@@ -35,6 +35,7 @@ class CohortSpec(NamedTuple):
     model: str
     # 동결 시 profile 확정(D-21 §19·D-23) — 기본값은 기존 거동 불변
     constructors: tuple = None  # None → V0_O1_CONSTRUCTORS
+    template_file: str = None   # None → V1 stage2_prompt_template.md (D-26: V4는 명시 지정)
 
 
 class MaterialUnavailable(Exception):
@@ -47,12 +48,13 @@ class CohortOverwriteRefused(Exception):
     pass
 
 
-def load_template() -> str:
-    """Load the Stage 2 prompt template from stage2_prompt_template.md.
+def load_template(path=None) -> str:
+    """Stage 2 프롬프트 template 로드 — ```template fenced block만.
 
-    Returns the ```template fenced block content only (stripped of fence lines).
+    path 미지정은 V1(stage2_prompt_template.md). V4(D-26, implies 방언)는
+    호출자가 명시 지정한다 — 기본값이 조용히 바뀌는 것을 막는 설계.
     """
-    template_file = HERE / "stage2_prompt_template.md"
+    template_file = Path(path) if path else HERE / "stage2_prompt_template.md"
     content = template_file.read_text(encoding="utf-8")
 
     lines = content.split("\n")
@@ -67,7 +69,7 @@ def load_template() -> str:
             break
 
     if start_idx is None or end_idx is None:
-        raise ValueError("template block not found in stage2_prompt_template.md")
+        raise ValueError(f"template block not found in {template_file.name}")
 
     return "\n".join(lines[start_idx:end_idx])
 
@@ -110,7 +112,7 @@ def build_cohort(spec: CohortSpec) -> dict:
         )
 
     # Load template and schema
-    template = load_template()
+    template = load_template(spec.template_file)
     profile = tuple(spec.constructors) if spec.constructors else V0_O1_CONSTRUCTORS
     schema = dispatch_envelope_schema(profile)
 

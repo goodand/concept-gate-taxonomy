@@ -12,17 +12,17 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: RULING_D26_RECEIVED_AWAITING_V4_IMPLEMENTATION   # implies 추가 승인·도달성 진단 강등·V4 재동결 명령
-next_action_code: IMPLEMENT_V4_FREEZE   # D-26: implies 방언 6종·자격 P7/P8·SAT gate V2 개정·multi 17에서 selector 재실행·V3=ABORTED_PRE_FREEZE 기록
+state_code: REFROZEN_V4_AWAITING_CONTROLS   # D-25/26 적용 완료 — projection 채점·SAT V2·implies 방언·V4 동결
+next_action_code: DISPATCH_V4_CONTROLS   # FOLIO 3 + PMB projection 3 (N 밖) — 통과 시 본 코호트는 별도 사용자 승인
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
-authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2_V2.md
+authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2_V4.md
 # 코드별 authority 근거절 — 위 코드를 주장할 때는 아래 절을 인용하라:
-#   state_code             ← PREREGISTRATION_STAGE2_V2.md AMENDMENT 1 (V1은 SUPERSEDED_PRE_EXECUTION으로 보존)
-#   next_action_code       ← PREREGISTRATION_STAGE2_V2.md PART I adapter control 절 (control 3건 선행)
+#   state_code             ← PREREGISTRATION_STAGE2_V4.md AMENDMENT 2 (V1·V2 보존, V3=ABORTED_PRE_FREEZE)
+#   next_action_code       ← PREREGISTRATION_STAGE2_V4.md A2.2 controls 행 (FOLIO 3 + PMB 3 선행)
 #   NO_COHORT_WITHOUT_USER_APPROVAL ← CLAUDE.md "## 실행 승인" 절 (저장소 전역 운영 규칙 — 사전등록은 실행 허가가 아니다)
-#   NO_FROZEN_SURFACE_EDITS         ← PREREGISTRATION_STAGE2_V2.md (D-19 §12; 개정은 D-24 §9 amendment 절차로만)
+#   NO_FROZEN_SURFACE_EDITS         ← PREREGISTRATION_STAGE2_V4.md (D-19 §12; 개정은 D-24 §9 절차로만)
 ```
 
 ## 1. 현재 상태 한 줄
