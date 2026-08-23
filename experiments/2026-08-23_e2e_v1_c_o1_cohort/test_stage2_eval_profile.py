@@ -111,3 +111,107 @@ def test_profile_module_is_pure():
     imported |= {n.module for n in ast.walk(tree)
                  if isinstance(n, ast.ImportFrom) and n.module}
     assert imported <= {"__future__", "typing", "re", "copy"}, imported
+
+
+# ---------------------------------------------------------------------------
+# D-E2E-v1-24 Q24.1: FOLIO_LABEL_LOWERCASE_V1 — RED 먼저.
+#
+# smoke가 적발한 B1: FOLIO oracle 술어는 대문자/CamelCase로 남는데 template은
+# subject에게 소문자를 강제 → 라벨 불일치만으로 fail. 판정은 FOLIO 한정
+# 소문자화 codec만 허용(분절·동의어·lemma·병합 금지), PMB codec과 별도 유지,
+# source(case_id 접두어)별 dispatch를 비교층에 요구했다.
+# ---------------------------------------------------------------------------
+
+
+def test_folio_profile_identity():
+    assert prof.FOLIO_PROFILE_ID == "FOLIO_LABEL_LOWERCASE_V1"
+
+
+def test_folio_casefold_positive():
+    ir = EX("x", {"kind": "and", "args": [
+        P("Zorble", V("x")), P("CanCatch", V("x"), V("x"))]})
+    out = prof.normalize_folio_labels(ir)
+    names = [a["name"] for a in out["body"]["args"]]
+    assert names == ["zorble", "cancatch"]
+
+
+def test_folio_no_lexical_substitution():
+    """판정 §12 negative: Zorble ≠ Creature — codec은 어휘를 절대 바꾸지 않는다."""
+    ir = EX("x", {"kind": "and", "args": [
+        P("Zorble", V("x")), P("Creature", V("x"))]})
+    out = prof.normalize_folio_labels(ir)
+    names = [a["name"] for a in out["body"]["args"]]
+    assert names == ["zorble", "creature"]
+    assert names[0] != names[1]
+
+
+def test_folio_no_camelcase_segmentation():
+    """판정 §2: CamelCase 분절 금지 — 'CanCatch'는 'cancatch'이지 'can_catch'가 아니다."""
+    out = prof.normalize_folio_labels(P("CanCatch", V("x"), V("x")))
+    assert out["name"] == "cancatch"
+    assert "_" not in out["name"] and " " not in out["name"]
+
+
+def test_folio_preserves_reserved_true_token():
+    """desugar는 중립 제한식을 name == "True" 문자열로 식별한다
+    (_stage2_canonical_core.py). codec이 True를 소문자화하면 desugar가 중립형을
+    재포장해 비교가 깨진다 — 예약 토큰은 codec을 통과해도 불변이어야 한다."""
+    ir = EX("x", P("Glims", V("x")))          # EX의 restriction = P("True")
+    out = prof.normalize_folio_labels(ir)
+    assert out["restriction"]["name"] == "True"
+    assert out["body"]["name"] == "glims"
+
+
+def test_folio_structure_arity_topology_untouched():
+    ir = EX("x", {"kind": "and", "args": [
+        P("OnRoof", V("x")), {"kind": "not", "body": P("WentWrong", V("x"))}]})
+    out = prof.normalize_folio_labels(ir)
+    assert out["kind"] == "exists" and out["body"]["kind"] == "and"
+    assert out["body"]["args"][1]["kind"] == "not"
+    assert len(out["body"]["args"][0]["args"]) == 1
+
+
+def test_folio_input_not_mutated_and_idempotent():
+    import copy
+    ir = EX("x", P("Zorble", V("x")))
+    snapshot = copy.deepcopy(ir)
+    once = prof.normalize_folio_labels(ir)
+    assert ir == snapshot
+    assert prof.normalize_folio_labels(once) == once
+
+
+def test_folio_same_lowercased_names_stay_separate_nodes():
+    """소문자화로 라벨이 충돌해도 노드 병합 금지 (판정 preserve: predicate_occurrence)."""
+    ir = EX("x", {"kind": "and", "args": [
+        P("Glims", V("x")), P("GLIMS", V("x"))]})
+    out = prof.normalize_folio_labels(ir)
+    assert len(out["body"]["args"]) == 2
+    assert [a["name"] for a in out["body"]["args"]] == ["glims", "glims"]
+
+
+# --- source별 dispatch (비교층 배선의 단일 진입점) ---
+
+
+def test_dispatch_pmb_routes_to_synset_codec():
+    out = prof.normalize_labels_for_case(
+        "PMB-p09-d2243", P("Zorble.n.01", V("x")))
+    assert out["name"] == "zorble"          # synset → lemma
+
+
+def test_dispatch_folio_routes_to_casefold_codec():
+    out = prof.normalize_labels_for_case(
+        "FOLIO-175p1", P("Zorble.n.01", V("x")))
+    assert out["name"] == "zorble.n.01"     # FOLIO codec은 lemma 추출이 아니라 소문자화만
+
+
+def test_dispatch_unknown_prefix_refuses():
+    """미지 source는 조용한 무정규화가 아니라 거부 — fail-closed.
+
+    SMOKE-도 거부다: 코호트 비교층의 codec은 판정상 정확히 두 source
+    (PMB·FOLIO)에 결박된다. smoke 하네스가 codec이 필요하면
+    normalize_folio_labels를 직접 부른다 — dispatch를 넓히지 않는다
+    (첫 위임 구현이 SMOKE- 분지를 임의 추가했다가 검수에서 제거된 이력)."""
+    with pytest.raises(ValueError):
+        prof.normalize_labels_for_case("WIKISEM-01", P("Zorble", V("x")))
+    with pytest.raises(ValueError):
+        prof.normalize_labels_for_case("SMOKE-01", P("Zorble", V("x")))

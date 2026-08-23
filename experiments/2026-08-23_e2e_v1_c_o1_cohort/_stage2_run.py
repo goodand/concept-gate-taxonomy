@@ -26,7 +26,7 @@ sys.path.insert(0, str(HERE.parents[1]))
 from conceptgate.cg_fixture_resolver import resolve_bytes
 from conceptgate.cg_identity import canonical_sha256
 from conceptgate.cg_evaluate import evaluate
-from _stage2_eval_profile import normalize_predicate_labels
+from _stage2_eval_profile import normalize_labels_for_case
 from _stage2_canonical_core import desugar
 from _stage2_score import score
 
@@ -217,9 +217,13 @@ def ingest_outputs(plan_path: Path | str,
                 predicted_ir = output["ir"]
                 oracle_ir = expected_irs[case_id]
 
-                # Apply evaluation profile normalization to both sides
-                normalized_predicted = desugar(normalize_predicate_labels(predicted_ir))
-                normalized_oracle = desugar(normalize_predicate_labels(oracle_ir))
+                # 평가 profile 정규화 — source(case_id 접두어)별 codec을
+                # 양측에 동일하게 적용 (D-E2E-v1-24 Q24.1: PMB=synset→lemma,
+                # FOLIO=소문자화만; 교차 적용은 dispatch가 구조적으로 차단)
+                normalized_predicted = desugar(
+                    normalize_labels_for_case(case_id, predicted_ir))
+                normalized_oracle = desugar(
+                    normalize_labels_for_case(case_id, oracle_ir))
 
                 # Evaluate
                 ev = evaluate(normalized_predicted, normalized_oracle)

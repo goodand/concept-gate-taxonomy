@@ -24,6 +24,11 @@ from typing import Any
 
 
 PROFILE_ID = "O1_PMB_LEMMA_NO_SENSE_V1"
+FOLIO_PROFILE_ID = "FOLIO_LABEL_LOWERCASE_V1"
+
+# desugar (_stage2_canonical_core.py) identifies neutral restrictions
+# by the literal name "True"; the codec must never touch it.
+RESERVED_LABELS = ("True",)
 
 # WordNet synset pattern: lemma.pos.number
 # e.g., "Zorble.n.01", "glim.a.02", "zorble_krell.n.03"
@@ -65,3 +70,65 @@ def _normalize_in_place(node: Any) -> None:
             for item in value:
                 if isinstance(item, dict):
                     _normalize_in_place(item)
+
+
+def normalize_folio_labels(formula: dict) -> dict:
+    """Return a new formula where all predicate names are lowercased, except reserved tokens.
+
+    D-E2E-v1-24 Q24.1: FOLIO oracle 술어는 대문자/CamelCase로 남는데 template의
+    subject가 소문자를 강제하므로 라벨 불일치만으로 실패한다. FOLIO 한정으로
+    소문자화 codec만 허용한다 (분절·동의어·lemma·병합 금지).
+
+    The input is never mutated. All structural elements (quantifiers, args, arity,
+    topology) are preserved. Lowercasing collisions do not merge nodes.
+
+    Idempotent: normalize(normalize(x)) == normalize(x).
+    """
+    # Deep copy to ensure input is never mutated
+    result = copy.deepcopy(formula)
+    _normalize_folio_in_place(result)
+    return result
+
+
+def _normalize_folio_in_place(node: Any) -> None:
+    """Recursively lowercase predicate names (already copied), except reserved labels."""
+    if not isinstance(node, dict):
+        return
+
+    # Handle predicate nodes
+    if node.get("kind") == "pred" and "name" in node:
+        if node["name"] not in RESERVED_LABELS:
+            node["name"] = node["name"].lower()
+
+    # Recursively process all dict and list values
+    for key, value in node.items():
+        if isinstance(value, dict):
+            _normalize_folio_in_place(value)
+        elif isinstance(value, list):
+            for item in value:
+                if isinstance(item, dict):
+                    _normalize_folio_in_place(item)
+
+
+def normalize_labels_for_case(case_id: str, formula: dict) -> dict:
+    """Dispatch to the appropriate codec based on the case_id prefix.
+
+    D-E2E-v1-24: 비교층의 source별 codec dispatch 단일 진입점. PMB와 FOLIO
+    codec은 절대 조용히 교차 적용되지 않는다.
+
+    Args:
+        case_id: source-bound case identifier (e.g., "PMB-p09-d2243", "FOLIO-175p1")
+        formula: normalized IR formula dict
+
+    Returns:
+        Formula with labels normalized according to source codec.
+
+    Raises:
+        ValueError: if case_id prefix is not recognized (fail-closed).
+    """
+    if case_id.startswith("PMB-"):
+        return normalize_predicate_labels(formula)
+    elif case_id.startswith("FOLIO-"):
+        return normalize_folio_labels(formula)
+    else:
+        raise ValueError(f"Unknown case_id prefix: {case_id}")

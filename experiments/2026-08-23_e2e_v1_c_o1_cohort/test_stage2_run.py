@@ -47,10 +47,10 @@ def put(cache: Path, data: bytes) -> str:
 def world(tmp_path):
     cache = tmp_path / "cache"; cache.mkdir()
     fixtures = [
-        ("R-01", "Every zorble glims.",
+        ("PMB-R-01", "Every zorble glims.",
          EX("x", {"kind": "and", "args": [P("zorble.n.01", V("x")),
                                           P("glim.a.01", V("x"))]})),
-        ("R-02", "Some tikk praxes.",   EX("y", P("tikk.n.01", V("y")))),
+        ("PMB-R-02", "Some tikk praxes.",   EX("y", P("tikk.n.01", V("y")))),
     ]
     entries, oracle = [], {}
     for cid, sent, ir in fixtures:
@@ -97,21 +97,21 @@ def test_export_uses_plan_prompts_verbatim(world):
 def test_derive_expected_irs_verifies_commitment(world):
     spec, adapter, oracle, _ = world
     out = R.derive_expected_irs(spec.manifest_path, spec.cache_dir, adapter)
-    assert set(out) == {"R-01", "R-02"}
-    assert out["R-01"] == oracle["R-01"]
+    assert set(out) == {"PMB-R-01", "PMB-R-02"}
+    assert out["PMB-R-01"] == oracle["PMB-R-01"]
 
 
 def test_derive_refuses_hash_mismatch(world):
     """adapter 산출이 사전등록 해시와 다르면 — 코드가 바뀌었든 조작이든 —
     그 oracle은 존재하지 않는 것과 같다. 반환은 위조 통과다."""
     spec, adapter, oracle, _ = world
-    wrong = dict(oracle); wrong["R-02"] = EX("z", P("prax.n.01", V("z")))
+    wrong = dict(oracle); wrong["PMB-R-02"] = EX("z", P("prax.n.01", V("z")))
     def bad_adapter(lf):  # R-02만 다른 IR
         cid = lf.decode().split()[-1].rstrip(")")
         return wrong[cid]
     with pytest.raises(R.OracleDrift) as ei:
         R.derive_expected_irs(spec.manifest_path, spec.cache_dir, bad_adapter)
-    assert "R-02" in str(ei.value)
+    assert "PMB-R-02" in str(ei.value)
 
 
 def test_derive_refuses_missing_cache(world):
@@ -242,7 +242,7 @@ def test_restricted_subject_converges_with_neutral_oracle(world):
         R.derive_expected_irs(spec.manifest_path, spec.cache_dir, adapter),
         results_path=tmp / "results.json", pass_min=2)
     rows = {r["case_id"]: r["result"] for r in res["trial_rows"]}
-    assert rows["R-01"] == "pass", rows
+    assert rows["PMB-R-01"] == "pass", rows
 
 
 # ============================================================== ROUND 3 ====
@@ -276,3 +276,89 @@ def test_expected_unscorable_and_stratum_maps_reach_rows(world):
         R.ingest_outputs(spec.cohort_path, _outputs(spec, oracle), exp,
                          results_path=tmp / "rs2.json", pass_min=1,
                          expected_unscorable={"GHOST": True})
+
+
+# ------------------------------- D-24 Q24.1: source별 codec dispatch 축 ----
+
+
+def test_ingest_dispatches_folio_codec_by_case_prefix(world):
+    """FOLIO case: oracle이 CamelCase, subject가 소문자 — 대소문자만 다르면
+    pass여야 한다(smoke가 적발한 B1의 회귀 계약). PMB case는 기존 synset→
+    lemma 동작 그대로다."""
+    spec, adapter, oracle, tmp = world
+    import _stage2_cohort as C2
+    m = json.loads(spec.manifest_path.read_text())
+    camel = EX("x", {"kind": "and", "args": [P("Zorble", V("x")),
+                                             P("CanCatch", V("x"), V("x"))]})
+    lfb = b"(invented-lf FOLIO-F1)"
+    m["entries"].append({
+        "case_id": "FOLIO-F1",
+        "source_locator": {"corpus_id": "inv", "corpus_version": "v0",
+                           "artifact": "none", "record_locator": "FOLIO-F1",
+                           "retrieval_urls": []},
+        "text_sha256": put(spec.cache_dir, b"Every zorble can catch itself."),
+        "lf_sha256": put(spec.cache_dir, lfb),
+        "adapter_version": "inv-handmade",
+        "adapter_code_sha256": "0" * 64,
+        "canonicalization_profile_hash": "1" * 64,
+        "expected_ir_sha256": canonical_sha256(camel)})
+    mpath2 = tmp / "manifest2.json"
+    mpath2.write_text(json.dumps(m, ensure_ascii=False))
+    spec2 = C2.CohortSpec(mpath2, tmp / "plan2.json", spec.cache_dir,
+                          "RUN-test-v2", "RT2", "claude-haiku-4-5-20251001")
+    C2.write_cohort(spec2)
+    oracle2 = dict(oracle); oracle2["FOLIO-F1"] = camel
+    def adapter2(lf):
+        cid = lf.decode().split()[-1].rstrip(")")
+        return oracle2[cid]
+    expected = R.derive_expected_irs(mpath2, spec.cache_dir, adapter2)
+    plan = json.loads(spec2.cohort_path.read_text())
+    outs = []
+    for t in plan["trials"]:
+        if t["case_id"] == "FOLIO-F1":
+            ir = EX("x", {"kind": "and", "args": [P("zorble", V("x")),
+                                                  P("cancatch", V("x"), V("x"))]})
+        else:
+            ir = json.loads(json.dumps(oracle2[t["case_id"]]))
+        outs.append({"trial_id": t["trial_id"], "ir": ir})
+    res = R.ingest_outputs(spec2.cohort_path, outs, expected,
+                           results_path=tmp / "res_folio.json", pass_min=3)
+    by_case = {r["case_id"]: r["result"] for r in res["trial_rows"]}
+    assert by_case["FOLIO-F1"] == "pass"          # 대소문자만 → pass (B1 소멸)
+    assert by_case["PMB-R-01"] == "pass"          # PMB 경로 무손상
+
+
+def test_ingest_refuses_unknown_source_prefix(world):
+    """plan에 미지 접두어 case가 있으면 조용한 무정규화가 아니라 거부."""
+    spec, adapter, oracle, tmp = world
+    import _stage2_cohort as C2
+    m = json.loads(spec.manifest_path.read_text())
+    ir = EX("x", P("blorp", V("x")))
+    m["entries"].append({
+        "case_id": "WIKISEM-9",
+        "source_locator": {"corpus_id": "inv", "corpus_version": "v0",
+                           "artifact": "none", "record_locator": "WIKISEM-9",
+                           "retrieval_urls": []},
+        "text_sha256": put(spec.cache_dir, b"A blorp."),
+        "lf_sha256": put(spec.cache_dir, b"(invented-lf WIKISEM-9)"),
+        "adapter_version": "inv-handmade",
+        "adapter_code_sha256": "0" * 64,
+        "canonicalization_profile_hash": "1" * 64,
+        "expected_ir_sha256": canonical_sha256(ir)})
+    mpath2 = tmp / "manifest3.json"
+    mpath2.write_text(json.dumps(m, ensure_ascii=False))
+    spec2 = C2.CohortSpec(mpath2, tmp / "plan3.json", spec.cache_dir,
+                          "RUN-test-v3", "RT3", "claude-haiku-4-5-20251001")
+    C2.write_cohort(spec2)
+    oracle2 = dict(oracle); oracle2["WIKISEM-9"] = ir
+    def adapter2(lf):
+        cid = lf.decode().split()[-1].rstrip(")")
+        return oracle2[cid]
+    expected = R.derive_expected_irs(mpath2, spec.cache_dir, adapter2)
+    plan = json.loads(spec2.cohort_path.read_text())
+    outs = [{"trial_id": t["trial_id"],
+             "ir": json.loads(json.dumps(oracle2[t["case_id"]]))}
+            for t in plan["trials"]]
+    with pytest.raises(ValueError):
+        R.ingest_outputs(spec2.cohort_path, outs, expected,
+                         results_path=tmp / "res_bad.json", pass_min=3)
