@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: REFROZEN_V4_AWAITING_CONTROLS   # D-25/26 적용 완료 — projection 채점·SAT V2·implies 방언·V4 동결
-next_action_code: DISPATCH_V4_CONTROLS   # FOLIO 3 + PMB projection 3 (N 밖) — 통과 시 본 코호트는 별도 사용자 승인
+state_code: V4_CONTROLS_FAILED_AWAITING_Q27   # control 1/6 — 동치 관용구·대명사 ∃ 층 노출, 코호트 미실행
+next_action_code: AWAIT_Q27_RULING   # docs/DESIGN_REQUEST_equivalence_idioms.md — 동치 정규화 목록·대명사 ∃ 절첩·control 술어
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
