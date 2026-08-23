@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: FULL_O1_AWAITING_SOURCE_ROUND2   # boundary=full O1 확정; 기수·비례 재료 부재로 2차 조사 대기
-next_action_code: AWAIT_SOURCE_ROUND2_THEN_Q29   # docs/RESEARCH_REQUEST_cardinal_proportional_round2.md — 회신 후 방언 기수 표현·source 채택을 Q29로 상신
+state_code: FULL_O1_SOURCE_ROUND2_INSUFFICIENT   # 2차 회신 검증 완료 — 적격 하한 충족 후보 0, ERG/MRS가 최유력
+next_action_code: Q29_OR_ROUND3   # 방언 기수 표현·ERG/MRS 채택은 판정 사안(Q29); Redwoods proportional locator는 3차 조사 사안 — 3차 요청서에는 선행 판정 목록(D-21 wikisem 배제 등)을 반드시 embed
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
