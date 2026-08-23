@@ -33,6 +33,8 @@ class CohortSpec(NamedTuple):
     order_seed: str
     trial_id_prefix: str
     model: str
+    # 동결 시 profile 확정(D-21 §19·D-23) — 기본값은 기존 거동 불변
+    constructors: tuple = None  # None → V0_O1_CONSTRUCTORS
 
 
 class MaterialUnavailable(Exception):
@@ -109,7 +111,8 @@ def build_cohort(spec: CohortSpec) -> dict:
 
     # Load template and schema
     template = load_template()
-    schema = dispatch_envelope_schema()
+    profile = tuple(spec.constructors) if spec.constructors else V0_O1_CONSTRUCTORS
+    schema = dispatch_envelope_schema(profile)
 
     # Deterministic seeded order: sort by sha256(f"{order_seed}:{case_id}") hex
     entries_with_sort_keys = []
@@ -171,7 +174,7 @@ def build_cohort(spec: CohortSpec) -> dict:
             },
             "output_schema": schema,
             "output_schema_sha256": schema_sha256,
-            "constructor_profile": list(V0_O1_CONSTRUCTORS),
+            "constructor_profile": list(profile),
             "prompt_template_sha256": template_sha256,
             "model": spec.model,
         },

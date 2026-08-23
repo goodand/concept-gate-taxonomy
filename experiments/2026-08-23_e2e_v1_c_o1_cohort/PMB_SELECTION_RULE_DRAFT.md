@@ -33,8 +33,8 @@ Path A OK 671건 (`pmb_eligibility_scan_pathB.json` + adapter 자격 9/9의
    expected_ir_sha256(=canonical_sha256(adapt_sbn(...)))
 5. 사전등록 TBD 해소와 **한 커밋** 동결, Path A/B 대조 기록 동봉
 
-ORDER_SEED: `[TBD-FREEZE-SEED]` — 동결 커밋에서 확정(선별 조작 불가능성의
-증거는 seed가 스캔 결과 커밋 **이후** 정해졌다는 이력 자체다).
+ORDER_SEED: **`E2EV1C-freeze-20260823-v1`** — 동결 커밋에서 확정됨. 실행
+정본은 `freeze_stage2.py`(층 술어·우선순위 사슬·ANA 제외 포함).
 
 ---
 

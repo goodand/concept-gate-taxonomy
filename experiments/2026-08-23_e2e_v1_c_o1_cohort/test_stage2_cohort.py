@@ -183,3 +183,27 @@ def test_written_plan_bytes_reproduce(world):
     on_disk = world.cohort_path.read_text(encoding="utf-8")
     rebuilt = json.dumps(C.build_cohort(world), ensure_ascii=False, indent=2) + "\n"
     assert on_disk == rebuilt, "verbatim 바이트 규율 — 재현이 곧 검증"
+
+
+# ============================================================== ROUND 2 ====
+# 동결 준비(2026-08-23): 양화-부정 fixture는 subject가 `not`을 내야 하므로
+# profile이 O1_V1=(forall,exists,and,pred,not)로 동결된다. builder가 profile을
+# 받아 스키마·provenance에 일관 반영해야 한다(기본값은 기존 거동 불변).
+
+
+def test_constructor_profile_flows_into_schema_and_provenance(world):
+    spec2 = world._replace(constructors=("forall", "exists", "and", "pred", "not"))
+    plan = C.build_cohort(spec2)
+    prov = plan["provenance"]
+    assert prov["constructor_profile"] == ["forall", "exists", "and", "pred", "not"]
+    assert prov["output_schema"] == cg_ir_schema.dispatch_envelope_schema(
+        ("forall", "exists", "and", "pred", "not"))
+    kinds = {b["properties"]["kind"]["const"]
+             for b in prov["output_schema"]["$defs"]["formula"]["oneOf"]}
+    assert "not" in kinds
+
+
+def test_default_profile_unchanged(world):
+    plan = C.build_cohort(world)
+    assert plan["provenance"]["constructor_profile"] == list(
+        cg_ir_schema.V0_O1_CONSTRUCTORS)

@@ -1,10 +1,11 @@
-# Stage 2 (E2E-v1-C) 사전등록 — **DRAFT, 미동결**
+# Stage 2 (E2E-v1-C) 사전등록 — **FROZEN 2026-08-23**
 
-status: **DRAFT**. 동결 조건 = 신규 O1 source가 적격성 6조건(D-E2E-v1-21
-Q21.2 b\*)을 통과하고 fixture manifest 20건 + constructor profile hash가
-같은 커밋에서 확정될 때. 그 전까지 이 문서는 예고이지 계약이 아니다.
-`[TBD-*]` 슬롯이 남아 있는 한 동결 커밋을 만들지 마라 — 이 문장 자체가
-동결 게이트의 검사 대상이다.
+status: **FROZEN** — 이 커밋이 동결이다. fixture manifest 20건
+(`stage2_fixture_manifest.json`) + constructor profile(O1_V1) hash + 프롬프트
+template이 이 커밋에서 함께 확정됐다. 이후 아래 항목의 변경은 D-19 §12의
+외부 판정 사안이다. 동결 선별의 정본 규칙은 `freeze_stage2.py`(seed 포함,
+손 선택 지점 0), 동결 직전 검증은 23/23(commitment 완전·resolver 왕복·
+재복호 해시 일치·2경로 소속).
 
 등록 항목은 D-E2E-v1-19 §11의 목록 그대로이며, 그 목록에 없는 governance를
 추가하지 않는다(§11: "estimand에 비례").
@@ -29,19 +30,19 @@ Q21.2 b\*)을 통과하고 fixture manifest 20건 + constructor profile hash가
 | oracle leakage prohibition | 구조적: dispatch-plan 빌더가 LF를 resolve하지 않음 + 누출 테스트 | 준비물 ③ |
 | no post-result fixture replacement / N increase | 서약 — 위반은 §12 외부 판정 사안 | D-19 §12 |
 | UNSCORABLE 회계 | freeze 전 unsupported=INELIGIBLE(표본 밖) / freeze 후=UNEXPECTED_UNSCORABLE(수용 FAIL) | D-21 §14 |
-| 결과 보고 표기 | `O1-v1 source = [TBD-SOURCE]` 명시, wikisem 결과와 비교 서술 금지 | D-21 §11 |
+| 결과 보고 표기 | `O1-v1 source = PMB-5.1.0-gold(15) + FOLIO-v0.0(5)` 명시, wikisem 결과와 비교 서술 금지 | D-21 §11 |
 
 ## B. source 종속 — **[TBD], 동결 시 확정**
 
 | §11 항목 | 슬롯 |
 |---|---|
-| source locator | PMB 5.1.0 = **QUALIFIED_PARTIAL_SOURCE**(D-22, ≤15건) + **FOLIO v0.0 = APPROVED 제2 source**(D-23; train sha256 `008d34b7…`, validation `6922c988…`; manifest에 folio_subset(WikiLogic|HybLogic) 기록 의무 — D-23 §16) |
-| fixture IDs + hashes | `[TBD-MANIFEST]` — commitment 필드만(D-20), 원문 0바이트 |
-| expected canonical IR | `[TBD-EXPECTED-IR-HASHES]` — adapter(자격 7/7 PASS, 코드 결박) 산출의 sha256 |
-| canonicalization profile | `[TBD-PROFILE-HASH]` — D-22 §19: IR constructor와 source encoding profile(PMB_SBN_5_1 ¬∃¬→∀ codec) 분리 기록; 평가측 O1_PMB_LEMMA_NO_SENSE_V1(lemma 정규화, 커널 밖) — constructor 목록에서 유도(②의 단일 출처), manifest와 같은 커밋에서 hash 동결 |
+| source locator | **확정**: PMB 5.1.0 gold 15건(전부 Tatoeba/CC-BY) + FOLIO v0.0 5건(전부 WikiLogic — subset 기록됨). locator·해시는 manifest |
+| fixture IDs + hashes | **`stage2_fixture_manifest.json`** — 20건 + adapter control 3건(N 밖), commitment 필드만, 원문 0바이트 |
+| expected canonical IR | manifest의 expected_ir_sha256 — SBN adapter(자격 9/9 v1)·FOL adapter(자격 9/9 v2) 산출, 동결 시 재복호 일치 확인 |
+| canonicalization profile | **O1_V1 = (forall, exists, and, pred, not)**, hash `dcda0f63e19c980d…`(전체는 manifest) — descriptor에 IR constructor·source encoding(PMB_SBN_5_1/FOLIO_FOL_V0)·비교층(desugar+lemma profile) 분리 기록. `not` 포함 사유: 양화-부정 stratum이 subject의 부정 표현을 요구(동결 직전 점검에서 발견·template 동시 보강) |
 | model/version/config | **haiku (claude-haiku-4-5-20251001)** — 사용자 확정(2026-08-23). 근거: 이 도구의 최다 사용 모델이자 agentic 성능의 바닥선 — haiku에서 작동하면 상위 모델로 일반화된다는 floor-model 가정. 프로브·리허설과도 동일 모델 |
-| certified bit의 의무 집합 | `[TBD-CERT-OBLIGATIONS]` — A/B열 배선은 리허설 완료(REHEARSAL 추기 2), 본 코호트의 "Certified" 정의(어느 의무들의 PASS인가)는 동결 시 확정 |
-| qualification vs capability fixture 분리 | `[TBD-SPLIT]` — 적격성 스캔(2경로, 불일치=FREEZE_BLOCKED) 통과 목록에서 분리 |
+| certification 축 | **dormant-by-design**(W3 선례): 본 코호트 전원 certified=False — 2×2의 C/D열만 실측, A/B 배선은 리허설로 검증된 상태로 기록. secondary 지표는 Coverage=0으로 보고(primary 무영향). 활성화는 의무 집합 정의와 함께 향후 사안 |
+| qualification vs capability 분리 | **확정**: capability 20 = PMB{비례1·양화부정4·보편4·기수3·존재3} + FOLIO multi 5; adapter control 3건은 N 밖(D-22 §15) |
 
 ## C. 동결 절차 (예고)
 

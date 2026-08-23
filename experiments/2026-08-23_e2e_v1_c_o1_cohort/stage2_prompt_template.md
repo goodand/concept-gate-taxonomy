@@ -1,8 +1,9 @@
 # Stage 2 (E2E-v1-C) trial prompt template — DRAFT (동결은 사전등록과 함께)
 
-status: DRAFT. fixture manifest·constructor profile과 같은 커밋에서 동결된다
-(D-E2E-v1-21). 이 초안의 방언 명세는 프로브 A/B(PROBE_o1_compiler_20260823.md)
-가 실측으로 검증한 그 텍스트다 — 실측 없이 고치지 말 것.
+status: **FROZEN** (2026-08-23 동결 커밋 — fixture manifest·profile과 동시).
+방언 명세는 프로브 A/B가 실측 검증한 텍스트에 `not` 구성자 1행을 추가한 것
+(O1_V1 profile — 양화-부정 scope fixture가 subject에게 부정 표현을 요구하므로,
+동결 직전 점검에서 발견·보강. 추가 후 발명 문장 프로브로 재검증).
 
 아래 fenced block이 template 정본이다. `{sentence}` 슬롯 하나만 치환된다.
 oracle 쪽 어휘(LF, expected, corpus명)는 등장하지 않는다 — 등장 여부는
@@ -18,6 +19,7 @@ A formula is one JSON object. The allowed node kinds are exactly:
 - {"kind": "forall", "var": <string>, "restriction": <formula>, "body": <formula>}
 - {"kind": "exists", "var": <string>, "restriction": <formula>, "body": <formula>}
 - {"kind": "and", "args": [<formula>, ...]}
+- {"kind": "not", "body": <formula>}
 - {"kind": "pred", "name": <string>, "args": [<term>, ...]}
 and a term is exactly one of:
 - {"kind": "var", "name": <string>}
