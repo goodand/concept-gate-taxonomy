@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: V5_HALTED_AWAITING_Q28   # fixture 실물 READ가 신호 소실·층 술어 결함 3건 적발
-next_action_code: AWAIT_Q28_RULING   # docs/DESIGN_REQUEST_pmb_projection_signal_loss.md — G3 본문 소실·G1 최상급 오분류·G2 기수 층 표현불가·Gate C 제안
+state_code: RULING_D28_RECEIVED_AWAITING_BOUNDARY_DECISION   # event-incidence projection·Gate C 승인; O1 boundary 갈래는 사용자 결정
+next_action_code: DECIDE_O1_BOUNDARY_THEN_IMPLEMENT   # D-28 Q28.2 두 갈래: full O1(기수 source 재조사) vs O1_CORE_V1(기수·비례 deferred, 판정자 권고) — 사용자 결정 후 구현
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
