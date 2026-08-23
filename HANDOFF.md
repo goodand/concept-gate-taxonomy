@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: REFROZEN_V2_AWAITING_EXECUTION_APPROVAL   # D-E2E-v1-24 amendment 적용
-next_action_code: DISPATCH_FOLIO_ADAPTER_CONTROLS   # §3-2 — 본 코호트보다 먼저 (V2 기준)
+state_code: BLOCKED_UNTIL_RULING_Q25   # control 2/3 → 코호트 미실행; oracle granularity 상신
+next_action_code: AWAIT_Q25_RULING   # docs/DESIGN_REQUEST_oracle_granularity.md 판정 대기
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
@@ -27,11 +27,14 @@ authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2_V2.m
 
 ## 1. 현재 상태 한 줄
 
-**Stage 2 재동결 V2 (D-E2E-v1-24 amendment) — 코호트 실행 승인 대기.**
-smoke가 적발한 B1(FOLIO 라벨 규약)을 판정대로 수리: FOLIO codec + 도달성
-적격 술어 + FOLIO 두 stratum 재선별(`stage2_fixture_manifest_v2.json`).
-V1(f57ae12)은 SUPERSEDED_PRE_EXECUTION으로 바이트 보존(게이트가 감시).
-코호트 결과 0건 관측 상태의 수정이다. 실행은 V2 manifest 기준.
+**Stage 2 V2 — adapter control 2/3(해석 가능 조건 미달) → 본 코호트
+미실행, Q25 판정 대기.** control 원인 분해가 상위 결함을 노출했다:
+F1 라벨 span 미결정(derivable ≠ unique), F2 다중 토큰 join 규약 부재
+(in-N FOLIO 4/5), **F3 PMB 15/15 — oracle이 사건 의미론 granularity라
+template 준수 subject는 원리적으로 fail** (V1부터 존재, subject-통과
+가능성 게이트 부재가 근본 원인). 기록: `experiments/…/CONTROLS_RUN_
+20260823.md`, 상신: `docs/DESIGN_REQUEST_oracle_granularity.md`.
+코호트 dispatch 0건 — 결과에 조건화된 것 없음.
 
 ## 2. 정본 지도 (읽는 순서)
 

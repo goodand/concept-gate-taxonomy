@@ -1,0 +1,201 @@
+{
+  "cohort_version": "E2EV1C-freeze-20260823-v1",
+  "provenance": {
+    "trial_subject": {
+      "name": "o1-compiler",
+      "definition_path": "/Users/jaehyuntak/.claude/agents/o1-compiler.md",
+      "definition_sha256": "891dd0d6c2cfc8f77a8d20f060dddc2ded57f354148c500ea24857fc77795548"
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "formula": {
+          "$ref": "#/$defs/formula"
+        }
+      },
+      "required": [
+        "formula"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "term": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "var"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "name"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "entity"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "formula": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "forall"
+                },
+                "var": {
+                  "type": "string"
+                },
+                "restriction": {
+                  "$ref": "#/$defs/formula"
+                },
+                "body": {
+                  "$ref": "#/$defs/formula"
+                }
+              },
+              "required": [
+                "kind",
+                "var",
+                "restriction",
+                "body"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "exists"
+                },
+                "var": {
+                  "type": "string"
+                },
+                "restriction": {
+                  "$ref": "#/$defs/formula"
+                },
+                "body": {
+                  "$ref": "#/$defs/formula"
+                }
+              },
+              "required": [
+                "kind",
+                "var",
+                "restriction",
+                "body"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "and"
+                },
+                "args": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/formula"
+                  },
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "kind",
+                "args"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "pred"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/term"
+                  }
+                }
+              },
+              "required": [
+                "kind",
+                "name",
+                "args"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "not"
+                },
+                "body": {
+                  "$ref": "#/$defs/formula"
+                }
+              },
+              "required": [
+                "kind",
+                "body"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      }
+    },
+    "output_schema_sha256": "354cee9506c2cddf38f4e6ab825f485d42d1de9d56869d810445e3a9198f2c9b",
+    "constructor_profile": [
+      "forall",
+      "exists",
+      "and",
+      "pred",
+      "not"
+    ],
+    "prompt_template_sha256": "fda6daf1be53da12ec3075db88c20fb21fb0a58288c06f6b7b285a2a2fb34b95",
+    "model": "haiku"
+  },
+  "trials": [
+    {
+      "trial_id": "CTRL-01",
+      "case_id": "FOLIO-1420p2",
+      "text_sha256": "08a21707601fa9ef881863adc1371cdfe1e62199183db31eb643db2f3fd6644b",
+      "prompt": "Compile the meaning of the following English sentence into exactly one formula of the IR dialect specified below, and return it as a single JSON object.\n\nSENTENCE: All videos are visual. \n\nIR DIALECT (complete specification):\nA formula is one JSON object. The allowed node kinds are exactly:\n- {\"kind\": \"forall\", \"var\": <string>, \"restriction\": <formula>, \"body\": <formula>}\n- {\"kind\": \"exists\", \"var\": <string>, \"restriction\": <formula>, \"body\": <formula>}\n- {\"kind\": \"and\", \"args\": [<formula>, ...]}\n- {\"kind\": \"not\", \"body\": <formula>}\n- {\"kind\": \"pred\", \"name\": <string>, \"args\": [<term>, ...]}\nand a term is exactly one of:\n- {\"kind\": \"var\", \"name\": <string>}\n- {\"kind\": \"entity\", \"name\": <string>}\nA quantifier's \"var\" binds occurrences of that variable name in BOTH its restriction and its body. Predicate arguments must be terms, never formulas. Use lowercase predicate names taken from the sentence's content words. The formula must be closed: every variable occurrence bound by some enclosing quantifier.\n\nOUTPUT: your entire final message must be that one JSON object and nothing else."
+    },
+    {
+      "trial_id": "CTRL-02",
+      "case_id": "FOLIO-175p1",
+      "text_sha256": "c0cd28f493ee5334e1d32c2c378ae91dde394c6224d1e55b94ece30b998e88ba",
+      "prompt": "Compile the meaning of the following English sentence into exactly one formula of the IR dialect specified below, and return it as a single JSON object.\n\nSENTENCE: All monitors equipped in the lab are cheaper than their original prices. \n\nIR DIALECT (complete specification):\nA formula is one JSON object. The allowed node kinds are exactly:\n- {\"kind\": \"forall\", \"var\": <string>, \"restriction\": <formula>, \"body\": <formula>}\n- {\"kind\": \"exists\", \"var\": <string>, \"restriction\": <formula>, \"body\": <formula>}\n- {\"kind\": \"and\", \"args\": [<formula>, ...]}\n- {\"kind\": \"not\", \"body\": <formula>}\n- {\"kind\": \"pred\", \"name\": <string>, \"args\": [<term>, ...]}\nand a term is exactly one of:\n- {\"kind\": \"var\", \"name\": <string>}\n- {\"kind\": \"entity\", \"name\": <string>}\nA quantifier's \"var\" binds occurrences of that variable name in BOTH its restriction and its body. Predicate arguments must be terms, never formulas. Use lowercase predicate names taken from the sentence's content words. The formula must be closed: every variable occurrence bound by some enclosing quantifier.\n\nOUTPUT: your entire final message must be that one JSON object and nothing else."
+    },
+    {
+      "trial_id": "CTRL-03",
+      "case_id": "FOLIO-1377p0",
+      "text_sha256": "8dd97f77a299302fd62c2b18ec8b2dc326889d73716b21b4fb60a3f0968846aa",
+      "prompt": "Compile the meaning of the following English sentence into exactly one formula of the IR dialect specified below, and return it as a single JSON object.\n\nSENTENCE: All humans eat.\n\nIR DIALECT (complete specification):\nA formula is one JSON object. The allowed node kinds are exactly:\n- {\"kind\": \"forall\", \"var\": <string>, \"restriction\": <formula>, \"body\": <formula>}\n- {\"kind\": \"exists\", \"var\": <string>, \"restriction\": <formula>, \"body\": <formula>}\n- {\"kind\": \"and\", \"args\": [<formula>, ...]}\n- {\"kind\": \"not\", \"body\": <formula>}\n- {\"kind\": \"pred\", \"name\": <string>, \"args\": [<term>, ...]}\nand a term is exactly one of:\n- {\"kind\": \"var\", \"name\": <string>}\n- {\"kind\": \"entity\", \"name\": <string>}\nA quantifier's \"var\" binds occurrences of that variable name in BOTH its restriction and its body. Predicate arguments must be terms, never formulas. Use lowercase predicate names taken from the sentence's content words. The formula must be closed: every variable occurrence bound by some enclosing quantifier.\n\nOUTPUT: your entire final message must be that one JSON object and nothing else."
+    }
+  ]
+}

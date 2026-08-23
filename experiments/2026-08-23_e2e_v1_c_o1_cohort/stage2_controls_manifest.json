@@ -1,0 +1,104 @@
+{
+  "manifest_version": "e2e-v1-c-fixtures-v2",
+  "amendment": {
+    "ruling": "D-E2E-v1-24",
+    "supersedes": "stage2_fixture_manifest.json (V1, freeze commit f57ae12)",
+    "v1_status": "SUPERSEDED_PRE_EXECUTION",
+    "defect": "B1 — FOLIO predicate label convention gap (smoke test, pre-execution; no cohort outcomes observed)"
+  },
+  "order_seed": "E2EV1C-freeze-20260823-v1",
+  "profile": {
+    "id": "O1_V1",
+    "constructors": [
+      "forall",
+      "exists",
+      "and",
+      "pred",
+      "not"
+    ],
+    "canonicalizer": "cg_ir.canonicalize_v0 (capture-avoiding alpha-rename only)",
+    "comparison_core": {
+      "desugar": "FORALL(x,R,B)->FORALL(x,True,implies(R,B)); EXISTS(x,R,B)->EXISTS(x,True,and(R,B)) (D-23 §12)",
+      "predicate_labels": {
+        "PMB": "O1_PMB_LEMMA_NO_SENSE_V1",
+        "FOLIO": "FOLIO_LABEL_LOWERCASE_V1"
+      }
+    },
+    "source_encoding_profiles": {
+      "PMB_SBN_5_1": "paired NEGATION -> forall (documented codec, D-22 Q22.2)",
+      "FOLIO_FOL_V0": "implication-under-forall lowering; neutral exists (D-23 §12)"
+    }
+  },
+  "profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+  "selection_inputs": {
+    "pmb_scan_sha256": "e6a2617a729ee3a7bfe4ac5859be2f86be78924e7b66efeb2ab6ae795cc8b9bd",
+    "folio_scan_sha256": "93eea2262a6ec9b9e279711998a964ff511feac080c01f28d641f46cf807495f",
+    "folio_reachability_scan_v2_sha256": "1c74ade646d614a84b28dbcb8db8145ea9fd51580aca8fc02af8837059defb13"
+  },
+  "strata_counts": {
+    "adapter_control": 3
+  },
+  "entries": [
+    {
+      "case_id": "FOLIO-175p1",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=175;premise=1",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "c0cd28f493ee5334e1d32c2c378ae91dde394c6224d1e55b94ece30b998e88ba",
+      "lf_sha256": "e50f9fe24bc020f42e7185c2a76bacefdb4854887ccead64487d71709c780d0e",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "06e7dee1a6ec40192709240de68ed17764be7703a33c4b1625bb3ffd86aad6dd"
+    },
+    {
+      "case_id": "FOLIO-1377p0",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=1377;premise=0",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "HybLogic",
+      "text_sha256": "8dd97f77a299302fd62c2b18ec8b2dc326889d73716b21b4fb60a3f0968846aa",
+      "lf_sha256": "85ccc26ba16961f508dcd9d142c2628314799a20c9ae0332f3f92078ab6bda75",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "468bd564fcac6669c8e0558cedfa6acbadfc53c685eeb9b1d8acba4447b5c39b"
+    },
+    {
+      "case_id": "FOLIO-1420p2",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=1420;premise=2",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "HybLogic",
+      "text_sha256": "08a21707601fa9ef881863adc1371cdfe1e62199183db31eb643db2f3fd6644b",
+      "lf_sha256": "902a9f3616e0862ccc14115e24ecc0faba8b6fa19a1ee47dcd7d321ced44c961",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "c9d22d5c482dab0acaadd1614557bf849d481bf79a05f47858803deb82ddca08",
+      "expected_ir_sha256": "6091525125d8889baff9e21db3d96f52bbdc4e276c623163883a58b67c9fec48"
+    }
+  ],
+  "folio_simple_controls": []
+}
