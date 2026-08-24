@@ -39,7 +39,9 @@ zero-context agent를 위한 읽는 순서:
 | D-29 | 기수·비례 방언(`count`·`prop`) · MRS 조건부 후보 | [[DESIGN_REQUEST_cardinal_dialect_and_mrs_source]] | [[DESIGN_DECISION_cardinal_dialect_and_mrs_source]] |
 | D-30 | MRS fail-closed 구체화(admissible BODY target)·변수별 card·기수 관계 사상표·권리 gate 분리 | [[DESIGN_REQUEST_mrs_fail_closed_and_rights]] | [[DESIGN_DECISION_mrs_fail_closed_and_rights]] |
 
-| **Q31** | **판정 대기** — 한정사의 scope 지위 · 배제 규칙 E13~E15 · 중복 428건 | [[DESIGN_REQUEST_definite_scope_and_material_rules]] | (없음) |
+| D-31 | 한정사는 BODY 경쟁자 **유지**(제외는 ambiguity→uniqueness 변환) · E13~E15 승인(사유 각각 상이, E15는 최상위 hard gate) · 중복은 Case A collapse / Case B ORACLE_COLLISION · 제한식 비-머리 내용은 **measurand 오염** | [[DESIGN_REQUEST_definite_scope_and_material_rules]] | [[DESIGN_DECISION_definite_scope_and_material_rules]] |
+
+| **Q32** | **판정 대기** — 제한식 투영: 비-scope 내용의 지위(D-31 Q31.4가 명한 후속) | [[DESIGN_REQUEST_restriction_projection]] | (없음) |
 
 별도 계열(이 실험 전 단계): [[DESIGN_DECISION_refine_verify_v0_review]]
 
