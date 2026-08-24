@@ -54,7 +54,7 @@ worktree의 커밋으로 처리할 수 없으므로(다른 디렉터리) 기록�
 
 | 대상 | 용량 | 복구 방법 | 상태 |
 |---|---:|---|---|
-| 완전 push된 worktree 디렉터리 4개 (아래 §참조 분류 참고) | **190M** | `git worktree remove <경로>` → 필요 시 `git worktree add <경로> <브랜치>`(전부 `ahead=0`이라 origin에 남아 있다) | **분류 완료 — 경로 의존 0건.** 삭제 실행은 승인 대기 |
+| 완전 push된 worktree 디렉터리 4개 (아래 §참조 분류·§More READ 참고) | **190M** | `git worktree add <경로> <브랜치>` | **T1 2개 제거 완료(91M)** · T2 판정 아래 · T3 보류 |
 | `.vault-harness/vault-md-retrieval/retrieval_index.sqlite3` + 평가 JSON 4건 | **92M** | `build_retrieval_index.py` 재실행 | 미승인. README가 "frozen local experiment"로 지목하므로 재현 가능성 검토가 선행돼야 한다 |
 
 **총 회수 가능 추정 282M / workspace 1.5G.**
@@ -189,3 +189,44 @@ Claude Code의 **예열된 예비 프로세스**가 이 디렉터리를 cwd로 �
 
 **진단은 대상을 진단 전 상태로 되돌려야 한다.** 그러지 않으면 다음 실측이
 내 잔여물을 재료로 오독한다.
+
+## 제거 실행 (2026-08-24) — T1 두 개, 91M 회수
+
+강제 옵션 없이 `git worktree remove`로 제거했다. 각 제거 직전에
+`dirty=0 · 미추적=0 · 핸들=0`을 다시 확인했고, 제거 후 저장소 게이트를
+재확인했다(둘 다 **13 passed / 0 failed**). 등록 worktree 11 → **9**.
+workspace 1.5G → **1.4G**.
+
+| 제거 | 크기 | 복구 명령 |
+|---|---:|---|
+| `concept-gate-redteam-wt` | 43M | `git -C concept-gate-h1-wt worktree add /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-redteam-wt codex/redteam-handoff-guards` |
+| `concept-gate-taxonomy/.claude/worktrees/input-length-guard` | 48M | `git -C concept-gate-h1-wt worktree add /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/input-length-guard worktree-input-length-guard` |
+
+첫 시도는 **상대 경로가 거부**됐다(`fatal: … is not a working tree`) — 절대
+경로가 필요하다. 거부가 정상 동작이므로 강제하지 않고 경로를 고쳤다.
+
+## T2 `concept-gate-codex-mcp-wt` — 같은 저장소의 legacy 작업 (확인)
+
+사용자 관찰이 맞았다: 이름의 `concept-gate` 접두어대로 **같은
+`concept-gate-taxonomy` 저장소의 worktree**다(동일 `CLAUDE.md`, 동일
+개발자 줄). 브랜치 `codex/mcp-provider-isolation`, **마지막 커밋 2026-08-11**
+(2주 전), origin에 `2cc7b1bb3` 동일 커밋 존재.
+
+**다만 단순 legacy가 아니라 살아 있는 도구의 조상이다.** 이 worktree의
+`experiments/2026-08-07_handoff_dynamic_controller/_contract.py`가 독립 프로젝트
+`evidence-evaluator/`로 **추출**됐고(그 파일 docstring이 출처를 그렇게 적는다),
+그 계열이 지금 이 세션이 쓰는 `vault_backlinks`·`vault_search` MCP다. 실험
+14개를 들고 있고 그중 4개(`h1a_source_authority_unresolved` ·
+`owl_entailment_contract_shape` · `handoff_dynamic_controller` ·
+`e2.4_repo_grounded_contract_transfer`)는 다른 worktree에도 있다.
+
+그럼에도 **디렉터리 제거는 아무것도 잃지 않는다**: 추출분은 이미 독립
+프로젝트에 있고, 나머지는 origin의 `2cc7b1bb3`에 있으며, 이 worktree를
+가리키는 참조 93건은 전부 역사·출처 언급으로 실측됐다(경로 의존 0).
+
+**남은 단 하나의 걸림돌**은 `~/.claude.json`의
+`activeWorktreeSession.preEnterOriginalCwd`다 — 세션 `cf591228…`이 worktree를
+나갈 때 이 경로로 복귀한다. 없으면 그 복귀가 실패한다. 데이터 소실이 아니라
+**다른 세션의 편의**가 깨지는 것이고, 그 세션의 작업 디렉터리는 다른
+저장소(`evidence-evaluator`)다. 미추적 2건(재생성되는 HMAC 키·빈 디렉터리)은
+1차 More READ에서 무해 판정했다.
