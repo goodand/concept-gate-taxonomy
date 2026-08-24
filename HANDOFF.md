@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: D35_RECEIVED__ANNOTATION_EVIDENCE_ADMISSIBLE_NOT_AUTHORITY   # V5 동결(투영 V1→V2·20건 재투영·채점 배선 교체)과 control 재선별 5/5는 끝났다. 그러나 D-33이 코호트를 막았다: 지시 표현의 참여자 ∃ 대 `entity` 항 불일치가 measurand인지 미정이고, `O1_SCOPE_PROJECTION_V3`이 예고됐으므로 **V2는 최종이 아니다**. **코호트 dispatch 누계 0건**
-next_action_code: AWAIT_D36__R2_CONSTRAINT   # **Q34 상신 완료(2026-08-24)** — 남은 것은 회신 대기다. D-33 권고 (b*): 경계를 먼저 독립 정의 → qualification → V3. 경계 규칙을 우리가 만들면 `operational_patch: forbidden` 위반이므로 **실사 결과만 Q34로 상신**한다. 실측 결론(§B.3·B.4): synset으로는 불가(`person.n.01`이 양화·지시·보통명사 세 부류에 걸침), 표면 토큰이 필요하나 표면 규칙 시도는 **4회 전부 다르게 실패**. `stage2_cohort_plan_v5.json`은 생성돼 있고 V3가 채점을 바꾸면 의도적으로 지워야 한다(`write_cohort`는 덮어쓰기 거부). dispatch는 매번 별도 승인
+state_code: D36_RECEIVED__R2_IS_CONSTRAINT_BUT_R1_R4_NOT_A_THEOREM   # D-36 도착·검증·저장 완료. R2(독립 검증 가능성)가 실제 구속 조건임은 확인됐으나 **R1~R4는 정리가 아니라 후보 분해**다. `ANA` 100% 구조 일관성은 **부분 증거일 뿐** — 삼층(L1 encoding / L2 correctness / L3 qualification)을 **합치지 마라**가 핵심. V5는 여전히 잠정. **코호트 dispatch 누계 0건**
+next_action_code: SEPARATE_L1_L2_L3__R4_EQUIVALENCE_QUESTION_UNRAISED   # 회신 없이 할 수 있는 둘: (1) `sbn_spec.py` **원천** 확보(전사만 보유, D-36 §5가 material이라 했다 — 단 충분조건 아님) (2) role 어휘 **198종 미검토** 실사, 재고부터(`EQU` 12,501 포함). **신규 상신 후보 1건**: D-36 §2가 미결로 남긴 R4 재해석 — 두 source가 같은 annotation mechanism을 가져야 하는가, 아니면 **동일 measurand에 의미적으로 동등한 qualification**이면 되는가. 금지 유지: `operational_patch`·`immediate_projection`·V3 제작·`ANA` 배제 되돌리기
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
@@ -56,7 +56,7 @@ Q36으로 상신했고 회신 대기다.
 ## 2. 정본 지도 (읽는 순서)
 
 **graph 진입점**: [[concept-gate-h1-wt/docs/RULING_CHAIN_INDEX|RULING_CHAIN_INDEX]]
-— 판정 **D-19~D-35** + 상신 Q36 + 조사 6왕복 전부를 **1홉으로** 도달 가능하게
+— 판정 **D-19~D-36** + 조사 6왕복 전부를 **1홉으로** 도달 가능하게
 묶은 색인이다. `rg`로는 판정 문서를 찾을 수 없는 경우가 실측으로 확인됐으므로
 (파일명이 질문의 어휘를 포함하지 않는다), 이어받는 세션은 **grep이 아니라 이
 색인에서 시작**한다. 각 판정 문서 헤더에 `이전`/`다음` 링크가 있어 색인 없이도
@@ -66,7 +66,7 @@ Q36으로 상신했고 회신 대기다.
 |---|---|
 | 최신 상태·패턴 원장 | [[concept-gate-h1-wt/docs/H1A_PROBLEM_ANALYSIS\|H1A_PROBLEM_ANALYSIS]] **마지막 절** — 규약상 항상 문서 끝이 최신(현재 **§21**). 이 이름은 vault에 9개 있으므로 경로로 지정한다 |
 | 판정·조사 사슬 전체 | [[concept-gate-h1-wt/docs/RULING_CHAIN_INDEX\|RULING_CHAIN_INDEX]] |
-| **무엇이 코호트를 막고 있나** | **순환이다.** [[DESIGN_DECISION_referential_participant_quantification\|D-33]] → [[DESIGN_DECISION_d33_claim_status\|D-33-V]] → [[DESIGN_DECISION_referential_existential_qualification\|D-34]] → [[DESIGN_DECISION_annotation_layer_admissibility\|D-35]] → 상신 [[DESIGN_REQUEST_independent_verifiability_constraint\|Q36]] 회신 대기. 병목은 **R2(독립 검증 가능성)** 이고 구조는 [[README_referential_circularity]]가 그림으로 갖고 있다 |
+| **무엇이 코호트를 막고 있나** | **순환이다.** [[DESIGN_DECISION_referential_participant_quantification\|D-33]] → [[DESIGN_DECISION_d33_claim_status\|D-33-V]] → [[DESIGN_DECISION_referential_existential_qualification\|D-34]] → [[DESIGN_DECISION_annotation_layer_admissibility\|D-35]] → [[DESIGN_DECISION_independent_verifiability_constraint\|D-36]]. 병목은 **R2(독립 검증 가능성)** 이고 D-36이 그것을 확인했으나 **R1~R4는 정리가 아니라 후보 분해**이며 삼층(L1/L2/L3)을 합치지 말라고 명했다. 구조는 구조는 [[README_referential_circularity]]가 그림으로 갖고 있다 |
 | **왜 우리가 경계를 정할 수 없나** | `operational_patch: forbidden`(D-31 Q31.4·D-33) + `immediate_projection: forbidden`(D-35). 실측 근거도 있다 — 표면 목록으로 유형화 비율이 **2~51%**로 움직이므로 목록 선택이 이미 부분적 경계 결정이다 |
 | 무엇이 죽었고 대신 무엇을 쓰나 | [[LEGACY_REGISTER]] · 만든 것이 실제로 불리는가 [[ADOPTION_REGISTER]] — 둘 다 게이트가 거짓말을 막는다 |
 | 무엇이 동결됐고 무엇이 금지인가 | 사전등록 본문은 `PREREGISTRATION_STAGE2_V4.md`가 여전히 정본이고, **동결 산출은 V5**다(`stage2_fixture_manifest_v5.json` — 투영 전용 개정). D-33이 `O1_SCOPE_PROJECTION_V3`을 예고했으므로 **V5의 measurement_contract는 잠정**이다 |
@@ -103,7 +103,7 @@ blocked(owlready2 — 무관). 실험 폴더 `python3 -m pytest .` = 373 passed.
 
 ### 1. ~~Q34~~ ~~Q34-B~~ ~~Q35~~ ~~Q36~~ **상신 완료** — 회신 대기가 다음 행동이다
 
-사슬은 `D-33 → D-33-V → D-34 → D-35 → Q36(대기)`다. Q36의 축은 **R2가 실제
+사슬은 `D-33 → D-33-V → D-34 → D-35 → D-36`이다. Q36의 축은 **R2가 실제
 구속 조건인가**이고, 우리가 요건을 발명했다면 그 문서 전체가 잘못된 문제를 푼다.
 
 **회신 없이 할 수 있는 것 둘**(둘 다 재료 문제이고 경계 결정이 아니다):
@@ -185,7 +185,16 @@ trials_raw 보존 + 결과는 동결과 **별도 커밋**(방법론 §1). 결과
 - **신규 기제 부채 3건**(§21.6): 수치 민감도 필수 보고 · **적대검증 대상 동결
   기록**(대상 sha256을 회신 요구에 넣고 불일치 시 회신 무효, ~30행) · 재고 목록
   단계. 기존 부채는 §19에서 0으로 상환됐다.
-- `.vault-harness` 82M 처분 — **양 세션 모두 권한 없음, 사용자 판단 대기**
+- `.vault-harness` 처분 — **색인 부분은 종결, 나머지는 미제기.**
+  색인: 동료 세션이 사용자 승인으로 `20260824_pre_rebuild` 83M 삭제(`e9230a0`),
+  `live/` 82M은 삭제 불가 확정("쓰는 중"), `frozen/` 82M은 보존 확정
+  (live와 바이트 동일 `39a75d98…`이지만 그것이 남길 이유 — 검색 결과가 싣는
+  `index_sha256`의 원본).
+  **그러나 지배적 소비자는 색인이 아니다(2026-08-24 실측)**:
+  `.venv-neural` **853M**(가상환경, 미제기) · `live/` 82M · `frozen/` 82M ·
+  `mcp-runtime/` 40M(런처가 `uv sync`로 재생성) · `.git` 50M. 총 **1.1G**.
+  삭제 논의는 82M~165M 구간에서만 이뤄졌고 **853M은 한 번도 후보로 올라오지
+  않았다.** (수정·이동·삭제 금지 대상이므로 보고만 한다.)
   ([[LEGACY_REGISTER]] §"동결 판본 소실"). 색인 재생성은 완료됐다.
 - cert 축 활성화(의무 집합 정의 — 별도 사안), G64(PMB Δ66 모집단 정의),
   뮤테이션 하네스의 게이트화(P16), O3(재료 관문 미해결 — D-21이 조건부
@@ -203,7 +212,7 @@ D-33 수신 처리(검증 설계 → 설계 적대검증 → 검증 → 기록)�
 | 3 | ~~**handoff test**~~ **2라운드 완료** — **10/10 복원·막힌 지점 0·낡은 것 0**, 중의성 1건 적발·수리("원문 0바이트"를 파일 크기로 오독). 신규 8건 고아 0. 1라운드는 9/9·결함 3건
 | 4 | ~~**삭제 후보 탐색 — 현재 작업 범위**~~ **2라운드 완료** — 신규 24파일 재계수: 후보 0건, **거짓 포인터 3건 적발·수리**(`.dot`이 없는 소스를 가리켰다). 1라운드는 문서 공백 1건 | ✅ |
 | 5 | ~~**탐색 범위 분할**~~ **2라운드 완료** — **분할 축을 크기에서 권위로 바꿨다**(같은 크기라도 다른 시험을 받으면 다른 범위). A(git 밖 최상위)·B(archive)·C(trunk 미커밋)·D(형제 worktree)·E(vault+MCP 저장소). 제외 목록(vendor 140M·`.git`·등록 worktree 46M = 220M)을 브리프에 먼저 명시 | ✅ |
-| 6 | ~~**탐색 subagent(haiku) 위임**~~ **2라운드 완료** — 4건 위임 전부 0건. lead 재실측이 **1건 확증(음성 대조)·1건 정정**(MCP 등재를 설정 파일 하나만 보고 오판). 후보 1건은 lead 범위에서 나왔고 **승인 대기** | ✅ [[WORKSPACE_CLEANUP_20260824_ROUND4]] |
+| 6 | ~~**탐색 subagent(haiku) 위임**~~ **2라운드 완료** — 4건 위임 전부 0건. lead 재실측이 **1건 확증(음성 대조)·1건 정정**(MCP 등재를 설정 파일 하나만 보고 오판). 후보 1건은 lead 범위에서 나왔고 **삭제 완료**(전문 보존 후 sha256 왕복 대조). 누계 삭제 7건 | ✅ [[WORKSPACE_CLEANUP_20260824_ROUND4]] |
 
 ### 이 대기열에 이미 적용되는 규율
 
