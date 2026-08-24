@@ -272,3 +272,96 @@ def test_pred_argument_check_reaches_nested_predicates():
 
 def test_bad_pred_arg_selection_is_not_empty():
     assert len(BAD_PRED_ARGS) == 9
+
+
+# ---- D-E2E-v1-29: count·prop은 커널이 아는 결박자다 --------------------
+#
+# 왜 커널인가: 이것은 **방언 문법**이고 실험 정책이 아니다. Q22.3 §10이
+# 커널 반입을 금지한 것은 라벨 정규화(실험별 평가 정책)였다. 판정 D-29 §1이
+# 방언을 8종으로 확정했고 `cg_ir_schema`(같은 커널)가 이미 두 종을 발행하는데
+# `validate_formula`/`canonicalize_v0`가 모르면, **subject에게 허용한 것을
+# 커널이 채점하지 못한다**(실측: evaluate → UNKNOWN_KIND → unscorable).
+
+_CNT = {"kind": "count", "rel": "ge", "num": 3, "var": "x",
+        "restriction": {"kind": "pred", "name": "dog",
+                        "args": [{"kind": "var", "name": "x"}]},
+        "body": {"kind": "pred", "name": "bark",
+                 "args": [{"kind": "var", "name": "x"}]}}
+_PROP = {"kind": "prop", "rel": "most", "var": "x",
+         "restriction": {"kind": "pred", "name": "cat",
+                         "args": [{"kind": "var", "name": "x"}]},
+         "body": {"kind": "pred", "name": "sleep",
+                  "args": [{"kind": "var", "name": "x"}]}}
+
+
+def test_count_and_prop_are_known_kinds():
+    assert cg_ir.validate_formula(_CNT) == []
+    assert cg_ir.validate_formula(_PROP) == []
+
+
+def test_count_binds_its_variable():
+    """결박자다 — restriction·body 양쪽에서 var를 결박한다(forall/exists와 동형)."""
+    assert cg_ir.free_variables(_CNT) == set()
+    assert cg_ir.free_variables(_PROP) == set()
+
+
+def test_count_free_variable_outside_the_binder_is_reported():
+    f = dict(_CNT, body={"kind": "pred", "name": "chew",
+                         "args": [{"kind": "var", "name": "x"},
+                                  {"kind": "var", "name": "y"}]})
+    assert cg_ir.free_variables(f) == {"y"}
+
+
+def test_count_variable_is_alpha_renamed():
+    a = _CNT
+    b = dict(_CNT, var="z",
+             restriction={"kind": "pred", "name": "dog",
+                          "args": [{"kind": "var", "name": "z"}]},
+             body={"kind": "pred", "name": "bark",
+                   "args": [{"kind": "var", "name": "z"}]})
+    assert cg_ir.canonicalize_v0(a) == cg_ir.canonicalize_v0(b)
+    assert cg_ir.formula_fingerprint(a) == cg_ir.formula_fingerprint(b)
+
+
+def test_canonicalize_preserves_rel_and_num():
+    """정규화가 기수 값을 지우거나 뭉개면 3≠4 신호가 사라진다."""
+    out = cg_ir.canonicalize_v0(_CNT)
+    assert out["rel"] == "ge" and out["num"] == 3
+    assert cg_ir.canonicalize_v0(_PROP)["rel"] == "most"
+
+
+def test_cardinal_value_is_not_canonicalized_away():
+    assert (cg_ir.formula_fingerprint(_CNT)
+            != cg_ir.formula_fingerprint(dict(_CNT, num=4)))
+    assert (cg_ir.formula_fingerprint(_CNT)
+            != cg_ir.formula_fingerprint(dict(_CNT, rel="gt")))
+
+
+def test_count_and_prop_are_not_interchangeable():
+    assert (cg_ir.formula_fingerprint(_CNT)
+            != cg_ir.formula_fingerprint(dict(_PROP, restriction=_CNT["restriction"],
+                                              body=_CNT["body"])))
+
+
+def test_count_requires_its_own_fields():
+    for missing in ("rel", "num", "var", "restriction", "body"):
+        bad = {k: v for k, v in _CNT.items() if k != missing}
+        assert cg_ir.validate_formula(bad), f"{missing} 누락이 통과됐다"
+
+
+def test_count_rejects_non_integer_num():
+    assert cg_ir.validate_formula(dict(_CNT, num="3"))
+
+
+def test_count_rejects_unknown_relation():
+    assert cg_ir.validate_formula(dict(_CNT, rel="approx"))
+
+
+def test_prop_v1_admits_only_most():
+    """비례는 어떤 고정 기수 임계값도 아니다(D-29 §5 — 우리 실측으로 재확인)."""
+    assert cg_ir.validate_formula(dict(_PROP, rel="half"))
+    assert "num" not in _PROP
+
+
+def test_count_malformed_subformula_is_refused():
+    assert cg_ir.validate_formula(dict(_CNT, restriction={"kind": "nope"}))

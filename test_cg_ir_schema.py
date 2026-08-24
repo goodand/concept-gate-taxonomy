@@ -207,3 +207,78 @@ def test_dispatch_envelope_wraps_formula_for_the_tool_api():
     # 봉투 내부는 formula 스키마와 같은 경계를 지킨다
     bad = {"formula": {"kind": "forall", "var": "x", "body": P("g", "x")}}
     assert not valid(bad, env)
+
+
+# ---- D-E2E-v1-29 Q29.1: count·prop constructor (기수·비례 measurement) ----
+
+def test_count_branch_shape():
+    """`count`는 자체 binder다 — var·restriction·body를 갖고 rel·num이
+    **operator parameter**다. 숫자를 term으로 넣지 않으므로 항 문법
+    (var|entity)은 불변이다(판정 §2·§4)."""
+    s = sch.formula_json_schema(("forall", "exists", "and", "pred", "count"))
+    branch = next(b for b in s["$defs"]["formula"]["oneOf"]
+                  if b["properties"]["kind"]["const"] == "count")
+    assert set(branch["required"]) == {"kind", "rel", "num", "var", "restriction", "body"}
+    assert branch["properties"]["rel"]["enum"] == ["eq", "ge", "le", "gt", "lt"]
+    assert branch["properties"]["num"]["type"] == "integer"
+    assert branch["properties"]["var"]["type"] == "string"
+    assert branch["properties"]["restriction"] == {"$ref": "#/$defs/formula"}
+    assert branch["properties"]["body"] == {"$ref": "#/$defs/formula"}
+    assert branch["additionalProperties"] is False
+
+
+def test_prop_branch_shape_v1_most_only():
+    """v1은 `most` 하나만 — half·ratio·percentage는 source가 없어 미설계
+    (판정 §6). 확장은 profile revision 사안이다."""
+    s = sch.formula_json_schema(("forall", "exists", "and", "pred", "prop"))
+    branch = next(b for b in s["$defs"]["formula"]["oneOf"]
+                  if b["properties"]["kind"]["const"] == "prop")
+    assert set(branch["required"]) == {"kind", "rel", "var", "restriction", "body"}
+    assert branch["properties"]["rel"]["enum"] == ["most"]
+    assert "num" not in branch["properties"]          # 비례는 수치를 갖지 않는다
+
+
+def test_count_and_prop_are_separate_constructors():
+    """판정 §5: most는 어떤 고정 기수 threshold로도 표현할 수 없으므로
+    두 semantic family를 한 operator에 섞지 않는다."""
+    s = sch.formula_json_schema(("pred", "count", "prop"))
+    kinds = [b["properties"]["kind"]["const"] for b in s["$defs"]["formula"]["oneOf"]]
+    assert "count" in kinds and "prop" in kinds
+    cb = next(b for b in s["$defs"]["formula"]["oneOf"]
+              if b["properties"]["kind"]["const"] == "count")
+    assert "most" not in cb["properties"]["rel"]["enum"]
+
+
+def test_numeric_terms_are_not_introduced():
+    """판정 §4: 수치 term 도입은 기각됐다 — term은 var|entity뿐이다."""
+    s = sch.formula_json_schema(("pred", "count"))
+    term_kinds = [b["properties"]["kind"]["const"] for b in s["$defs"]["term"]["oneOf"]]
+    assert term_kinds == ["var", "entity"]
+
+
+def test_dispatch_envelope_carries_count_and_prop():
+    e = sch.dispatch_envelope_schema(("forall", "exists", "and", "pred", "not",
+                                  "implies", "count", "prop"))
+    kinds = [b["properties"]["kind"]["const"] for b in e["$defs"]["formula"]["oneOf"]]
+    assert {"count", "prop"} <= set(kinds)
+    assert list(e["properties"]) == ["formula"]      # 봉투 패턴 불변
+
+
+def test_schema_rejects_malformed_count():
+    import jsonschema
+    s = sch.formula_json_schema(("pred", "count"))
+    P = lambda n: {"kind": "pred", "name": n, "args": []}
+    good = {"kind": "count", "rel": "ge", "num": 3, "var": "x",
+            "restriction": P("dog"), "body": P("bark")}
+    jsonschema.validate(good, s)
+    for bad, why in (
+        ({**good, "rel": "most"}, "rel에 most 금지"),
+        ({**good, "num": "3"}, "num은 정수"),
+        ({k: v for k, v in good.items() if k != "num"}, "num 누락"),
+        ({**good, "num": 3, "extra": 1}, "additionalProperties"),
+    ):
+        try:
+            jsonschema.validate(bad, s)
+            raise AssertionError(f"거부되지 않았다: {why}")
+        except jsonschema.ValidationError:
+            pass

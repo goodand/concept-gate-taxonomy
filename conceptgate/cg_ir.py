@@ -27,6 +27,13 @@ from typing import Any
 import conceptgate.cg_identity as cg_identity
 
 
+# 기수·비례 관계 어휘 (D-E2E-v1-29 §2·§6). prop v1은 `most`만 —
+# 판정 §5가 확정하고 우리가 실측 재확인했다: most는 어떤 고정 기수
+# 임계값과도 동치가 아니다(임계값이 |R|에 의존한다).
+COUNT_RELATIONS = ("eq", "ge", "le", "gt", "lt")
+PROP_RELATIONS = ("most",)
+
+
 def validate_formula(node: Any) -> list[dict]:
     """Formula dict의 구조 검증. 오류 목록 반환 (빈 리스트 = 유효).
 
@@ -69,6 +76,13 @@ def validate_formula(node: Any) -> list[dict]:
         "and": {"required": ["args"], "optional": []},
         "or": {"required": ["args"], "optional": []},
         "not": {"required": ["body"], "optional": []},
+        # 기수·비례 양화 결박자 (D-E2E-v1-29 §1~§6). forall/exists와 같은
+        # 결박 구조에 rel(+num)만 추가한다 — 수치는 연산자 매개변수이고
+        # **항이 아니다**(항 문법 = var | entity 불변).
+        "count": {"required": ["rel", "num", "var", "restriction", "body"],
+                  "optional": []},
+        "prop": {"required": ["rel", "var", "restriction", "body"],
+                 "optional": []},
     }
 
     if kind not in known_kinds:
@@ -87,6 +101,40 @@ def validate_formula(node: Any) -> list[dict]:
             })
 
     # Type checks for specific fields
+    if kind in ("count", "prop"):
+        var_val = node.get("var")
+        if var_val is not None and not isinstance(var_val, str):
+            errors.append({
+                "code": "VAR_NOT_STRING",
+                "detail": f"'var' must be string, got {type(var_val).__name__}"
+            })
+        allowed = COUNT_RELATIONS if kind == "count" else PROP_RELATIONS
+        rel = node.get("rel")
+        if rel is not None and rel not in allowed:
+            errors.append({
+                "code": "BAD_RELATION",
+                "detail": f"kind {kind!r} relation must be one of "
+                          f"{sorted(allowed)}, got {rel!r}"
+            })
+        if kind == "count":
+            num = node.get("num")
+            # bool은 int의 하위형이라 명시 배제 — True가 1로 통과하면 안 된다
+            if num is not None and (isinstance(num, bool)
+                                    or not isinstance(num, int)):
+                errors.append({
+                    "code": "NUM_NOT_INTEGER",
+                    "detail": f"'num' must be integer, got {type(num).__name__}"
+                })
+        elif "num" in node:
+            errors.append({
+                "code": "PROP_HAS_NUM",
+                "detail": "kind 'prop' takes no 'num' — 비례는 고정 기수 임계값이 아니다"
+            })
+        for field in ("restriction", "body"):
+            sub = node.get(field)
+            if sub is not None:
+                errors.extend(validate_formula(sub))
+
     if kind in ("forall", "exists"):
         var_val = node.get("var")
         if var_val is not None and not isinstance(var_val, str):
@@ -177,7 +225,7 @@ def _free_variables_helper(formula: dict, bound_vars: set[str]) -> set[str]:
         for arg in args:
             free.update(_free_variables_helper(arg, bound_vars))
 
-    elif kind in ("forall", "exists"):
+    elif kind in ("forall", "exists", "count", "prop"):
         var = formula.get("var")
         body = formula.get("body")
         restriction = formula.get("restriction")
@@ -266,7 +314,7 @@ def _canonicalize_helper(formula: dict, rename_map: dict[str, str], counter: int
             new_args.append(new_arg)
         return {"kind": "pred", "name": name, "args": new_args}, counter
 
-    elif kind in ("forall", "exists"):
+    elif kind in ("forall", "exists", "count", "prop"):
         var = formula.get("var")
         body = formula.get("body")
         restriction = formula.get("restriction")
@@ -290,6 +338,12 @@ def _canonicalize_helper(formula: dict, rename_map: dict[str, str], counter: int
         result = {"kind": kind, "var": canonical_var, "body": new_body}
         if new_restriction is not None:
             result["restriction"] = new_restriction
+        # rel·num은 채점 대상 신호다(D-29 §3·§13) — 정규화가 지우면 3≠4가
+        # 사라지므로 그대로 실어 보낸다. α-rename만이 정규화의 몫이다.
+        if kind in ("count", "prop"):
+            result["rel"] = formula.get("rel")
+            if kind == "count":
+                result["num"] = formula.get("num")
         return result, final_counter
 
     elif kind in ("box", "diamond", "not"):

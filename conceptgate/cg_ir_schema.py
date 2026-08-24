@@ -26,12 +26,18 @@ V0_O1_CONSTRUCTORS = ("forall", "exists", "and", "pred")
 def _assert_known_constructors(constructors: tuple[str, ...]) -> None:
     """Constructor 목록이 지원되는 종류만 포함하는지 검증.
 
-    지원 집합: {"forall", "exists", "and", "pred", "or", "implies", "not", "box", "diamond"}
+    지원 집합: {"forall", "exists", "and", "pred", "or", "implies", "not",
+    "box", "diamond", "count", "prop"}
+
+    `count`·`prop`은 D-E2E-v1-29 Q29.1이 도입한 기수·비례 measurement
+    constructor다. 수치는 **operator parameter**이지 term이 아니므로
+    term 문법(var|entity)은 불변이다 — 판정 §2·§4가 수치 term 도입을 기각.
 
     Raises:
         ValueError: 지원되지 않는 constructor가 있을 때, 그것을 지명하는 메시지와 함께.
     """
-    supported = {"forall", "exists", "and", "pred", "or", "implies", "not", "box", "diamond"}
+    supported = {"forall", "exists", "and", "pred", "or", "implies", "not",
+                 "box", "diamond", "count", "prop"}
     for ctor in constructors:
         if ctor not in supported:
             raise ValueError(f"unknown constructor: {ctor!r}")
@@ -163,6 +169,40 @@ def formula_json_schema(constructors: tuple[str, ...] = V0_O1_CONSTRUCTORS) -> d
                 "body": {"$ref": "#/$defs/formula"},
             },
             "required": ["kind", "body"],
+            "additionalProperties": False,
+        }
+
+    # count: 기수 양화 binder (D-29 Q29.1). rel·num은 parameter, 결박은
+    # forall/exists와 동형. 의미는 |{x: R(x)∧B(x)}| rel num (판정 §3).
+    if "count" in constructors:
+        schema_branches["count"] = {
+            "type": "object",
+            "properties": {
+                "kind": {"const": "count"},
+                "rel": {"enum": ["eq", "ge", "le", "gt", "lt"]},
+                "num": {"type": "integer"},
+                "var": {"type": "string"},
+                "restriction": {"$ref": "#/$defs/formula"},
+                "body": {"$ref": "#/$defs/formula"},
+            },
+            "required": ["kind", "rel", "num", "var", "restriction", "body"],
+            "additionalProperties": False,
+        }
+
+    # prop: 비례 양화 binder. count와 **분리**한다 — most는 어떤 고정 기수
+    # threshold로도 표현할 수 없다(restrictor 크기 의존, 판정 §5 및 우리
+    # 재검증: 크기 1~8에서 해집합 공집합). v1은 rel=most만(§6).
+    if "prop" in constructors:
+        schema_branches["prop"] = {
+            "type": "object",
+            "properties": {
+                "kind": {"const": "prop"},
+                "rel": {"enum": ["most"]},
+                "var": {"type": "string"},
+                "restriction": {"$ref": "#/$defs/formula"},
+                "body": {"$ref": "#/$defs/formula"},
+            },
+            "required": ["kind", "rel", "var", "restriction", "body"],
             "additionalProperties": False,
         }
 
