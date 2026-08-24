@@ -61,9 +61,9 @@ control 재선별로 **5/5 통과**를 얻었다(V4 1/6 → V5 2/6 → V5.1 5/5,
 | MRS 재료가 왜 아직 부적격인가 | [[RESEARCH_RESULT_mrs_redwoods_round3\|3차 조사 회신 + 우리 검증]] §B — 전수 37,066건 실측, 적격 기수 **0건**(BODY 비제약이 유일 장애 16,584건) |
 | adapter 자격(코드 결박) | `experiments/2026-08-23_{o1,sbn,fol}_adapter_qualification/` — test_protocol이 코드 해시를 라이브와 대조: **커널·adapter를 고치면 자격이 자동 실효**된다(2026-08-24 실측: `cg_ir` 확장으로 3건 실효 → 재자격 9/9·9/9·7/7 재현) |
 | 적대 검증 결과 | [[ADVERSARIAL_VALIDATION_20260823]] |
-| 이 handoff가 실제로 복원 가능한가 | [[HANDOFF_EVALUATION_20260823]] — zero-context 평가기 실측(3/3) + 결함 2건 수리 + 남은 한계 4건 |
+| 이 handoff가 실제로 복원 가능한가 | [[HANDOFF_EVALUATION_20260824]] — **9/9 복원·막힌 지점 0**, 그러나 결함 2건 적발(V5.1 운영 로그 누락 · 고아 노트 1건)과 **`vault_search`가 정본·D-33에 도달 못 함**. 1차는 [[HANDOFF_EVALUATION_20260823]](3/3) |
 | 채점이 무엇을 재는가 | 같은 폴더 `_stage2_projection_pipeline_v2.py` — V1 전처리(desugar·관용구·granularity 다리) → V2 signature 합성. **이 모듈이 계약이고 V5 manifest가 해시를 pin한다**. 계약 정본은 `test_stage2_projection_pipeline_v2.py` |
-| control이 무엇을 보증하고 무엇을 보증하지 않나 | `CONTROLS_RUN_V5_20260824.md`(2/6 → 정지) + `stage2_controls_results_v5_1.json`(재선별 **5/5**). D-33 §9: `control eligibility excludes X → control PASS therefore says nothing about X` — 적격 술어가 배제한 성질은 인증되지 않는다 |
+| control이 무엇을 보증하고 무엇을 보증하지 않나 | [[CONTROLS_RUN_V5_20260824|V5 실행(2/6 → 정지)]] → [[CONTROLS_RUN_V5_1_20260824|V5.1 재선별(5/5)]]. D-33 §9: `control eligibility excludes X → control PASS therefore says nothing about X` — 적격 술어가 배제한 성질은 인증되지 않는다 |
 | 실행 기제 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/_stage2_*.py` + `conceptgate/cg_{sbn,fol}_adapter.py`, `cg_mrs_reader.py`, `cg_fixture_resolver.py` |
 
 ## 3. 다음 실행 절차 (사용자 승인 후 — 이 문서의 유일한 고유 내용)
@@ -162,7 +162,7 @@ D-33 수신 처리(검증 설계 → 설계 적대검증 → 검증 → 기록)�
 |---|---|---|
 | 1 | ~~**회고**~~ **완료(2026-08-24)** — §18 append. 신규 G125~G135, P12가 한 구간 5회로 지배, 기제 부채 +60행 | ✅ `docs/H1A_PROBLEM_ANALYSIS.md` §18 |
 | 2 | ~~**handoff 갱신**~~ **완료(2026-08-24)** — §0 코드·§1 재작성, §2 낡은 행 5건 정정(D-19~D-33·§18·차단 요인·V4→V5·FREEZE_STATE) + 신설 행 2건(채점 계약·control 보증 범위), §3 전면 재작성, §4에 교훈 3건 | ✅ |
-| 3 | **handoff test** — ① `evidence-evaluator` MCP 사용(handoff 시점의 도구다) ② **zero-context subagent 복원 시험** | 무맥락 agent가 §0만 읽고 다음 행동을 정확히 재구성. 실패 항목은 숨기지 않고 기록 |
+| 3 | ~~**handoff test**~~ **완료(2026-08-24)** — 9/9 복원·막힌 지점 0, 결함 3건 적발·수리(V5.1 로그 누락 · 고아 노트 · 스텁 리다이렉트) | ✅ [[HANDOFF_EVALUATION_20260824]] |
 | 4 | **삭제 후보 탐색 — 현재 작업 범위** | 이번 세션이 만든 산출물 중 중복·미채택·재생성 가능분을 먼저 식별 |
 | 5 | **탐색 범위 분할** | 겹치지 않는 범위로 쪼갠다(3차 라운드) |
 | 6 | **탐색 subagent(haiku) 위임** | 범위별 위임 → **lead가 상위 후보 직접 재실측**(P12) 후에만 삭제 |
@@ -174,8 +174,8 @@ D-33 수신 처리(검증 설계 → 설계 적대검증 → 검증 → 기록)�
   약화시키면 시험이 무의미해진다.
 - 4~6항: **날짜는 근거가 아니다.** `SAFE_TO_REMOVE`는 근거 3항이 필요하고,
   0건이 정당한 답이다(2차 라운드 실측: worktree 0 · vault 0 · 파일 1). 선행
-  결정을 재제안하지 않기 위해 `docs/WORKSPACE_CLEANUP_20260823.md`와
-  `docs/WORKSPACE_CLEANUP_20260824.md`를 **먼저 읽는다**.
+  결정을 재제안하지 않기 위해 [[WORKSPACE_CLEANUP_20260823|1차 라운드]]와
+  [[WORKSPACE_CLEANUP_20260824|2차 라운드]]를 **먼저 읽는다**.
 - 4~6항의 함정 3개(2차 라운드에서 실측된 것): worktree 삭제 안전성의 기준은
   병합이 아니라 **push**다 · **상호 참조는 참조가 아니다**(닫힌 고리는 둘 다
   후보) · **캐시라도 테스트가 읽으면 하중 자산**이다.

@@ -61,3 +61,10 @@ V4 실패 하나(curry)를 V5가 해소했다.**
 V1↔V2 점수 직접 비교는 manifest가 금지한다
 (`score_comparability.V1_to_V2.direct_numeric_comparison: false`). 위 표의
 V4 열은 **실패 부류의 존속 여부** 추적이지 수치 비교가 아니다.
+
+---
+
+**후속**: 이 실행의 2/6이 control 선별 계약의 결함을 드러냈고, D-27 §18의
+재선별을 실행해 [[CONTROLS_RUN_V5_1_20260824|V5.1에서 5/5]]를 얻었다. 그러나
+그 통과가 코호트를 열지는 못했다 — 적격 술어가 배제한 성질이 in-N의 지배적
+성질이기 때문이다([[DESIGN_DECISION_referential_participant_quantification|D-33]]).
