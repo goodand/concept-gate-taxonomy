@@ -1936,7 +1936,7 @@ CLAUDE.md의 Subtree Assembly(불변식, 우선순위 3)와 Ponytail 7단(최소
 |---|---|---|
 | **조사 agent(openai_web_gpt) — 능력의 종류** | **코드를 실행할 수 없다.** 그래서 "이 코덱이 이 형식을 읽는가"에 소스 독해로 답했고 틀렸다(G98). 반대로 웹 문서 인용·라이선스 문구 확보는 정확했다(4/4 일치) | **질문 배분 규칙**: 실행이 필요한 질문은 조사에 보내지 않는다. 조사에는 실행으로 얻을 수 없는 것(정본 문구·배포처·권리)만 |
 | **조사 agent — 도달 범위** | `application/zip`·대용량 fetch 제한, https 전용 재시도. 우리는 379MB tgz를 받고 tar로 열었다 | 회신의 BLOCKED는 **우리 재시도 목록**(P20 1회차) |
-| **Codex 라인** | 계속 휴면. 현 브랜치명 `codex/h1-source-authority`가 계보 흔적이나 이 구간 작업은 전부 Claude 쪽 | Codex는 MCP(kroki·vault-retrieval·wolfram)·Workflow/Agent 위임·백그라운드 작업이 없다. 따라서 **M15(계층 그래프)·M16(zero-context 카나리)·M17(격리 실행)·위임 기반 구현은 Claude 라인 전용**이다 — Codex가 이어받으면 **재현 불가한 검증이 존재**한다. 이 절이 그 목록이다 |
+| **Codex 라인** | 계속 휴면. 현 브랜치명 `codex/h1-source-authority`가 계보 흔적이나 이 구간 작업은 전부 Claude 쪽 | Codex는 MCP(kroki·vault-retrieval·wolfram)·Workflow/Agent 위임·백그라운드 작업이 없다. 따라서 **M15(계층 그래프)·M17(격리 실행)·위임 기반 구현은 Claude 라인 전용**이다 — 단 **M16은 아니다**(아래 정정) — Codex가 이어받으면 **재현 불가한 검증이 존재**한다. 이 절이 그 목록이다 |
 | **Agent tool의 effort 미지원** | 프로토콜은 `Subagent(Haiku, xhigh)`를 명하는데 Agent tool은 `model`만 받고 `effort`가 없다(§11.6과 동일 확인) | 지시된 (모델, effort) 조합을 정확히 이행하려면 Workflow `agent()` opts 경유. 이 구간은 `model=haiku`만 지정하고 그 사실을 기록 |
 | **subagent 중단 — 환경 사유** | 위임 1건이 "computer went to sleep mid-response" API 오류로 조기 종료. 부분 산출("파일이 없다")은 보고로 쓸 수 없었다 | **논리적 실패와 환경적 실패를 구별**해 1회 재위임했고 정상 완료. 부분 산출을 결론으로 쓰지 않은 것이 핵심 |
 | **알림과 파일시스템의 경합** | 위임 구현의 파일이 **완료 알림 도착 전에** 이미 디스크에 있었다(게이트를 돌리다 발견) | 알림 부재가 미완료를 함의하지 않는다. 반대로 파일 존재가 완료를 함의하지도 않는다 — **판정은 테스트로** |
@@ -2136,3 +2136,100 @@ cascade에서 앞 규칙이 먼저 잡으면 뒤 규칙은 0건이 되고, 그 �
 - `20725062`의 표면에 인용부호가 있고 프롬프트에 그대로 들어간다 — 영향 미측정.
 - G64(PMB Δ66)·P16 게이트화·cert 축·O3은 §11부터 이월된 채 미착수.
 - 이 절도 마지막 절이다.
+
+## 14.8 정정 — M16은 Claude 라인 전용이 **아니다**
+
+§13.6과 §14.6이 "M16(zero-context 카나리)은 Claude 라인 전용이라 Codex가
+이어받으면 재현 불가"라고 적었다. **틀렸다.**
+
+`evidence-evaluator/evidence_evaluator/providers.py`에 **`codex-mcp-cli`
+provider**가 있고(`provider_meta={"provider": "codex-mcp-cli", …}`), 그 저장소
+README는 그것을 추출 근거로 명시한다:
+
+> "a provider layer that already worked across two different agent CLIs
+> (`providers.py`'s `resolve_provider()` dispatches to a Claude CLI adapter
+> or a Codex CLI adapter by config, both under process-level sandboxing) —
+> this is the part that makes 'does it work with Codex too' a fact about the
+> code, not an aspiration."
+
+**원인**: 도구의 정본(README·소스)을 읽지 않고 "이 세션에서 내가 Claude로
+돌렸다"를 "Claude만 가능하다"로 일반화했다. §13의 G100(표본 n=3에서 corpus
+성질 단정)과 **같은 형태**다 — 관측 범위를 능력 범위로 오독했다. P12의
+"가장 자주 틀리는 대리자는 내 측정기"에 한 항을 더한다: **내 일반화**.
+
+정정 후 Codex 인계 그림:
+
+| 방법 | Codex 재현 |
+|---|---|
+| M15 계층 그래프(kroki MCP) | 불가 |
+| M17 격리 실행 반증 | 불가(실행 환경) |
+| 위임 기반 구현(Agent tool) | 불가 |
+| **M16 zero-context 카나리** | **가능**(provider 설정만) |
+
+부수 실측: `evidence_evaluator`는 `concept-gate-h1-wt`에서 **import 불가**
+(미설치)다. 쓰려면 패키지 설치 또는 그쪽 CLI/MCP 경유가 필요하고, 그것이
+저장소 간 결합 비용이다.
+
+## 14.9 삭제 — `handoff_reachability.py` (그리고 신규 패턴 P21)
+
+`scripts/handoff_reachability.py`(268행)와 `test_handoff_reachability.py`
+(156행)를 삭제했다. **사용자 판단이고 운영 세션이 동의했다.**
+
+### 왜 삭제인가 — 나는 직전 턴에 "확장하라"고 권고했고 그것이 틀렸다
+
+목적 전용 도구가 이미 있다: `evidence-evaluator/vault-backlinks-mcp`.
+계약을 대조하면 삭제 대상이 열등하다.
+
+| | `handoff_reachability.py` | `vault_backlinks` MCP |
+|---|---|---|
+| 답의 출처 | 저장소 파일 파싱 | **Obsidian 그래프 인덱스(live only)** |
+| 실패 처리 | orphan 목록에 섞임 | `error` + `backend_used:"none"` — **빈 목록으로 조용히 바꾸지 않는다** |
+| 사후 검토 | 없음 | `review_required` · `review_checks` |
+| vault 간 모호성 | 없음 | `AMBIGUOUS_ACROSS_REGISTERED_VAULTS` 탐지 |
+| 채택 | **0**(16일간 배선 0·import 0) | MCP로 세션에 노출됨 |
+
+내가 내세운 유일한 우위(LINK vs MENTION 정밀도)는 **무의미하다** — MCP는
+그래프 인덱스에서 읽으므로 산문 언급이 애초에 섞이지 않는다. 실측 호출로
+확인: D-30 문서의 backlink 4건(`RULING_CHAIN_INDEX` + 감사 2 + READ 로그),
+`backend_used: "live"`, `review_required: false`, `error: null`.
+
+잃는 것은 `reachable_from(entry, max_hops)`의 **전이 도달성** 하나다. 그것은
+orphan 243을 뱉어 게이트로 쓸 수 없었고, 실제로 필요한 성질(판정 문서마다
+live backlink ≥1)은 MCP 호출 + 단언으로 검사된다. 전이 확장이 필요해지면
+`evidence_evaluator.retrieval`이 그 일의 정본이다.
+
+### P21 (신규) — **테스트는 도는데 채택은 안 된 도구**
+
+`handoff_reachability`의 상태는 "legacy"가 아니었다. 테스트 15건이 core
+pytest에서 **초록으로 돌고 있었고**, `run_gates.py` 배선 0·외부 import 0이었다.
+폐기 표시가 없고 초록이니 다음 세션이 "이미 있으니 재사용"으로 집어든다 —
+**직전 턴의 내가 그 증거다**(P9 예방을 하려다 P9를 저질렀다).
+
+그리고 이 상태는 **설정이 조용히 썩는다.** 기본 진입점 `docs/HANDOFF.md`는
+2026-08-08에는 정본이었고 08-23에 내가 stub으로 강등하면서 틀려졌다.
+도구는 안 변했는데 세계가 변한 형태다. 테스트는 파서 동작만 검사하므로
+**진입점이 실재하는 정본인지는 아무도 검사하지 않았다.**
+
+`scripts/*.py` 전수 실측: 이 상태인 것은 **이 한 건뿐**이었다(단발, 만성 아님).
+
+**기제화 제안**: 이 저장소에는 이미 관용구가 있다 —
+`test_guard_negative_coverage.py`의 `KNOWN_UNPROVEN`(모킹으로 초록칠하지 말고
+이유와 담당을 적어라). 같은 형태로 `scripts/` 도구의 **채택 상태**를 명시하고,
+테스트가 있는데 등재되지 않은 도구를 FAIL시킨다:
+
+```python
+ADOPTION = {"<tool>": "gated" | "manual(이유)" | "legacy(후속 도구명)"}
+```
+
+**초록 테스트가 채택을 뜻하지 않는다**는 것을 관측 가능하게 만드는 장치다.
+P1을 기제로 옮긴 것과 같은 이동(관측값이 같아 구별 불가했던 것을 구별 가능하게).
+
+### 부수 정정 — backlink 게이트는 인덱스 의존이 **결함이 아니다**
+
+내가 §14 앞부분에서 "게이트는 결정적이어야 하므로 Obsidian 인덱스에 의존하면
+안 된다"고 적었다. 사용자 지적: **그래서 MCP를 만들었고 내부에 fallback
+구조가 있다.** 실측으로 확인 — MCP는 live 실패를 `error`로 보고하므로 게이트가
+false-green이 아니라 **BLOCKED**로 떨어진다. 이 저장소의 PASS/FAIL/BLOCKED
+어휘와 정확히 같은 처리다(`owlready2` 부재 → blocked와 동형). 즉 인덱스
+의존은 정직하게 표시되는 한 결함이 아니고, **결정성 논거로 제2 구현을
+정당화한 내 추론이 틀렸다.**
