@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: V5_FROZEN__CONTROLS_5_OF_5__COHORT_BLOCKED_ON_Q33   # V5 재동결 완료(투영 V1→V2, 20건 재투영, 채점 배선 교체). control 재선별 후 **5/5 통과 — 사슬 최초**. 그러나 코호트 dispatch는 **보류**: control 적격 술어가 지시 표현을 배제하므로 5/5는 in-N의 지배적 성질을 인증하지 못한다. **코호트 dispatch 누계 0건**
-next_action_code: AWAIT_Q33_THEN_DISPATCH_20   # Q33 회신 대기 → 판정대로 계약 수리 → 20건 dispatch. plan은 이미 생성돼 있다(`stage2_cohort_plan_v5.json`, 프롬프트 정본). **Q33이 채점을 바꾸면 그 plan을 지우고 재생성해야 한다** — `write_cohort`가 덮어쓰기를 거부하므로 의도적으로 지워야 한다. dispatch는 매번 별도 승인
+state_code: D33_RECEIVED__COHORT_BLOCKED__QUALIFICATION_REQUIRED_BEFORE_V3   # V5 동결(투영 V1→V2·20건 재투영·채점 배선 교체)과 control 재선별 5/5는 끝났다. 그러나 D-33이 코호트를 막았다: 지시 표현의 참여자 ∃ 대 `entity` 항 불일치가 measurand인지 미정이고, `O1_SCOPE_PROJECTION_V3`이 예고됐으므로 **V2는 최종이 아니다**. **코호트 dispatch 누계 0건**
+next_action_code: DEFINE_REFERENTIAL_EXISTENTIAL_THEN_Q34   # D-33 권고 (b*): referential ∃ 경계를 **먼저 독립 정의** → qualification → V3. 경계 규칙을 우리가 만들면 `operational_patch: forbidden` 위반이므로 **실사 결과만 Q34로 상신**한다. 실측 결론(§B.3·B.4): synset으로는 불가(`person.n.01`이 양화·지시·보통명사 세 부류에 걸침), 표면 토큰이 필요하나 표면 규칙 시도는 **4회 전부 다르게 실패**. `stage2_cohort_plan_v5.json`은 생성돼 있고 V3가 채점을 바꾸면 의도적으로 지워야 한다(`write_cohort`는 덮어쓰기 거부). dispatch는 매번 별도 승인
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
@@ -124,3 +124,30 @@ blocked(owlready2 — 무관) 확인.
 - cert 축 활성화(의무 집합 정의 — 별도 사안), G64(PMB Δ66 모집단 정의),
   뮤테이션 하네스의 게이트화(P16), O3(재료 관문 미해결 — D-21이 조건부
   선행 허용).
+
+## 6. 작업 대기열 (사용자 지정 — 2026-08-24, 순서 그대로)
+
+D-33 수신 처리(검증 설계 → 설계 적대검증 → 검증 → 기록)를 끝낸 뒤 **이 순서로**
+진행한다. 사용자가 순서를 지정했으므로 임의로 바꾸지 않는다.
+
+| # | 할 일 | 완료 판정 |
+|---|---|---|
+| 1 | **회고** — 7항 표준 프롬프트(신규 이슈 · 재현 증가 이슈 · 해결 근거 있는 것 · 해결 유무 · 문제 정의 압축 · 가설·검증 방식 · 매우 구체적 해결 방법). Codex/다른 Claude 세션과의 **권한·도구 차이**를 반영 | `docs/H1A_PROBLEM_ANALYSIS.md`에 새 절(§18) append |
+| 2 | **handoff 갱신** | 이 문서의 §0 코드·§1·§3이 실제 상태와 1:1 |
+| 3 | **handoff test** — ① `evidence-evaluator` MCP 사용(handoff 시점의 도구다) ② **zero-context subagent 복원 시험** | 무맥락 agent가 §0만 읽고 다음 행동을 정확히 재구성. 실패 항목은 숨기지 않고 기록 |
+| 4 | **삭제 후보 탐색 — 현재 작업 범위** | 이번 세션이 만든 산출물 중 중복·미채택·재생성 가능분을 먼저 식별 |
+| 5 | **탐색 범위 분할** | 겹치지 않는 범위로 쪼갠다(3차 라운드) |
+| 6 | **탐색 subagent(haiku) 위임** | 범위별 위임 → **lead가 상위 후보 직접 재실측**(P12) 후에만 삭제 |
+
+### 이 대기열에 이미 적용되는 규율
+
+- 3항의 zero-context 시험은 **5/5를 목표로 하지 않는다** — 복원 실패가 나오면
+  그것이 handoff의 결함이고 고칠 대상이다. 통과율을 좋게 만들려고 시험을
+  약화시키면 시험이 무의미해진다.
+- 4~6항: **날짜는 근거가 아니다.** `SAFE_TO_REMOVE`는 근거 3항이 필요하고,
+  0건이 정당한 답이다(2차 라운드 실측: worktree 0 · vault 0 · 파일 1). 선행
+  결정을 재제안하지 않기 위해 `docs/WORKSPACE_CLEANUP_20260823.md`와
+  `docs/WORKSPACE_CLEANUP_20260824.md`를 **먼저 읽는다**.
+- 4~6항의 함정 3개(2차 라운드에서 실측된 것): worktree 삭제 안전성의 기준은
+  병합이 아니라 **push**다 · **상호 참조는 참조가 아니다**(닫힌 고리는 둘 다
+  후보) · **캐시라도 테스트가 읽으면 하중 자산**이다.

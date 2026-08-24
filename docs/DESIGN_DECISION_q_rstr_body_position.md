@@ -1,6 +1,6 @@
 # DESIGN DECISION — D-E2E-v1-32-C: `Q_RSTR_BODY`를 위치로 정의 (Q32-C 판정)
 
-- 사슬 항법: 이전 [[DESIGN_DECISION_restriction_projection|D-32]] · **D-32-C** · 다음 (없음) · 색인 [[RULING_CHAIN_INDEX]]
+- 사슬 항법: 이전 [[DESIGN_DECISION_restriction_projection|D-32]] · **D-32-C** · 다음 [[DESIGN_DECISION_referential_participant_quantification|D-33]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수신: 2026-08-24, 사용자 경유 (판정자: 외부 설계 담당, Wolfram 검증 명시)
 - 원 요청: [[DESIGN_REQUEST_q_rstr_body_position|Q32-C]]
 - 요약: **(a\*) 승인 — 단 `forall` 한정.** 운영 세션이 요청서에 쓴 "제한식이
