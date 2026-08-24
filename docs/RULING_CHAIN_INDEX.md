@@ -43,8 +43,7 @@ zero-context agent를 위한 읽는 순서:
 
 | D-32 | 제한식 비-scope 내용을 opaque 붕괴(empty/nonempty·incidence 보존) · 닫힌 profile `O1_SCOPE_PROJECTION_V2` · 20건 전량 재투영 · amendment+profile 둘 다 | [[DESIGN_REQUEST_restriction_projection]] | [[DESIGN_DECISION_restriction_projection]] |
 
-**확인 요청(판정 질문 아님)**: [[CONFIRMATION_REQUEST_q_rstr_body_position]] —
-D-32 §Q32.2의 `Q_RSTR_BODY`를 provenance가 아니라 위치로 정의해도 되는지 1건.
+| **Q32-C** | **판정 대기** — D-32 §Q32.2의 `Q_RSTR_BODY`를 provenance가 아니라 **위치**로 정의해도 되는가(문항 1개) | [[DESIGN_REQUEST_q_rstr_body_position]] | (없음) |
 
 별도 계열(이 실험 전 단계): [[DESIGN_DECISION_refine_verify_v0_review]]
 
@@ -68,6 +67,26 @@ D-32 §Q32.2의 `Q_RSTR_BODY`를 provenance가 아니라 위치로 정의해도 
 - 적대 검증: [[ADVERSARIAL_VALIDATION_20260823]]
 - handoff 자체의 복원 가능성 실측(zero-context 평가기): [[HANDOFF_EVALUATION_20260823]]
 - 다이어그램 규약(추상화 우선순위·semantic zoom): [[concept-gate-h1-wt/docs/diagrams/README|diagrams/README]]
+
+## 파일명 규약 — 접두어를 새로 만들지 마라
+
+이 채널의 문서는 **네 접두어뿐**이다.
+
+| 접두어 | 무엇 |
+|---|---|
+| `DESIGN_REQUEST_` | 외부 설계 담당에게 보내는 상신서 |
+| `DESIGN_DECISION_` | 그 판정문(verbatim + sha256 + 우리 수신 검증) |
+| `RESEARCH_REQUEST_` | 조사용 agent에게 보내는 요청서 |
+| `RESEARCH_RESULT_` | 그 회신(verbatim + sha256 + 우리 검증) |
+
+**규모가 작아도 접두어를 바꾸지 않는다.** 2026-08-24 실측: 문항 1개짜리
+재해석 확인을 `CONFIRMATION_REQUEST_`로 만들었더니 사용자가 **다른 파일인지
+헷갈렸다.** 같은 채널·같은 형식의 문서인데 이름이 규약 밖이면 사람도
+zero-context agent도 그것이 무엇이고 사슬의 어디인지 알 수 없다. 작은 상신은
+접두어를 유지하고 **번호로 구별한다**(예: Q32의 후속 = `Q32-C`).
+
+이것은 §"md 문서를 만들 때"(저장소 CLAUDE.md)의 graph 규약과 같은 목적이다 —
+**파일이 있는 것과 알아볼 수 있는 것은 다르다.**
 
 ## 이 색인을 고칠 때
 
