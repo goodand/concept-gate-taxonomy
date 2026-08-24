@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: RIGHTS_RESOLVED_MATERIAL_MARGIN_ZERO   # rights는 사용자 결정으로 해소(D-30 §C). Gate C 사람 감사 2건 완료: PMB는 기수·비례를 **원리적으로** 공급 못 함(부호없는 수사 106건 전수 배제) → MRS가 유일 공급원, 기수 3·비례 1로 **여유 0**. V4의 cardinal 3·proportional 1 배정은 4/4 무효(최상급 1 + Quantity 극성표지 3)
-next_action_code: IMPLEMENT_D30_CONTRACTS_THEN_RESCAN   # D-30 구현 6항 + Gate C가 만든 E0~E6 배제 규칙을 계약으로. 재스캔에서 한 건만 더 탈락하면 하한이 깨진다 — 여유 확보 방안(다른 component·다른 source)을 병행 검토. surface 원문은 저장소 밖(Q30.4는 완화 대상 아님)
+state_code: RULING_D31_RECEIVED_RESTRICTION_PROJECTION_BLOCKER   # D-31 수령·검증 완료(V2가 반례 99건 확증) + **확정분 5항 구현 완료**(E15 최상위 게이트·E13 사유코드·E14 detector·dedup 모듈·신원 분리 결박). 재료 3/1·여유 0. **유일 차단: Q32 제한식 투영**(판정 대기)
+next_action_code: AWAIT_Q32_RULING   # Q32 상신 완료(`docs/DESIGN_REQUEST_restriction_projection.md`, 5문항). 판정 전 독립 가능분 없음 — D-30/D-31 확정분은 전부 구현됐고 dedup 배선·V5 동결은 Q32 판정에 의존한다(투영 모듈 해시가 contract_hashes에 핀돼 있다)
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
