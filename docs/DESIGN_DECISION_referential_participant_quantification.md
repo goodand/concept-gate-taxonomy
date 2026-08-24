@@ -2,7 +2,7 @@
 
 - 수신: 2026-08-24 · 발신: 외부 설계 담당(저장소 접근 없음)
 - 요청서: [[DESIGN_REQUEST_referential_participant_quantification|Q33]]
-- 사슬 항법: 이전 [[DESIGN_DECISION_q_rstr_body_position|D-32-C]] · **D-33** · 다음 (없음) · 색인 [[RULING_CHAIN_INDEX]]
+- 사슬 항법: 이전 [[DESIGN_DECISION_q_rstr_body_position|D-32-C]] · **D-33** · 다음 [[DESIGN_REQUEST_referential_existential_qualification|Q34 상신]] · 색인 [[RULING_CHAIN_INDEX]]
 - `VERBATIM_SHA256: e618857ba9900f2cb1072deb6d5b9d62c701d9c886f3bc48796369f61cbcb42a`
   (범위: `<!-- VERBATIM-BEGIN -->` 다음 개행부터 `<!-- VERBATIM-END -->` 직전 개행 **제외**까지 — D-30~D-32-C와 같은 규약)
 

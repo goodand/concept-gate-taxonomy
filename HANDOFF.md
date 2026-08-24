@@ -13,7 +13,7 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 
 ```yaml
 state_code: D33_RECEIVED__COHORT_BLOCKED__QUALIFICATION_REQUIRED_BEFORE_V3   # V5 동결(투영 V1→V2·20건 재투영·채점 배선 교체)과 control 재선별 5/5는 끝났다. 그러나 D-33이 코호트를 막았다: 지시 표현의 참여자 ∃ 대 `entity` 항 불일치가 measurand인지 미정이고, `O1_SCOPE_PROJECTION_V3`이 예고됐으므로 **V2는 최종이 아니다**. **코호트 dispatch 누계 0건**
-next_action_code: DEFINE_REFERENTIAL_EXISTENTIAL_THEN_Q34   # D-33 권고 (b*): referential ∃ 경계를 **먼저 독립 정의** → qualification → V3. 경계 규칙을 우리가 만들면 `operational_patch: forbidden` 위반이므로 **실사 결과만 Q34로 상신**한다. 실측 결론(§B.3·B.4): synset으로는 불가(`person.n.01`이 양화·지시·보통명사 세 부류에 걸침), 표면 토큰이 필요하나 표면 규칙 시도는 **4회 전부 다르게 실패**. `stage2_cohort_plan_v5.json`은 생성돼 있고 V3가 채점을 바꾸면 의도적으로 지워야 한다(`write_cohort`는 덮어쓰기 거부). dispatch는 매번 별도 승인
+next_action_code: AWAIT_D34__THEN_QUALIFICATION_AND_V3   # **Q34 상신 완료(2026-08-24)** — 남은 것은 회신 대기다. D-33 권고 (b*): 경계를 먼저 독립 정의 → qualification → V3. 경계 규칙을 우리가 만들면 `operational_patch: forbidden` 위반이므로 **실사 결과만 Q34로 상신**한다. 실측 결론(§B.3·B.4): synset으로는 불가(`person.n.01`이 양화·지시·보통명사 세 부류에 걸침), 표면 토큰이 필요하나 표면 규칙 시도는 **4회 전부 다르게 실패**. `stage2_cohort_plan_v5.json`은 생성돼 있고 V3가 채점을 바꾸면 의도적으로 지워야 한다(`write_cohort`는 덮어쓰기 거부). dispatch는 매번 별도 승인
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
@@ -53,7 +53,7 @@ control 재선별로 **5/5 통과**를 얻었다(V4 1/6 → V5 2/6 → V5.1 5/5,
 |---|---|
 | 최신 상태·패턴 원장 | [[concept-gate-h1-wt/docs/H1A_PROBLEM_ANALYSIS\|H1A_PROBLEM_ANALYSIS]] **마지막 절** — 규약상 항상 문서 끝이 최신(현재 **§18**). 이 이름은 vault에 9개 있으므로 경로로 지정한다 |
 | 판정·조사 사슬 전체 | [[concept-gate-h1-wt/docs/RULING_CHAIN_INDEX\|RULING_CHAIN_INDEX]] |
-| **무엇이 코호트를 막고 있나** | [[DESIGN_DECISION_referential_participant_quantification\|D-33]] — referential ∃ 경계가 미정의라 `dispatch: blocked` · `operational_patch: forbidden`. 우리가 경계를 그으면 위반이므로 **실사만 Q34로 상신**한다(§B.3·B.4가 재료) |
+| **무엇이 코호트를 막고 있나** | [[DESIGN_DECISION_referential_participant_quantification\|D-33]] → 실사 상신 [[DESIGN_REQUEST_referential_existential_qualification\|Q34]] 회신 대기. — referential ∃ 경계가 미정의라 `dispatch: blocked` · `operational_patch: forbidden`. 우리가 경계를 그으면 위반이므로 **실사만 Q34로 상신**한다(§B.3·B.4가 재료) |
 | 무엇이 동결됐고 무엇이 금지인가 | 사전등록 본문은 `PREREGISTRATION_STAGE2_V4.md`가 여전히 정본이고, **동결 산출은 V5**다(`stage2_fixture_manifest_v5.json` — 투영 전용 개정). D-33이 `O1_SCOPE_PROJECTION_V3`을 예고했으므로 **V5의 measurement_contract는 잠정**이다 |
 | fixture commitment | 같은 폴더 `stage2_fixture_manifest_v5.json` (원문 0바이트 — 해시·locator만. V4에서 commitment 필드 바이트 동일, 추가된 것은 `expected_scope_signature_v2_sha256`) |
 | 선별이 조작 불가능한 이유 | 같은 폴더 `freeze_stage2_v4.py`(in-N 선별) · `freeze_stage2_v5.py`(V5 = 투영 전용 개정, 재투영·서명 재생성이 전부 코드) · `freeze_controls_v5_1.py`(control 재선별, 적격 술어 2층) — seed·층 술어·투영 전부 코드가 정본이고 산출은 덮어쓰기를 거부한다 |
@@ -82,7 +82,7 @@ blocked(owlready2 — 무관). 실험 폴더 `python3 -m pytest .` = 373 passed.
   커밋 `fe0e618`·`3125d8d`·`e5ef159`.
 - **코호트 plan 20건 생성** — `stage2_cohort_plan_v5.json`. **dispatch 0건.**
 
-### 1. Q34 상신 — 이것이 유일한 다음 행동이다
+### 1. ~~Q34 상신~~ **완료(2026-08-24)** — 회신 대기가 다음 행동이다
 
 D-33이 `(b*)`를 명했다: referential ∃ 경계를 **먼저 독립 정의**하고 그
 qualification 통과 후에만 `O1_SCOPE_PROJECTION_V3`을 낸다. **경계 규칙을 우리가
@@ -98,8 +98,10 @@ qualification 통과 후에만 `O1_SCOPE_PROJECTION_V3`을 낸다. **경계 규�
   ANSI 이스케이프 오염 · 문두 대문자 오분류 — 마지막은 `has_excluded_participant`에
   이미 문서화된 같은 누출).
 
-**미완 실사 1건**: FOLIO 쪽. FOL은 고유명을 **상수**로 쓰므로 문제 형태가 다르다.
-Q34 전에 이것을 실측하는 것이 낫다(20건 중 5건이 FOLIO다).
+**FOLIO 실사 완료(2026-08-24)**: FOL은 지시 표현을 **상수**로 쓴다 — 적격 풀
+799건 중 **116건(14%)**. 즉 **두 승인 source가 같은 현상을 반대로 인코딩**하고
+측정이 그 불일치를 물려받았다. in-N 분포: PMB 15건에 문제 있음 · FOLIO 5건은
+거의 없음(상수 사용 1건뿐). 이것이 Q34의 핵심 논거다.
 
 ### 2. D-34 수령 후 (판정 내용에 따라 갈림)
 
