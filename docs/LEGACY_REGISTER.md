@@ -95,3 +95,45 @@ worktree의 커밋으로 처리할 수 없으므로(다른 디렉터리) 기록�
 **결론: 이 4개는 `git worktree remove`로 제거해도 깨지는 것이 없고, 필요하면
 `git worktree add`로 되돌아온다.** 남는 참조는 전부 "그때 그 worktree에서
 이런 일이 있었다"는 기록이고, 그 기록은 디렉터리가 없어도 유효하다.
+
+## 제거 전 More READ (2026-08-24) — grep이 못 잡는 것을 읽어서 위험을 낮췄다
+
+`ahead=0 · dirty=0 · stash=0`은 **추적된 것**만 말한다. `git status --short`는
+**gitignore된 파일을 보여주지 않으므로**, 그것만으로 "제거해도 안전"이라고
+말하면 미추적 로컬 산출물의 소실을 못 본다. `git clean -ndx`(모의 실행)로
+읽었다.
+
+| worktree | 제거 시 소실되는 미추적/무시 항목 |
+|---|---|
+| `concept-gate-codex-mcp-wt` | **2건** — `experiments/2026-08-07_handoff_dynamic_controller/.launcher_hmac_key`(32바이트) · 같은 폴더 `audit_workspace/` |
+| `concept-gate-redteam-wt` | 0 |
+| `claude-provider-adapter` | 0 |
+| `input-length-guard` | 0 |
+
+**grep 기반 분류로는 HMAC 키를 절대 못 잡았을 것이다.** 그것이 이 절이
+존재하는 이유다.
+
+그 2건을 다시 읽어 위험을 해소했다.
+
+1. **키는 재생성된다.** `_receipt.py`가 `os.open(..., O_CREAT|O_EXCL)`로
+   없으면 만들고 `secrets.token_bytes(KEY_BYTES)`를 쓴다. 고정 키가 아니다.
+2. **저장된 영수증이 이 키에 묶여 있지 않다.** `verify(doc, key, domain=…)`가
+   같은 키를 요구하므로 이것이 결정적 질문이었다 — 실험 폴더의 **JSON 115개를
+   전수 스캔해 `signature`/`hmac`/`mac` 필드 보유 0개**를 확인했다.
+   `reviewer_runner.py`는 한 실행 안에서 서명(152행)하고 검증(602행)한다 —
+   런타임 전용이다.
+3. **키 없이 스위트가 통과한다.** 키를 임시 이동한 뒤 실험 폴더 전체를
+   돌려 **327 passed / 2 skipped**를 얻고 원위치 복원했다(32바이트 확인).
+4. `audit_workspace/`는 **0바이트·파일 0개** — 빈 디렉터리다.
+
+**결론: 4개 전부 제거해도 소실되는 증거가 없다.** 위험이 "미추적 암호 자료일
+수 있음(불명)"에서 "재생성되는 임시 키 1개 + 빈 디렉터리 1개"로 내려갔다.
+
+### 복구 명령 (제거 후 필요해지면)
+
+```text
+git -C <아무 worktree> worktree add /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-codex-mcp-wt   codex/mcp-provider-isolation
+git -C <아무 worktree> worktree add /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-redteam-wt     codex/redteam-handoff-guards
+git -C <아무 worktree> worktree add /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-adapter  claude-provider-adapter
+git -C <아무 worktree> worktree add /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/input-length-guard      worktree-input-length-guard
+```
