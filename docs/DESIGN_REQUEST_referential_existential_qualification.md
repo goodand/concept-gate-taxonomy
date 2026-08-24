@@ -41,6 +41,25 @@ FOLIO "People who can catch balls are good wide receivers."
 두 source가 이미 서로 다른 규약을 갖고 있고 측정이 그 불일치를 물려받았다**는
 실측이다.
 
+**framing 정정(D-34 §3의 지시로 상신 후 교체)** — 위 문장은 "반대로
+인코딩한다"로 읽히는데 그것은 과하다. 정확한 형태는 이것이다:
+
+> PMB와 FOLIO는 유사한 participant-like material에 서로 **다른 formal
+> representation**을 쓸 수 있고, **FOLIO의 constant 사용 자체가
+> referentiality의 충분한 증거가 아니다.**
+
+그리고 **양방향을 모두 인정해야 한다**:
+
+```text
+FOLIO constant          ≠  referential expression
+PMB existential binder  ≠  genuine quantificational force
+```
+
+두 번째 방향을 우리는 명시하지 않았고 판정이 지적했다. PMB gold 전수로
+실측했다 — 결박자 15,810개 중 **395개는 표면이 양화 한정사**(결박자 제거가
+실제 scope를 파괴한다)이고 **7,701개는 대명사·지시사 위**(결박자 존재가
+양화력의 증거가 아니다)다. 어느 쪽 단정도 근거가 없다.
+
 ## 2. 동결 코호트 20건에서 문제의 분포
 
 | source | 건수 | 지시 표현 문제 |
