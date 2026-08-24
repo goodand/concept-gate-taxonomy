@@ -41,7 +41,7 @@ zero-context agent를 위한 읽는 순서:
 
 | D-31 | 한정사는 BODY 경쟁자 **유지**(제외는 ambiguity→uniqueness 변환) · E13~E15 승인(사유 각각 상이, E15는 최상위 hard gate) · 중복은 Case A collapse / Case B ORACLE_COLLISION · 제한식 비-머리 내용은 **measurand 오염** | [[DESIGN_REQUEST_definite_scope_and_material_rules]] | [[DESIGN_DECISION_definite_scope_and_material_rules]] |
 
-| **Q32** | **판정 대기** — 제한식 투영: 비-scope 내용의 지위(D-31 Q31.4가 명한 후속) | [[DESIGN_REQUEST_restriction_projection]] | (없음) |
+| D-32 | 제한식 비-scope 내용을 opaque 붕괴(empty/nonempty·incidence 보존) · 닫힌 profile `O1_SCOPE_PROJECTION_V2` · 20건 전량 재투영 · amendment+profile 둘 다 | [[DESIGN_REQUEST_restriction_projection]] | [[DESIGN_DECISION_restriction_projection]] |
 
 별도 계열(이 실험 전 단계): [[DESIGN_DECISION_refine_verify_v0_review]]
 

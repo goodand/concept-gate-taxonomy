@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: RULING_D31_RECEIVED_RESTRICTION_PROJECTION_BLOCKER   # D-31 수령·검증 완료(V2가 반례 99건 확증) + **확정분 5항 구현 완료**(E15 최상위 게이트·E13 사유코드·E14 detector·dedup 모듈·신원 분리 결박). 재료 3/1·여유 0. **유일 차단: Q32 제한식 투영**(판정 대기)
-next_action_code: AWAIT_Q32_RULING   # Q32 상신 완료(`docs/DESIGN_REQUEST_restriction_projection.md`, 5문항). 판정 전 독립 가능분 없음 — D-30/D-31 확정분은 전부 구현됐고 dedup 배선·V5 동결은 Q32 판정에 의존한다(투영 모듈 해시가 contract_hashes에 핀돼 있다)
+state_code: RULING_D32_RECEIVED_V2_PROJECTION_TO_IMPLEMENT   # D-32 수령·검증(8축 + 설계 자체를 적대 검증). 판정의 qualification 8종을 **시제품으로 8/8 동시 만족 입증**. 델타는 #1(제한식 opaque)·#5(and/or 정체) 둘뿐이고 BODY는 이미 충족. 영향 5/20(그중 3건이 multi_quantifier)
+next_action_code: IMPLEMENT_O1_SCOPE_PROJECTION_V2__THEN_V5_REFREEZE   # 구현 7항(B.8): V2 닫힌 profile · **순서 보존 incidence**(집합이면 D-27 위반) · **위치 기반 Q_RSTR_BODY**(판정 문면 재해석 — 확인 필요) · qualification 8종 계약 · unknown_operator fail · 20건 재투영 → expected_ir 재생성 · manifest에 score_comparability. 그 뒤 V5 재동결. **dispatch는 여전히 별도 승인**
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
