@@ -1,0 +1,196 @@
+{
+  "manifest_version": "e2e-v1-c-controls-v5.1",
+  "amendment": {
+    "procedure": "PRE_EXECUTION_FREEZE_AMENDMENT_V1",
+    "rulings": [
+      "D-E2E-v1-27"
+    ],
+    "eligibility_profile": "O1_CONTROL_ELIGIBILITY_V1",
+    "reselection_trigger": "CONTROLS_RUN_V5_20260824 — FOLIO adapter 2/3, 해석 가능 조건 미충족",
+    "old_controls_status": "HISTORICAL_QUALIFICATION_EVIDENCE",
+    "cohort_dispatch_count_at_amendment": 0,
+    "defect": "V5 control 실행이 결정론 재선별 이전의 손 선택 control 6건에 의존해 2/6만 해석 가능했다 — 새 2층 적격 술어로 재선별한다."
+  },
+  "order_seed": "E2EV1C-freeze-20260823-v1",
+  "profile": {
+    "id": "O1_V5",
+    "constructors": [
+      "forall",
+      "exists",
+      "and",
+      "pred",
+      "not",
+      "implies"
+    ],
+    "canonicalizer": "cg_ir.canonicalize_v0 (capture-avoiding alpha-rename only)",
+    "comparison_core": {
+      "desugar": "FORALL(x,R,B)->FORALL(x,True,implies(R,B)); EXISTS(x,R,B)->EXISTS(x,True,and(R,B)) (D-23 §12)",
+      "predicate_labels": {
+        "status": "diagnostic_only (D-25 Q25.2, D-26 Q26.3)",
+        "PMB": "O1_PMB_LEMMA_NO_SENSE_V1",
+        "FOLIO": "FOLIO_LABEL_LOWERCASE_V1"
+      },
+      "scope_projection": "O1_SCOPE_PROJECTION_V2",
+      "primary_metric": "O1ScopeMatch (D-25 §8)"
+    },
+    "source_encoding_profiles": {
+      "PMB_SBN_5_1": "paired NEGATION -> forall (documented codec, D-22 Q22.2)",
+      "FOLIO_FOL_V0": "implication-under-forall lowering; neutral exists (D-23 §12)"
+    },
+    "eligibility_gate": "MEASUREMENT_SATISFIABILITY_V2"
+  },
+  "profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+  "contract_hashes": {
+    "prompt_template_v4_sha256": "1ea2159e2ca5738b4863947701c1072a99c53548cc2d1f1b080e5fd5258044d6",
+    "dispatch_schema_sha256": "1d95861576edd1d365515e54ba7247868846b33c0d2ff5e2c136650e022f58cd",
+    "canonicalization_core_sha256": "6ac24f52b2dc6af12d37439fe7c846e4262cbdb9ddb105a9d7e548a4ecc6e168",
+    "projection_module_sha256": "81e1af9abd5c6f48f9a5a3b60c4070a636a5934a5ab735efdc004837cd82fadf",
+    "projection_module_v2_sha256": "013fa142782e82f72b6f5385ce9bcd06ac4cb2ada18b09a990fb12e1bbff51ef",
+    "projection_pipeline_module_sha256": "92e0cf46c9e94abf6f17691f68300f27e1c992326b74d3fcfe1d94132dcbc7f3",
+    "satisfiability_module_sha256": "78a16e517cf4b0fbc4576ef3f9ac36858b766e2df739a4ff10ba3e73ef8282da",
+    "eval_profile_module_sha256": "76c61f24bd4aaf8d1e07a490b0c360abb79bd0fd1448223e05c5323dc85d2795"
+  },
+  "measurement_contract": {
+    "projection_profile": "O1_SCOPE_PROJECTION_V2",
+    "projection_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+    "projection_module_sha256": "013fa142782e82f72b6f5385ce9bcd06ac4cb2ada18b09a990fb12e1bbff51ef",
+    "pre_projection_module_sha256": "81e1af9abd5c6f48f9a5a3b60c4070a636a5934a5ab735efdc004837cd82fadf",
+    "pipeline_module_sha256": "92e0cf46c9e94abf6f17691f68300f27e1c992326b74d3fcfe1d94132dcbc7f3"
+  },
+  "supersedes": [
+    "O1_SCOPE_PROJECTION_V1"
+  ],
+  "score_comparability": {
+    "V1_to_V2": {
+      "direct_numeric_comparison": false,
+      "reason": "non_scope_restriction_and_body_content_projection_changed"
+    }
+  },
+  "measurement_semantics": {
+    "V1-V4": "O1_SCOPE_PROJECTION_V1",
+    "V5_onward": "O1_SCOPE_PROJECTION_V2"
+  },
+  "selection_inputs": {
+    "pmb_scan_sha256": "e6a2617a729ee3a7bfe4ac5859be2f86be78924e7b66efeb2ab6ae795cc8b9bd",
+    "folio_scan_sha256": "93eea2262a6ec9b9e279711998a964ff511feac080c01f28d641f46cf807495f",
+    "folio_reachability_scan_v2_sha256": "1c74ade646d614a84b28dbcb8db8145ea9fd51580aca8fc02af8837059defb13",
+    "satisfiability_scan_v4_sha256": "db0deceeeb96fc721489ee8eb2fff14aaf250d7dff5aaf69a18df80e1b97bfd4",
+    "control_eligibility_pools": {
+      "folio_forall": 233,
+      "folio_exists": 35,
+      "pmb_forall": 1,
+      "pmb_exists": 10
+    }
+  },
+  "strata_counts": {
+    "folio_universal_control": 2,
+    "folio_existential_control": 1,
+    "pmb_universal_control": 1,
+    "pmb_existential_control": 1
+  },
+  "entries": [
+    {
+      "case_id": "FOLIO-1377p0",
+      "stratum": "folio_universal_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=1377;premise=0",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "HybLogic",
+      "text_sha256": "8dd97f77a299302fd62c2b18ec8b2dc326889d73716b21b4fb60a3f0968846aa",
+      "lf_sha256": "85ccc26ba16961f508dcd9d142c2628314799a20c9ae0332f3f92078ab6bda75",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "expected_ir_sha256": "468bd564fcac6669c8e0558cedfa6acbadfc53c685eeb9b1d8acba4447b5c39b",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_scope_signature_v2_sha256": "24f6aef2266bbc551584ff7d74268a410705390d9c5d9e4f2734cea1426f3e9b"
+    },
+    {
+      "case_id": "FOLIO-1420p2",
+      "stratum": "folio_universal_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=1420;premise=2",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "HybLogic",
+      "text_sha256": "08a21707601fa9ef881863adc1371cdfe1e62199183db31eb643db2f3fd6644b",
+      "lf_sha256": "902a9f3616e0862ccc14115e24ecc0faba8b6fa19a1ee47dcd7d321ced44c961",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "expected_ir_sha256": "6091525125d8889baff9e21db3d96f52bbdc4e276c623163883a58b67c9fec48",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_scope_signature_v2_sha256": "24f6aef2266bbc551584ff7d74268a410705390d9c5d9e4f2734cea1426f3e9b"
+    },
+    {
+      "case_id": "FOLIO-901p2",
+      "stratum": "folio_existential_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=901;premise=2",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "HybLogic",
+      "text_sha256": "6814c6399bb61b5726851d0f256f432a38e91b08601c565282ed05f95b034f71",
+      "lf_sha256": "9048f570fe114f0214410acd1b37c60caac24aa8ad570b72795e689c0b196d2b",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "expected_ir_sha256": "3cccfb834fc44c39350c43b4c2bb4b9222db054f8e9c5f241853d237477ad5e8",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_scope_signature_v2_sha256": "9e4e38e23c86d7ac8e886974bf2de2e9e9cfd99e7333a111bc9af22f76826458"
+    },
+    {
+      "case_id": "PMB-p70-d1927",
+      "stratum": "pmb_universal_control",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p70/d1927/en.drs.sbn",
+        "record_locator": "p70/d1927",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "text_sha256": "e82a9b1c80b7f26bce21fbc346ac932a558ad89f1214672d147193d5a7b2752b",
+      "lf_sha256": "2fa3335aa1b50bc6bd4f6d33d5ef2aa8d32e8afc726cc70a35b98c6bfc0e7b57",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "expected_ir_sha256": "06b0d2489436d4fd6b7f2b7e1261572221b6a78b269dec4daf4c24c7863c6745",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_scope_signature_v2_sha256": "24f6aef2266bbc551584ff7d74268a410705390d9c5d9e4f2734cea1426f3e9b"
+    },
+    {
+      "case_id": "PMB-p98-d2753",
+      "stratum": "pmb_existential_control",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p98/d2753/en.drs.sbn",
+        "record_locator": "p98/d2753",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "text_sha256": "57c9e7b759f22ec31d5a7a114377667018e69737b01c2d033fc023d66ee8ce85",
+      "lf_sha256": "3f12c84d5f5d0f7ce0ab917701586369ceaf98764c96dcb5bf1788e24b69511e",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "expected_ir_sha256": "31bc934aada9fd96542b387f8763e9b993140e6a122017f90e6fb767ad276201",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_scope_signature_v2_sha256": "65473f64a6d40ad1bf8a35e2896a2c26abfa63a456e542b7b40fa6c4459b62e7"
+    }
+  ]
+}
