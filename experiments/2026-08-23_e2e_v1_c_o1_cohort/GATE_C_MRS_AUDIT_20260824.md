@@ -167,3 +167,90 @@ fixture는 "수식어를 제한식에 넣었는가"를 함께 채점한다.
 
 **규칙**: 이질적 입력에서 균일한 결과가 나오면 측정기를 먼저 의심한다.
 0건은 발견이 아니라 **측정기 점검 신호**다.
+
+---
+
+# 추기 2 — 기각 버킷 전수 READ (4~7순위)
+
+## E. E0(승수/측정 판별자)은 과잉 기각하지 않는다
+
+E0 대상 **6,181건**을 (card 공유 술어, RSTR target 술어) 패턴으로 묶으니 622종
+이고 상위 10종이 77%를 덮는다. 전부 통화·측정 구문이다:
+
+| 건수 | RSTR target | 예 |
+|---:|---|---|
+| 3,401 | `_dollar_n_1`+`times` | `… grew by $1.5 billion …` |
+| 264 | `_dollar_n_1`+`_of_p`+`times` | `approved $705.6 million of …` |
+| 230 | `_percent_n_of`+`plus` | `PRIME RATE: 10 1/2%.` |
+| 146 | `_share_n_of`+`times` | `volume of 118.6 million shares` |
+| 141 | `_yen_n_2`+`times` | `about 40 billion yen` |
+| 89 | `generic_entity`+`times` | `only about a dozen` |
+
+꼬리를 검사하려고 **측정·승수 표지가 전혀 없는 것**만 골랐다 — 오탐이 있다면
+거기 있다. **34건(0.55%)** 이고 읽은 12건이 **12/12 정당 기각**이었으며,
+두 유형이 새로 나왔다:
+
+- **E13 선언/범위 기수** — `two or three bottles`(`_or_c`) ·
+  `between three and six judges`(`_and_c_btwn`) · `three or four calls a week`.
+  card EP가 둘이라 단일 `num`으로 표현 불가. D-30 Q30.2의 변수별 규칙에도 걸린다
+- **E14 수치 지정자** — `Intel **286** and **386** microprocessors`.
+  수사가 **이름**이고 개수가 아니다
+
+## F. `card`에 단일 결박 양화가 없는 8,220건 — 숨은 재료 0
+
+사유가 **한 가지**다: `card.ARG1`이 개체 변수가 아니다(`i` 8,189 · `e` 31).
+개체 변수인데 결박 양화가 0개거나 2개 이상인 경우는 **0건**이다.
+
+- **E15 `card.ARG1`이 `x`(개체 변수)가 아니면 배제** — `i`는 측정 구문의
+  미명세 개체(`$1.5 billion`의 `i25`), `e`는 사건 기수. 술어 하나로 8,220건이
+  정리되고 E0보다 단순하다.
+
+## G. 비례 440건과 **한정사 문제** ★
+
+`_most_q` 보유 record는 대부분 admissible이 4~18개(심한 다중 양화)다. 그러나
+admissible이 **정확히 2개**인 근접 사례가 **6건**이고, 그 6건의 동반 양화가
+**전부 `_the_q`** 다:
+
+- `The dollar gained against most foreign currencies.`
+- `The practice is, however, legal in most cases.`
+- `Most sleep on the floor.`
+
+한정사는 scope 경쟁자로서 의미상 불활성이다(항상 최광역). 그렇다면
+`_the_q`·`proper_q`·`pronoun_q` 류를 **admissible BODY 경쟁자에서 제외**하는
+것이 D-30 Q30.1의 "BODY 후보가 될 수 없는 label 제거"에 해당하는지가 문제가 된다.
+
+실측한 효과:
+
+| 층 | 현재 적격 | 한정사 제외 시 |
+|---|---:|---:|
+| proportional | **1** | **7** (+6) |
+| cardinal | 11 (사람 감사 전) | **104** (+93) |
+
+**한 문항이 여유 0을 넉넉한 풀로 바꾼다.** 단 +93은 Gate C 사람 감사를
+거치지 않은 수다 — E1(`unknown_rel`)·E6(`both`/`all N`)·E13·E14가 그 안에서
+얼마를 걷어낼지는 미측정이다. 확실한 것은 **후보 풀이 11이 아니라 100 규모**라는 것이다.
+
+이것은 판정 사안이다. 운영 세션은 **권고하지 않고 수치만 올린다**(P19).
+
+## H. 이번 READ 프로그램이 만든 규칙 원장 (누계)
+
+| 코드 | 정의 | 적발 규모 |
+|---|---|---|
+| E0 | 승수/측정 — `card.LBL ≠ QEQ해소(RSTR)` | 6,181 (오탐 0/12 표본) |
+| E1 | `unknown_rel` — ERG 발화 분석 실패 | 4 |
+| E2 | 측정 명사가 card와 label 공유 | 9,758(독립 실행) |
+| E3 | **사상표에 없는** 관계 수식어 | 297(독립) — 정의 오류를 검사가 교정 |
+| E4 | MRS 바이트 동일 중복 | 428 — 독립성 위반 |
+| E5 | 본문 채점 내용 없음 | 미검사 |
+| E6 | 층과 양립 않는 양화(`_both_q`·`_all_q`) | 4 |
+| E7 | 빈도/횟수(`twice`) | PMB |
+| E8 | 부분격 `N of the X` | PMB 8 |
+| E9 | 분수/비례 수사(`two-thirds`) | PMB 3 |
+| E10 | 다중 문장 record | PMB 9 |
+| E11 | 제한식 다중 술어 | **기각 아님** — 동결 코호트에 이미 2건 |
+| E12 | `_u_unknown` 어휘 미지 표지 | 표시만 |
+| E13 | 선언/범위 기수(`two or three`) | E0 꼬리 |
+| E14 | 수치 지정자(`Intel 286`) | E0 꼬리 |
+| E15 | `card.ARG1`이 개체 변수 아님 | 8,220 |
+
+미검사로 남은 것은 **E5**뿐이다.
