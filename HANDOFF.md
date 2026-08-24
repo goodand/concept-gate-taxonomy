@@ -27,23 +27,36 @@ authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/stage2_fixture_manifest_v5.
 
 ## 1. 현재 상태 한 줄
 
-**측정 도구는 완성됐고, 도구가 무엇을 재는지의 질문 하나가 남았다.** V5 동결
-(투영 `O1_SCOPE_PROJECTION_V2`, 20건 재투영, 채점 배선 교체)이 끝났고, D-27 §18의
-control 재선별로 **5/5 통과**를 얻었다(V4 1/6 → V5 2/6 → V5.1 5/5, 사슬 최초).
+**측정 도구는 완성됐고, 그 도구가 정의할 수 없는 것 하나에 막혀 있다.**
+V5 동결(투영 `O1_SCOPE_PROJECTION_V2`)과 control 재선별 **5/5**(V4 1/6 → V5 2/6
+→ V5.1 5/5, 사슬 최초)는 끝났다. 남은 것은 **referential ∃ 경계**이고, 그것이
+순환이다.
 
-그런데 그 통과는 in-N의 지배적 성질에 대해 **설계상 침묵한다**: 적격 술어
-`has_excluded_participant`가 대명사·고유명 문장을 배제하므로 통과한 5건에는
-지시 표현이 없다. 반면 PMB gold는 고유명·대명사·지시사를 **참여자 ∃로 인코딩**
-하고 자연스러운 subject는 `entity` 항을 쓴다 — oracle 쪽에만 결박자가 하나 더
-생겨 scope 서명이 갈린다. 이 부류는 control에서 **네 번 재현**됐다(V4 2건, V5 2건).
+고리는 이렇게 닫힌다(그림: [[concept-gate-h1-wt/docs/diagrams/README_referential_circularity|Z0→Z2]]):
 
-그래서 **Q33을 상신하고 코호트를 보류했다**. 관측 후에는 이 질문이 post-hoc이
-되므로 사전에 물어야 한다. **코호트 dispatch 누계 0건**이다.
+```text
+순수 measurand → scope/encoding 분리 → referential ∃ 경계
+      ↑                                        ↓
+      └────────── 무엇이 정답인가(채점 계약) ──────┘
+```
+
+**우리가 시도한 네 가지가 전부 고리를 끊지 못했다** — synset(식별 함수 아님) ·
+표면 목록(목록 자체가 부분 경계, 비율이 2~51%) · FOLIO 규약(D-34 기각) ·
+`Name`/`ANA` 권위(D-35: 증거지 충분조건 아님). **내 측정이 한 일은 고리를 끊은
+것이 아니라 거짓 탈출구를 제거한 것이다.**
+
+끊는 간선은 apparatus 밖의 권위 하나이고, 그 요건 넷 중 **병목은 R2(정확성의
+독립 검증 가능성)** 다 — R1은 후보 넷이 다 채우고 R2는 둘만 채운다. 그것을
+Q36으로 상신했고 회신 대기다.
+
+**코호트 dispatch 누계 0건**이며 `dispatch: blocked` ·
+`immediate_projection: forbidden` · `operational_patch: forbidden`이 모두 유효하다.
+**`O1_SCOPE_PROJECTION_V3`을 만들지 마라** — D-35가 금지했다.
 
 ## 2. 정본 지도 (읽는 순서)
 
 **graph 진입점**: [[concept-gate-h1-wt/docs/RULING_CHAIN_INDEX|RULING_CHAIN_INDEX]]
-— 판정 **D-19~D-33** + 조사 6왕복 전부를 **1홉으로** 도달 가능하게
+— 판정 **D-19~D-35** + 상신 Q36 + 조사 6왕복 전부를 **1홉으로** 도달 가능하게
 묶은 색인이다. `rg`로는 판정 문서를 찾을 수 없는 경우가 실측으로 확인됐으므로
 (파일명이 질문의 어휘를 포함하지 않는다), 이어받는 세션은 **grep이 아니라 이
 색인에서 시작**한다. 각 판정 문서 헤더에 `이전`/`다음` 링크가 있어 색인 없이도
@@ -51,9 +64,11 @@ control 재선별로 **5/5 통과**를 얻었다(V4 1/6 → V5 2/6 → V5.1 5/5,
 
 | 알고 싶은 것 | 정본 |
 |---|---|
-| 최신 상태·패턴 원장 | [[concept-gate-h1-wt/docs/H1A_PROBLEM_ANALYSIS\|H1A_PROBLEM_ANALYSIS]] **마지막 절** — 규약상 항상 문서 끝이 최신(현재 **§18**). 이 이름은 vault에 9개 있으므로 경로로 지정한다 |
+| 최신 상태·패턴 원장 | [[concept-gate-h1-wt/docs/H1A_PROBLEM_ANALYSIS\|H1A_PROBLEM_ANALYSIS]] **마지막 절** — 규약상 항상 문서 끝이 최신(현재 **§21**). 이 이름은 vault에 9개 있으므로 경로로 지정한다 |
 | 판정·조사 사슬 전체 | [[concept-gate-h1-wt/docs/RULING_CHAIN_INDEX\|RULING_CHAIN_INDEX]] |
-| **무엇이 코호트를 막고 있나** | [[DESIGN_DECISION_referential_participant_quantification\|D-33]] → [[DESIGN_DECISION_d33_claim_status\|D-33-V]] → Q34/Q34-B → **[[DESIGN_DECISION_referential_existential_qualification\|D-34]]**: 경계 정의 미수행, (a) **기각**, `immediate_projection: forbidden` 추가. **gold 표현 자체는 semantic authority가 될 수 없다** — 다음은 독립적 semantic qualification을 줄 **source 결정**이다(분류기 제작 금지). 첫 후보를 [[DESIGN_REQUEST_annotation_layer_admissibility\|Q35]]로 상신해 [[DESIGN_DECISION_annotation_layer_admissibility\|D-35]]를 받았다: **증거로는 적격, semantic authority로는 미확립.** 주석 부재는 표현의 성질이 아니라 **범위**다(같은 `he`가 주석 82회·무주석 990회 — 실측). **다음은 주석의 의미·정확성을 독립 검증할 수 있는지 상신**하는 것이고, 재료는 감사 범위 294건과 **role 어휘 200종 중 2종만 검토**했다는 사실이다. **그런데 그 질문의 수준이 올라갔다**(Z0→Z2 drill-down, [[README_referential_circularity]]): 독립 검증 가능성(R2)은 `Name`/`ANA`만의 문제가 아니라 **모든 후보 source에 걸리는 구속 조건**이고, 다른 주석 corpus는 R1·R4를 채우면서 R2에서 같은 순환을 물려받는다. 상신을 그 수준으로 올렸다 — [[DESIGN_REQUEST_independent_verifiability_constraint|Q36]]. R2 부분 기제(**내부 구조 일관성**)를 하나 찾았고, R2의 구체적 공백(**주석 규약 사양 `sbn_spec.py`가 손에 없고 전사만 있다**)도 함께 올렸다. **`B*`의 정확한 강도**: 확정된 것은 "encoding과 scope가 현재 측정으로 식별 불가"이고 "referential ∃가 measurand 밖"은 아직 미확정이다. — referential ∃ 경계가 미정의라 `dispatch: blocked` · `operational_patch: forbidden`. 우리가 경계를 그으면 위반이므로 **실사만 Q34로 상신**한다(§B.3·B.4가 재료) |
+| **무엇이 코호트를 막고 있나** | **순환이다.** [[DESIGN_DECISION_referential_participant_quantification\|D-33]] → [[DESIGN_DECISION_d33_claim_status\|D-33-V]] → [[DESIGN_DECISION_referential_existential_qualification\|D-34]] → [[DESIGN_DECISION_annotation_layer_admissibility\|D-35]] → 상신 [[DESIGN_REQUEST_independent_verifiability_constraint\|Q36]] 회신 대기. 병목은 **R2(독립 검증 가능성)** 이고 구조는 [[README_referential_circularity]]가 그림으로 갖고 있다 |
+| **왜 우리가 경계를 정할 수 없나** | `operational_patch: forbidden`(D-31 Q31.4·D-33) + `immediate_projection: forbidden`(D-35). 실측 근거도 있다 — 표면 목록으로 유형화 비율이 **2~51%**로 움직이므로 목록 선택이 이미 부분적 경계 결정이다 |
+| 무엇이 죽었고 대신 무엇을 쓰나 | [[LEGACY_REGISTER]] · 만든 것이 실제로 불리는가 [[ADOPTION_REGISTER]] — 둘 다 게이트가 거짓말을 막는다 |
 | 무엇이 동결됐고 무엇이 금지인가 | 사전등록 본문은 `PREREGISTRATION_STAGE2_V4.md`가 여전히 정본이고, **동결 산출은 V5**다(`stage2_fixture_manifest_v5.json` — 투영 전용 개정). D-33이 `O1_SCOPE_PROJECTION_V3`을 예고했으므로 **V5의 measurement_contract는 잠정**이다 |
 | fixture commitment | 같은 폴더 `stage2_fixture_manifest_v5.json` (원문 0바이트 — 해시·locator만. V4에서 commitment 필드 바이트 동일, 추가된 것은 `expected_scope_signature_v2_sha256`) |
 | 선별이 조작 불가능한 이유 | 같은 폴더 `freeze_stage2_v4.py`(in-N 선별) · `freeze_stage2_v5.py`(V5 = 투영 전용 개정, 재투영·서명 재생성이 전부 코드) · `freeze_controls_v5_1.py`(control 재선별, 적격 술어 2층) — seed·층 술어·투영 전부 코드가 정본이고 산출은 덮어쓰기를 거부한다 |
@@ -81,27 +96,29 @@ blocked(owlready2 — 무관). 실험 폴더 `python3 -m pytest .` = 373 passed.
 - **control 4라운드** — V4 1/6 → V5 2/6 → D-27 §18 재선별 → **V5.1 5/5**.
   커밋 `fe0e618`·`3125d8d`·`e5ef159`.
 - **코호트 plan 20건 생성** — `stage2_cohort_plan_v5.json`. **dispatch 0건.**
+- **기제 부채 상환 완료**(§19) — 인용 검사기·프롬프트 바이트 게이트·ADOPTION
+  원장·문서 규약 4종. 게이트 4개 중 2개가 음성 확인에서 자기 결함을 드러냈다.
+- **경계 실사 3라운드**(Q34·Q34-B·Q35) — PMB gold 12,053 전수, FOLIO 적격 풀
+  799 전수, role 주석 층 발견. **경계는 얻지 못했고 얻을 수 없는 이유를 얻었다.**
 
-### 1. ~~Q34 상신~~ + ~~Q34-B 보충~~ **완료(2026-08-24)** — 회신 대기가 다음 행동이다
+### 1. ~~Q34~~ ~~Q34-B~~ ~~Q35~~ ~~Q36~~ **상신 완료** — 회신 대기가 다음 행동이다
 
-D-33이 `(b*)`를 명했다: referential ∃ 경계를 **먼저 독립 정의**하고 그
-qualification 통과 후에만 `O1_SCOPE_PROJECTION_V3`을 낸다. **경계 규칙을 우리가
-만들면 `operational_patch: forbidden` 위반**이므로 실사 결과만 올린다.
+사슬은 `D-33 → D-33-V → D-34 → D-35 → Q36(대기)`다. Q36의 축은 **R2가 실제
+구속 조건인가**이고, 우리가 요건을 발명했다면 그 문서 전체가 잘못된 문제를 푼다.
 
-상신서에 들어갈 재료는 이미 실측돼 있다 — D-33 문서 §B.3·§B.4:
+**회신 없이 할 수 있는 것 둘**(둘 다 재료 문제이고 경계 결정이 아니다):
 
-- gold는 각 개념 노드에 **표면 토큰을 주석으로 기록**한다(`male.n.02 % him [18-22]`).
-  즉 증거는 원리적으로 존재한다.
-- 그러나 **synset만으로는 가를 수 없다**: `person.n.01`이 양화(`Everyone`·
-  `Some`·`Nobody`) · 지시(`I`·`you`) · 보통명사(`passengers`) 세 부류에 걸친다.
-- 표면 규칙 시도는 **4회 전부 다르게 실패**했다(양화/지시 혼동 · 부정관사 혼입 ·
-  ANSI 이스케이프 오염 · 문두 대문자 오분류 — 마지막은 `has_excluded_participant`에
-  이미 문서화된 같은 누출).
+- **`sbn_spec.py` 확보.** `ANA`·`Name`의 규약상 의미가 그 사양에 있고 우리는
+  **전사만** 갖고 있다(`SBN_ADAPTER_DESIGN.md` §2). Q36 (d)가 그것이 R2의
+  선행 조건인지 묻는 중이지만, **취득 자체는 우리가 할 수 있다.**
+- **미검토 role 198종 실사.** role 어휘는 200종이고 우리가 본 것은
+  `Name`·`ANA` 둘이다. `EQU` **12,501건**은 동일성 표시라 지시성과 직접
+  관계될 수 있는데 보지 않았다. **재고 목록 없이 실사를 시작한 것이 G146의
+  원인**이므로 이번엔 전수 열거부터 한다.
 
-**FOLIO 실사 완료(2026-08-24)**: FOL은 지시 표현을 **상수**로 쓴다 — 적격 풀
-799건 중 **116건(14%)**. 즉 **두 승인 source가 같은 현상을 반대로 인코딩**하고
-측정이 그 불일치를 물려받았다. in-N 분포: PMB 15건에 문제 있음 · FOLIO 5건은
-거의 없음(상수 사용 1건뿐). 이것이 Q34의 핵심 논거다.
+**하지 말 것**: `O1_SCOPE_PROJECTION_V3` 제작(D-35 금지) · 경계 규칙 제안
+(`operational_patch: forbidden`) · `ANA` 배제 되돌리기(D-35 §8 — 동결 모집단을
+관측 결과에 맞춰 고치는 모양이 된다).
 
 ### 2. D-34 수령 후 (판정 내용에 따라 갈림)
 
@@ -165,6 +182,11 @@ trials_raw 보존 + 결과는 동결과 **별도 커밋**(방법론 §1). 결과
 ## 5. 열린 항목 (차단 아님)
 
 - **`concept-gate-e2.2-wt`의 h1a 구현 분기 병합 결정**(3차 정리 라운드가 발견 — `_h1a_diag*` 대 다른 4개 worktree의 `_h1a_score`/`_h1a_policy`, 정본 미결정).
+- **신규 기제 부채 3건**(§21.6): 수치 민감도 필수 보고 · **적대검증 대상 동결
+  기록**(대상 sha256을 회신 요구에 넣고 불일치 시 회신 무효, ~30행) · 재고 목록
+  단계. 기존 부채는 §19에서 0으로 상환됐다.
+- `.vault-harness` 82M 처분 — **양 세션 모두 권한 없음, 사용자 판단 대기**
+  ([[LEGACY_REGISTER]] §"동결 판본 소실"). 색인 재생성은 완료됐다.
 - cert 축 활성화(의무 집합 정의 — 별도 사안), G64(PMB Δ66 모집단 정의),
   뮤테이션 하네스의 게이트화(P16), O3(재료 관문 미해결 — D-21이 조건부
   선행 허용).
