@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: RULING_D32_RECEIVED_V2_PROJECTION_TO_IMPLEMENT   # D-32 수령·검증(8축 + 설계 자체를 적대 검증). 판정의 qualification 8종을 **시제품으로 8/8 동시 만족 입증**. 델타는 #1(제한식 opaque)·#5(and/or 정체) 둘뿐이고 BODY는 이미 충족. 영향 5/20(그중 3건이 multi_quantifier)
-next_action_code: IMPLEMENT_O1_SCOPE_PROJECTION_V2__THEN_V5_REFREEZE   # 구현 7항(B.8): V2 닫힌 profile · **순서 보존 incidence**(집합이면 D-27 위반) · **위치 기반 Q_RSTR_BODY**(판정 문면 재해석 — 확인 필요) · qualification 8종 계약 · unknown_operator fail · 20건 재투영 → expected_ir 재생성 · manifest에 score_comparability. 그 뒤 V5 재동결. **dispatch는 여전히 별도 승인**
+state_code: V2_PROJECTION_IMPLEMENTED__AWAITING_Q32C_BEFORE_REFREEZE   # D-32 수령·검증 완료(qualification 8종을 시제품으로 8/8 입증) + `O1_SCOPE_PROJECTION_V2` 신설·계약 29건 결박·커밋. V1은 바이트 보존. **재동결은 Q32-C 회신 전까지 하지 않는다** — 태깅 지시가 오면 20건 서명을 다시 찍어야 한다
+next_action_code: AWAIT_Q32C__THEN_REPROJECT_20_AND_FREEZE_V5   # ①Q32-C 회신(`docs/DESIGN_REQUEST_q_rstr_body_position.md`) ②20건 전량 재투영 → expected_ir_sha256 재생성(**20/20 변경이 정상** — V2는 모든 술어를 opaque incidence로 바꾼다) ③manifest에 measurement_contract·score_comparability(V1↔V2 직접 비교 불가) ④PRE_EXECUTION_FREEZE_AMENDMENT_V1 절차로 V5 동결. **코호트 dispatch는 그 뒤에도 별도 승인**
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
@@ -27,15 +27,18 @@ authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2_V4.m
 
 ## 1. 현재 상태 한 줄
 
-**Stage 2 V4 동결은 D-27/D-28/D-29 구현으로 실효(`V4_SUPERSEDED…V5_PENDING`)
-— V5 재동결은 재료 부재로 BLOCKED, 코호트 dispatch 누계 0건.** 판정 사슬
-D-24~D-29가 측정 계약의 6층 결함을 차례로 열었고(층 목록·근거:
-`docs/H1A_PROBLEM_ANALYSIS.md` §12.2 P17), 현재의 유일한 차단 요인은
-**기수 층 3건·비례 층 1건의 적격 재료가 0건**이라는 것이다. Redwoods/MRS가
-`CONDITIONALLY_QUALIFIED_CANDIDATE`(선행 조건 7건)이고 3차 조사 요청서
-(`docs/RESEARCH_REQUEST_mrs_redwoods_round3.md`)는 **발송 대기**다.
-방언은 8종(`count`·`prop` 추가)으로 확정·구현됐다 — 커널 확장과 투영 채점은
-작업트리에 있고 **커밋 미승인**, 게이트 13/0/1 GREEN.
+**설계 차단 요인이 하나로 좁혀졌다 — Q32-C 회신 1건.** 재료(기수 3·비례 1)와
+권리는 해소됐고, D-30~D-32의 계약은 전부 구현·결박됐다. 남은 것은 `Q_RSTR_BODY`를
+provenance가 아니라 **위치**로 정의해도 되는지의 확인이며(문면대로는 구현 불가 —
+desugar 후 생성분과 원본이 바이트 동일), 그 회신 뒤 **20건 재투영 → manifest →
+V5 동결**을 한 흐름으로 한다. **코호트 dispatch 누계 0건**이고 V5 동결 후에도
+실행은 별도 승인 사안이다.
+
+측정 계약의 현재 형태: 방언 8종(`forall/exists/and/or/not/implies/pred` +
+`count`·`prop`) · 채점 `O1ScopeMatch` · 투영은 **`O1_SCOPE_PROJECTION_V2`**
+(비-scope 내용을 opaque incidence로 붕괴, empty/nonempty와 순서 보존 incidence는
+유지, 닫힌 profile로 미지 연산자 거부). **V1은 바이트 보존**돼 있고
+`V1–V4 = V1 semantics` / `V5 onward = V2 semantics`를 선언해야 한다.
 
 ## 2. 정본 지도 (읽는 순서)
 
@@ -65,6 +68,25 @@ D-24~D-29가 측정 계약의 6층 결함을 차례로 열었고(층 목록·근
 
 전제: 게이트 `python3 scripts/run_gates.py` = 13 passed / 0 failed / 1
 blocked(owlready2 — 무관) 확인.
+
+**0. 먼저 V5 재동결이 끝나야 한다(D-32).** 아래 1~4는 **V5 동결 이후**의
+절차다. 현재 동결(V4)은 실효 상태이고, D-32가 새 투영 profile
+`O1_SCOPE_PROJECTION_V2`를 명했으므로 그 전에:
+
+   a. **Q32-C 회신**을 받는다(`docs/DESIGN_REQUEST_q_rstr_body_position.md`).
+      회신 전 재동결 금지 — 태깅 지시가 오면 20건 서명을 다시 찍어야 한다.
+   b. **20건 전량 재투영** → `expected_ir_sha256` 재생성.
+      **20/20이 바뀌는 것이 정상**이다(V2는 모든 술어를 opaque incidence로
+      바꾼다). 5/20 같은 부분 변경을 기대하면 잘못 잰 것이다 — 실측 근거는
+      회고 §16 G121.
+   c. manifest에 `measurement_contract`(profile·profile_hash·module_sha256) ·
+      `supersedes: [O1_SCOPE_PROJECTION_V1]` · `score_comparability.V1_to_V2.
+      direct_numeric_comparison: false` 를 넣는다. 사슬에
+      `V1–V4 = V1 semantics` / `V5 onward = V2 semantics` 선언.
+   d. `PRE_EXECUTION_FREEZE_AMENDMENT_V1` 절차로 **V5 동결**. V1~V4 파일은
+      바이트 불변(특히 `_stage2_scope_projection.py` V1을 고치지 마라 —
+      그 해시가 V4 manifest에 핀돼 있고 역사적 측정 의미론의 증인이다).
+   e. 채점 배선을 V2로 교체하고 게이트 재확인.
 
 1. **재료 캐시 확인**: `.oracle_cache/`(gitignore)가 비어 있으면 재구축 —
    PMB는 `docs/RESEARCH_RESULT_o1_corpus_access.md` 부록의 URL 14개에서
