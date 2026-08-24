@@ -281,3 +281,100 @@ def ingest_outputs(plan_path: Path | str,
     )
 
     return result
+
+
+# ---------------------------------------------------------------- 코호트 수락 ---
+# 드라이런(2026-08-24)이 적발한 구멍: `stratum_floors`가 선택 인자여서 **생략하면
+# 사전등록이 금지한 수락이 조용히 통과한다.** 실측 — multi_quantifier 5건 중 1건만
+# 통과하고 나머지 15건이 통과해 전체 16/20인 시나리오에서:
+#
+#     floors 전달  → accepted=False  floors_met=False  mq={'n':5,'pass':1}
+#     floors 생략  → accepted=True                       ← 회피 성공
+#
+# 채점기 docstring이 정확히 이 회피를 명명하고 있었는데도 호출 측에서 도달
+# 가능했다. 고치는 방향은 경고를 키우는 것이 아니라 **유도로 그 경로를 없애는
+# 것**이다(동료 세션이 preflight의 `--manifest` 생략 구멍을 같은 방향으로 고쳤다).
+#
+# 아래 상수는 사전등록 산문의 **전사**다. 전사는 드리프트하므로
+# `test_stage2_cohort_acceptance.py`가 원문과 대조해 고정한다.
+COHORT_ACCEPTANCE = {
+    # PREREGISTRATION_STAGE2_V4.md:40 — "N=20, PASS≥16 ∧ multi-quantifier
+    # stratum 4/5 ∧ 최종 ERROR=0 ∧ 예상 밖 UNSCORABLE=0" (D-19·D-21·D-22 §2-3·§16)
+    "n_preregistered": 20,
+    "pass_min": 16,
+    "stratum_floors": {"multi_quantifier": (5, 4)},
+}
+
+
+def derive_acceptance_inputs(manifest_path: Path | str,
+                             plan_path: Path | str) -> dict:
+    """수락 파라미터를 manifest·plan에서 **유도**한다 — 호출 측 생략을 막는다.
+
+    `strata`(trial_id → stratum)는 manifest의 case별 stratum과 plan의
+    trial→case 대응으로 유도한다. 손으로 적으면 그 지도가 드리프트한다.
+
+    층 하한의 `n_min`은 manifest의 실제 stratum 크기와 대조한다 — manifest가
+    바뀌면 조용히 통과하지 말고 여기서 멈춘다.
+
+    Raises:
+        ValueError: manifest의 stratum 구성이 사전등록 하한과 어긋날 때,
+                    또는 plan의 case_id가 manifest에 없을 때.
+    """
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    plan = json.loads(Path(plan_path).read_text(encoding="utf-8"))
+
+    stratum_of_case = {e["case_id"]: e.get("stratum") for e in manifest["entries"]}
+    n = len(manifest["entries"])
+    if n != COHORT_ACCEPTANCE["n_preregistered"]:
+        raise ValueError(
+            f"manifest entries {n} != 사전등록 N "
+            f"{COHORT_ACCEPTANCE['n_preregistered']} — 모집단이 바뀌었다")
+
+    strata = {}
+    for t in plan["trials"]:
+        case_id = t["case_id"]
+        if case_id not in stratum_of_case:
+            raise ValueError(f"plan이 manifest에 없는 case를 가리킨다: {case_id}")
+        strata[t["trial_id"]] = stratum_of_case[case_id]
+
+    sizes: dict[str, int] = {}
+    for s in strata.values():
+        sizes[s] = sizes.get(s, 0) + 1
+    for name, (n_min, _pass_min) in COHORT_ACCEPTANCE["stratum_floors"].items():
+        actual = sizes.get(name, 0)
+        if actual != n_min:
+            raise ValueError(
+                f"stratum {name!r} 크기 {actual} != 사전등록 하한의 n_min "
+                f"{n_min} — manifest와 사전등록이 어긋났다")
+
+    return {
+        "pass_min": COHORT_ACCEPTANCE["pass_min"],
+        "stratum_floors": dict(COHORT_ACCEPTANCE["stratum_floors"]),
+        "strata": strata,
+    }
+
+
+def ingest_cohort(plan_path: Path | str,
+                  outputs: list[dict],
+                  expected_irs: dict[str, dict],
+                  *,
+                  manifest_path: Path | str,
+                  results_path: Path | str,
+                  certified: dict | None = None,
+                  expected_unscorable: dict | None = None) -> dict:
+    """본 코호트 채점의 **유일한 진입점.** 층 하한을 생략할 수 없다.
+
+    `ingest_outputs`를 직접 부르면 `stratum_floors`를 빼먹을 수 있고 그러면
+    사전등록이 금지한 수락이 통과한다(위 주석의 실측). 코호트는 이 함수로만
+    채점한다 — `ingest_outputs`는 control·시험용으로 남긴다.
+    """
+    acc = derive_acceptance_inputs(manifest_path, plan_path)
+    return ingest_outputs(
+        plan_path, outputs, expected_irs,
+        results_path=results_path,
+        pass_min=acc["pass_min"],
+        stratum_floors=acc["stratum_floors"],
+        strata=acc["strata"],
+        certified=certified,
+        expected_unscorable=expected_unscorable,
+    )

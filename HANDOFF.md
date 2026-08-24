@@ -67,6 +67,8 @@ Q36으로 상신했고 회신 대기다.
 | 최신 상태·패턴 원장 | [[concept-gate-h1-wt/docs/H1A_PROBLEM_ANALYSIS\|H1A_PROBLEM_ANALYSIS]] **마지막 절** — 규약상 항상 문서 끝이 최신(현재 **§21**). 이 이름은 vault에 9개 있으므로 경로로 지정한다 |
 | 판정·조사 사슬 전체 | [[concept-gate-h1-wt/docs/RULING_CHAIN_INDEX\|RULING_CHAIN_INDEX]] |
 | **무엇이 코호트를 막고 있나** | **순환이다.** [[DESIGN_DECISION_referential_participant_quantification\|D-33]] → [[DESIGN_DECISION_d33_claim_status\|D-33-V]] → [[DESIGN_DECISION_referential_existential_qualification\|D-34]] → [[DESIGN_DECISION_annotation_layer_admissibility\|D-35]] → [[DESIGN_DECISION_independent_verifiability_constraint\|D-36]]. 병목은 **R2(독립 검증 가능성)** 이고 D-36이 그것을 확인했으나 **R1~R4는 정리가 아니라 후보 분해**이며 삼층(L1/L2/L3)을 합치지 말라고 명했다. 구조는 구조는 [[README_referential_circularity]]가 그림으로 갖고 있다 |
+| **배관이 도는가** | **돈다 — 2026-08-24 드라이런.** 오라클 20/20 해석·드리프트 0, `ingest → evaluate → score → report` 전 구간 통과, 수락 게이트가 경계에서 뒤집힌다(16→수락 / 15→거부 / 출력 누락→ERROR로 거부). **남은 미지는 모델의 답뿐이다.** 기록 [[DRYRUN_20260824]] |
+| **드라이런이 잡은 것** | `stratum_floors`가 선택 인자여서 **생략하면 사전등록 금지 수락이 통과**했다(전체 16/20·mq 1/5 → floors 생략 시 `accepted=True`). `ingest_cohort()`로 **유도**해 그 경로를 없앴다. 그리고 이 기록을 사전등록서에 append했다가 되돌렸다 — 게이트가 13/0으로 통과했으므로 `test_frozen_surfaces.py`를 신설해 동결 표면 11개를 바이트로 고정했다 |
 | **왜 우리가 경계를 정할 수 없나** | `operational_patch: forbidden`(D-31 Q31.4·D-33) + `immediate_projection: forbidden`(D-35). 실측 근거도 있다 — 표면 목록으로 유형화 비율이 **2~51%**로 움직이므로 목록 선택이 이미 부분적 경계 결정이다 |
 | 무엇이 죽었고 대신 무엇을 쓰나 | [[LEGACY_REGISTER]] · 만든 것이 실제로 불리는가 [[ADOPTION_REGISTER]] — 둘 다 게이트가 거짓말을 막는다 |
 | 무엇이 동결됐고 무엇이 금지인가 | 사전등록 본문은 `PREREGISTRATION_STAGE2_V4.md`가 여전히 정본이고, **동결 산출은 V5**다(`stage2_fixture_manifest_v5.json` — 투영 전용 개정). D-33이 `O1_SCOPE_PROJECTION_V3`을 예고했으므로 **V5의 measurement_contract는 잠정**이다 |
