@@ -1,0 +1,212 @@
+{
+  "manifest_version": "e2e-v1-c-fixtures-v5",
+  "amendment": {
+    "procedure": "PRE_EXECUTION_FREEZE_AMENDMENT_V1",
+    "rulings": [
+      "D-E2E-v1-32",
+      "D-E2E-v1-32-C"
+    ],
+    "supersedes": "stage2_fixture_manifest_v4.json (V4)",
+    "v4_status": "SUPERSEDED_PRE_EXECUTION",
+    "cohort_dispatch_count_at_amendment": 0,
+    "reprojection_impact": {
+      "in_n_signature_changed_vs_v1": 20,
+      "in_n_total": 20
+    },
+    "defect": "투영 전용 개정 — 제한식 내용이 V1에서 미채점이던 것을 opaque incidence로 채점(D-32); fixture 선별·방언· template 불변"
+  },
+  "order_seed": "E2EV1C-freeze-20260823-v1",
+  "profile": {
+    "id": "O1_V5",
+    "constructors": [
+      "forall",
+      "exists",
+      "and",
+      "pred",
+      "not",
+      "implies"
+    ],
+    "canonicalizer": "cg_ir.canonicalize_v0 (capture-avoiding alpha-rename only)",
+    "comparison_core": {
+      "desugar": "FORALL(x,R,B)->FORALL(x,True,implies(R,B)); EXISTS(x,R,B)->EXISTS(x,True,and(R,B)) (D-23 §12)",
+      "predicate_labels": {
+        "status": "diagnostic_only (D-25 Q25.2, D-26 Q26.3)",
+        "PMB": "O1_PMB_LEMMA_NO_SENSE_V1",
+        "FOLIO": "FOLIO_LABEL_LOWERCASE_V1"
+      },
+      "scope_projection": "O1_SCOPE_PROJECTION_V2",
+      "primary_metric": "O1ScopeMatch (D-25 §8)"
+    },
+    "source_encoding_profiles": {
+      "PMB_SBN_5_1": "paired NEGATION -> forall (documented codec, D-22 Q22.2)",
+      "FOLIO_FOL_V0": "implication-under-forall lowering; neutral exists (D-23 §12)"
+    },
+    "eligibility_gate": "MEASUREMENT_SATISFIABILITY_V2"
+  },
+  "profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+  "contract_hashes": {
+    "prompt_template_v4_sha256": "1ea2159e2ca5738b4863947701c1072a99c53548cc2d1f1b080e5fd5258044d6",
+    "dispatch_schema_sha256": "1d95861576edd1d365515e54ba7247868846b33c0d2ff5e2c136650e022f58cd",
+    "canonicalization_core_sha256": "6ac24f52b2dc6af12d37439fe7c846e4262cbdb9ddb105a9d7e548a4ecc6e168",
+    "projection_module_sha256": "81e1af9abd5c6f48f9a5a3b60c4070a636a5934a5ab735efdc004837cd82fadf",
+    "projection_module_v2_sha256": "013fa142782e82f72b6f5385ce9bcd06ac4cb2ada18b09a990fb12e1bbff51ef",
+    "projection_pipeline_module_sha256": "92e0cf46c9e94abf6f17691f68300f27e1c992326b74d3fcfe1d94132dcbc7f3",
+    "satisfiability_module_sha256": "78a16e517cf4b0fbc4576ef3f9ac36858b766e2df739a4ff10ba3e73ef8282da",
+    "eval_profile_module_sha256": "76c61f24bd4aaf8d1e07a490b0c360abb79bd0fd1448223e05c5323dc85d2795"
+  },
+  "measurement_contract": {
+    "projection_profile": "O1_SCOPE_PROJECTION_V2",
+    "projection_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+    "projection_module_sha256": "013fa142782e82f72b6f5385ce9bcd06ac4cb2ada18b09a990fb12e1bbff51ef",
+    "pre_projection_module_sha256": "81e1af9abd5c6f48f9a5a3b60c4070a636a5934a5ab735efdc004837cd82fadf",
+    "pipeline_module_sha256": "92e0cf46c9e94abf6f17691f68300f27e1c992326b74d3fcfe1d94132dcbc7f3"
+  },
+  "supersedes": [
+    "O1_SCOPE_PROJECTION_V1"
+  ],
+  "score_comparability": {
+    "V1_to_V2": {
+      "direct_numeric_comparison": false,
+      "reason": "non_scope_restriction_and_body_content_projection_changed"
+    }
+  },
+  "measurement_semantics": {
+    "V1-V4": "O1_SCOPE_PROJECTION_V1",
+    "V5_onward": "O1_SCOPE_PROJECTION_V2"
+  },
+  "selection_inputs": {
+    "pmb_scan_sha256": "e6a2617a729ee3a7bfe4ac5859be2f86be78924e7b66efeb2ab6ae795cc8b9bd",
+    "folio_scan_sha256": "93eea2262a6ec9b9e279711998a964ff511feac080c01f28d641f46cf807495f",
+    "folio_reachability_scan_v2_sha256": "1c74ade646d614a84b28dbcb8db8145ea9fd51580aca8fc02af8837059defb13",
+    "satisfiability_scan_v4_sha256": "db0deceeeb96fc721489ee8eb2fff14aaf250d7dff5aaf69a18df80e1b97bfd4"
+  },
+  "strata_counts": {
+    "adapter_control": 3,
+    "pmb_projection_control": 3
+  },
+  "entries": [
+    {
+      "case_id": "FOLIO-175p1",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=175;premise=1",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "c0cd28f493ee5334e1d32c2c378ae91dde394c6224d1e55b94ece30b998e88ba",
+      "lf_sha256": "e50f9fe24bc020f42e7185c2a76bacefdb4854887ccead64487d71709c780d0e",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "06e7dee1a6ec40192709240de68ed17764be7703a33c4b1625bb3ffd86aad6dd",
+      "expected_scope_signature_v2_sha256": "24f6aef2266bbc551584ff7d74268a410705390d9c5d9e4f2734cea1426f3e9b"
+    },
+    {
+      "case_id": "FOLIO-500p4",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=500;premise=4",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "bc5bf2b4148be6b9fe7978fe8f070159edbcc01a7c10b8e0f06ee8f5b9fe50b9",
+      "lf_sha256": "91d196037a8f24301bcba10a4fc378639c7f88f1020ff289d39d2267afcbc52a",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "3c339beb73044043a15b3e509a653a03452757435f3752e1586eeaba813fd5bb",
+      "expected_scope_signature_v2_sha256": "24f6aef2266bbc551584ff7d74268a410705390d9c5d9e4f2734cea1426f3e9b"
+    },
+    {
+      "case_id": "FOLIO-1377p0",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=1377;premise=0",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "HybLogic",
+      "text_sha256": "8dd97f77a299302fd62c2b18ec8b2dc326889d73716b21b4fb60a3f0968846aa",
+      "lf_sha256": "85ccc26ba16961f508dcd9d142c2628314799a20c9ae0332f3f92078ab6bda75",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "468bd564fcac6669c8e0558cedfa6acbadfc53c685eeb9b1d8acba4447b5c39b",
+      "expected_scope_signature_v2_sha256": "24f6aef2266bbc551584ff7d74268a410705390d9c5d9e4f2734cea1426f3e9b"
+    },
+    {
+      "case_id": "PMB-p12-d2559",
+      "stratum": "pmb_projection_control",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p12/d2559/en.drs.sbn",
+        "record_locator": "p12/d2559",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "text_sha256": "6268b74168f9243d36a981151a3f6e8476e8350f4920e10638c0e5a071fb69c9",
+      "lf_sha256": "9ed02cf33608d7b827c701c881747416d93176a5e55973dd2ea4d45788108eae",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "8e0c8d1a7e29c3470506a9d1faaddcffbddc14911ad2916a0099933cbcada73e",
+      "expected_scope_signature_v2_sha256": "2f67e9232c4765cb2b62c5236bd236569f9768ed34a4bb87092373088c343bc7"
+    },
+    {
+      "case_id": "PMB-p11-d2268",
+      "stratum": "pmb_projection_control",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p11/d2268/en.drs.sbn",
+        "record_locator": "p11/d2268",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "text_sha256": "06685fded981f7312e731f3aeece76a902fd29c34f7c2cf55fb6f177a935f664",
+      "lf_sha256": "3361e5a2999c961d8a153d48490c038b6a684436e31100629b6c01493191b852",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "a9d9bfbbad0f902ceaa3a28a44df213a188bdcee55f8db4749b7ea4ccb71a269",
+      "expected_scope_signature_v2_sha256": "9127a8c9824fb3eec90f89febda37ad66b740b3d9455462aa554c831087da7ad"
+    },
+    {
+      "case_id": "PMB-p24-d2685",
+      "stratum": "pmb_projection_control",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p24/d2685/en.drs.sbn",
+        "record_locator": "p24/d2685",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "text_sha256": "789b7b304366f6794da8df8daef76ef3d5ada328e2317bbf1e4d309c80f831b0",
+      "lf_sha256": "0d3cf619613488793e952082fe8179244e818207642bd16ee9135f50f01b615c",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "f52386a27d3a86dce6e59ed9a56f892970dee118eaa8a854b9776bef30f63a9a",
+      "expected_scope_signature_v2_sha256": "857a0709c6be39f833a4ceb327f0f83984d88be589aa6880431e78705d0114c1"
+    }
+  ]
+}
