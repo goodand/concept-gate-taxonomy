@@ -1,3 +1,31 @@
-// 이 SVG는 mcp-kroki(graphviz)로 렌더했다. 소스는 회고 §20의 코드 블록이
-// 정본이고, 이 파일은 재생성 경로를 적어 두기 위한 스텁이다.
-// 재생성: mcp-kroki download_diagram(type=graphviz, content=<§20의 dot>)
+// referential ∃ 경계 순환 — Z2 (끊는 간선의 자격 요건 R1~R4 × 후보 4종)
+// 렌더: mcp-kroki download_diagram(type="graphviz", content=<이 파일>)
+// 이 파일이 소스 정본이다. 발견: R2 에 붙는 후보가 둘뿐이다(병목).
+digraph L2 {
+  rankdir=TB; bgcolor="white";
+  node [fontname="Helvetica" shape=box style="rounded,filled" fontsize=11];
+  edge [fontname="Helvetica" fontsize=9];
+  target [label="끊는 간선: 외부 권위 → referential ∃ 경계" fillcolor="#d8f0d8" penwidth=2];
+  subgraph cluster_req {
+    label="자격 요건 — 판정·우리 실측에서 도출됨"; style=solid; color="#080"; fontsize=10;
+    r1 [label="R1 apparatus 밖에서\n의미 부류를 기록한다\n(D-34 §5 · 우리 §B.8)" fillcolor="#d8f0d8"];
+    r2 [label="R2 그 기록의 정확성을\n독립 검증할 수 있다\n(D-35 §9 — 순환 방지)" fillcolor="#d8f0d8"];
+    r3 [label="R3 미포함분을 선언한다\n(D-35 §6 3값 · 부재≠음성)" fillcolor="#d8f0d8"];
+    r4 [label="R4 두 source 에 같은 기준\n(PMB·FOLIO — 미해소)" fillcolor="#fff3cd"];
+  }
+  subgraph cluster_cand {
+    label="후보 유형 — 아직 판정받지 않음"; style=dashed; color="#888"; fontsize=10;
+    k1 [label="사람의 판정\n(Gate C 선례 있음)" fillcolor="#e8f0ff"];
+    k2 [label="다른 주석 corpus\n(조응·개체 전용)" fillcolor="#e8f0ff"];
+    k3 [label="언어학 이론 + 명시 기준\n(문헌)" fillcolor="#e8f0ff"];
+    k4 [label="판정 채널 자체\napparatus 밖에 있다" fillcolor="#e8f0ff"];
+  }
+  have [label="우리가 이미 가진 재료\n• 감사 범위 294건\n• role 어휘 200종 중 2종 검토\n• EQU 12,501 미검토\n• 주석 부재=범위 (he 82/990)" fillcolor="#cfe3ff"];
+  target -> r1; target -> r2; target -> r3; target -> r4;
+  k1 -> r1 [style=dashed]; k1 -> r2 [style=dashed label="자기 검증?"];
+  k2 -> r1 [style=dashed]; k2 -> r4 [style=dashed label="PMB만?"];
+  k3 -> r1 [style=dashed]; k3 -> r4 [style=dashed];
+  k4 -> r1 [style=dashed]; k4 -> r2 [style=dashed color="#c00" label="자기 검증 불가?"];
+  have -> r2 [label="이 재료가 R2 의 입력이다"];
+  have -> r3 [label="같음"];
+}

@@ -1,3 +1,31 @@
-// 이 SVG는 mcp-kroki(graphviz)로 렌더했다. 소스는 회고 §20의 코드 블록이
-// 정본이고, 이 파일은 재생성 경로를 적어 두기 위한 스텁이다.
-// 재생성: mcp-kroki download_diagram(type=graphviz, content=<§20의 dot>)
+// referential ∃ 경계 순환 — Z0 (추상: 불변·목적·산출·조건·확실성)
+// 렌더: mcp-kroki download_diagram(type="graphviz", content=<이 파일>)
+// 이 파일이 소스 정본이다. SVG는 렌더 산출물이다.
+digraph L0 {
+  rankdir=TB; bgcolor="white";
+  node [fontname="Helvetica" shape=box style="rounded,filled" fontsize=11];
+  edge [fontname="Helvetica" fontsize=9];
+  subgraph cluster_inv {
+    label="(0) 절대 불변 — 고칠 수 없는 것"; style=dashed; color="#888"; fontsize=10;
+    inv1 [label="∃x[P∧B] ≢ ∃x B ≢ B(c)\n(논리 사실, 3회 확인)" fillcolor="#e8e8e8"];
+    inv2 [label="dispatch 누계 0\n(관측 전 상태)" fillcolor="#e8e8e8"];
+    inv3 [label="operational_patch: forbidden\nimmediate_projection: forbidden" fillcolor="#e8e8e8"];
+    inv4 [label="V1~V5 동결 표면 바이트 불변" fillcolor="#e8e8e8"];
+  }
+  goal [label="(1) 궁극 목적 (상위 재귀)\nO1 scope 컴파일 능력의 신뢰 가능한 측정\n← estimand 순도\n← ConceptGate 의미→OWL 컴파일 타당성" fillcolor="#cfe3ff"];
+  out  [label="(2) expected_output\nscope 능력만 재는 채점 계약" fillcolor="#d8f0d8"];
+  subgraph cluster_cond {
+    label="(3) possible_conditions — 아직 갈리지 않은 분기"; style=dashed; color="#888"; fontsize=10;
+    c1 [label="경계 정의 가능" fillcolor="#fff3cd"];
+    c2 [label="외부 source로만 가능" fillcolor="#fff3cd"];
+    c3 [label="원리적 불가\n(→ 모집단 문제로 회귀)" fillcolor="#fff3cd"];
+  }
+  circle [label="순환\nY = f(scope 능력, 표상 규약 호환성)\n두 항을 분리하려면 경계가 필요하고\n경계를 정하려면 측정 밖 권위가 필요하다" fillcolor="#ffd6d6" shape=box style="filled,bold"];
+  cert [label="(4) 기계 판정 확실성\n• 논리 비동치: 확실\n• 주석 부재 = 범위: 확실 (he 82/990)\n• 무엇이 지시적인가: 미정" fillcolor="#efe4ff"];
+  goal -> out;
+  out -> circle [label="달성하려면"];
+  circle -> cert [label="무엇이 확실한가"];
+  circle -> c1 [style=dashed]; circle -> c2 [style=dashed]; circle -> c3 [style=dashed];
+  inv1 -> circle [label="제거를 막는다" color="#666"];
+  inv3 -> circle [label="우리가 끊는 것을 막는다" color="#666"];
+}

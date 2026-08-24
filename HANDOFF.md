@@ -70,7 +70,7 @@ Q36으로 상신했고 회신 대기다.
 | **왜 우리가 경계를 정할 수 없나** | `operational_patch: forbidden`(D-31 Q31.4·D-33) + `immediate_projection: forbidden`(D-35). 실측 근거도 있다 — 표면 목록으로 유형화 비율이 **2~51%**로 움직이므로 목록 선택이 이미 부분적 경계 결정이다 |
 | 무엇이 죽었고 대신 무엇을 쓰나 | [[LEGACY_REGISTER]] · 만든 것이 실제로 불리는가 [[ADOPTION_REGISTER]] — 둘 다 게이트가 거짓말을 막는다 |
 | 무엇이 동결됐고 무엇이 금지인가 | 사전등록 본문은 `PREREGISTRATION_STAGE2_V4.md`가 여전히 정본이고, **동결 산출은 V5**다(`stage2_fixture_manifest_v5.json` — 투영 전용 개정). D-33이 `O1_SCOPE_PROJECTION_V3`을 예고했으므로 **V5의 measurement_contract는 잠정**이다 |
-| fixture commitment | 같은 폴더 `stage2_fixture_manifest_v5.json` (원문 0바이트 — 해시·locator만. V4에서 commitment 필드 바이트 동일, 추가된 것은 `expected_scope_signature_v2_sha256`) |
+| fixture commitment | 같은 폴더 `stage2_fixture_manifest_v5.json` (**코퍼스 원문을 담지 않는다** — `text` 필드 없이 `text_sha256`·locator만. 파일 자체는 31KB다. V4에서 commitment 필드 바이트 동일, 추가된 것은 `expected_scope_signature_v2_sha256`) |
 | 선별이 조작 불가능한 이유 | 같은 폴더 `freeze_stage2_v4.py`(in-N 선별) · `freeze_stage2_v5.py`(V5 = 투영 전용 개정, 재투영·서명 재생성이 전부 코드) · `freeze_controls_v5_1.py`(control 재선별, 적격 술어 2층) — seed·층 술어·투영 전부 코드가 정본이고 산출은 덮어쓰기를 거부한다 |
 | 동결이 실효됐다는 선언 | 같은 폴더 `test_stage2_freeze_v4.py`의 `FREEZE_STATE`(= `V5_ACTIVE`) — SUPERSEDED 선언 하에서는 **drift가 존재해야 통과**한다(선언이 거짓일 수 없게). V5는 `test_stage2_freeze_v5.py`가 지킨다 |
 | MRS 재료가 왜 아직 부적격인가 | [[RESEARCH_RESULT_mrs_redwoods_round3\|3차 조사 회신 + 우리 검증]] §B — 전수 37,066건 실측, 적격 기수 **0건**(BODY 비제약이 유일 장애 16,584건) |
@@ -191,16 +191,16 @@ trials_raw 보존 + 결과는 동결과 **별도 커밋**(방법론 §1). 결과
   뮤테이션 하네스의 게이트화(P16), O3(재료 관문 미해결 — D-21이 조건부
   선행 허용).
 
-## 6. 작업 대기열 (사용자 지정 — 2026-08-24, 순서 그대로)
+## 6. 작업 대기열 (사용자 지정 — 2026-08-24, **2라운드**, 순서 그대로)
 
 D-33 수신 처리(검증 설계 → 설계 적대검증 → 검증 → 기록)를 끝낸 뒤 **이 순서로**
 진행한다. 사용자가 순서를 지정했으므로 임의로 바꾸지 않는다.
 
 | # | 할 일 | 완료 판정 |
 |---|---|---|
-| 1 | ~~**회고**~~ **완료(2026-08-24)** — §18 append. 신규 G125~G135, P12가 한 구간 5회로 지배, 기제 부채 +60행 | ✅ `docs/H1A_PROBLEM_ANALYSIS.md` §18 |
-| 2 | ~~**handoff 갱신**~~ **완료(2026-08-24)** — §0 코드·§1 재작성, §2 낡은 행 5건 정정(D-19~D-33·§18·차단 요인·V4→V5·FREEZE_STATE) + 신설 행 2건(채점 계약·control 보증 범위), §3 전면 재작성, §4에 교훈 3건 | ✅ |
-| 3 | ~~**handoff test**~~ **완료(2026-08-24)** — 9/9 복원·막힌 지점 0, 결함 3건 적발·수리(V5.1 로그 누락 · 고아 노트 · 스텁 리다이렉트) | ✅ [[HANDOFF_EVALUATION_20260824]] |
+| 1 | ~~**회고**~~ **2라운드 완료** — §21 append(G140~G148, P24가 11회로 지배). 1라운드는 §18
+| 2 | ~~**handoff 갱신**~~ **2라운드 완료** — §1 전면 재작성(고리 구조·병목 R2)·§2 낡은 행 3건+신설 3행·§3 재작성. 1라운드는 §0 코드·§1 재작성
+| 3 | ~~**handoff test**~~ **2라운드 완료** — **10/10 복원·막힌 지점 0·낡은 것 0**, 중의성 1건 적발·수리("원문 0바이트"를 파일 크기로 오독). 신규 8건 고아 0. 1라운드는 9/9·결함 3건
 | 4 | ~~**삭제 후보 탐색 — 현재 작업 범위**~~ **완료** — 후보 0건, 문서 공백 1건 수리 | ✅ |
 | 5 | ~~**탐색 범위 분할**~~ **완료** — Safety Gate 후 규모 실측으로 A(taxonomy 173M)·B(데이터·캐시)·C(archive+worktree 5개)로 분할 | ✅ |
 | 6 | ~~**탐색 subagent(haiku) 위임**~~ **완료** — 3건 위임·lead 재실측 → **삭제 0건**, 병합 대기 4건 발견 | ✅ [[WORKSPACE_CLEANUP_20260824_ROUND3]] |

@@ -4,6 +4,11 @@
 반복 정교화)을 순환 문제에 적용했다. 추상화 우선순위는 (0) 불변 → (1) 궁극
 목적 → (2) expected_output → (3) possible_conditions → (4) 기계 확실성.
 
+**소스는 `.dot`이고 `.svg`는 렌더 산출물이다.** 재생성:
+`mcp-kroki download_diagram(type="graphviz", content=<.dot 내용>)`. 왕복 검증했다 —
+`.dot`으로 재렌더하면 커밋된 SVG와 노드 10·간선 11·812pt가 동일하고 고리 간선
+네 개가 그대로 나온다.
+
 | 단계 | 파일 | 무엇을 보여주는가 |
 |---|---|---|
 | Z0 | `referential-circularity-Z0.svg` | 불변·목적·산출·조건·확실성의 배치 |
