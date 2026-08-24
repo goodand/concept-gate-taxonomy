@@ -1,0 +1,640 @@
+{
+  "manifest_version": "e2e-v1-c-fixtures-v5",
+  "amendment": {
+    "procedure": "PRE_EXECUTION_FREEZE_AMENDMENT_V1",
+    "rulings": [
+      "D-E2E-v1-32",
+      "D-E2E-v1-32-C"
+    ],
+    "supersedes": "stage2_fixture_manifest_v4.json (V4)",
+    "v4_status": "SUPERSEDED_PRE_EXECUTION",
+    "cohort_dispatch_count_at_amendment": 0,
+    "reprojection_impact": {
+      "in_n_signature_changed_vs_v1": 20,
+      "in_n_total": 20
+    },
+    "defect": "투영 전용 개정 — 제한식 내용이 V1에서 미채점이던 것을 opaque incidence로 채점(D-32); fixture 선별·방언· template 불변"
+  },
+  "order_seed": "E2EV1C-freeze-20260823-v1",
+  "profile": {
+    "id": "O1_V5",
+    "constructors": [
+      "forall",
+      "exists",
+      "and",
+      "pred",
+      "not",
+      "implies"
+    ],
+    "canonicalizer": "cg_ir.canonicalize_v0 (capture-avoiding alpha-rename only)",
+    "comparison_core": {
+      "desugar": "FORALL(x,R,B)->FORALL(x,True,implies(R,B)); EXISTS(x,R,B)->EXISTS(x,True,and(R,B)) (D-23 §12)",
+      "predicate_labels": {
+        "status": "diagnostic_only (D-25 Q25.2, D-26 Q26.3)",
+        "PMB": "O1_PMB_LEMMA_NO_SENSE_V1",
+        "FOLIO": "FOLIO_LABEL_LOWERCASE_V1"
+      },
+      "scope_projection": "O1_SCOPE_PROJECTION_V2",
+      "primary_metric": "O1ScopeMatch (D-25 §8)"
+    },
+    "source_encoding_profiles": {
+      "PMB_SBN_5_1": "paired NEGATION -> forall (documented codec, D-22 Q22.2)",
+      "FOLIO_FOL_V0": "implication-under-forall lowering; neutral exists (D-23 §12)"
+    },
+    "eligibility_gate": "MEASUREMENT_SATISFIABILITY_V2"
+  },
+  "profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+  "contract_hashes": {
+    "prompt_template_v4_sha256": "1ea2159e2ca5738b4863947701c1072a99c53548cc2d1f1b080e5fd5258044d6",
+    "dispatch_schema_sha256": "1d95861576edd1d365515e54ba7247868846b33c0d2ff5e2c136650e022f58cd",
+    "canonicalization_core_sha256": "6ac24f52b2dc6af12d37439fe7c846e4262cbdb9ddb105a9d7e548a4ecc6e168",
+    "projection_module_sha256": "81e1af9abd5c6f48f9a5a3b60c4070a636a5934a5ab735efdc004837cd82fadf",
+    "projection_module_v2_sha256": "013fa142782e82f72b6f5385ce9bcd06ac4cb2ada18b09a990fb12e1bbff51ef",
+    "projection_pipeline_module_sha256": "92e0cf46c9e94abf6f17691f68300f27e1c992326b74d3fcfe1d94132dcbc7f3",
+    "satisfiability_module_sha256": "78a16e517cf4b0fbc4576ef3f9ac36858b766e2df739a4ff10ba3e73ef8282da",
+    "eval_profile_module_sha256": "76c61f24bd4aaf8d1e07a490b0c360abb79bd0fd1448223e05c5323dc85d2795"
+  },
+  "selection_inputs": {
+    "pmb_scan_sha256": "e6a2617a729ee3a7bfe4ac5859be2f86be78924e7b66efeb2ab6ae795cc8b9bd",
+    "folio_scan_sha256": "93eea2262a6ec9b9e279711998a964ff511feac080c01f28d641f46cf807495f",
+    "folio_reachability_scan_v2_sha256": "1c74ade646d614a84b28dbcb8db8145ea9fd51580aca8fc02af8837059defb13",
+    "satisfiability_scan_v4_sha256": "db0deceeeb96fc721489ee8eb2fff14aaf250d7dff5aaf69a18df80e1b97bfd4"
+  },
+  "strata_counts": {
+    "proportional": 1,
+    "quantifier_negation_scope": 4,
+    "single_universal": 4,
+    "cardinal": 3,
+    "single_existential": 3,
+    "multi_quantifier": 5
+  },
+  "measurement_contract": {
+    "projection_profile": "O1_SCOPE_PROJECTION_V2",
+    "projection_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+    "projection_module_sha256": "013fa142782e82f72b6f5385ce9bcd06ac4cb2ada18b09a990fb12e1bbff51ef",
+    "pre_projection_module_sha256": "81e1af9abd5c6f48f9a5a3b60c4070a636a5934a5ab735efdc004837cd82fadf",
+    "pipeline_module_sha256": "92e0cf46c9e94abf6f17691f68300f27e1c992326b74d3fcfe1d94132dcbc7f3"
+  },
+  "supersedes": [
+    "O1_SCOPE_PROJECTION_V1"
+  ],
+  "score_comparability": {
+    "V1_to_V2": {
+      "direct_numeric_comparison": false,
+      "reason": "non_scope_restriction_and_body_content_projection_changed"
+    }
+  },
+  "measurement_semantics": {
+    "V1-V4": "O1_SCOPE_PROJECTION_V1",
+    "V5_onward": "O1_SCOPE_PROJECTION_V2"
+  },
+  "entries": [
+    {
+      "case_id": "PMB-p09-d2243",
+      "stratum": "proportional",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p09/d2243/en.drs.sbn",
+        "record_locator": "p09/d2243",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "71242929858939724ac427e87991f550c6777bfe413ae16d6fb46f83e45fbb3a",
+      "lf_sha256": "e7f473cffb6db9918b2ce84407136fd734e80c56e6084cd80f98341804f5dc1e",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "dacd371c2d28c6e5bb35dcd5f496a91da0f5b19644225b0d15df87288bad48b1",
+      "expected_scope_signature_v2_sha256": "a47e483403a934a6614ad627576a2403a27adbe4593ead3039cc2dd320aa6f8c"
+    },
+    {
+      "case_id": "PMB-p06-d1718",
+      "stratum": "quantifier_negation_scope",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p06/d1718/en.drs.sbn",
+        "record_locator": "p06/d1718",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "b1db1661044347835b090b6980c599093ea977e0a4bbe253f160a3d8c32ff3e2",
+      "lf_sha256": "3e9ce7ae4518cc146d7db6b9b1a7aaeaf82439f9f2577829026d4373041abba7",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "0d18b9db258da01f4183a6c0662f9dc14c036be5029c3051abd53ca9341cdb9b",
+      "expected_scope_signature_v2_sha256": "d0b292c39ac1d92f49228f3910933d0088ec9c4999dea71ce519460ab7a3b997"
+    },
+    {
+      "case_id": "PMB-p15-d0787",
+      "stratum": "quantifier_negation_scope",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p15/d0787/en.drs.sbn",
+        "record_locator": "p15/d0787",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "07722cec299d64093490ef56c0b31bcaba8b5bcef55feb83ec1cbc2829f24f6e",
+      "lf_sha256": "4cd303f24ca1b405551c3d7f033cc7ba8009fb8d041543db03bbfad89197aa8b",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "77ea90e47561630ef3fee7482e28fc7d51dee208a4a5378aae3d561b898a36f4",
+      "expected_scope_signature_v2_sha256": "d0b292c39ac1d92f49228f3910933d0088ec9c4999dea71ce519460ab7a3b997"
+    },
+    {
+      "case_id": "PMB-p93-d1717",
+      "stratum": "quantifier_negation_scope",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p93/d1717/en.drs.sbn",
+        "record_locator": "p93/d1717",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "85322005bccdc968256a45a30da890d02cea76f9cc25712ecb5f7567ecbb301b",
+      "lf_sha256": "ccc6ea326de8da765075e73c5e710227d84407cf758e11268e322a3dbdddc9da",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "95f45d93a113e3b92fec966dd940a69a964d2adcdfe59ab3bd4e75ae13b33573",
+      "expected_scope_signature_v2_sha256": "60c223aac33ce27f3849378a44a614f26f917cac5abf854cf7e63313c8475168"
+    },
+    {
+      "case_id": "PMB-p76-d2248",
+      "stratum": "quantifier_negation_scope",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p76/d2248/en.drs.sbn",
+        "record_locator": "p76/d2248",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "49b1153663e01c6896d5c1a3f103d0ea14c2ece1c9c3060ca96f41f8fa36ebf7",
+      "lf_sha256": "595ada039de15a8415e1589bef7546d99eb977fb6457810f0965d7510d898914",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "7b9cffe3d99417bcd2489673f2fbd6ab1553b4f6b140761507e809f56722657c",
+      "expected_scope_signature_v2_sha256": "d0b292c39ac1d92f49228f3910933d0088ec9c4999dea71ce519460ab7a3b997"
+    },
+    {
+      "case_id": "PMB-p43-d3444",
+      "stratum": "single_universal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p43/d3444/en.drs.sbn",
+        "record_locator": "p43/d3444",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "08e991b2ce09cbd901e895cf23a5645663a2f63700192811be4275cf459e6a36",
+      "lf_sha256": "59b05dc93437db2f54b655d705c4dee655c7a7995a6e556acb19691d4a3cb5e8",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "e43121adf5f0cd14d21c1769628093d357e632c95ec234b6eab99b2e4dd17b96",
+      "expected_scope_signature_v2_sha256": "962999299fe3b6f56d0d4813134f09e0faebdc4df2cffe98899f503014121ee7"
+    },
+    {
+      "case_id": "PMB-p00-d1686",
+      "stratum": "single_universal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p00/d1686/en.drs.sbn",
+        "record_locator": "p00/d1686",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "9debeb12815afb8be72de4ff8f4de4d33b96e52fb24176840080e2419c523ed8",
+      "lf_sha256": "7fd17be23d9483f423948ecd37adc6b2a068a988cdd9116591b0688bdbdfc339",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "04a4cfda2f1a623f9a58da94046991e92fa33bc08221063fc8f5e4fc51aadff8",
+      "expected_scope_signature_v2_sha256": "80481f6f6a50edb21d95a9c3c141a97e1fa7e4749010a93def0da8562bd59117"
+    },
+    {
+      "case_id": "PMB-p00-d1657",
+      "stratum": "single_universal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p00/d1657/en.drs.sbn",
+        "record_locator": "p00/d1657",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "5f5f6d0c9f54b5dc68ebdbbd9d032e37792cb18021415867eb2594d3bb09f86b",
+      "lf_sha256": "5c1987ef880d78b603acb84e3ad8abf3a4f8a71ac0bae3888dd666ab8b102654",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "3317712b6f9d43c3b0add3b9685216136fa735aa35b95db7eca79cccc4effaa7",
+      "expected_scope_signature_v2_sha256": "962999299fe3b6f56d0d4813134f09e0faebdc4df2cffe98899f503014121ee7"
+    },
+    {
+      "case_id": "PMB-p36-d2853",
+      "stratum": "single_universal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p36/d2853/en.drs.sbn",
+        "record_locator": "p36/d2853",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "cdd56fdd94e9fe9114ad068bfb74616f279625ca22ab6fed8fa655aaa1b34c8e",
+      "lf_sha256": "635d907551b3acb35eb1b8ba844955197ba2bb3d033d92cca967773338227128",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "e859f37e821f4e2be7f3b8da2f54ea4c4a5f5aa15747d28ffb69f7469821c459",
+      "expected_scope_signature_v2_sha256": "24f6aef2266bbc551584ff7d74268a410705390d9c5d9e4f2734cea1426f3e9b"
+    },
+    {
+      "case_id": "PMB-p69-d1730",
+      "stratum": "cardinal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p69/d1730/en.drs.sbn",
+        "record_locator": "p69/d1730",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "02cdaf89eaa20b5e6ea67342da69a33c8cbd6a224faa0216a73057376d092af3",
+      "lf_sha256": "848b8afa7506330c48d3a4b5ec57f4dc96ce7ec161947bfd222701758a47bf01",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "b945d77b2fe5b640a2edc8c9692d261f77539ab4f4be58d4259d6ea82247cc40",
+      "expected_scope_signature_v2_sha256": "c9abd2eeb51faa4cbe993cf1f34ebc570831a14bbc0c86159ed51a7133eb467c"
+    },
+    {
+      "case_id": "PMB-p36-d3354",
+      "stratum": "cardinal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p36/d3354/en.drs.sbn",
+        "record_locator": "p36/d3354",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "6d1ace3e8ab951eef126ad122fd2bae76976dec026de86346d33c54ba16821d7",
+      "lf_sha256": "e01bff51ff3d4ea92c4a1097e47b563c0523c22f4e33f9e0897f6da14f22e090",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "2900d9921c28dbf9c53cc42fd5569a9a2728914c7db69d1c372cbec5a6cc11e9",
+      "expected_scope_signature_v2_sha256": "0445568fc37f159074763e21f930378bb13a31b5424e1826de18f2b24d13b479"
+    },
+    {
+      "case_id": "PMB-p43-d3167",
+      "stratum": "cardinal",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p43/d3167/en.drs.sbn",
+        "record_locator": "p43/d3167",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "845ec271198daa277bd00851c1ede1b95810be03d6bee597eedcf286f26dd7c0",
+      "lf_sha256": "9a25733b2e75e76de8f0ce04450747e054b609cb51e9f01def1eaf637ce5b5e5",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "8a3b794376fbf3f6c987ac2dbdc07260733c68e6699befc9befc28678f490df3",
+      "expected_scope_signature_v2_sha256": "857a0709c6be39f833a4ceb327f0f83984d88be589aa6880431e78705d0114c1"
+    },
+    {
+      "case_id": "PMB-p00-d2298",
+      "stratum": "single_existential",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p00/d2298/en.drs.sbn",
+        "record_locator": "p00/d2298",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "ac068849888b4f43d43e8c0499cd51e0cd549b068145963edb2c2d6037396dee",
+      "lf_sha256": "f93aa7c55fbd4c750b36f44a264382a4367f984c56a52535240b0a60349862c8",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "775d1b9ab8f796b99493f30932ba4e0f0f4c19c07b5c354c6baee58d8039455a",
+      "expected_scope_signature_v2_sha256": "c9abd2eeb51faa4cbe993cf1f34ebc570831a14bbc0c86159ed51a7133eb467c"
+    },
+    {
+      "case_id": "PMB-p05-d1463",
+      "stratum": "single_existential",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p05/d1463/en.drs.sbn",
+        "record_locator": "p05/d1463",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "e9b8370357a5060445fcdb7461354acf3a643a61b428f67bc7f27de63de34aed",
+      "lf_sha256": "d403c2db457bdaa29e9a68d45e13d3bb9e5043604e5842fb69f2cc8f193165eb",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "99d5f167ab0c4559ea1d0c18fa459bbc1a5cb368b49357d4bfa4492612ac77c9",
+      "expected_scope_signature_v2_sha256": "9e4e38e23c86d7ac8e886974bf2de2e9e9cfd99e7333a111bc9af22f76826458"
+    },
+    {
+      "case_id": "PMB-p87-d1860",
+      "stratum": "single_existential",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p87/d1860/en.drs.sbn",
+        "record_locator": "p87/d1860",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "subcorpus": "Tatoeba",
+      "text_sha256": "11e253781e81678a6e81841c08b8cc54cc402c5e99d2e6a8430554e7485aff2e",
+      "lf_sha256": "634de83f066ed1c6cf5478a9dafa422073e353477748feef17d8ed5abe5749fc",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "9b4f06244b7c7d3c623293d6996286267f15dc08e34f6c0636542d51fff012d3",
+      "expected_scope_signature_v2_sha256": "857a0709c6be39f833a4ceb327f0f83984d88be589aa6880431e78705d0114c1"
+    },
+    {
+      "case_id": "FOLIO-142p1",
+      "stratum": "multi_quantifier",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=142;premise=1",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "b7599de68c480caa13d6f615bd040fa5cbc144204a98c753e7fab07fce43c70a",
+      "lf_sha256": "5ab6601179f20ad171ca0f45697bca85c7f1e3f33e620bc33dffbc389556cbd1",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "61e7807e6f7d65b181586fdb2707cb2daba11160edc806d60ac280f6388ae232",
+      "expected_scope_signature_v2_sha256": "f70cf377274e673e0786d51047629f5db0d6767de53aeeaf2e69ebdbfabbd543"
+    },
+    {
+      "case_id": "FOLIO-695p1",
+      "stratum": "multi_quantifier",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=695;premise=1",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "5c5f75fcfce4b61671fe21125a4aae3a4ddee139c42219616f28cf3dba31a3d7",
+      "lf_sha256": "23628ee271d3cadc78624dcce730de6783db0a138f1d64d927ead7c0caeb54c1",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "3fab32cef88546fe33158b38ca613abce4ade0725137c47fd5c4ad6dfe21d52b",
+      "expected_scope_signature_v2_sha256": "917cfd0dbff6bc3d19d8c745d0babe78f394e14033c517dfab996812257efa70"
+    },
+    {
+      "case_id": "FOLIO-404p3",
+      "stratum": "multi_quantifier",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=404;premise=3",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "64fdb6cac198acbcadb2e3c9d392bc2a268867c4868faddd7cc60b134f188c8a",
+      "lf_sha256": "e1159eb2a0b87574b0ab08b2ac3d2adaeb54c9264ced65becd0bf2150877bece",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "519ccac22b4789499541076f7780e0992522d87deb49bd96e190d96b2bbc9f0b",
+      "expected_scope_signature_v2_sha256": "d4a34803b604993666bd2a4c7b999336f79aba653f8b2c7881c3aab6bc47174b"
+    },
+    {
+      "case_id": "FOLIO-721p1",
+      "stratum": "multi_quantifier",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=721;premise=1",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "0e6700d41a0a6227c965b803daf9a2e2e9af0cb2836203d332cb4541c0261d2d",
+      "lf_sha256": "2f91a39678c25bdbc079267db9e01582e22bc8fafb326f879bf149fdc20b95a1",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "d994fbdeb86d680df7ffdb5f41dcf93ba3b542cfd783967f3b4877009ea9d866",
+      "expected_scope_signature_v2_sha256": "6f377be11b24efd14a5c3fcd6a9b037de470993a92bb83ab0ebaa6cbc9e34869"
+    },
+    {
+      "case_id": "FOLIO-274p1",
+      "stratum": "multi_quantifier",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=274;premise=1",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "f6107d2f7512ac6977061cd1ca5d6d8927fc07c7f8d286ead5634ad3454dc277",
+      "lf_sha256": "824c21f5cb2a8408985b299cdb84018fded6141893c76b3471e7f8a456002117",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "769fbeffbe35752054d6f3302f1ab286582536707d2a6d2089aa231433727358",
+      "expected_ir_sha256": "58b82e369998b7cc8a0ab84b81d39269555837f542cebd52f2405957d1655fee",
+      "expected_scope_signature_v2_sha256": "1f1574d55620f75a0e4224d2f65b6314b8135cefb4b71c15a8a9c2edc841c478"
+    }
+  ],
+  "folio_simple_controls": [
+    {
+      "case_id": "FOLIO-175p1",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=175;premise=1",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "c0cd28f493ee5334e1d32c2c378ae91dde394c6224d1e55b94ece30b998e88ba",
+      "lf_sha256": "e50f9fe24bc020f42e7185c2a76bacefdb4854887ccead64487d71709c780d0e",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "06e7dee1a6ec40192709240de68ed17764be7703a33c4b1625bb3ffd86aad6dd",
+      "expected_scope_signature_v2_sha256": "24f6aef2266bbc551584ff7d74268a410705390d9c5d9e4f2734cea1426f3e9b"
+    },
+    {
+      "case_id": "FOLIO-500p4",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=500;premise=4",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "WikiLogic",
+      "text_sha256": "bc5bf2b4148be6b9fe7978fe8f070159edbcc01a7c10b8e0f06ee8f5b9fe50b9",
+      "lf_sha256": "91d196037a8f24301bcba10a4fc378639c7f88f1020ff289d39d2267afcbc52a",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "3c339beb73044043a15b3e509a653a03452757435f3752e1586eeaba813fd5bb",
+      "expected_scope_signature_v2_sha256": "24f6aef2266bbc551584ff7d74268a410705390d9c5d9e4f2734cea1426f3e9b"
+    },
+    {
+      "case_id": "FOLIO-1377p0",
+      "stratum": "adapter_control",
+      "source_locator": {
+        "corpus_id": "folio",
+        "corpus_version": "v0.0",
+        "artifact": "data/v0.0/folio-train.jsonl",
+        "record_locator": "example_id=1377;premise=0",
+        "retrieval_urls": [
+          "https://github.com/Yale-LILY/FOLIO"
+        ]
+      },
+      "folio_subset": "HybLogic",
+      "text_sha256": "8dd97f77a299302fd62c2b18ec8b2dc326889d73716b21b4fb60a3f0968846aa",
+      "lf_sha256": "85ccc26ba16961f508dcd9d142c2628314799a20c9ae0332f3f92078ab6bda75",
+      "adapter_version": "cg_fol_adapter/FOLIO_FOL_V0",
+      "adapter_code_sha256": "94526f10e82fbbf54440625ac6f1fb7aba85d166a640bcb219e12db47bbe483b",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "468bd564fcac6669c8e0558cedfa6acbadfc53c685eeb9b1d8acba4447b5c39b",
+      "expected_scope_signature_v2_sha256": "24f6aef2266bbc551584ff7d74268a410705390d9c5d9e4f2734cea1426f3e9b"
+    }
+  ],
+  "pmb_projection_controls": [
+    {
+      "case_id": "PMB-p12-d2559",
+      "stratum": "pmb_projection_control",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p12/d2559/en.drs.sbn",
+        "record_locator": "p12/d2559",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "text_sha256": "6268b74168f9243d36a981151a3f6e8476e8350f4920e10638c0e5a071fb69c9",
+      "lf_sha256": "9ed02cf33608d7b827c701c881747416d93176a5e55973dd2ea4d45788108eae",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "8e0c8d1a7e29c3470506a9d1faaddcffbddc14911ad2916a0099933cbcada73e",
+      "expected_scope_signature_v2_sha256": "2f67e9232c4765cb2b62c5236bd236569f9768ed34a4bb87092373088c343bc7"
+    },
+    {
+      "case_id": "PMB-p11-d2268",
+      "stratum": "pmb_projection_control",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p11/d2268/en.drs.sbn",
+        "record_locator": "p11/d2268",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "text_sha256": "06685fded981f7312e731f3aeece76a902fd29c34f7c2cf55fb6f177a935f664",
+      "lf_sha256": "3361e5a2999c961d8a153d48490c038b6a684436e31100629b6c01493191b852",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "a9d9bfbbad0f902ceaa3a28a44df213a188bdcee55f8db4749b7ea4ccb71a269",
+      "expected_scope_signature_v2_sha256": "9127a8c9824fb3eec90f89febda37ad66b740b3d9455462aa554c831087da7ad"
+    },
+    {
+      "case_id": "PMB-p24-d2685",
+      "stratum": "pmb_projection_control",
+      "source_locator": {
+        "corpus_id": "pmb-5.1.0",
+        "corpus_version": "5.1.0",
+        "artifact": "data/en/gold/p24/d2685/en.drs.sbn",
+        "record_locator": "p24/d2685",
+        "retrieval_urls": [
+          "https://pmb.let.rug.nl/releases/pmb-5.1.0.zip"
+        ]
+      },
+      "text_sha256": "789b7b304366f6794da8df8daef76ef3d5ada328e2317bbf1e4d309c80f831b0",
+      "lf_sha256": "0d3cf619613488793e952082fe8179244e818207642bd16ee9135f50f01b615c",
+      "adapter_version": "cg_sbn_adapter/PMB_SBN_5_1",
+      "adapter_code_sha256": "9d699969d3b6eef34a05989ceedf417f95102b5fe5619d6ca0a3358f28ca51e1",
+      "canonicalization_profile_hash": "15b01b4bfd282e348f822511870c5a2d12a0e411bb39a43b811696f8a43a0899",
+      "expected_ir_sha256": "f52386a27d3a86dce6e59ed9a56f892970dee118eaa8a854b9776bef30f63a9a",
+      "expected_scope_signature_v2_sha256": "857a0709c6be39f833a4ceb327f0f83984d88be589aa6880431e78705d0114c1"
+    }
+  ]
+}

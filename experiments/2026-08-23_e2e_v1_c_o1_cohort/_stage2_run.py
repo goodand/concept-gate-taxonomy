@@ -27,7 +27,7 @@ from conceptgate.cg_fixture_resolver import resolve_bytes
 from conceptgate.cg_identity import canonical_sha256
 from conceptgate.cg_evaluate import evaluate
 from _stage2_eval_profile import normalize_labels_for_case
-from _stage2_scope_projection import project_scope_for_case
+from _stage2_projection_pipeline_v2 import evaluate_scope_v2
 from _stage2_canonical_core import desugar
 from _stage2_score import score
 
@@ -218,11 +218,11 @@ def ingest_outputs(plan_path: Path | str,
                 predicted_ir = output["ir"]
                 oracle_ir = expected_irs[case_id]
 
-                # 채점 = O1ScopeMatch (D-25 §8): 양측을 O1_SCOPE_PROJECTION
-                # 으로 투영한 signature 사이 exact structural match. 투영은
-                # desugar를 내장하고 라벨을 익명화하므로 codec과 무관하다.
-                ev = evaluate(project_scope_for_case(case_id, predicted_ir),
-                              project_scope_for_case(case_id, oracle_ir))
+                # 채점 = O1ScopeMatch, V2 투영 (D-E2E-v1-32/32-C): V1 전처리
+                # (desugar·관용구 정규화·source별 granularity 다리) → V2
+                # signature(제한식 opaque 붕괴 + and/or 정체 미채점)의 합성을
+                # _stage2_projection_pipeline_v2가 계약으로 pin한다.
+                ev = evaluate_scope_v2(case_id, predicted_ir, oracle_ir)
                 row["result"] = ev["result"]
                 if "mismatch_dimensions" in ev:
                     row["mismatch_dimensions"] = ev["mismatch_dimensions"]

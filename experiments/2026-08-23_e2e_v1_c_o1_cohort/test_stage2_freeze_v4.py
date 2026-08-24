@@ -83,7 +83,7 @@ def test_profile_v4_recomputable_and_has_implies_dialect():
 # D-27(curry 정규화·표면 필터) 구현으로 측정 경로 모듈이 바뀌었으므로 V4는
 # 실효됐고 V5는 아직 동결되지 않았다. 이 공백은 숨기지 않고 주장한다:
 # 이 상태에서 코호트를 실행하면 어떤 동결도 결과를 규정하지 못한다.
-FREEZE_STATE = "V4_SUPERSEDED_BY_D27_IMPLEMENTATION__V5_PENDING"
+FREEZE_STATE = "V4_SUPERSEDED_BY_D27_IMPLEMENTATION__V5_ACTIVE"
 
 
 def test_v4_code_binding_state_is_asserted_not_hidden():
