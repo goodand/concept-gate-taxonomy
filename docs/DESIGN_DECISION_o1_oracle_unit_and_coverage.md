@@ -1,5 +1,6 @@
 # DESIGN DECISION — D-E2E-v1-21: O1 오라클의 단위·적용범위 (Q21 판정)
 
+- 사슬 항법: 이전 [[DESIGN_DECISION_o1_fixture_licensing|D-20]] · **D-21** · 다음 [[DESIGN_DECISION_pmb_source_qualification|D-22]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수령: 2026-08-23, 사용자 경유 (설계 담당, Wolfram MCP 형식화 명시)
 - 상신 원문: `DESIGN_REQUEST_o1_oracle_unit_and_coverage.md` (Q21)
 - 요지: **Q21.1=(b)** 문장 단위 유지 + O1 instance source 교체 /

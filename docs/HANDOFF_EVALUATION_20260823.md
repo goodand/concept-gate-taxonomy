@@ -1,5 +1,6 @@
 # HANDOFF 평가 — zero-context 평가기 실측 (2026-08-23)
 
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]
 - 문서 종류: **운영 로그**(`WORKSPACE_NAVIGATION.md` §2). 동결 아티팩트와
   같은 커밋에 섞지 않는다
 - 대상: 이 worktree 루트 `HANDOFF.md`(Stage 2 동결 직후판)

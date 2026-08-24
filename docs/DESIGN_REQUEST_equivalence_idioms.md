@@ -113,3 +113,8 @@ Measurement Satisfiability는 **필요조건**이지 자연 도달성의 충분�
   D-23/24 검증에 쓴 기법 그대로)
 - dispatch 이력: 6건 중 1건은 하네스 차단 2회 후 사용자 명시 재승인으로
   수행 — mechanical retry 회계, semantic retry 0
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

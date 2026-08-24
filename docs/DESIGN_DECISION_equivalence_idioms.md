@@ -1,5 +1,6 @@
 # DESIGN DECISION — D-E2E-v1-27: 동치 관용구와 측정 경계 (Q27 판정)
 
+- 사슬 항법: 이전 [[DESIGN_DECISION_subject_dialect_expressiveness|D-26]] · **D-27** · 다음 [[DESIGN_DECISION_pmb_projection_signal_loss|D-28]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수신: 2026-08-23, 사용자 경유 (판정자: 외부 설계 담당, Wolfram MCP 검토 명시)
 - 원 요청: `DESIGN_REQUEST_equivalence_idioms.md`
   (sha256 `09340cdc863e852b1431...` — 전체는 git 이력)

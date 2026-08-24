@@ -1,5 +1,6 @@
 # DESIGN DECISION — D-E2E-v1-22: PMB source 자격 판정 (Q22)
 
+- 사슬 항법: 이전 [[DESIGN_DECISION_o1_oracle_unit_and_coverage|D-21]] · **D-22** · 다음 [[DESIGN_DECISION_folio_second_source|D-23]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수령: 2026-08-23, 사용자 경유 (설계 담당, Wolfram MCP 형식 검토 명시)
 - 상신 원문: `DESIGN_REQUEST_pmb_source_qualification.md` (Q22)
 - 요지: **Q22.1=(b)** 다중 양화는 독립 제2 source가 담당(경계 축소 없음) /

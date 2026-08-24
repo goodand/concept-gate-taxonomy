@@ -1,5 +1,6 @@
 # DESIGN DECISION — D-E2E-v1-24: FOLIO 술어 라벨 규약 (Q24 판정)
 
+- 사슬 항법: 이전 [[DESIGN_DECISION_folio_second_source|D-23]] · **D-24** · 다음 [[DESIGN_DECISION_oracle_granularity|D-25]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수신: 2026-08-23, 사용자 경유 (판정자: 외부 설계 담당, Wolfram MCP 검토 명시)
 - 원 요청: `DESIGN_REQUEST_folio_predicate_labels.md`
   (sha256 `54aa1a7d719f66226c17c577768eb4c575ececf97038b6dc1fa37324ee3e133d`)

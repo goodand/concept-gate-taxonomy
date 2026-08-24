@@ -1,5 +1,6 @@
 # RESEARCH RESULT — PMB의 O1 fixture source 적격성 사전 조사 (수신 verbatim)
 
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]
 - 수령: 2026-08-23, 사용자 경유 (조사용 agent — openai_web_gpt 환경)
 - 요청 원문: `RESEARCH_REQUEST_pmb_o1_eligibility.md`
 - 검증: 수령 당일, 이 문서 말미 "수신 검증 기록" — **조사 환경이 열지 못한

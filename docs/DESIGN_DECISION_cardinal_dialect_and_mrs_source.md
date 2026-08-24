@@ -1,5 +1,6 @@
 # DESIGN DECISION — D-E2E-v1-29: 기수·비례 방언과 MRS source (Q29 판정)
 
+- 사슬 항법: 이전 [[DESIGN_DECISION_pmb_projection_signal_loss|D-28]] · **D-29** · 다음 [[DESIGN_REQUEST_mrs_fail_closed_and_rights|Q30 (판정 대기)]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수신: 2026-08-24, 사용자 경유 (판정자: 외부 설계 담당, Wolfram MCP 검토 명시)
 - 원 요청: `DESIGN_REQUEST_cardinal_dialect_and_mrs_source.md`
   (sha256 `991b69a91e7baff950fb…`)

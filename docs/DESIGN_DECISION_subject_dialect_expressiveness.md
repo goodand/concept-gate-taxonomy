@@ -1,5 +1,6 @@
 # DESIGN DECISION — D-E2E-v1-26: subject 방언 표현력 (Q26 판정)
 
+- 사슬 항법: 이전 [[DESIGN_DECISION_oracle_granularity|D-25]] · **D-26** · 다음 [[DESIGN_DECISION_equivalence_idioms|D-27]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수신: 2026-08-23, 사용자 경유 (판정자: 외부 설계 담당, Wolfram MCP 검토 명시)
 - 원 요청: `DESIGN_REQUEST_subject_dialect_expressiveness.md`
   (sha256 `e22fe5c1924a6329b24466ab659dd19bc942621f94fcfd07e45a8ed341cdcf0c`)

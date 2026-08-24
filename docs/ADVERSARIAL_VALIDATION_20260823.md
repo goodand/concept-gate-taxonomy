@@ -18,6 +18,7 @@ finding 폐기, severity 상위는 lead 전량 재실측(P12).
 
 ## 반박·기각된 주장 (P12 — 재실측이 뒤집음)
 
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]
 - "`∀x Loves(x, alice)`에서 alice가 free로 잡혀야" — **반박**: alice는 항
   규칙상 정당한 상수(entity). 진짜 문제는 F1의 단일 소문자 케이스뿐.
 - "Path A/B 불일치 15건 = MAJOR 신규" — **기지 사실 재발견**: fc2e0aa에서

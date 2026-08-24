@@ -118,3 +118,8 @@ Certified-gate authority 전환(Reason/Derive 입력을 Certified로 좁히기)�
 | O3 = formula_generated | 같은 파일 + ACL 2025 초록("controlled dataset of ... syllogisms in propositional and modal logic") | 웹 실측 |
 | H1a 하네스 선례 | `experiments/2026-07-29_.../_h1a_cohort_run.py` 등 | 이 세션에서 구현·실행 |
 | 166 passed / 게이트 8-0-1 | 로컬 실행 | CI 부재 — 자기보고임을 명시 (귀하의 V5 지적 수용) |
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

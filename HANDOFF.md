@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: RULING_D29_RECEIVED_AWAITING_MATERIAL   # 방언 8종 설계 승인(count·prop) — 재료 0/3·0/1로 freeze BLOCKED
-next_action_code: IMPLEMENT_COUNT_PROP_THEN_AWAIT_ROUND3   # D-29: count(eq|ge|le|gt|lt)·prop(most) constructor + MRS_COUNT_PROJECTION_V1 계약은 재료와 독립 구현 가능; Redwoods locator는 3차 조사 대기
+state_code: RULING_D30_RECEIVED_MATERIAL_UNBLOCKED_RIGHTS_BLOCKED   # D-30 수령·검증(예측 3/3 적중). 새 정의로 잠정 재스캔: 기수 11건·비례 1건 = 하한 충족 → 재료 차단 해소. **주 차단은 rights gate(NC·SA·라이선스 버전 UNRESOLVED)**
+next_action_code: IMPLEMENT_D30_CONTRACTS_THEN_RESCAN   # 구현 6항: admissible BODY target · 변수별 card · MRS_CARDINAL_RELATION_MAP_V1 · implicit_restriction_policy 동결 · CONTROL_SURFACE_PROFILE_V2 후 전체 재스캔 · surface_display 기본값 sha256. 계약 결박 전 수치(11/1)를 적격 확정으로 쓰지 말 것
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
@@ -27,28 +27,39 @@ authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2_V4.m
 
 ## 1. 현재 상태 한 줄
 
-**Stage 2 V2 — adapter control 2/3(해석 가능 조건 미달) → 본 코호트
-미실행, Q25 판정 대기.** control 원인 분해가 상위 결함을 노출했다:
-F1 라벨 span 미결정(derivable ≠ unique), F2 다중 토큰 join 규약 부재
-(in-N FOLIO 4/5), **F3 PMB 15/15 — oracle이 사건 의미론 granularity라
-template 준수 subject는 원리적으로 fail** (V1부터 존재, subject-통과
-가능성 게이트 부재가 근본 원인). 기록: `experiments/…/CONTROLS_RUN_
-20260823.md`, 상신: `docs/DESIGN_REQUEST_oracle_granularity.md`.
-코호트 dispatch 0건 — 결과에 조건화된 것 없음.
+**Stage 2 V4 동결은 D-27/D-28/D-29 구현으로 실효(`V4_SUPERSEDED…V5_PENDING`)
+— V5 재동결은 재료 부재로 BLOCKED, 코호트 dispatch 누계 0건.** 판정 사슬
+D-24~D-29가 측정 계약의 6층 결함을 차례로 열었고(층 목록·근거:
+`docs/H1A_PROBLEM_ANALYSIS.md` §12.2 P17), 현재의 유일한 차단 요인은
+**기수 층 3건·비례 층 1건의 적격 재료가 0건**이라는 것이다. Redwoods/MRS가
+`CONDITIONALLY_QUALIFIED_CANDIDATE`(선행 조건 7건)이고 3차 조사 요청서
+(`docs/RESEARCH_REQUEST_mrs_redwoods_round3.md`)는 **발송 대기**다.
+방언은 8종(`count`·`prop` 추가)으로 확정·구현됐다 — 커널 확장과 투영 채점은
+작업트리에 있고 **커밋 미승인**, 게이트 13/0/1 GREEN.
 
 ## 2. 정본 지도 (읽는 순서)
 
+**graph 진입점**: [[concept-gate-h1-wt/docs/RULING_CHAIN_INDEX|RULING_CHAIN_INDEX]]
+— 판정 D-19~D-29 + Q30 상신 + 조사 6왕복 전부를 **1홉으로** 도달 가능하게
+묶은 색인이다. `rg`로는 판정 문서를 찾을 수 없는 경우가 실측으로 확인됐으므로
+(파일명이 질문의 어휘를 포함하지 않는다), 이어받는 세션은 **grep이 아니라 이
+색인에서 시작**한다. 각 판정 문서 헤더에 `이전`/`다음` 링크가 있어 색인 없이도
+사슬을 걸을 수 있다.
+
 | 알고 싶은 것 | 정본 |
 |---|---|
-| 최신 상태·패턴 원장 | `docs/H1A_PROBLEM_ANALYSIS.md` **마지막 절(§11)** — 규약상 항상 문서 끝이 최신 |
-| 무엇이 동결됐고 무엇이 금지인가 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2.md` (FROZEN) |
-| fixture 20+3건의 commitment | 같은 폴더 `stage2_fixture_manifest.json` (원문 0바이트 — 해시·locator만) |
-| 선별이 조작 불가능한 이유 | 같은 폴더 `freeze_stage2.py` (seed·층 술어·ANA 제외 전부 코드가 정본) |
-| 외부 판정 사슬 | `docs/DESIGN_DECISION_*` — D-19(실험 구조)·D-20(commitment)·D-21(oracle 교체)·D-22(PMB 부분자격+stratum floor)·D-23(FOLIO+FOL codec). 전부 verbatim+sha256, 말미에 수신 검증 기록 |
-| adapter 자격(코드 결박) | `experiments/2026-08-23_{o1,sbn,fol}_adapter_qualification/` — 각 test_protocol이 코드 해시를 라이브와 대조: **adapter·비교층을 고치면 자격이 자동 실효**된다 |
-| 적대 검증 결과 | `docs/ADVERSARIAL_VALIDATION_20260823.md` |
-| 이 handoff가 실제로 복원 가능한가 | `docs/HANDOFF_EVALUATION_20260823.md` — zero-context 평가기 실측(3/3 accepted) + 발견된 결함 2건과 수리 + 남은 한계 4건 |
-| 실행 기제 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/_stage2_{cohort,run,score,eval_profile,canonical_core}.py` + `conceptgate/cg_{sbn,fol}_adapter.py`, `cg_fixture_resolver.py` |
+| 최신 상태·패턴 원장 | [[concept-gate-h1-wt/docs/H1A_PROBLEM_ANALYSIS\|H1A_PROBLEM_ANALYSIS]] **마지막 절** — 규약상 항상 문서 끝이 최신(현재 §13). 이 이름은 vault에 9개 있으므로 경로로 지정한다 |
+| 판정·조사 사슬 전체 | [[concept-gate-h1-wt/docs/RULING_CHAIN_INDEX\|RULING_CHAIN_INDEX]] |
+| 판정 대기 중인 것 | [[DESIGN_REQUEST_mrs_fail_closed_and_rights\|Q30]] — 7문항. **이것이 현재 유일한 차단 요인**이다 |
+| 무엇이 동결됐고 무엇이 금지인가 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2_V4.md` (V4 = 최신 동결. **D-27~D-29 구현으로 실효**, V5 대기) |
+| fixture commitment | 같은 폴더 `stage2_fixture_manifest_v4.json` (원문 0바이트 — 해시·locator만) |
+| 선별이 조작 불가능한 이유 | 같은 폴더 `freeze_stage2_v4.py` (seed·층 술어 전부 코드가 정본) |
+| 동결이 실효됐다는 선언 | 같은 폴더 `test_stage2_freeze_v4.py`의 `FREEZE_STATE` — SUPERSEDED 선언 하에서는 **drift가 존재해야 통과**한다(선언이 거짓일 수 없게) |
+| MRS 재료가 왜 아직 부적격인가 | [[RESEARCH_RESULT_mrs_redwoods_round3\|3차 조사 회신 + 우리 검증]] §B — 전수 37,066건 실측, 적격 기수 **0건**(BODY 비제약이 유일 장애 16,584건) |
+| adapter 자격(코드 결박) | `experiments/2026-08-23_{o1,sbn,fol}_adapter_qualification/` — test_protocol이 코드 해시를 라이브와 대조: **커널·adapter를 고치면 자격이 자동 실효**된다(2026-08-24 실측: `cg_ir` 확장으로 3건 실효 → 재자격 9/9·9/9·7/7 재현) |
+| 적대 검증 결과 | [[ADVERSARIAL_VALIDATION_20260823]] |
+| 이 handoff가 실제로 복원 가능한가 | [[HANDOFF_EVALUATION_20260823]] — zero-context 평가기 실측(3/3) + 결함 2건 수리 + 남은 한계 4건 |
+| 실행 기제 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/_stage2_*.py` + `conceptgate/cg_{sbn,fol}_adapter.py`, `cg_mrs_reader.py`, `cg_fixture_resolver.py` |
 
 ## 3. 다음 실행 절차 (사용자 승인 후 — 이 문서의 유일한 고유 내용)
 

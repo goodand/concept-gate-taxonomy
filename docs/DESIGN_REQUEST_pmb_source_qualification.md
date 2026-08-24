@@ -125,3 +125,8 @@ source 요건이 "20건 전부를 두 source가 나눠 공급"인가, "수용 �
 sha256 `1533d2a5…`의 en/gold 전개본). 분류 규칙의 근거는 스크립트
 docstring에, 첫 census의 오분류(비교·시제 role 연산자를 box 연산자로
 합산)와 그 정정도 기록돼 있다.
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

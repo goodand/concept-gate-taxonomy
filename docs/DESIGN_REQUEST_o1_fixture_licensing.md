@@ -87,3 +87,8 @@ expected IR의 동결력은 hash로 유지된다. 번역기가 결정론이므�
 | "licensed under CC-BY-NC" | 논문 PDF 스트림 직접 추출 텍스트에서 발견 (당초 "CC BY 4.0" 표기는 미실측 가정이었음이 확정, 정정됨) |
 | ~45% scope interaction | 같은 PDF에서 통계 5종+"nearly half" 확인 |
 | 대안 A/B 부적합 | 외부 조사 agent 보고 + 운영 세션 재실측 (RESEARCH_RESULT_o1_corpus_access.md) |
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

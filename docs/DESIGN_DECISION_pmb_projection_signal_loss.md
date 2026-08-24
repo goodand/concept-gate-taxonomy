@@ -1,5 +1,6 @@
 # DESIGN DECISION — D-E2E-v1-28: projection 신호 소실과 층 술어 (Q28 판정)
 
+- 사슬 항법: 이전 [[DESIGN_DECISION_equivalence_idioms|D-27]] · **D-28** · 다음 [[DESIGN_DECISION_cardinal_dialect_and_mrs_source|D-29]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수신: 2026-08-23, 사용자 경유 (판정자: 외부 설계 담당, Wolfram MCP 검토 명시)
 - 원 요청: `DESIGN_REQUEST_pmb_projection_signal_loss.md`
   (sha256 `61fef029a712c4515ac02b2c…`)

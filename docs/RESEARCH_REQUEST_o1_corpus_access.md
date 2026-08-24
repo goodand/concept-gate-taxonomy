@@ -77,3 +77,8 @@ fixture 20건(quantifier scope) 저작에 가장 확실한 출처 1순위와 근
 - 대용량 파일 전체를 출력에 붙이지 말 것 (샘플 인용만)
 - corpus 내용을 요약·의역해 logical form을 "재구성"하지 말 것 — verbatim만
 - 접근 불가를 확인 없이 단정하지 말 것 (경로 목록 필수)
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

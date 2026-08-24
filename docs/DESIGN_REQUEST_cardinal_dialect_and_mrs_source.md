@@ -167,3 +167,8 @@ F5의 Wikisem 재제안은 **우리 요청서 결함**이었다(선행 배제 �
   (record 131 / InAnaphorSet 1690 / ratio=·count=·Most 0회 / most 54 중 48
   최상급)
 - 방언·투영·채점 계약: 실험 폴더의 계약 테스트 195건이 전부 통과 상태
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

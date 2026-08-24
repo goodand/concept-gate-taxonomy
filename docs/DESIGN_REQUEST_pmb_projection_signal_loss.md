@@ -139,3 +139,8 @@ PMB는 이 estimand의 source로 부적합할 수 있다.
   범위를 초과해 quantifier_negation_scope를 1/4로 붕괴시켰다), 문두 고유명
   누출 29건은 SBN `Name` role 병용으로 봉합. curry 정규화(D-27 Q27.1)는
   구현·계약 완료(뮤테이션 3/3 적중).
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

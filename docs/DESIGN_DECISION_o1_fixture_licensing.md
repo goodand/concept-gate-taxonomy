@@ -1,5 +1,6 @@
 # DESIGN DECISION — O1 fixture 라이선스-안전 저장 (D-E2E-v1-20)
 
+- 사슬 항법: 이전 [[DESIGN_DECISION_e2e_v1_experiment_design|D-19]] · **D-20** · 다음 [[DESIGN_DECISION_o1_oracle_unit_and_coverage|D-21]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수신: **2026-08-22** (요청서: `DESIGN_REQUEST_o1_fixture_licensing.md`, Q20)
 - 판정 요지: **Q20.1 = (b+)** — corpus 원문·LF·expected IR 직렬화를 저장소에
   두지 않고 sha256 commitment로 동결 + **결정론적 Oracle Adapter**(일반

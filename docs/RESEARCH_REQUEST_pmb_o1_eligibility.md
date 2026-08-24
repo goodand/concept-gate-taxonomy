@@ -75,3 +75,8 @@ constructor 스캐너를 만들 수 있다 — 그래서 R4가 R6보다 중요�
 각 R항목별로: **사실 / 근거(URL·파일 경로·verbatim 인용) / 확신도 /
 BLOCKED 여부**. 시도했으나 실패한 경로도 기록하라(무엇을 어떻게 시도했는지
 — 부재 판정의 근거가 된다).
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

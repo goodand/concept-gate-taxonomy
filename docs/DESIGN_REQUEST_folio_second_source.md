@@ -81,3 +81,8 @@ FOL adapter의 RED 계약 초안(두 갈래 모두 대비 가능), FOLIO v0.0 �
 
 census 스크립트는 20줄 이하(§1 수치 전부), 원본은 GitHub raw v0.0.
 검증 기록은 조사 결과 문서 말미.
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

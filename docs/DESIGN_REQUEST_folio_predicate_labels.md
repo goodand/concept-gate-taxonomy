@@ -104,3 +104,8 @@ FOLIO 함의-양화 topology와 subject 자연 독해의 구조 갈림은:
 - B1 1줄 재현: `adapt_fol("∀x (Zorble(x) → Glims(x))")` 술어명 대문자 보존
   + `_stage2_eval_profile.SYNSET_PATTERN` 불일치로 정규화 미적용
 - FOLIO 8건 술어 목록: SMOKE 문서 §2 표 (manifest+캐시에서 기계 재도출 가능)
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

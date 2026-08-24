@@ -1,5 +1,6 @@
 # DESIGN DECISION — E2E-v1 실험 설계 (D-E2E-v1-19)
 
+- 사슬 항법: 이전 (없음 — 사슬 시작) · **D-19** · 다음 [[DESIGN_DECISION_o1_fixture_licensing|D-20]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수신: **2026-08-22**
 - 도착 경로: 사용자가 `DESIGN_REQUEST_e2e_v1_experiment_design.md`(Q19)를
   설계 담당에게 공유하고 회신을 전달

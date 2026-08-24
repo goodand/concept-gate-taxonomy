@@ -1,5 +1,6 @@
 # RESEARCH RESULT — 2차 조사 회신 (비례 source + BLOCKED 해소 + 방언 정합)
 
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]
 - 수신: 2026-08-24, 사용자 경유 (조사용 agent, 다른 workspace)
 - 원 요청: `RESEARCH_REQUEST_cardinal_proportional_round2.md`
   (sha256 `3319126def245b59fc2a…`)

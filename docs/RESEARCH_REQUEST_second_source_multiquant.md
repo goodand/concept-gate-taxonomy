@@ -68,3 +68,8 @@ gold가 사람 저작인지, 문법에서 자동 생성됐는지(생성이면 �
 
 R항목별: 사실 / 근거(URL·verbatim) / 확신도 / BLOCKED 여부. 시도했으나
 실패한 경로 포함. 후보 순위는 매겨도 좋으나 근거를 사실로 한정하라.
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

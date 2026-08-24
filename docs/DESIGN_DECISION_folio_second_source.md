@@ -1,5 +1,6 @@
 # DESIGN DECISION — D-E2E-v1-23: FOLIO 승인 + FOL encoding profile (Q23)
 
+- 사슬 항법: 이전 [[DESIGN_DECISION_pmb_source_qualification|D-22]] · **D-23** · 다음 [[DESIGN_DECISION_folio_predicate_labels|D-24]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수령: 2026-08-23, 사용자 경유 (설계 담당, Wolfram MCP 형식 검토 명시)
 - 상신 원문: `DESIGN_REQUEST_folio_second_source.md` (Q23)
 - 요지: **Q23.1 FOLIO 승인**(제2 source, v0.0, 다중 양화 ≥5) /

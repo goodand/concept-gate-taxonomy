@@ -1,5 +1,6 @@
 # DESIGN DECISION — D-E2E-v1-25: oracle granularity와 측정 계약 (Q25 판정)
 
+- 사슬 항법: 이전 [[DESIGN_DECISION_folio_predicate_labels|D-24]] · **D-25** · 다음 [[DESIGN_DECISION_subject_dialect_expressiveness|D-26]] · 색인 [[RULING_CHAIN_INDEX]]
 - 수신: 2026-08-23, 사용자 경유 (판정자: 외부 설계 담당, Wolfram MCP 검토 명시)
 - 원 요청: `DESIGN_REQUEST_oracle_granularity.md`
   (sha256 `8150ba41c2e332aecbbf7487aea8199397947f1dc9eb57ed9b391056b5cf17bd`)

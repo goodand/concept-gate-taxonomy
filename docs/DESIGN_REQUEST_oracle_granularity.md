@@ -119,3 +119,8 @@ F3이 23/23 검증을 통과한 근본 원인이 이 게이트의 부재다.
 - F3 1줄 재현: manifest_v2의 아무 PMB entry나 캐시 LF를
   `cg_sbn_adapter.adapt_sbn`으로 IR화해 술어 목록을 문장과 대조
 - F1: control results의 CTRL-02 행 + 본문 §2 대조표
+
+---
+
+<!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]

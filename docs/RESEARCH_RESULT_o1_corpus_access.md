@@ -1,5 +1,6 @@
 # RESEARCH RESULT — O1 corpus 접근 조사 (외부 조사 agent 회신)
 
+- 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]
 - 수신: **2026-08-22** (요청서: `RESEARCH_REQUEST_o1_corpus_access.md`)
 - 결론: **corpus 확보 OK** — OSU Schuler Lab `wikisem` v0.3, 신청 불필요,
   직접 다운로드. multi-quantifier 공급 충분(~45%가 scope interaction).
