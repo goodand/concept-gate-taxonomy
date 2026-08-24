@@ -137,3 +137,55 @@ git -C <아무 worktree> worktree add /Users/jaehyuntak/Desktop/Project_in_progr
 git -C <아무 worktree> worktree add /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/claude-provider-adapter  claude-provider-adapter
 git -C <아무 worktree> worktree add /Users/jaehyuntak/Desktop/Project_in_progress/concept-gate-taxonomy/.claude/worktrees/input-length-guard      worktree-input-length-guard
 ```
+
+## More READ 2차 (2026-08-24) — 위험이 **계층으로 갈렸다**
+
+1차 More READ는 "제거 시 무엇이 소실되나"만 읽었다. 아직 안 읽은 벡터 네 개를
+더 읽었고, **4개를 균일하게 다루면 안 된다는 것**이 드러났다.
+
+| worktree | 크기 | 미추적 | 살아 있는 프로세스 | 다른 세션의 상태에 걸림 | origin 실측 | 계층 |
+|---|---:|---:|---|---|---|---|
+| `concept-gate-redteam-wt` | 43M | 0 | 없음 | 없음 | ✓ `62fc7e576` 일치 | **T1 — 지금 안전** |
+| `input-length-guard` | 48M | 0 | 없음 | 없음 | ✓ `385e34368` 일치 | **T1 — 지금 안전** |
+| `concept-gate-codex-mcp-wt` | 53M | 2 | 없음 | **있음** — 아래 §2 | ✓ `2cc7b1bb3` 일치 | **T2 — 연성 위험** |
+| `claude-provider-adapter` | 46M | 0 | **`claude bg-spare` PID가 cwd로 잡고 있다** | 없음 | ✓ `d7b588b45` 일치 | **T3 — 지금 건드리지 마라** |
+
+### 1. origin 실측 — 네 개 전부 확인
+
+`ahead=0`은 **로컬 원격추적 ref** 기준이라 fetch가 낡았으면 거짓일 수 있다.
+`git ls-remote origin refs/heads/<브랜치>`로 **원격에 직접 물어** 네 개 모두
+로컬 HEAD와 동일한 커밋임을 확인했다(위 표의 SHA).
+
+### 2. `codex-mcp-wt`은 다른 세션의 복귀 경로다 (T2)
+
+`~/.claude.json`을 **키 범위로만** 읽었다(비밀 블록은 열지 않았다).
+
+```text
+projects.<concept-gate-taxonomy>.activeWorktreeSession.preEnterOriginalCwd
+  = …/concept-gate-codex-mcp-wt
+```
+
+세션 `cf591228…`이 worktree에 진입하기 전 원래 cwd가 여기다. 그 세션이
+worktree를 나가면 이 경로로 복귀하려 한다 — 디렉터리가 없으면 그 복귀가
+실패한다. `worktreePath` 자체는 다른 저장소(`evidence-evaluator`)를 가리키므로
+**이 4개 중 어느 것도 활성 세션의 작업 디렉터리는 아니다.**
+
+### 3. `claude-provider-adapter`에 살아 있는 프로세스가 있다 (T3)
+
+```text
+claude bg-spare  PID 55424  cwd → …/.claude/worktrees/claude-provider-adapter
+```
+
+Claude Code의 **예열된 예비 프로세스**가 이 디렉터리를 cwd로 잡고 있다.
+제거하면 그 예비가 세션에 배정될 때 존재하지 않는 디렉터리에서 시작한다.
+**핸들이 사라진 뒤에 다시 판정한다.**
+
+### 4. 내 진단이 대상을 오염시켰고 원상복구했다
+
+`codex-mcp-wt`의 미추적이 2 → **6**으로 늘어난 것을 발견했다. 시각을 읽으니
+`.pytest_cache/`와 `__pycache__` 3건이 **18:26~18:27** — HMAC 키 검증을 위해
+내가 그 안에서 pytest를 돌린 잔여물이다(원래 2건은 17:08·17:28). 그 4건만
+정확히 지워 **미추적 2건 상태로 복구**했다(추적 파일 변경 0).
+
+**진단은 대상을 진단 전 상태로 되돌려야 한다.** 그러지 않으면 다음 실측이
+내 잔여물을 재료로 오독한다.
