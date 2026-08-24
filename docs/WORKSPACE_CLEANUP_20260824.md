@@ -12,8 +12,8 @@
 | 축 | 후보 | 처분 |
 |---|---:|---|
 | worktree 11개 | **0** | 전부 보류 또는 KEEP |
-| 이 worktree 파일 | **1** | `__pycache__`(840K, gitignore — 커밋 불요) |
-| vault 쪽 | 미확정 | 조사 회신 일부 누락, 재청구 중 |
+| 이 worktree 파일 | **1** | `__pycache__`(840K, gitignore — 커밋 불요, 완료) |
+| vault 쪽 | **0** | 재청구 회신 수령·확정 |
 
 **후보가 거의 없는 것이 이 저장소의 성질이다**: 동결 표면·단일 정본·참조
 규율 때문에 대부분의 파일이 하중을 진다. 1차 라운드가 이미 정리를 했다는 것도
@@ -59,10 +59,10 @@ MOC의 언급은 **역사 기록**(경로 존재 의존이 아님)이고,
 (`_verify_review_11.py`·`scan_pmb_eligibility.py`처럼 import 0이어도 문서가
 수동 실행 스크립트로 지목한다).
 
-## vault 축 — 회신 일부 누락, 정정 1건
+## vault 축 — 재청구 회신 확정, 0건
 
-조사 C의 회신이 꼬리(`diagrams/` 절)만 전달돼 네 표를 받지 못했다. 재청구했다.
-받은 부분에서 **전제 오류 2건**을 정정했다:
+조사 C의 1차 회신은 꼬리(`diagrams/` 절)만 전달돼 네 표를 못 받았다. 재청구하며
+전제 오류 2건을 함께 통지했다:
 
 - "루트 `diagrams/`의 동명 파일이 `concept-gate-h1-wt/docs/diagrams/`에도 존재"
   → **거짓**. 그 디렉터리에는 `README.md`와 `refine-verify-Z*`만 있다
@@ -70,6 +70,18 @@ MOC의 언급은 **역사 기록**(경로 존재 의존이 아님)이고,
   `notes/projects/concept-gate/concept-gate-diagrams-architecture-analysis.md`
   (81·83·1040·1042행)과 `docs/diagrams/README.md:66`이 가리키며, 후자는
   **input-task-output 레지스터의 실물 예시**로 지목한다 → `REFERENCED`
+
+2차 회신에서 네 표 전부 수령했다. 결론은 전부 후보 아님:
+
+| 항목 | 판정 | 근거 |
+|---|---|---|
+| `notes/00-moc/`(48파일) | `REGENERABLE_BUT_COSTLY` | 생성기(`generate_vault_mocs.py`) 있음, 그러나 39파일에서 backlink — SAFE 아님 |
+| `.vault-harness/vault-md-retrieval/retrieval_index.sqlite3`(82M) 등 | `REGENERABLE_BUT_COSTLY` | 재생성 스크립트 존재하나 README가 "frozen local experiment"로 지목 — 임의 삭제 대상 아님 |
+| `evidence-evaluator/results/`(1.8M) | `REGENERABLE_BUT_COSTLY` | 동일 실험 재실행으로 재생성 가능하나 기록 가치 있음 |
+| 고아 노트 | **0건** | `notes/*.md` 110파일 전부 backlink 1+ (Obsidian CLI 전수 확인) |
+| 중복 하네스 2개(`vault-md-retrieval` vs `evidence-evaluator/…/retrieval`) | 후보 아님 | 하나는 동결된 재현 시험, 하나는 유지 관리되는 재사용 코드 — 역할이 다르다. `.mcp.json`에 둘 다 배선돼 있다 |
+
+`SAFE_TO_REMOVE`: **0건.**
 
 ## 이 라운드가 남기는 규율
 
