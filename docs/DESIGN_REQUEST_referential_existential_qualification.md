@@ -147,5 +147,5 @@ D-33은 `REFERENTIAL_EXISTENTIAL_QUALIFICATION_V1`의 조건 5개를 제시했�
 
 <!-- 저장소 내부 항법 (외부 수신자에게는 무의미하다 — 그래서 본문 끝에 둔다) -->
 - 사슬 색인 [[RULING_CHAIN_INDEX]] · 상태 정본 [[concept-gate-h1-wt/HANDOFF|HANDOFF (worktree 루트)]]
-- 이 실사를 명한 판정 [[DESIGN_DECISION_referential_participant_quantification|D-33]] · 선행 상신 [[DESIGN_REQUEST_referential_participant_quantification|Q33]]
+- 이 실사를 명한 판정 [[DESIGN_DECISION_referential_participant_quantification|D-33]] · 선행 상신 [[DESIGN_REQUEST_referential_participant_quantification|Q33]] · **보충** [[DESIGN_REQUEST_referential_boundary_corpus_scale|Q34-B]](§7 한계 둘을 닫았다)
 - 관련 판정 [[DESIGN_DECISION_equivalence_idioms|D-27]] · [[DESIGN_DECISION_definite_scope_and_material_rules|D-31 Q31.4]]

@@ -47,6 +47,7 @@ zero-context agent를 위한 읽는 순서:
 | D-33 | 선택지 **네 개 전부 그대로는 기각** — (a) 인코딩 관례가 scope measurand 오염 · (b) 방향만 인정·**즉시 구현 금지**(referential ∃ 경계 미정의) · (c)(d) 기각. 권고는 선택지에 없던 **(b\*)**: `REFERENTIAL_EXISTENTIAL_QUALIFICATION_V1`을 먼저 정의한 뒤에만 `O1_SCOPE_PROJECTION_V3`. `dispatch: blocked` · `operational_patch: forbidden` | [[DESIGN_REQUEST_referential_participant_quantification]] | [[DESIGN_DECISION_referential_participant_quantification]] |
 | D-33-V | **D-33 재검증 — 뒤집지 않고 주장 유형을 갈랐다.** 논리 확인(∃ 비환원·signature의 **non-injective** 인과 미식별) / corpus 실사(synset alone 불충분) / **의미론 미확정**(`him` 대 `someone`)을 분리하고, `B*`의 강도를 "encoding과 scope가 식별 불가"로 좁혔다 | — | [[DESIGN_DECISION_d33_claim_status]] |
 | **Q34** | *판정 대기* — D-33이 명한 (b*)의 선행 실사. **두 승인 source가 지시 표현을 반대로 인코딩한다**(PMB=∃ 결박자 / FOLIO=상수, 적격 풀 799건 중 116건). 경계는 제안하지 않고 gold가 기록하는 증거만 올렸다 | [[DESIGN_REQUEST_referential_existential_qualification]] | — |
+| **Q34-B** | *보충, 새 문항 없음* — Q34 §7이 선언한 측정 한계 둘을 닫았다. **PMB gold 12,053 전수**: 지시 후보 노드 15,810개 중 닫힌 양화 어휘가 해결하는 것은 **2%**, **96%가 미결정**. **FOLIO 전수**: 상수 160회 중 **67% 미결정**이고 보통명사·물질명사·파싱 잔여도 상수다 → Q34 §1 자기 정정. (a)의 형태가 "FOLIO 규약 채택"에서 "새 경계를 세워 두 corpus를 사상"으로 바뀐다 | [[DESIGN_REQUEST_referential_boundary_corpus_scale]] | — |
 
 별도 계열(이 실험 전 단계): [[DESIGN_DECISION_refine_verify_v0_review]]
 
