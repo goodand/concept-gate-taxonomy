@@ -50,7 +50,7 @@ FOLIO "People who can catch balls are good wide receivers."
 
 즉 이 문제는 **in-N의 3/4에 해당하고 한쪽 source에 국한**된다.
 
-## 3. PMB 쪽 실사 — gold는 증거를 기록하지만 **synset으로는 가를 수 없다**
+## 3. PMB 쪽 실사 — gold는 증거를 기록하지만 **이 corpus에서 synset alone은 부류를 식별하지 못한다**
 
 PMB fixture 20건(in-N 15 + control 5)의 개념 노드 **93개 전수**.
 
@@ -84,7 +84,12 @@ male.n.02                                    % him        [18-22]
 | 4 | ANSI를 고치자 **문두 대문자**를 고유명으로 오분류했다(`'Not everyone'` → 지시). 이것은 우리 control 적격 술어에 **이미 문서화된 같은 누출**이다 |
 
 그래서 **분류기 제작을 중단했다.** 계속하면 `operational_patch: forbidden`
-위반이고, 도구가 정할 수 없는 것을 도구가 정하게 된다.
+위반이고, 도구 능력이 의미 경계를 정하게 된다.
+
+**주장의 범위**: 말할 수 있는 것은 **"현재 시도한 표면·구문 proxy로는 경계를
+안정적으로 추출할 수 있다는 증거가 없다"**이고, "원리적으로 불가능하다"가
+아니다. (이 문단은 상신 후 D-33 재검증(D-33-V §7)의 요구로 범위를 좁힌 것이며,
+상신 시점 본문의 주장을 철회하는 것이 아니라 강도를 정확히 한 것이다.)
 
 ## 5. 판정문 §5의 계약 필드에 대해 — **가/불가를 나누지 않고 증거만 보고한다**
 
@@ -99,7 +104,7 @@ D-33은 `REFERENTIAL_EXISTENTIAL_QUALIFICATION_V1`의 조건 5개를 제시했�
 | `quantificational_force` | 표면 한정사 어휘(`every`·`some`·`no`) | `someone` 대 `him`처럼 **둘 다 사람을 가리키는** 경우의 force 차이 |
 | `scope_bearing_role` | 어댑터가 만든 결박자 위치 | 그 결박자가 **의미상** scope를 만드는지 |
 | `representation` | SBN role(`Agent`·`Recipient`) · FOL 항 종류 | — |
-| `semantic_class` | synset(`male.n.02`·`person.n.01`) | **§3이 보인 대로 synset은 부류를 가르지 못한다** |
+| `semantic_class` | synset(`male.n.02`·`person.n.01`) | **§3이 보인 대로 이 corpus에서 synset alone은 부류를 식별하지 못한다** |
 
 ## 6. 우리가 판정에 청하는 것
 

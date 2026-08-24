@@ -45,6 +45,7 @@ zero-context agent를 위한 읽는 순서:
 
 | D-32-C | `Q_RSTR_BODY`를 위치로 정의 **승인, 단 `forall` 한정**(existential은 `P∧Q`≢`True∧(P→Q)`) · provenance는 scoring signature 금지 | [[DESIGN_REQUEST_q_rstr_body_position]] | [[DESIGN_DECISION_q_rstr_body_position]] |
 | D-33 | 선택지 **네 개 전부 그대로는 기각** — (a) 인코딩 관례가 scope measurand 오염 · (b) 방향만 인정·**즉시 구현 금지**(referential ∃ 경계 미정의) · (c)(d) 기각. 권고는 선택지에 없던 **(b\*)**: `REFERENTIAL_EXISTENTIAL_QUALIFICATION_V1`을 먼저 정의한 뒤에만 `O1_SCOPE_PROJECTION_V3`. `dispatch: blocked` · `operational_patch: forbidden` | [[DESIGN_REQUEST_referential_participant_quantification]] | [[DESIGN_DECISION_referential_participant_quantification]] |
+| D-33-V | **D-33 재검증 — 뒤집지 않고 주장 유형을 갈랐다.** 논리 확인(∃ 비환원·signature의 **non-injective** 인과 미식별) / corpus 실사(synset alone 불충분) / **의미론 미확정**(`him` 대 `someone`)을 분리하고, `B*`의 강도를 "encoding과 scope가 식별 불가"로 좁혔다 | — | [[DESIGN_DECISION_d33_claim_status]] |
 | **Q34** | *판정 대기* — D-33이 명한 (b*)의 선행 실사. **두 승인 source가 지시 표현을 반대로 인코딩한다**(PMB=∃ 결박자 / FOLIO=상수, 적격 풀 799건 중 116건). 경계는 제안하지 않고 gold가 기록하는 증거만 올렸다 | [[DESIGN_REQUEST_referential_existential_qualification]] | — |
 
 별도 계열(이 실험 전 단계): [[DESIGN_DECISION_refine_verify_v0_review]]

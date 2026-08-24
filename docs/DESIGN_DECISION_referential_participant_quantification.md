@@ -2,7 +2,7 @@
 
 - 수신: 2026-08-24 · 발신: 외부 설계 담당(저장소 접근 없음)
 - 요청서: [[DESIGN_REQUEST_referential_participant_quantification|Q33]]
-- 사슬 항법: 이전 [[DESIGN_DECISION_q_rstr_body_position|D-32-C]] · **D-33** · 다음 [[DESIGN_REQUEST_referential_existential_qualification|Q34 상신]] · 색인 [[RULING_CHAIN_INDEX]]
+- 사슬 항법: 이전 [[DESIGN_DECISION_q_rstr_body_position|D-32-C]] · **D-33** · 다음 [[DESIGN_DECISION_d33_claim_status|D-33-V(재검증)]] → [[DESIGN_REQUEST_referential_existential_qualification|Q34]] · 색인 [[RULING_CHAIN_INDEX]]
 - `VERBATIM_SHA256: e618857ba9900f2cb1072deb6d5b9d62c701d9c886f3bc48796369f61cbcb42a`
   (범위: `<!-- VERBATIM-BEGIN -->` 다음 개행부터 `<!-- VERBATIM-END -->` 직전 개행 **제외**까지 — D-30~D-32-C와 같은 규약)
 
@@ -12,7 +12,9 @@
   오염) · (b) **방향은 인정, 즉시 구현 금지**(referential ∃의 경계가 미정의) ·
   (c) 기각(이론적 근거 없이 층별로 measurand를 바꿈) · (d) 기각(사전등록 모집단
   변경 + 측정 곤란 사례를 골라 제거).
-- **권고는 `(b*)`** — 원래 선택지에 없던 것: 먼저
+- **권고는 `(b*)`** — 원래 선택지에 없던 것. **강도 주의**(D-33-V §8): 확정된
+  것은 "referential ∃가 measurand 밖이다"가 아니라 **"encoding과 scope가 현재
+  측정으로 식별 불가"**이고, projection의 **semantic boundary는 미확정**이다: 먼저
   `REFERENTIAL_EXISTENTIAL_QUALIFICATION_V1`으로 "어떤 ∃가 순수 referential
   participant binder인가"를 독립 정의하고, 그 qualification 통과 후에만
   `O1_SCOPE_PROJECTION_V3`에서 referential binder를 measurand 밖으로 투영한다.
@@ -558,7 +560,7 @@ Q33에 실제로 해당하는 두 형태를 도메인 2에서 전수 확인했�
 것이다. 그렇게 되지 않았다 — 즉 이 검증은 판정에 유리한 방향으로만 설계되지
 않았다.
 
-## B.3 V2(수리판) — 재료 실사: 경계는 **synset으로 그을 수 없다**
+## B.3 V2(수리판) — 재료 실사: **이 corpus에서는** synset alone이 부류를 식별하지 못한다
 
 PMB fixture 20건(in-N 15 + control 5, 중복 제거) 개념 노드 **93개 전수**.
 
@@ -572,6 +574,11 @@ gold는 각 개념 노드에 **표면 토큰을 주석으로 기록**한다(`mal
 
 `person.n.01` 하나가 세 부류에 걸친다. 이 결론은 아래 계측기 결함과 **무관하게
 성립한다** — `Everyone`/`I`/`passengers`는 모호하지 않은 사례다.
+
+**주장의 범위**(D-33-V §6이 요구한 정정): 이것은 "이 gold corpus에서 synset
+alone이 원하는 분류를 식별하지 못한다"는 **corpus 실사**다. `I`가 의미론적으로
+referential이라는 **증명이 아니다** — 그 판단은 gold annotation과 언어학 이론에
+대한 별개 주장이다.
 
 판정 §6("`male.n.02` 하나만 보고 제거하면 안 된다")이 **실측으로 확인**됐다.
 
@@ -592,6 +599,11 @@ gold는 각 개념 노드에 **표면 토큰을 주석으로 기록**한다(`mal
 
 **이 네 번의 실패가 판정 §3("경계가 임의적")의 가장 강한 경험적 증거다.**
 추상적으로 동의한 것이 아니라, 네 번 시도해서 네 번 다른 방식으로 틀렸다.
+
+**주장의 범위**(D-33-V §7이 요구한 정정): 정확한 결론은 **"현재 시도한 proxy들이
+불충분·불안정하다"**이고, "4번 실패했으므로 원리적으로 분류 불가능하다"로
+확대하면 안 된다. 표면적·구문적 proxy만으로 경계를 안정적으로 추출할 수 있다는
+**증거가 없다**는 것이 우리가 말할 수 있는 전부다.
 
 ## B.5 V4 — (d) 기각 근거: **CONFIRMED**
 

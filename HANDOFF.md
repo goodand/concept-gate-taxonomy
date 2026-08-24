@@ -53,7 +53,7 @@ control 재선별로 **5/5 통과**를 얻었다(V4 1/6 → V5 2/6 → V5.1 5/5,
 |---|---|
 | 최신 상태·패턴 원장 | [[concept-gate-h1-wt/docs/H1A_PROBLEM_ANALYSIS\|H1A_PROBLEM_ANALYSIS]] **마지막 절** — 규약상 항상 문서 끝이 최신(현재 **§18**). 이 이름은 vault에 9개 있으므로 경로로 지정한다 |
 | 판정·조사 사슬 전체 | [[concept-gate-h1-wt/docs/RULING_CHAIN_INDEX\|RULING_CHAIN_INDEX]] |
-| **무엇이 코호트를 막고 있나** | [[DESIGN_DECISION_referential_participant_quantification\|D-33]] → 실사 상신 [[DESIGN_REQUEST_referential_existential_qualification\|Q34]] 회신 대기. — referential ∃ 경계가 미정의라 `dispatch: blocked` · `operational_patch: forbidden`. 우리가 경계를 그으면 위반이므로 **실사만 Q34로 상신**한다(§B.3·B.4가 재료) |
+| **무엇이 코호트를 막고 있나** | [[DESIGN_DECISION_referential_participant_quantification\|D-33]] → 재검증 [[DESIGN_DECISION_d33_claim_status\|D-33-V]](판정 유지·주장 유형 분리) → 실사 상신 [[DESIGN_REQUEST_referential_existential_qualification\|Q34]] 회신 대기. **`B*`의 정확한 강도**: 확정된 것은 "encoding과 scope가 현재 측정으로 식별 불가"이고 "referential ∃가 measurand 밖"은 아직 미확정이다. — referential ∃ 경계가 미정의라 `dispatch: blocked` · `operational_patch: forbidden`. 우리가 경계를 그으면 위반이므로 **실사만 Q34로 상신**한다(§B.3·B.4가 재료) |
 | 무엇이 동결됐고 무엇이 금지인가 | 사전등록 본문은 `PREREGISTRATION_STAGE2_V4.md`가 여전히 정본이고, **동결 산출은 V5**다(`stage2_fixture_manifest_v5.json` — 투영 전용 개정). D-33이 `O1_SCOPE_PROJECTION_V3`을 예고했으므로 **V5의 measurement_contract는 잠정**이다 |
 | fixture commitment | 같은 폴더 `stage2_fixture_manifest_v5.json` (원문 0바이트 — 해시·locator만. V4에서 commitment 필드 바이트 동일, 추가된 것은 `expected_scope_signature_v2_sha256`) |
 | 선별이 조작 불가능한 이유 | 같은 폴더 `freeze_stage2_v4.py`(in-N 선별) · `freeze_stage2_v5.py`(V5 = 투영 전용 개정, 재투영·서명 재생성이 전부 코드) · `freeze_controls_v5_1.py`(control 재선별, 적격 술어 2층) — seed·층 술어·투영 전부 코드가 정본이고 산출은 덮어쓰기를 거부한다 |
