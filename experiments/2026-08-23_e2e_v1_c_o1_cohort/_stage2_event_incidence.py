@@ -32,6 +32,11 @@ from _stage2_canonical_core import desugar
 from _stage2_scope_projection import normalize_local_idioms
 
 EVENT_INCIDENCE_PROFILE_ID = "PMB_EVENT_INCIDENCE_PROJECTION_V1"
+# target 양화(= 신호가 남아야 하는 결박자). 방언을 넓히면 **여기도 넓혀야**
+# 한다 — D-29가 count·prop을 추가했을 때 이 집합을 넓히지 않아 기수·비례
+# fixture가 `target_quantifiers=0`으로 집계됐다(fail-closed라 안전 쪽으로
+# 틀렸지만 이유가 틀렸다).
+TARGET_BINDERS = ("forall", "exists", "count", "prop")
 SLOT = "□"
 RESERVED = "True"
 
@@ -251,7 +256,7 @@ def projection_signal_check(case_id: str, formula: dict,
     def walk(node: Any) -> None:
         nonlocal total, collapsed
         if isinstance(node, dict):
-            if node.get("kind") in ("forall", "exists"):
+            if node.get("kind") in TARGET_BINDERS:
                 total += 1
                 body = node["body"]
                 # desugar 후 형태: forall(x, True, implies(R, B)) —

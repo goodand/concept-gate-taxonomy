@@ -306,3 +306,84 @@ def test_folio_control_500p4_shape_now_converges():
               IMP(P("in_race", V("x")), P("racehorse", V("x"))))
     assert same(proj.project_scope_for_case("FOLIO-500p4", gold),
                 proj.project_scope_for_case("FOLIO-500p4", subj))
+
+
+# ---- D-E2E-v1-29 Q29.3: count·prop은 scored target signal ----
+
+CNT = lambda rel, num, v, r, b: {"kind": "count", "rel": rel, "num": num,
+                                 "var": v, "restriction": r, "body": b}
+PROP = lambda rel, v, r, b: {"kind": "prop", "rel": rel, "var": v,
+                             "restriction": r, "body": b}
+
+
+def test_count_rel_and_num_survive_projection():
+    """판정 §3: rel·num·결박·제한/본문·중첩 위치가 전부 채점 대상."""
+    out = proj.project_scope_for_case(
+        "FOLIO-c", CNT("ge", 3, "x", P("dog", V("x")), P("bark", V("x"))))
+    s = json.dumps(out, ensure_ascii=False)
+    assert '"count"' in s and '"ge"' in s and '"num": 3' in s
+
+
+def test_cardinal_value_mutation_fails():
+    """판정 §13: 3→4는 반드시 FAIL. §14가 실측한 신호(3≠4)를 지키는 계약."""
+    three = CNT("eq", 3, "x", P("dog", V("x")), P("bark", V("x")))
+    four = CNT("eq", 4, "x", P("dog", V("x")), P("bark", V("x")))
+    assert not same(proj.project_scope_for_case("FOLIO-c", three),
+                    proj.project_scope_for_case("FOLIO-c", four))
+
+
+def test_cardinal_relation_mutation_fails():
+    """ge→gt는 FAIL (판정 §13)."""
+    a = CNT("ge", 3, "x", P("dog", V("x")), P("bark", V("x")))
+    b = CNT("gt", 3, "x", P("dog", V("x")), P("bark", V("x")))
+    assert not same(proj.project_scope_for_case("FOLIO-c", a),
+                    proj.project_scope_for_case("FOLIO-c", b))
+
+
+def test_count_scope_mutation_fails():
+    """RSTR/BODY 교환은 FAIL (판정 §13 scope mutation).
+
+    주의 — 항수가 같은 1항 술어 둘을 교환하는 뮤테이션은 **원리상 빗나간다**:
+    FOLIO 투영이 라벨을 전부 `□`로 익명화하므로 `□(x)`↔`□(x)` 교환은 관측
+    불가하고, 그것은 결함이 아니라 라벨 비채점 계약의 귀결이다(P16). 관측
+    가능한 최소 뮤테이션은 **구조가 다른** 제한식/본문의 교환이다.
+    """
+    r = P("dog", V("x"))
+    b_ = {"kind": "and", "args": [P("bark", V("x")), P("loud", V("x"))]}
+    assert not same(proj.project_scope_for_case("FOLIO-c", CNT("eq", 3, "x", r, b_)),
+                    proj.project_scope_for_case("FOLIO-c", CNT("eq", 3, "x", b_, r)))
+
+
+def test_prop_most_vs_ordinary_quantifier_fails():
+    """판정 §13 proportional mutation: most→일반 양화가 같은 signature면 FAIL."""
+    most = PROP("most", "x", P("cat", V("x")), P("sleep", V("x")))
+    univ = FA("x", P("cat", V("x")), P("sleep", V("x")))
+    exis = EX("x", P("cat", V("x")), P("sleep", V("x")))
+    m = proj.project_scope_for_case("FOLIO-c", most)
+    assert not same(m, proj.project_scope_for_case("FOLIO-c", univ))
+    assert not same(m, proj.project_scope_for_case("FOLIO-c", exis))
+
+
+def test_prop_and_count_are_distinguished():
+    """비례와 기수는 서로 다른 signature여야 한다(같은 family가 아니다)."""
+    most = PROP("most", "x", P("cat", V("x")), P("sleep", V("x")))
+    cnt = CNT("ge", 2, "x", P("cat", V("x")), P("sleep", V("x")))
+    assert not same(proj.project_scope_for_case("FOLIO-c", most),
+                    proj.project_scope_for_case("FOLIO-c", cnt))
+
+
+def test_count_labels_still_anonymised():
+    """라벨은 여전히 채점 밖 — 기수·비례가 채점 대상인 것과 무관하다."""
+    a = CNT("eq", 2, "x", P("Dog", V("x")), P("Bark", V("x")))
+    b = CNT("eq", 2, "x", P("hound", V("x")), P("yap", V("x")))
+    assert same(proj.project_scope_for_case("FOLIO-c", a),
+                proj.project_scope_for_case("FOLIO-c", b))
+
+
+def test_count_nesting_position_is_scored():
+    inner = CNT("eq", 2, "y", P("bone", V("y")), P("chew", V("x"), V("y")))
+    a = FA("x", P("dog", V("x")), inner)
+    b = CNT("eq", 2, "y", P("bone", V("y")),
+            FA("x", P("dog", V("x")), P("chew", V("x"), V("y"))))
+    assert not same(proj.project_scope_for_case("FOLIO-c", a),
+                    proj.project_scope_for_case("FOLIO-c", b))

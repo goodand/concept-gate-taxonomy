@@ -227,3 +227,45 @@ def test_role_order_does_not_determine_argument_order():
     walk(sig)
     assert found and found[0] == ["x0", "x2"], found      # 계보 순서로 정규화
     assert same(sig, ei.project_event_incidence(SUBJECT_LIKE))
+
+
+# ---- D-E2E-v1-29: count·prop도 target 양화다 ---------------------------
+#
+# 실물 대조(Redwoods 20214052 "Most are trim." / 21438006 "Three companies…")로
+# 드러난 결함: 게이트가 target 양화를 `forall|exists`로만 세므로 기수·비례
+# fixture는 `target_quantifiers=0`이 되어 SIGNAL_COLLAPSED로 떨어진다.
+# fail-closed라 안전 쪽으로 틀리지만 **이유가 틀리다** — 신호가 붕괴한 것이
+# 아니라 게이트가 그 양화를 보지 못한 것이다. 방언을 넓히면서 하류 게이트를
+# 넓히지 않은 것이 원인(P9 계열의 역방향).
+
+def test_count_is_counted_as_a_target_quantifier():
+    f = {"kind": "count", "rel": "eq", "num": 3, "var": "x",
+         "restriction": {"kind": "pred", "name": "company",
+                         "args": [{"kind": "var", "name": "x"}]},
+         "body": {"kind": "pred", "name": "trade",
+                  "args": [{"kind": "var", "name": "x"}]}}
+    out = ei.projection_signal_check("MRS-21438006", f, already_projected=True)
+    assert out["target_quantifiers"] == 1, out
+    assert out["verdict"] == "SIGNAL_RETAINED", out
+
+
+def test_prop_is_counted_as_a_target_quantifier():
+    f = {"kind": "prop", "rel": "most", "var": "x",
+         "restriction": {"kind": "pred", "name": "generic_entity",
+                         "args": [{"kind": "var", "name": "x"}]},
+         "body": {"kind": "pred", "name": "trim",
+                  "args": [{"kind": "var", "name": "x"}]}}
+    out = ei.projection_signal_check("MRS-20214052", f, already_projected=True)
+    assert out["target_quantifiers"] == 1, out
+    assert out["verdict"] == "SIGNAL_RETAINED", out
+
+
+def test_count_with_empty_body_still_collapses():
+    """게이트를 넓히는 것이 게이트를 무르게 하는 것이어서는 안 된다(음성)."""
+    f = {"kind": "count", "rel": "eq", "num": 3, "var": "x",
+         "restriction": {"kind": "pred", "name": "company",
+                         "args": [{"kind": "var", "name": "x"}]},
+         "body": {"kind": "pred", "name": "True", "args": []}}
+    out = ei.projection_signal_check("MRS-x", f, already_projected=True)
+    assert out["target_quantifiers"] == 1 and out["collapsed_quantifiers"] == 1
+    assert out["verdict"] == "SIGNAL_COLLAPSED"
