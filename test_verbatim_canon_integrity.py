@@ -40,7 +40,24 @@ BEGIN = "<!-- VERBATIM-BEGIN -->\n"
 END_MARK = "<!-- VERBATIM-END -->"
 # 64-hex를 sha256 언급 근처에서 찾는다. 필드명이 사슬 안에서 갈렸으므로
 # 이름을 고정하지 않는다(위 docstring 참조).
-_HASH = re.compile(r"(?:sha256|SHA256)[^\n`]*`?([0-9a-f]{64})")
+#
+# 적대 검증(2026-08-24, Haiku red team) 반영:
+# * 대소문자(F1/F2) — hexdigest는 소문자지만 사람이 대문자로 옮겨 적으면
+#   이전 정규식([0-9a-f] 전용)이 "기록 없음"으로 **오발**했다. 게이트 오발은
+#   신뢰를 깎고, 신뢰 잃은 게이트는 꺼진다. IGNORECASE + 소문자 정규화로 수리.
+# * 기록 위치(F3/F4)는 **제약하지 않는다 — 수리가 아니라 한계로 문서화**:
+#   red team은 code fence 안의 해시도 "기록"으로 세어짐을 지적했으나,
+#   재실측하면 그것은 이미 알려진 잔여 우회("블록과 기록을 둘 다 고치면
+#   통과")와 등가다 — 기록이 어디 있든 고치는 행위는 같고 방어층도 같다:
+#   **git diff에 반드시 드러난다**. 위치를 제약하면 규약 두 변종을 깬다.
+#   같은 철학이 커널에 이미 있다: `cg_normalizer.verify_snapshot`의
+#   "hash는 증거가 아니다" — 기록된 값을 믿지 않고 재계산으로 대조한다.
+_HASH = re.compile(r"sha256[^\n`]*`?([0-9a-fA-F]{64})", re.IGNORECASE)
+
+
+def _recorded_hashes(text: str) -> set:
+    """기록 해시를 소문자로 정규화해 수집한다 — 대조는 항상 소문자 대 소문자."""
+    return {h.lower() for h in _HASH.findall(text)}
 
 
 def _marker_lines(text: str, marker: str) -> int:
@@ -72,7 +89,7 @@ def test_verbatim_block_matches_a_recorded_hash(path: Path):
     text = path.read_text(encoding="utf-8")
     assert "\n" + END_MARK in text, f"{path.name}: BEGIN만 있고 END가 없다"
 
-    recorded = set(_HASH.findall(text))
+    recorded = _recorded_hashes(text)
     assert recorded, (
         f"{path.name}: verbatim 블록이 있는데 sha256 기록이 없다. "
         "기록 없는 정본은 바뀌었는지 알 수 없고 그것은 무결과 구별되지 않는다")
@@ -99,7 +116,7 @@ def test_mutating_a_verbatim_block_is_detected():
     """
     path = _docs_with_verbatim()[0]
     text = path.read_text(encoding="utf-8")
-    recorded = set(_HASH.findall(text))
+    recorded = _recorded_hashes(text)
     body = _candidates(text)[0]
     tampered = body.replace("판정", "판단", 1)
     if tampered == body:
@@ -111,3 +128,17 @@ def test_prose_mention_of_a_marker_does_not_break_the_count():
     """음성 테스트 — 첫 실행이 저지른 오측정이 재발하지 않는다는 증거."""
     fake = f"{BEGIN}body\n{END_MARK}\n\n설명: `{END_MARK}` 직전까지의 바이트열.\n"
     assert _marker_lines(fake, END_MARK) == 1
+
+
+def test_uppercase_recorded_hash_is_still_recognised():
+    """red team F1의 수리 증거 — 대문자 기록도 인식한다(오발 방지)."""
+    fake = ("- VERBATIM_SHA256: `2FAB19ECFE9FBE9DEA8409F319AD4C23036BDC82"
+            "F309C220D04EF0C7B43D096D`\n")
+    assert _recorded_hashes(fake) == {
+        "2fab19ecfe9fbe9dea8409f319ad4c23036bdc82f309c220d04ef0c7b43d096d"}
+
+
+def test_mixed_case_field_name_is_still_recognised():
+    """red team F2의 수리 증거 — 필드명 대소문자 변형도 인식한다."""
+    fake = "- Verbatim_Sha256: 0123456789abcdef" + "0" * 48 + "\n"
+    assert len(_recorded_hashes(fake)) == 1

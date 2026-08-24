@@ -37,7 +37,10 @@ KNOWN_UNWITNESSED: dict[str, str] = {
 
 
 def _ep(pred, lbl="h8", **args):
-    return {"pred": pred, "lbl": lbl, "args": dict(args)}
+    # `span`을 포함해 실물 파서(`cg_mrs_reader`) 산출과 형태를 맞춘다 —
+    # 적대 검증 Finding 3: 형태가 어긋나면 증인이 GREEN이어도 실물에서
+    # 규칙이 죽을 수 있다(지금은 span 미사용이지만 형태 드리프트를 막는다).
+    return {"pred": pred, "span": (0, 1), "lbl": lbl, "args": dict(args)}
 
 
 def _mrs(eps, hcons=()):
@@ -134,21 +137,87 @@ def test_oracle_collision_has_a_witness():
 
 # ---- 원장 대조: 모든 reject 코드에 증인이 있는가 -----------------------
 
-def test_every_reject_code_has_a_witness_test():
-    """`REJECT_CODES`에 코드를 추가하면 증인 테스트도 추가해야 한다.
+def _witness_string_constants() -> set:
+    """**증인 테스트 함수 본문 안의** 문자열 상수만 수집한다.
 
-    이 게이트의 핵심이다. 코드만 늘리고 증인을 안 만들면 그 코드는
-    **도달 불가일 수 있고**, 도달 불가한 배제 규칙은 공허한 가드와 같다.
+    적대 검증(2026-08-24, Haiku red team)이 이전 판을 뚫었다: 이전 검사는
+    모듈 소스 전체에 대한 부분 문자열 검색이어서 **주석·docstring·
+    KNOWN_UNWITNESSED 등재**가 전부 증인으로 세어졌다 — 면제와 증인이
+    구별되지 않았고, 그것은 이 게이트가 잡으려던 결함 부류("코드가 참으로
+    만들지 않는 명제를 주장")를 게이트 자신이 저지른 것이다.
+
+    AST로 좁힌다: `test_*` 함수의 **본문**(docstring 제외)에 등장하는 문자열
+    상수만. 주석은 AST에 없고, KNOWN_UNWITNESSED는 함수가 아니며,
+    docstring은 첫 문장으로 식별해 제외한다.
     """
-    import inspect
-    src = inspect.getsource(inspect.getmodule(test_every_reject_code_has_a_witness_test))
-    missing = [c for c in mcp.REJECT_CODES if f'"{c}"' not in src]
+    import ast, inspect
+    tree = ast.parse(inspect.getsource(
+        inspect.getmodule(_witness_string_constants)))
+    got: set = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if not node.name.startswith("test_"):
+            continue
+        body = node.body
+        if (body and isinstance(body[0], ast.Expr)
+                and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)):
+            body = body[1:]                      # docstring 제외
+        for stmt in body:
+            for sub in ast.walk(stmt):
+                if isinstance(sub, ast.Constant) and isinstance(sub.value, str):
+                    got.add(sub.value)
+    return got
+
+
+def test_every_reject_code_has_a_witness_test():
+    """`REJECT_CODES`의 코드마다 **증인 테스트** 또는 **명시적 면제**가 있어야 한다.
+
+    두 경로를 구별한다(적대 검증이 요구한 수리):
+    (a) 증인 — test_ 함수 본문의 문자열 상수로 그 코드가 등장한다
+    (b) 면제 — `KNOWN_UNWITNESSED`의 **키**다. 면제는 조용히 통과되지 않고
+        아래 단언 메시지에 이름이 찍힌다.
+    """
+    witnessed = _witness_string_constants()
+    exempt = set(KNOWN_UNWITNESSED)
+    missing = [c for c in mcp.REJECT_CODES
+               if c not in witnessed and c not in exempt]
     assert not missing, (
         f"증인 테스트가 없는 reject 코드: {missing}. "
-        "증인을 쓰거나 KNOWN_UNWITNESSED에 이유와 담당을 적어라")
+        f"증인을 쓰거나 KNOWN_UNWITNESSED에 이유와 담당을 적어라 "
+        f"(현재 면제: {sorted(exempt)})")
+
+
+def test_comment_or_exemption_mention_is_not_a_witness():
+    """음성 테스트 — red team의 우회 경로가 닫혔다는 증거.
+
+    (1) 주석·docstring 언급은 AST에 없거나 제외되므로 증인이 아니다.
+    (2) KNOWN_UNWITNESSED 등재는 exempt이지 witnessed가 아니다.
+    """
+    witnessed = _witness_string_constants()
+    # 프로브 문자열을 **런타임 결합**으로 만든다 — 통짜 리터럴로 적으면 이
+    # 단언 자체가 test_ 함수 본문의 상수라 수집돼 자기모순이 된다(이 수리의
+    # 첫 판이 정확히 그렇게 실패했고, 음성 테스트가 그것을 잡았다).
+    probe = "fake_code_" + "only_in_a_comment"   # 주석에는 통짜로 적혀 있다:
+    # fake_code_only_in_a_comment  ← 주석은 AST에 없으므로 수집되지 않는다
+    assert probe not in witnessed
+    for exempt_key in KNOWN_UNWITNESSED:
+        # 면제 키가 우연히 어떤 증인 테스트 본문에 나타나면 그건 증인이
+        # 생겼다는 뜻이므로 면제를 지워야 한다 — 둘 다면 회계가 모호해진다.
+        assert exempt_key not in witnessed, (
+            f"{exempt_key}: 면제로 등재됐는데 증인도 있다 — 면제를 지워라")
 
 
 def test_known_unwitnessed_entries_carry_a_reason_and_owner():
+    """형식 검사는 **tripwire이지 증명이 아니다** (정직한 한계 명시).
+
+    적대 검증이 보인 대로 무의미한 채움 텍스트("aaa…담당: someone")도 이
+    형식을 통과한다. 형식 검사가 막는 것은 **빈 면제**(이유 없음)뿐이고,
+    이유의 **의미**는 사람 리뷰와 git diff의 몫이다 — 면제 추가는 이 파일의
+    diff로 반드시 드러난다. Codex 라인의 repair_loop이 G1 우회 가능성을
+    문서화한 것과 같은 태도다: 가드의 한계를 숨기지 않고 적는다.
+    """
     for rule, reason in KNOWN_UNWITNESSED.items():
         assert len(reason) > 60, f"{rule}: 이유가 너무 짧다"
         assert "담당" in reason, f"{rule}: 담당이 없다"
