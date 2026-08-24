@@ -509,3 +509,162 @@ def test_owlmap_stereotype_passes_through_to_owl_concepts():
     by_name = {c["name"]: c for c in r["owl"]["concepts"]}
     assert by_name["평행사변형"]["stereotype"] == "kind"
     assert by_name["X"]["stereotype"] == "phase"
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# 관계 해석 — 침묵 기본값 제거 (2026-08-24)
+#
+# 결함: `assemble_concepts` 가 `f.get("relation", "is_a")` 로 조회했다. 조회
+# 키는 **이론 어휘**(`relation`)인데, 호출자가 **운영 어휘**(`relation_hint`)나
+# `type` 으로 부르면 그 값이 **조용히 무시되고 is_a 가 적용**됐다.
+#
+# 실측(배포본·로컬 동일): `{"label":"tail","type":"structural_composition",
+# "relation_hint":"has_part"}` → `dog --is_a--> tail`. **부분이 하위클래스가
+# 됐다.** crosswalk 주석이 "침묵 매핑 금지"라고 적어 뒀는데 입력 쪽이 침묵
+# 기본값을 쓰고 있었다.
+#
+# 음성 테스트가 이 절의 핵심 — 침묵 기본값과 올바른 해석은 **성공 응답만
+# 보면 구별되지 않는다**(둘 다 ok=True 를 낸다). 어긋난 입력이 **멈추는지**를
+# 봐야 한다.
+# ═══════════════════════════════════════════════════════════════════════
+
+import pytest as _pytest
+
+from conceptgate import cg_normalizer as _N
+
+
+def _one(feats):
+    return _N.assemble_concepts({"concepts": [{"name": "dog", "features": feats}]})
+
+
+_EV = {"evidence_text": "A dog has a tail."}
+
+
+def _codes(r):
+    return [e["code"] for e in r.get("errors", [])]
+
+
+def test_operational_vocabulary_is_accepted_and_not_collapsed_to_is_a():
+    r = _one([{"label": "tail", "relation_hint": "component_of", **_EV}])
+    assert r["ok"] is True, r.get("errors")
+    f = r["concepts_json"]["concepts"][0]["features"][0]
+    assert f["type"] == "structural_composition"
+    assert f["relation_hint"] == "component_of"
+    c = r["claims"][0]
+    # 방향: 부분-전체는 feature 가 주어다 (Winston: pedal component_of bike)
+    assert (c["subject"], c["predicate"], c["object"]) == ("tail", "component_of", "dog")
+
+
+def test_theory_vocabulary_gives_the_same_result():
+    a = _one([{"label": "tail", "relation_hint": "component_of", **_EV}])
+    b = _one([{"label": "tail", "relation": "component_integral", **_EV}])
+    assert a["concepts_json"] == b["concepts_json"]
+    assert a["claims"] == b["claims"]
+
+
+def test_unknown_hint_halts_and_names_the_accepted_values():
+    """음성 — 이것이 조용히 is_a 가 되던 그 입력이다."""
+    r = _one([{"label": "tail", "relation_hint": "has_part", **_EV}])
+    assert r["ok"] is False
+    assert "UNKNOWN_RELATION_HINT" in _codes(r)
+    d = r["errors"][0]["detail"]
+    assert "component_of" in d["known_relation_hint"], "허용 목록을 말하지 않으면 고칠 수 없다"
+    assert d["fix"]
+
+
+def test_type_alone_halts_because_the_relation_is_not_recoverable():
+    """음성 — `structural_composition` 하나가 5개 관계에 대응한다."""
+    r = _one([{"label": "tail", "type": "structural_composition", **_EV}])
+    assert r["ok"] is False
+    assert "RELATION_REQUIRED_FOR_TYPE" in _codes(r)
+    cands = r["errors"][0]["detail"]["candidate_relation"]
+    assert len(cands) >= 2 and "component_integral" in cands
+
+
+def test_conflicting_type_halts_instead_of_being_overwritten():
+    """음성 — 조용히 한쪽을 이기게 하면 무엇이 적용됐는지 알 수 없다."""
+    r = _one([{"label": "tail", "relation": "component_integral",
+               "type": "essential_feature", **_EV}])
+    assert r["ok"] is False
+    assert "FEATURE_TYPE_CONFLICT" in _codes(r)
+    assert r["errors"][0]["detail"]["derived_feature_type"] == "structural_composition"
+
+
+def test_conflicting_hint_halts():
+    """음성 — relation 과 relation_hint 가 어긋나면 멈춘다."""
+    r = _one([{"label": "tail", "relation": "component_integral",
+               "relation_hint": "member_of", **_EV}])
+    assert r["ok"] is False
+    assert "RELATION_HINT_CONFLICT" in _codes(r)
+
+
+def test_absent_relation_still_defaults_to_is_a_for_existing_callers():
+    """기존 호출자 보존 — 아무 관계 정보도 없을 때만 기본값을 쓴다."""
+    r = _one([{"label": "animate", "evidence_text": "A dog is animate."}])
+    assert r["ok"] is True, r.get("errors")
+    f = r["concepts_json"]["concepts"][0]["features"][0]
+    assert f["type"] == "essential_feature"
+    assert r["claims"][0]["predicate"] == "is_a"
+
+
+def test_the_hint_index_is_derived_from_the_crosswalk_not_transcribed():
+    """유도 확인 — 표와 지도가 갈라지면 hint 로 관계를 복원할 수 없다."""
+    for hint, kind in _N.HINT_TO_RELATION.items():
+        assert _N.RELATION_CROSSWALK[kind]["relation_hint"] == hint
+    hinted = {k for k, v in _N.RELATION_CROSSWALK.items() if v.get("relation_hint")}
+    assert set(_N.HINT_TO_RELATION.values()) == hinted, "표의 항목이 지도에서 빠졌다"
+
+
+def test_the_hint_index_refuses_a_non_injective_table():
+    """음성 — hint 가 두 관계에 걸리면 역방향이 함수가 아니므로 멈춘다.
+
+    이 assert 가 없으면, 표에 hint 를 중복 추가했을 때 어느 관계로 복원될지가
+    dict 삽입 순서에 달린다 — 조용한 오분류다.
+    """
+    original = _N.RELATION_CROSSWALK
+    try:
+        _N.RELATION_CROSSWALK = {
+            "a": {"relation_hint": "dup", "feature_type": "x", "mapping_status": "exact"},
+            "b": {"relation_hint": "dup", "feature_type": "y", "mapping_status": "exact"},
+        }
+        with _pytest.raises(AssertionError, match="dup"):
+            _N._build_hint_index()
+    finally:
+        _N.RELATION_CROSSWALK = original
+
+
+# ─────────────────────────── 오류 메시지가 자기 키를 말하는가 ───────────────
+# 2026-08-24: 한 필드에 이름이 넷이었다 — 실제 키는 `feature`(v7 층) /
+# `label`(L1 층)인데 오류가 `MISSING_FEATURE_LABEL`·"feature name"·
+# `MISSING_LABEL`(detail 없음)이라고 말했다. 나는 `surface`→`label`→`name`→
+# `feature` 로 **네 번 시도**해서 겨우 통과했다. 오류가 틀린 필드명을 말하면
+# 아무도 첫 시도에 성공하지 못한다.
+#
+# 이 테스트는 그 통일을 **고정**한다 — 메시지가 다시 키를 감추면 실패한다.
+
+def test_l1_errors_name_the_key_they_read():
+    r = _one([{"feature": "tail", "type": "structural_composition",
+               "evidence": "A dog has a tail."}])          # v7 키를 L1 에 줬다
+    assert r["ok"] is False
+    e = next(x for x in r["errors"] if x["code"] == "MISSING_LABEL")
+    d = e["detail"]
+    assert d["read_key"] == "label", "무엇을 읽었는지 말해야 한다"
+    assert "feature" in d["fix"] and "label" in d["fix"], "두 층을 함께 알려야 한다"
+    assert d["got_keys"] and "feature" in d["got_keys"], "받은 키를 보여야 한다"
+
+
+def test_l1_missing_evidence_names_both_accepted_keys():
+    r = _one([{"label": "tail", "relation_hint": "component_of"}])   # evidence 없음
+    assert r["ok"] is False
+    e = next(x for x in r["errors"] if x["code"] == "MISSING_EVIDENCE")
+    assert set(e["detail"]["read_keys"]) == {"evidence_span", "evidence_text"}
+    assert "evidence_text" in e["detail"]["fix"]
+
+
+def test_v7_linter_message_names_the_key_and_both_layers():
+    from conceptgate import cg_input_linter as L
+    out = L.lint_concepts([{"name": "dog", "features": [
+        {"label": "animal", "type": "essential_feature", "evidence": "A dog is an animal."}]}])
+    msgs = " ".join(i["message"] for i in out["issues"])
+    assert "`feature`" in msgs, "v7 층의 키 이름이 메시지에 없다"
+    assert "`label`" in msgs or "evidence_text" in msgs, "L1 층을 안내해야 한다"

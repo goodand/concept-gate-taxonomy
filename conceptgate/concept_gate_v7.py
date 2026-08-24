@@ -677,7 +677,7 @@ class ParseGate:
                 # [v6.3] feature name: str 검사
                 if not fname or not isinstance(fname, str):
                     errors.append(GateResult("Parse Gate", False,
-                        f'"{name}": feature name 없거나 비문자열: {fname!r}',
+                        f'"{name}": 키 `feature` 가 없거나 비문자열: {fname!r} (이 층의 키는 `feature`·`type`·`evidence`; L1 normalizer 층은 `label`·`evidence_text`)',
                         severity=GateSeverity.ERROR))
                     continue
                 # [v6.3] evidence: str 검사
