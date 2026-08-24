@@ -1,0 +1,307 @@
+{
+  "trial_rows": [
+    {
+      "trial_id": "CTRL51-01",
+      "case_id": "FOLIO-1420p2",
+      "result": "pass",
+      "mismatch_dimensions": [],
+      "diagnostic_label_identity": {
+        "result": "pass",
+        "mismatch_dimensions": []
+      },
+      "certified": false,
+      "unscorable_expected": false,
+      "stratum": "folio_universal_control"
+    },
+    {
+      "trial_id": "CTRL51-02",
+      "case_id": "PMB-p98-d2753",
+      "result": "pass",
+      "mismatch_dimensions": [],
+      "diagnostic_label_identity": {
+        "result": "fail",
+        "mismatch_dimensions": [
+          "operator_type"
+        ]
+      },
+      "certified": false,
+      "unscorable_expected": false,
+      "stratum": "pmb_existential_control"
+    },
+    {
+      "trial_id": "CTRL51-03",
+      "case_id": "FOLIO-901p2",
+      "result": "pass",
+      "mismatch_dimensions": [],
+      "diagnostic_label_identity": {
+        "result": "fail",
+        "mismatch_dimensions": [
+          "operator_type",
+          "predicate_arguments"
+        ]
+      },
+      "certified": false,
+      "unscorable_expected": false,
+      "stratum": "folio_existential_control"
+    },
+    {
+      "trial_id": "CTRL51-04",
+      "case_id": "PMB-p70-d1927",
+      "result": "pass",
+      "mismatch_dimensions": [],
+      "diagnostic_label_identity": {
+        "result": "fail",
+        "mismatch_dimensions": [
+          "operator_type"
+        ]
+      },
+      "certified": false,
+      "unscorable_expected": false,
+      "stratum": "pmb_universal_control"
+    },
+    {
+      "trial_id": "CTRL51-05",
+      "case_id": "FOLIO-1377p0",
+      "result": "pass",
+      "mismatch_dimensions": [],
+      "diagnostic_label_identity": {
+        "result": "pass",
+        "mismatch_dimensions": []
+      },
+      "certified": false,
+      "unscorable_expected": false,
+      "stratum": "folio_universal_control"
+    }
+  ],
+  "report": {
+    "counts": {
+      "pass": 5,
+      "fail": 0,
+      "unscorable": 0,
+      "error": 0
+    },
+    "metrics": {
+      "UCR": 1.0,
+      "O1ScopeMatch": 1.0,
+      "CertificationCoverage": 0.0,
+      "CertifiedCorrectYield": 0.0,
+      "P_pass_given_certified": null
+    },
+    "two_by_two": {
+      "A": 0,
+      "B": 0,
+      "C": 5,
+      "D": 0
+    },
+    "certification_false_positive_ids": [],
+    "acceptance": {
+      "pass_min_met": true,
+      "no_final_error": true,
+      "no_unexpected_unscorable": true,
+      "accepted": true
+    },
+    "parameters": {
+      "n_preregistered": 5,
+      "pass_min": 5
+    }
+  },
+  "provenance": {
+    "trial_subject": {
+      "name": "o1-compiler",
+      "definition_path": "/Users/jaehyuntak/.claude/agents/o1-compiler.md",
+      "definition_sha256": "891dd0d6c2cfc8f77a8d20f060dddc2ded57f354148c500ea24857fc77795548"
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "formula": {
+          "$ref": "#/$defs/formula"
+        }
+      },
+      "required": [
+        "formula"
+      ],
+      "additionalProperties": false,
+      "$defs": {
+        "term": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "var"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "name"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "entity"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "kind",
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "formula": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "forall"
+                },
+                "var": {
+                  "type": "string"
+                },
+                "restriction": {
+                  "$ref": "#/$defs/formula"
+                },
+                "body": {
+                  "$ref": "#/$defs/formula"
+                }
+              },
+              "required": [
+                "kind",
+                "var",
+                "restriction",
+                "body"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "exists"
+                },
+                "var": {
+                  "type": "string"
+                },
+                "restriction": {
+                  "$ref": "#/$defs/formula"
+                },
+                "body": {
+                  "$ref": "#/$defs/formula"
+                }
+              },
+              "required": [
+                "kind",
+                "var",
+                "restriction",
+                "body"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "and"
+                },
+                "args": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/formula"
+                  },
+                  "minItems": 1
+                }
+              },
+              "required": [
+                "kind",
+                "args"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "pred"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "args": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/term"
+                  }
+                }
+              },
+              "required": [
+                "kind",
+                "name",
+                "args"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "not"
+                },
+                "body": {
+                  "$ref": "#/$defs/formula"
+                }
+              },
+              "required": [
+                "kind",
+                "body"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "implies"
+                },
+                "left": {
+                  "$ref": "#/$defs/formula"
+                },
+                "right": {
+                  "$ref": "#/$defs/formula"
+                }
+              },
+              "required": [
+                "kind",
+                "left",
+                "right"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      }
+    },
+    "output_schema_sha256": "1d95861576edd1d365515e54ba7247868846b33c0d2ff5e2c136650e022f58cd",
+    "constructor_profile": [
+      "forall",
+      "exists",
+      "and",
+      "pred",
+      "not",
+      "implies"
+    ],
+    "prompt_template_sha256": "dfc0aacb345fe4bd93a8d2cffefff2b81d201fced1299ee9e3df967a4a5421b6",
+    "model": "haiku"
+  }
+}

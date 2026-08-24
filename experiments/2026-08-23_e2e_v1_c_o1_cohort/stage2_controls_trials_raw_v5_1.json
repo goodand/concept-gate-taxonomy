@@ -1,0 +1,8 @@
+{"workflow_run_id": "wf_5b9508fc-22d", "dispatch_date": "2026-08-24", "subject": "o1-compiler/haiku", "mechanical_retries": 0,
+ "outputs": [
+  {"trial_id": "CTRL51-01", "case_id": "FOLIO-1420p2", "envelope": {"formula": {"kind": "forall", "var": "x", "restriction": {"kind": "pred", "name": "video", "args": [{"kind": "var", "name": "x"}]}, "body": {"kind": "pred", "name": "visual", "args": [{"kind": "var", "name": "x"}]}}}},
+  {"trial_id": "CTRL51-02", "case_id": "PMB-p98-d2753", "envelope": {"formula": {"kind": "not", "body": {"kind": "exists", "var": "x", "restriction": {"kind": "pred", "name": "person", "args": [{"kind": "var", "name": "x"}]}, "body": {"kind": "pred", "name": "watching", "args": [{"kind": "var", "name": "x"}]}}}}},
+  {"trial_id": "CTRL51-03", "case_id": "FOLIO-901p2", "envelope": {"formula": {"kind": "exists", "var": "x", "restriction": {"kind": "and", "args": [{"kind": "pred", "name": "watch", "args": [{"kind": "var", "name": "x"}]}, {"kind": "pred", "name": "mechanical", "args": [{"kind": "var", "name": "x"}]}]}, "body": {"kind": "pred", "name": "automatic", "args": [{"kind": "var", "name": "x"}]}}}},
+  {"trial_id": "CTRL51-04", "case_id": "PMB-p70-d1927", "envelope": {"formula": {"kind": "forall", "var": "v", "restriction": {"kind": "pred", "name": "vote", "args": [{"kind": "var", "name": "v"}]}, "body": {"kind": "pred", "name": "counts", "args": [{"kind": "var", "name": "v"}]}}}},
+  {"trial_id": "CTRL51-05", "case_id": "FOLIO-1377p0", "envelope": {"formula": {"kind": "forall", "var": "x", "restriction": {"kind": "pred", "name": "human", "args": [{"kind": "var", "name": "x"}]}, "body": {"kind": "pred", "name": "eat", "args": [{"kind": "var", "name": "x"}]}}}}
+ ]}
