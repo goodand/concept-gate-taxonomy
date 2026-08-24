@@ -20,13 +20,20 @@ from typing import Any
 PROJECTION_PROFILE_ID = "MRS_COUNT_PROJECTION_V1"
 LOGICAL_EQUIVALENCE_CLAIM = False
 
-# 판정 §11 reject_if — 이 5종이 정본이며 임의로 늘리지 않는다.
+# 판정 §11 reject_if 5종 + D-E2E-v1-31 Q31.2 개정 2건 = 6종. 이 집합이
+# 정본이며 임의로 늘리지 않는다.
+#   - "multiple_card_EP_candidates" → "unsupported_compound_cardinal_mapping_v1":
+#     "표현 불가"가 아니라 "승인된 semantics-preserving 사상이 아직 없어서
+#     fail-closed reject"라는 구분을 코드가 주장하지 않게 하려는 개정.
+#   - "type_mismatch" 신설: card.ARG1이 개체 변수가 아니면(§below 접두 `x`
+#     판정) 사상에 타입 강제가 필요하고 adapter 계약에 없어 최상위 게이트.
 REJECT_CODES = (
-    "multiple_card_EP_candidates",
+    "unsupported_compound_cardinal_mapping_v1",
     "card_and_quantifier_variable_disagree",
     "unresolved_handle_constraint",
     "numeric_scope_attachment_ambiguous",
     "unsupported_numeric_relation",
+    "type_mismatch",
 )
 
 # require 실패(=재료가 애초에 기수 fixture가 아님)는 reject 5종과 구별한다.
@@ -71,17 +78,35 @@ def package_count(mrs: dict) -> dict:
     if not cards:
         return _refuse("cardinal_EP_absent", f"{CARDINAL_PRED} EP가 없다")
 
+    # D-E2E-v1-31 Q31.2: E15 타입 게이트를 최상위로. 우리 IR의 count.var는
+    # 개체 변수인데 card.ARG1이 미명세 개체(i)나 사건(e)이면 사상에 타입
+    # 강제가 필요하고 adapter 계약에 없다. 다른 결함(CARG 비정수·RSTR 미해소
+    # 등)이 동시에 있어도 이것부터 판정해야 거부 사유 회계가 게이트 순서를
+    # 반영한다. 개체 변수는 접두 `x`로 식별한다(운영 실측: 게이트 순서를
+    # 바꿔도 최종 적격 집합은 불변 — 이 승격은 계약 명확성 문제다).
+    for c in cards:
+        v = c.get("args", {}).get("ARG1")
+        if not (isinstance(v, str) and v.startswith("x")):
+            return _refuse("type_mismatch",
+                           f"card ARG1={v!r}가 개체 변수(접두 x)가 아니다")
+
     # 여러 card가 **같은 변수**를 겨냥하면 어느 수치인지 결정 불가.
     by_var: dict = {}
     for c in cards:
         by_var.setdefault(c.get("args", {}).get("ARG1"), []).append(c)
     contested = [v for v, cs in by_var.items() if len(cs) > 1]
+    # D-31 Q31.2: 사유는 "표현 불가"가 아니다 — 방언에는 `or`+복수 `count`를
+    # 조합할 능력이 있다. "승인된 semantics-preserving 사상이 아직 없어서
+    # fail-closed reject"이므로 intrinsically_unexpressible을 명시적으로
+    # False로 싣는다(향후 검증된 projection rule로 지원할 여지를 남긴다).
     if contested:
-        return _refuse("multiple_card_EP_candidates",
-                       f"변수 {contested!r}에 card EP가 여럿")
+        return _refuse("unsupported_compound_cardinal_mapping_v1",
+                       f"변수 {contested!r}에 card EP가 여럿",
+                       intrinsically_unexpressible=False)
     if len(cards) > 1:
-        return _refuse("multiple_card_EP_candidates",
-                       "card EP가 여럿 — v1은 단일 기수 문장만 다룬다")
+        return _refuse("unsupported_compound_cardinal_mapping_v1",
+                       "card EP가 여럿 — v1은 단일 기수 문장만 다룬다",
+                       intrinsically_unexpressible=False)
 
     card = cards[0]
     target = card.get("args", {}).get("ARG1")

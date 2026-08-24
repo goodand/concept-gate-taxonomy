@@ -51,13 +51,10 @@ def noun(pred="_irony_n_1", lbl="h8", bv="x5"):
 
 def test_profile_identity():
     assert mcp.PROJECTION_PROFILE_ID == "MRS_COUNT_PROJECTION_V1"
-    assert set(mcp.REJECT_CODES) == {
-        "multiple_card_EP_candidates",
-        "card_and_quantifier_variable_disagree",
-        "unresolved_handle_constraint",
-        "numeric_scope_attachment_ambiguous",
-        "unsupported_numeric_relation",
-    }
+    # D-29 §11의 5종은 D-31 Q31.2로 개정됐다 — 정본 집합은
+    # `test_reject_codes_are_exactly_the_ruled_set`가 결박한다(아래).
+    assert "card_and_quantifier_variable_disagree" in mcp.REJECT_CODES
+    assert "unresolved_handle_constraint" in mcp.REJECT_CODES
 
 
 def test_no_logical_equivalence_is_claimed():
@@ -100,7 +97,8 @@ def test_multiple_card_candidates_on_same_variable_is_refused():
             hcons=[("h6", "QEQ", "h8"), ("h7", "QEQ", "h2")])
     out = mcp.package_count(m)
     assert out["ok"] is False
-    assert out["reject"] == "multiple_card_EP_candidates"
+    # D-31 Q31.2가 사유 코드를 개정했다: "표현 불가"가 아니라 "승인된 사상 없음".
+    assert out["reject"] == "unsupported_compound_cardinal_mapping_v1"
 
 
 def test_variable_disagreement_is_refused():
@@ -186,3 +184,87 @@ def test_the_same_real_item_would_package_if_BODY_were_constrained():
     assert out["ok"] is True
     assert out["count"] == {"rel": "eq", "num": 2, "var": "x5",
                             "restriction_label": "h8", "body_label": "h2"}
+
+
+# ---- D-E2E-v1-31: E15 최상위 hard gate + E13 사유 정정 ------------------
+#
+# 판정 Q31.2:
+#  * E15(`card.ARG1`이 개체 변수 아님) → `TYPE_MISMATCH`, **정본 hard gate**.
+#    `count.var`는 개체 변수인데 MRS가 `i`/`e`를 주면 사상에 **타입 강제**가
+#    필요하고 그것은 adapter 계약에 없다. 그래서 다른 모든 검사보다 앞이다.
+#    운영 세션 실측: 게이트 순서 교환성이 성립하므로(최종 15,084 동일) 이
+#    승격은 적격 결과를 바꾸지 않는다 — 계약 명확성의 문제다.
+#  * E13(선언/범위 기수) 사유를 `UNSUPPORTED_COMPOUND_CARDINAL_MAPPING_V1`로.
+#    "표현 불가"가 아니다 — 방언에는 `or`+복수 `count`를 조합할 능력이 있다.
+#    **승인된 semantics-preserving 사상이 없어서** fail-closed reject다.
+#    이 구분이 향후 방언 확장 없이 검증된 projection rule로 지원할 여지를 남긴다.
+
+def q_i(pred="udef_q", lbl="h4", bv="i9", rstr="h6", body="h7"):
+    return {"pred": pred, "lbl": lbl,
+            "args": {"ARG0": bv, "RSTR": rstr, "BODY": body}}
+
+
+def test_type_mismatch_is_a_reject_code():
+    assert "type_mismatch" in mcp.REJECT_CODES
+
+
+def test_non_entity_bound_variable_is_refused():
+    """`card.ARG1 = i` — 측정 구문의 미명세 개체($1.5 billion의 i25)."""
+    m = mrs([q(bv="i25"), card(arg1="i25"), noun(bv="i25")],
+            hcons=[("h6", "QEQ", "h8"), ("h7", "QEQ", "h2")])
+    out = mcp.package_count(m)
+    assert out["ok"] is False
+    assert out["reject"] == "type_mismatch"
+
+
+def test_event_bound_variable_is_refused():
+    m = mrs([q(bv="e9"), card(arg1="e9"), noun(bv="e9")],
+            hcons=[("h6", "QEQ", "h8"), ("h7", "QEQ", "h2")])
+    assert mcp.package_count(m)["reject"] == "type_mismatch"
+
+
+def test_type_gate_precedes_every_other_check():
+    """판정 §Q31.2: E15가 **최상위**다. 다른 결함이 함께 있어도 타입이 먼저다.
+
+    이 record는 (a) 비개체 변수 (b) CARG 비정수 (c) RSTR 미해소 를 동시에
+    갖는다. 셋 다 거부 사유지만 보고되는 것은 타입이어야 한다 — 그래야
+    거부 사유 회계가 게이트 순서를 반영한다.
+    """
+    m = mrs([q(bv="i9"), card(arg1="i9", carg="a few"), noun(bv="i9")],
+            hcons=[])
+    assert mcp.package_count(m)["reject"] == "type_mismatch"
+
+
+def test_entity_variable_still_reaches_the_later_checks():
+    """게이트를 올리는 것이 뒤 검사를 가리면 안 된다(음성 방향)."""
+    m = mrs([q(bv="x5"), card(arg1="x5", carg="a few"), noun(bv="x5")],
+            hcons=[("h6", "QEQ", "h8"), ("h7", "QEQ", "h2")])
+    assert mcp.package_count(m)["reject"] == "unsupported_numeric_relation"
+
+
+def test_e13_reason_code_is_unsupported_mapping_not_inexpressible():
+    """같은 변수에 card가 둘 — 판정이 명한 사유 코드로 보고한다."""
+    m = mrs([q(), card(carg="2"), card(lbl="h9", carg="3"), noun()],
+            hcons=[("h6", "QEQ", "h8"), ("h7", "QEQ", "h2")])
+    out = mcp.package_count(m)
+    assert out["ok"] is False
+    assert out["reject"] == "unsupported_compound_cardinal_mapping_v1"
+    # "표현 불가"를 주장하지 않는다는 것이 계약이다.
+    assert out.get("intrinsically_unexpressible") is False
+
+
+def test_compound_reject_code_replaces_the_old_one():
+    assert "multiple_card_EP_candidates" not in mcp.REJECT_CODES
+    assert "unsupported_compound_cardinal_mapping_v1" in mcp.REJECT_CODES
+
+
+def test_reject_codes_are_exactly_the_ruled_set():
+    """D-29 §11 5종 중 2종이 D-31로 개정됐다. 임의로 늘리지 않는다."""
+    assert set(mcp.REJECT_CODES) == {
+        "unsupported_compound_cardinal_mapping_v1",   # D-31 (구 multiple_card)
+        "card_and_quantifier_variable_disagree",
+        "unresolved_handle_constraint",
+        "numeric_scope_attachment_ambiguous",
+        "unsupported_numeric_relation",
+        "type_mismatch",                              # D-31 신설, 최상위
+    }

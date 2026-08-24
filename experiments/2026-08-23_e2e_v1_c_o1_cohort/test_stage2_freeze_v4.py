@@ -175,3 +175,48 @@ def test_v4_template_and_schema_hashes_still_bind():
         (HERE / "stage2_prompt_template_v4.md").read_bytes()).hexdigest()
     assert ch["dispatch_schema_sha256"] == canonical_sha256(
         dispatch_envelope_schema(("forall", "exists", "and", "pred", "not", "implies")))
+
+
+# ---- D-E2E-v1-31 Q31.3: 재료 신원 ≠ adapter 산출 신원 -------------------
+#
+# 판정: "`source artifact identity ≠ adapter output identity`를 혼동하지 않는
+# 것이 핵심이다. 현재 `lf_sha256`이 **정확히 원본 artifact byte의 hash**라는
+# 계약이라면 이름만 명확히 해도 된다."
+#
+# 실측으로 그 계약이 이미 성립한다: `freeze_stage2_v4.py`가
+# `put_cache(f.encode())`(FOLIO의 FOL 텍스트) / `put_cache(sbn_bytes)`(PMB의
+# 원본 바이트)로 계산하고, `.oracle_cache`가 그 해시로 **content-addressed**다.
+# 아래 두 테스트는 그 계약을 **명시적으로** 결박한다 — 지금까지는 캐시 조회가
+# 우연히 성공하는 것으로만 간접 보장됐다.
+
+def test_lf_sha256_is_the_cached_artifact_byte_hash():
+    """content-addressed 캐시의 이름이 곧 내용의 해시여야 한다."""
+    import hashlib
+    _, v4 = _load()
+    cache = REPO / ".oracle_cache"
+    everything = (v4["entries"] + v4["folio_simple_controls"]
+                  + v4["pmb_projection_controls"])
+    for e in everything:
+        raw = (cache / e["lf_sha256"]).read_bytes()
+        assert hashlib.sha256(raw).hexdigest() == e["lf_sha256"], e["case_id"]
+
+
+def test_source_identity_and_adapter_identity_are_distinct_fields():
+    """둘이 같은 값이면 어느 층의 신원인지 구별할 수 없게 된다."""
+    _, v4 = _load()
+    everything = (v4["entries"] + v4["folio_simple_controls"]
+                  + v4["pmb_projection_controls"])
+    for e in everything:
+        assert e["lf_sha256"] != e["expected_ir_sha256"], e["case_id"]
+        assert e["lf_sha256"] != e["text_sha256"], e["case_id"]
+
+
+def test_material_identity_fields_are_all_present():
+    """판정이 요구한 최소 신원 필드가 항목마다 있어야 한다."""
+    _, v4 = _load()
+    for e in v4["entries"]:
+        for field in ("source_locator", "text_sha256", "lf_sha256"):
+            assert e.get(field), (e["case_id"], field)
+        for field in ("expected_ir_sha256", "adapter_version",
+                      "canonicalization_profile_hash"):
+            assert e.get(field), (e["case_id"], field)
