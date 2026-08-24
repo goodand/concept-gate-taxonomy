@@ -47,6 +47,18 @@ description: >-
 
 **evidence 없는 finding은 즉시 폐기한다.** 이 규칙이 환각 전파를 막는 핵심 장치다.
 
+**이 규칙은 기제로 내려와 있다** — `python3 scripts/verify_finding_citations.py
+<findings.json> <대상 문서...>`. finding이 백틱·인용부호로 감싼 문자열이 대상에
+실재하는지 확인하고 없으면 `EVIDENCE_NOT_FOUND`로 자동 폐기한다(폐기가 있으면
+exit 1). 근거: 2026-08-24 실측 — 적대검증이 "표 첫 행 case ID가
+`PMB-p02-d2298` 오타"라고 보고했으나 그 문서에 `p02`가 **0건**이었고, lead가
+재실측하지 않았다면 정확한 문서를 틀리게 고쳤을 것이다.
+
+**이 검사가 하지 않는 것**: finding이 옳은지 판단하지 않는다. 인용이 실재해도
+해석이 틀릴 수 있다(같은 날 다른 적대검증의 blocker 1건이 판정문 §8과 §10을
+혼동한 오독이었다 — 이 검사는 그것을 잡지 못한다). 인용이 아예 없는 finding은
+`NOT_CHECKABLE`로 남기고 폐기하지 않는다 — lead가 읽어야 한다는 뜻이다.
+
 ## 3. Severity 기준
 
 | 등급 | 기준 |

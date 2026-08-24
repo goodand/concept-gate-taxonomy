@@ -104,3 +104,72 @@ wikilink를 추가하고, 그 스텁에 "vault_search로는 D-33에 도달하지
 - 9문항은 내가 골랐다. 내가 답할 수 있게 써 둔 것만 물었을 가능성이 있다 —
   다만 시험이 내가 몰랐던 결함(§2)을 찾았으므로 완전히 자기확인적이지는 않다.
 - `vault_search` 시험은 **질의 1건**이다. 다른 어휘로는 도달할 수도 있다.
+
+---
+
+## 7. §5의 **가설이 반증됐다** (2026-08-24, 동료 세션 검토 + lead 재실측)
+
+§5에서 나는 "질문의 어휘가 파일명에 없어 lexical 경로가 실패했다"고 추정했다.
+`.vault-harness` 소관 세션(`amendment 21 red-team validation`)에 검토를
+요청했고, **그 추정이 틀렸다**. 내가 색인을 직접 조회해 확인했다.
+
+```text
+색인 문서 수                                     3163
+concept-gate-h1-wt/HANDOFF.md   (정본)           ★ 색인에 없음
+concept-gate-h1-wt/docs/HANDOFF.md (스텁)        있음
+%RULING_CHAIN%                                   0건
+%referential_participant%                        0건
+%HANDOFF_EVALUATION%                             0건
+실재하지 않는 경로                               854 / 3163 = 26%
+```
+
+**반환되지 않은 것이 아니라 검색 대상에 존재하지 않았다.** 어떤 어휘로 물어도
+나올 수 없었고 그래프 순회도 불가능하다 — 노드가 없다. 색인은 2026-08-14에
+만들어졌고 D-33·Q33·Q34는 그 뒤에 생겼다. 그리고 worktree 제거로 경로 26%가
+죽었다.
+
+내 스텁 wikilink 완화는 **우연히 유효했다** — 스텁이 색인에 있는 유일한
+노드였으므로 실질적으로 그것만이 작동하는 경로였다. 근본 조치는 색인
+재생성이고, 그것은 `.vault-harness` 쓰기라 양쪽 세션 모두 권한이 없다.
+
+## 8. 내 쪽 과오 둘 — 회신을 **부분만 읽고** 결론을 냈다
+
+동료 세션은 "예산 소진 disclosure가 요약 텍스트 첫 블록에 무조건 실리므로
+이미 받았을 것"이라고 했다. 저장된 회신을 다시 읽었다.
+
+```text
+"do not treat this search as exhaustive"   → 0건
+"Stopped on …"                             → 0건
+index_metadata / built_at                  → 없음
+저장된 파일의 첫 바이트                    → {"contract_version":"vault-search-result-v1", …
+```
+
+**저장된 것은 JSON뿐이다.** 결과가 토큰 상한을 넘어 파일로 저장되는 경로에서
+`TextContent` 블록이 사라졌다. 즉 그 disclosure는 **결과가 클 때 정확히
+사라진다** — 과잉 해석이 가장 일어나기 쉬운 조건에서 가드가 없어진다.
+이것은 내 우려("`review_required`가 fail-open이다")도 아니고 동료의
+주장("이미 받았다")도 아닌 **제3의 결함**이다.
+
+그리고 **내 과오가 둘 있다.**
+
+1. **선택한 필드만 읽고 전체를 판정했다.** 나는 `status`·`review_required`·
+   `terminal_reason`·`retrieved_paths`·`review_checks`·`agent_comment`만
+   뽑았고 `next_action`·`turns`·`candidates`는 읽지 않았다. 부분을 읽고
+   전체를 결론한 것은 이 세션에서 계측기 실패로 네 번 겪은 것과 같은 형태다.
+2. **회신이 준 절차 지시를 따르지 않았다.** `next_action`이
+   `"Call vault_read for the strongest canonical authority paths before
+   answering."` 였고 나는 `vault_read`를 부르지 않았다. 이번엔 불렀어도
+   결과가 같았겠지만(정본이 색인에 없다) **절차를 건너뛴 것은 사실이다.**
+
+## 9. 남는 제안 (권한 밖 — 사용자 판단)
+
+동료 세션의 판단: 예산 소진을 review check로 만드는 것은 **144회 실측으로
+기각**됐다(`sufficiency-accepted`가 이 정책에서 도달 불가이므로 항상 켜지는
+공허한 가드가 된다). 그 논거는 이 저장소의 "공허한 가드" 규율과 같은 방향이라
+받아들인다.
+
+대신 **비어 있는 자리는 색인 신선도**다: 26% 죽은 경로가 어떤 필드에도
+나타나지 않는다. 드물게 켜지고 조치가 명확하며(재생성) 실측 가능하므로
+공허하지 않은 가드가 된다. 여기에 **내 발견을 하나 더한다** — 그런 가드를
+만들어도 `TextContent`에만 실으면 큰 결과에서 사라진다. **JSON 계약 필드로
+넣어야 한다.**

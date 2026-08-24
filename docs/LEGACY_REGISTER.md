@@ -55,7 +55,7 @@ worktree의 커밋으로 처리할 수 없으므로(다른 디렉터리) 기록�
 | 대상 | 용량 | 복구 방법 | 상태 |
 |---|---:|---|---|
 | 완전 push된 worktree 디렉터리 4개 (아래 §참조 분류·§More READ 참고) | **190M** | `git worktree add <경로> <브랜치>` | **T1 2개 제거 완료(91M)** · T2 판정 아래 · T3 보류 |
-| `.vault-harness/vault-md-retrieval/retrieval_index.sqlite3` + 평가 JSON 4건 | **92M** | `build_retrieval_index.py` 재실행 | 미승인. README가 "frozen local experiment"로 지목하므로 재현 가능성 검토가 선행돼야 한다 |
+| `.vault-harness/vault-md-retrieval/retrieval_index.sqlite3`(82M) + 평가 JSON 7건(~7.6M) | **~90M** | `build_retrieval_index.py` 재실행 | **양 세션 모두 권한 없음 — 사용자 판단 대기.** workspace CLAUDE.md가 `.vault-harness/` 수정·이동·삭제·이름변경을 금지한다. 소관 세션 검토(2026-08-24): 인덱스 해시는 결과의 증인이 **아니다**(평가 JSON 7건에 `index_sha256` 0건 — 그쪽 최초 가설 반증). 그러나 ① `vault-retrieval` MCP의 **살아 있는 의존성**(`DEFAULT_DB`) ② 재생성이 코퍼스를 바꿔(3163 → 실제 vault) **144회 recall 측정을 재현 불가로** 만든다. 평가 JSON은 재생성 불가라 보존 합의 |
 
 **총 회수 가능 추정 282M / workspace 1.5G.**
 
@@ -66,7 +66,7 @@ worktree의 커밋으로 처리할 수 없으므로(다른 디렉터리) 기록�
 
 | worktree | 위치 | 크기 | 총 참조 | 경로 의존 | 역사·출처 언급 |
 |---|---|---:|---:|---:|---:|
-| `concept-gate-codex-mcp-wt` | workspace 루트 | 53M | 93 | **0** | 93 (notes 46 · md 28 · 코드 주석·스냅샷 19) |
+| ~~`concept-gate-codex-mcp-wt`~~ **제거 완료(소관 세션, 2026-08-24)** | workspace 루트 | 53M | 93 | **0** | 93. 그쪽이 `git worktree remove`로 제거하고 `~/.claude.json`의 `preEnterOriginalCwd`를 정정했다(백업 후). 브랜치 `codex/mcp-provider-isolation`=`2cc7b1b`은 origin 보존 |
 | `concept-gate-redteam-wt` | workspace 루트 | 43M | 49 | **0** | 49 (notes 36 · md 5 · 스냅샷 8) |
 | `claude-provider-adapter` | `concept-gate-taxonomy/.claude/worktrees/` | 46M | 30 | **0** | 30 (notes 15 · md 7 · 스냅샷 8) |
 | `input-length-guard` | `concept-gate-taxonomy/.claude/worktrees/` | 48M | 30 | **0** | 30 (notes 15 · md 7 · 스냅샷 8) |
