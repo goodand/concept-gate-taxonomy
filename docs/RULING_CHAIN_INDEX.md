@@ -49,6 +49,7 @@ zero-context agent를 위한 읽는 순서:
 | **Q34** | *판정 대기* — D-33이 명한 (b*)의 선행 실사. **두 승인 source가 지시 표현을 반대로 인코딩한다**(PMB=∃ 결박자 / FOLIO=상수, 적격 풀 799건 중 116건). 경계는 제안하지 않고 gold가 기록하는 증거만 올렸다 | [[DESIGN_REQUEST_referential_existential_qualification]] | — |
 | **Q34-B** | *보충, 새 문항 없음* — Q34 §7이 선언한 측정 한계 둘을 닫았다. **PMB gold 12,053 전수**: 지시 후보 노드 15,810개 중 닫힌 양화 어휘가 해결하는 것은 **2%**, **96%가 미결정**. **FOLIO 전수**: 상수 160회 중 **67% 미결정**이고 보통명사·물질명사·파싱 잔여도 상수다 → Q34 §1 자기 정정. (a)의 형태가 "FOLIO 규약 채택"에서 "새 경계를 세워 두 corpus를 사상"으로 바뀐다 | [[DESIGN_REQUEST_referential_boundary_corpus_scale]] | — |
 | D-34 | **경계 정의는 수행하지 않는다 — `insufficient_evidence`.** (a) **기각**(corpus 규약을 semantic authority로 승격시키는 것) · synset은 식별 함수가 아니다 · **양방향 부등식**(`FOLIO constant ≠ referential` · `PMB binder ≠ quantificational force`) · `immediate_projection: forbidden` 추가. **다음은 분류기가 아니라 독립적 semantic qualification을 줄 source 결정**이다 | [[DESIGN_REQUEST_referential_existential_qualification]] + [[DESIGN_REQUEST_referential_boundary_corpus_scale|Q34-B]] | [[DESIGN_DECISION_referential_existential_qualification]] |
+| **Q35** | *판정 대기* — D-34가 명한 source 결정의 첫 후보. **PMB는 지시 기능을 별도 role 주석으로 기록한다**(`Name` 3,841=24% · `ANA` 1,022=6%, 후보 15,810 전수) — 우리가 고른 목록이 아니라 **주석자의 판단**이다. 그런데 **우리 선별이 `ANA` 보유 문서를 배제**했다(in-N `ANA` 0건). 묻는 것: 이 층이 D-34 §9가 금지한 "corpus 규약"과 같은 지위인가 | [[DESIGN_REQUEST_annotation_layer_admissibility]] | — |
 
 별도 계열(이 실험 전 단계): [[DESIGN_DECISION_refine_verify_v0_review]]
 
