@@ -44,6 +44,7 @@ zero-context agent를 위한 읽는 순서:
 | D-32 | 제한식 비-scope 내용을 opaque 붕괴(empty/nonempty·incidence 보존) · 닫힌 profile `O1_SCOPE_PROJECTION_V2` · 20건 전량 재투영 · amendment+profile 둘 다 | [[DESIGN_REQUEST_restriction_projection]] | [[DESIGN_DECISION_restriction_projection]] |
 
 | D-32-C | `Q_RSTR_BODY`를 위치로 정의 **승인, 단 `forall` 한정**(existential은 `P∧Q`≢`True∧(P→Q)`) · provenance는 scoring signature 금지 | [[DESIGN_REQUEST_q_rstr_body_position]] | [[DESIGN_DECISION_q_rstr_body_position]] |
+| **Q33** | *판정 대기* — 지시 표현(고유명·대명사·지시사)을 oracle이 참여자 ∃로 인코딩하고 subject가 `entity` 항을 쓰는 불일치가 measurand인가. **코호트 dispatch를 이것 때문에 보류했다** | [[DESIGN_REQUEST_referential_participant_quantification]] | — |
 
 별도 계열(이 실험 전 단계): [[DESIGN_DECISION_refine_verify_v0_review]]
 

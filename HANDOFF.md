@@ -12,33 +12,33 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: D32C_APPLIED__READY_FOR_20_REPROJECTION_AND_V5   # D-32-C 수령·검증·수리 완료. 판정이 재해석을 **승인하되 `forall` 한정으로 좁혔고**, 적대 검증이 우리 구현의 과일반화(4종 전부 적용)를 적발해 수리했다. 계약 40건. **설계 차단 요인 없음** — 남은 것은 실행 절차뿐
-next_action_code: REPROJECT_20__MANIFEST__FREEZE_V5   # §3의 0-b~0-e: 20건 전량 재투영(**20/20 변경이 정상**) → manifest에 measurement_contract·score_comparability → PRE_EXECUTION_FREEZE_AMENDMENT_V1로 V5 동결 → 채점 배선 V2 교체. **desugar → signature 순서를 배선에서 재확인**(불변성이 desugar에 의존한다). 코호트 dispatch는 그 뒤에도 별도 승인
+state_code: V5_FROZEN__CONTROLS_5_OF_5__COHORT_BLOCKED_ON_Q33   # V5 재동결 완료(투영 V1→V2, 20건 재투영, 채점 배선 교체). control 재선별 후 **5/5 통과 — 사슬 최초**. 그러나 코호트 dispatch는 **보류**: control 적격 술어가 지시 표현을 배제하므로 5/5는 in-N의 지배적 성질을 인증하지 못한다. **코호트 dispatch 누계 0건**
+next_action_code: AWAIT_Q33_THEN_DISPATCH_20   # Q33 회신 대기 → 판정대로 계약 수리 → 20건 dispatch. plan은 이미 생성돼 있다(`stage2_cohort_plan_v5.json`, 프롬프트 정본). **Q33이 채점을 바꾸면 그 plan을 지우고 재생성해야 한다** — `write_cohort`가 덮어쓰기를 거부하므로 의도적으로 지워야 한다. dispatch는 매번 별도 승인
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
-authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/PREREGISTRATION_STAGE2_V4.md
+authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/stage2_fixture_manifest_v5.json  # V5 = 최신 동결(투영 전용 개정). 사전등록 본문은 PREREGISTRATION_STAGE2_V4.md가 여전히 정본
 # 코드별 authority 근거절 — 위 코드를 주장할 때는 아래 절을 인용하라:
-#   state_code             ← PREREGISTRATION_STAGE2_V4.md AMENDMENT 2 (V1·V2 보존, V3=ABORTED_PRE_FREEZE)
-#   next_action_code       ← PREREGISTRATION_STAGE2_V4.md A2.2 controls 행 (FOLIO 3 + PMB 3 선행)
+#   state_code             ← stage2_fixture_manifest_v5.json amendment (V5 = 투영 전용 개정, dispatch 0) + stage2_controls_results_v5_1.json (5/5)
+#   next_action_code       ← docs/DESIGN_REQUEST_referential_participant_quantification.md (Q33 — 회신 전 코호트 금지)
 #   NO_COHORT_WITHOUT_USER_APPROVAL ← CLAUDE.md "## 실행 승인" 절 (저장소 전역 운영 규칙 — 사전등록은 실행 허가가 아니다)
 #   NO_FROZEN_SURFACE_EDITS         ← PREREGISTRATION_STAGE2_V4.md (D-19 §12; 개정은 D-24 §9 절차로만)
 ```
 
 ## 1. 현재 상태 한 줄
 
-**설계 차단 요인이 하나로 좁혀졌다 — Q32-C 회신 1건.** 재료(기수 3·비례 1)와
-권리는 해소됐고, D-30~D-32의 계약은 전부 구현·결박됐다. 남은 것은 `Q_RSTR_BODY`를
-provenance가 아니라 **위치**로 정의해도 되는지의 확인이며(문면대로는 구현 불가 —
-desugar 후 생성분과 원본이 바이트 동일), 그 회신 뒤 **20건 재투영 → manifest →
-V5 동결**을 한 흐름으로 한다. **코호트 dispatch 누계 0건**이고 V5 동결 후에도
-실행은 별도 승인 사안이다.
+**측정 도구는 완성됐고, 도구가 무엇을 재는지의 질문 하나가 남았다.** V5 동결
+(투영 `O1_SCOPE_PROJECTION_V2`, 20건 재투영, 채점 배선 교체)이 끝났고, D-27 §18의
+control 재선별로 **5/5 통과**를 얻었다(V4 1/6 → V5 2/6 → V5.1 5/5, 사슬 최초).
 
-측정 계약의 현재 형태: 방언 8종(`forall/exists/and/or/not/implies/pred` +
-`count`·`prop`) · 채점 `O1ScopeMatch` · 투영은 **`O1_SCOPE_PROJECTION_V2`**
-(비-scope 내용을 opaque incidence로 붕괴, empty/nonempty와 순서 보존 incidence는
-유지, 닫힌 profile로 미지 연산자 거부). **V1은 바이트 보존**돼 있고
-`V1–V4 = V1 semantics` / `V5 onward = V2 semantics`를 선언해야 한다.
+그런데 그 통과는 in-N의 지배적 성질에 대해 **설계상 침묵한다**: 적격 술어
+`has_excluded_participant`가 대명사·고유명 문장을 배제하므로 통과한 5건에는
+지시 표현이 없다. 반면 PMB gold는 고유명·대명사·지시사를 **참여자 ∃로 인코딩**
+하고 자연스러운 subject는 `entity` 항을 쓴다 — oracle 쪽에만 결박자가 하나 더
+생겨 scope 서명이 갈린다. 이 부류는 control에서 **네 번 재현**됐다(V4 2건, V5 2건).
+
+그래서 **Q33을 상신하고 코호트를 보류했다**. 관측 후에는 이 질문이 post-hoc이
+되므로 사전에 물어야 한다. **코호트 dispatch 누계 0건**이다.
 
 ## 2. 정본 지도 (읽는 순서)
 
