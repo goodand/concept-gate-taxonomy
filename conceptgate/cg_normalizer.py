@@ -314,6 +314,26 @@ RELATION_CROSSWALK: Dict[str, Dict[str, Any]] = {
 }
 
 
+# relation_hint(운영 어휘) → crosswalk 키(이론 어휘) 역방향 지도.
+# **전사하지 않고 유도한다** — 손으로 적으면 표가 바뀔 때 한쪽만 바뀐다.
+# hint 는 표에서 단사(injective)이므로 역이 함수다. 그것을 assert 로 고정한다.
+def _build_hint_index() -> Dict[str, str]:
+    idx: Dict[str, str] = {}
+    for kind, entry in RELATION_CROSSWALK.items():
+        hint = entry.get("relation_hint")
+        if not hint:
+            continue
+        if hint in idx:
+            raise AssertionError(
+                f"relation_hint {hint!r} 가 {idx[hint]!r} 와 {kind!r} 둘에 걸린다 — "
+                "역방향 지도가 함수가 아니면 hint 로 관계를 복원할 수 없다")
+        idx[hint] = kind
+    return idx
+
+
+HINT_TO_RELATION: Dict[str, str] = _build_hint_index()
+
+
 def map_relation(meronymy_kind: str) -> Dict[str, Any]:
     stage = "crosswalk"
     entry = RELATION_CROSSWALK.get(str(meronymy_kind).strip().lower())
@@ -330,6 +350,81 @@ def map_relation(meronymy_kind: str) -> Dict[str, Any]:
 # ═══════════════════════════════════════════════════════
 # Stage 5+6 — assemble + lint: 제안 묶음 → concepts JSON
 # ═══════════════════════════════════════════════════════
+
+def _resolve_relation_key(f: Dict[str, Any], concept: str, label: str,
+                          stage: str) -> tuple:
+    """feature 의 관계 키를 정한다. **침묵 기본값을 쓰지 않는다.**
+
+    반환 `(crosswalk 키, 오류 목록)`. 오류가 있으면 키는 None 이다.
+
+    우선순위와 그 이유:
+      1. `relation`(이론 어휘) — crosswalk 의 정본 키다.
+      2. `relation_hint`(운영 어휘) 역방향 — 호출자가 `has_part` 처럼 부르는
+         것이 자연스럽고, 표에서 hint 는 단사이므로 역이 함수다.
+      3. 둘 다 없고 `type` 도 없을 때만 `is_a`. **`type` 이 있으면 기본값을
+         쓰지 않는다** — `structural_composition` 을 주면서 관계를 안 적은 것은
+         누락이고, 그것을 is_a 로 읽으면 부분이 하위클래스가 된다.
+
+    그리고 호출자가 준 `type` 이 유도된 `feature_type` 과 다르면 멈춘다 —
+    한쪽을 조용히 이기게 하면 어느 쪽이 적용됐는지 알 수 없다.
+    """
+    errs = []
+    ctx = {"concept": concept, "label": label}
+    raw_rel = f.get("relation")
+    raw_hint = f.get("relation_hint")
+    raw_type = f.get("type")
+
+    key = None
+    if isinstance(raw_rel, str) and raw_rel.strip():
+        key = raw_rel.strip().lower()
+        if isinstance(raw_hint, str) and raw_hint.strip():
+            expected = RELATION_CROSSWALK.get(key, {}).get("relation_hint")
+            if expected and raw_hint.strip().lower() != expected:
+                errs.append(_err(stage, "RELATION_HINT_CONFLICT",
+                                 {**ctx, "relation": key,
+                                  "relation_hint": raw_hint,
+                                  "expected_relation_hint": expected,
+                                  "fix": "relation 과 relation_hint 중 하나만 주거나 "
+                                         "일치시켜라 — 조용히 한쪽을 버리지 않는다"}))
+    elif isinstance(raw_hint, str) and raw_hint.strip():
+        h = raw_hint.strip().lower()
+        key = HINT_TO_RELATION.get(h)
+        if key is None:
+            errs.append(_err(stage, "UNKNOWN_RELATION_HINT",
+                             {**ctx, "relation_hint": raw_hint,
+                              "known_relation_hint": sorted(HINT_TO_RELATION),
+                              "known_relation": sorted(RELATION_CROSSWALK),
+                              "fix": "`relation_hint` 또는 `relation` 에 위 목록의 "
+                                     "값을 넣어라"}))
+    elif isinstance(raw_type, str) and raw_type.strip():
+        # type 만 왔다 — `structural_composition` 하나가 5개 관계에 대응하므로
+        # 관계를 복원할 수 없다. is_a 로 기본값 처리하면 부분이 하위클래스가 된다.
+        cands = sorted(k for k, v in RELATION_CROSSWALK.items()
+                       if v.get("feature_type") == raw_type.strip())
+        errs.append(_err(stage, "RELATION_REQUIRED_FOR_TYPE",
+                         {**ctx, "type": raw_type,
+                          "candidate_relation": cands,
+                          "fix": "`type` 만으로는 관계가 결정되지 않는다 — "
+                                 "`relation`(이론 어휘) 또는 `relation_hint`"
+                                 "(운영 어휘)를 함께 주어라"}))
+    else:
+        key = "is_a"        # 아무것도 안 왔을 때만 — 기존 호출자 보존
+
+    if errs:
+        return None, errs
+
+    entry = RELATION_CROSSWALK.get(key)
+    if entry is not None and isinstance(raw_type, str) and raw_type.strip():
+        derived_type = entry.get("feature_type")
+        if derived_type and raw_type.strip() != derived_type:
+            errs.append(_err(stage, "FEATURE_TYPE_CONFLICT",
+                             {**ctx, "relation": key, "type": raw_type,
+                              "derived_feature_type": derived_type,
+                              "fix": "`type` 을 빼거나 유도값과 일치시켜라 — "
+                                     "관계가 type 을 결정한다"}))
+            return None, errs
+    return key, []
+
 
 def assemble_concepts(bundle: Dict[str, Any],
                       inventory: Optional[MemoryInventory] = None
@@ -417,10 +512,33 @@ def assemble_concepts(bundle: Dict[str, Any],
             label = unicodedata.normalize("NFC", str(f.get("label", "")).strip())
             if not label:
                 errors.append(_err(stage, "MISSING_LABEL",
-                                   {"concept": name, "index": fi}))
+                                   {"concept": name, "index": fi,
+                                    "read_key": "label",
+                                    "got_keys": sorted(f) if isinstance(f, dict) else None,
+                                    "fix": "이 층(L1 normalizer)의 키는 "
+                                           "`label`·`relation`(또는 `relation_hint`)·"
+                                           "`evidence_text` 다. v7 파이프라인 층은 "
+                                           "`feature`·`type`·`evidence` 를 쓴다 — "
+                                           "assemble_concepts 의 출력이 그 형태다"}))
                 continue
             # crosswalk (stage 4를 feature 단위로 통과)
-            rel = map_relation(f.get("relation", "is_a"))
+            #
+            # 2026-08-24 수리: 여기가 `f.get("relation", "is_a")` 였다. 조회 키는
+            # **이론 어휘**(`relation`: component_integral, stuff_object, …)인데
+            # 호출자가 **운영 어휘**(`relation_hint`: has_part, component_of, …)나
+            # `type` 으로 부르면 그 값이 **조용히 무시되고 is_a 기본값**이 적용됐다.
+            # 실측: `{"label":"tail","type":"structural_composition",
+            # "relation_hint":"has_part"}` → `dog --is_a--> tail`. 부분이 하위
+            # 클래스가 됐다. crosswalk 주석이 "침묵 매핑 금지"라고 적어 뒀는데
+            # 입력 쪽이 침묵 기본값을 쓰고 있었다.
+            #
+            # 규칙: `relation` > `relation_hint` 역방향 > (둘 다 없고 type 도
+            # 없을 때만) is_a. 어긋나면 멈춘다 — 조용히 덮어쓰지 않는다.
+            rel_key, key_errs = _resolve_relation_key(f, name, label, stage)
+            if key_errs:
+                errors.extend(key_errs)
+                continue
+            rel = map_relation(rel_key)
             if not rel["ok"]:
                 for e in rel["errors"]:
                     e["detail"] = {"concept": name, "label": label,
@@ -446,7 +564,13 @@ def assemble_concepts(bundle: Dict[str, Any],
                 vstatus = "unverified"
             if not evidence:
                 errors.append(_err(stage, "MISSING_EVIDENCE",
-                                   {"concept": name, "label": label}))
+                                   {"concept": name, "label": label,
+                                    "read_keys": ["evidence_span", "evidence_text"],
+                                    "fix": "이 층(L1 normalizer)의 키는 "
+                                           "`label`·`evidence_text`(또는 "
+                                           "`evidence_span`) 다. v7 파이프라인 층은 "
+                                           "`feature`·`evidence` 를 쓴다 — "
+                                           "assemble_concepts 가 그 변환을 한다"}))
                 continue
             feat = {"feature": label, "type": decision["feature_type"],
                     "evidence": evidence}

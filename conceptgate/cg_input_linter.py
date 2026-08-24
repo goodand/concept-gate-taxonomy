@@ -362,7 +362,9 @@ def _lint_feature(concept_name: str, raw_feature: Dict[str, Any], issues: List[D
         issues.append(_issue(
             "error",
             "MISSING_FEATURE_LABEL",
-            "feature must be a non-empty string.",
+            "feature: 키 `feature` 가 비어 있거나 문자열이 아니다 "
+            "(이 층의 키는 `feature`·`type`·`evidence` 다 — L1 normalizer 층은 "
+            "`label`·`evidence_text` 를 쓴다).",
             concept=concept_name,
         ))
     else:
@@ -389,7 +391,7 @@ def _lint_feature(concept_name: str, raw_feature: Dict[str, Any], issues: List[D
         issues.append(_issue(
             "error",
             "MISSING_FEATURE_TYPE",
-            "feature type is required.",
+            "feature: 키 `type` 이 없다. 허용값은 cg_input_linter.VALID_TYPES 다.",
             concept=concept_name,
             feature=feature_text or None,
         ))
@@ -407,7 +409,8 @@ def _lint_feature(concept_name: str, raw_feature: Dict[str, Any], issues: List[D
         issues.append(_issue(
             "error",
             "MISSING_EVIDENCE",
-            "evidence must be a source-backed string with at least 4 characters.",
+            "feature: 키 `evidence` 가 4자 이상 출처 기반 문자열이어야 한다 "
+            "(L1 normalizer 층에서는 `evidence_text`).",
             concept=concept_name,
             feature=feature_text or None,
         ))
