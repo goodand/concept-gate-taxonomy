@@ -272,3 +272,94 @@ def test_signature_is_deterministic_and_does_not_mutate_input():
     a, b = v2.signature(f), v2.signature(f)
     assert a == b
     assert f == before, "입력을 변경했다"
+
+
+# ---- D-32-C: 위치 규칙은 **`forall` 한정**이다 -------------------------
+#
+# 판정 D-E2E-v1-32-C가 운영 세션의 재해석을 **승인하되 좁혔다**. 요청서에 쓴
+# "제한식이 `True`인 **양화**의 직접 body"를 모든 결박자에 적용하면 안 된다.
+#
+# 근거(판정문 + 우리 2원소 전수 재계산으로 이중화):
+#   restricted universal   `P→Q`  ≡  `True→(P→Q)`   — 4/4 조합 동치
+#   restricted existential `P∧Q`  ≢  `True∧(P→Q)`   — 반례 (F,F)·(F,T)
+# 즉 `forall`에서만 두 인코딩이 같은 의미이고, `exists`·`count`·`prop`에서는
+# 위치 규칙을 적용하면 **의미가 다른 것을 같게 만든다**.
+#
+# 적대 검증(2026-08-24)이 구현에서 이 과일반화를 실측했다 — 4종 전부에 표지가
+# 붙고 있었다. 계약이 `forall`만 시험 입력으로 썼기 때문에 잡히지 않았다.
+# 판정의 `non_matches` 4항을 여기서 결박한다.
+
+_INNER = EX("y", P("c", V("y")), P("r", V("y")))   # 방향·표지 관측용
+
+
+def test_scope_of_the_position_rule_is_declared_forall_only():
+    """판정의 지시: **이름에 `forall` 한정임이 드러나야** 한다."""
+    assert v2.Q_RSTR_BODY_SCOPE == ("forall",)
+    assert "forall" in v2.Q_RSTR_BODY_MARKER.lower()
+
+
+def test_reinterpretation_text_states_the_forall_restriction():
+    assert "forall" in v2.REINTERPRETATION.lower()
+
+
+def test_forall_with_empty_restriction_and_implies_body_matches():
+    out = repr(v2.signature(FA("x", TRUE, IMP(P("d", V("x")), _INNER))))
+    assert v2.Q_RSTR_BODY_MARKER in out
+
+
+@pytest.mark.parametrize("binder", [
+    lambda b: EX("x", TRUE, b),
+    lambda b: CNT("eq", 2, "x", TRUE, b),
+    lambda b: PROP("most", "x", TRUE, b),
+], ids=["exists", "count", "prop"])
+def test_non_forall_binders_do_not_match(binder):
+    """판정 `non_matches`: exists/count/prop는 제외다.
+
+    적용하면 `P∧Q`와 `True∧(P→Q)`를 같게 만들어 **의미가 다른 것을 같게** 한다.
+    """
+    out = repr(v2.signature(binder(IMP(P("d", V("x")), _INNER))))
+    assert v2.Q_RSTR_BODY_MARKER not in out
+
+
+def test_implies_not_directly_under_forall_body_does_not_match():
+    """판정 `non_matches` 4항 — 직접 body가 아니면 적용 안 된다."""
+    nested = FA("x", TRUE, AND(IMP(P("d", V("x")), _INNER), P("z", V("x"))))
+    assert v2.Q_RSTR_BODY_MARKER not in repr(v2.signature(nested))
+
+
+def test_forall_with_nonempty_restriction_does_not_match():
+    """제한식이 비어 있지 않으면 그 body의 implies는 일반 implies다."""
+    out = repr(v2.signature(FA("x", P("d", V("x")), IMP(P("e", V("x")), _INNER))))
+    assert v2.Q_RSTR_BODY_MARKER not in out
+
+
+def test_encoding_invariance_holds_through_desugar():
+    """판정 `encoding_invariance: required: true`.
+
+    **운영 전제를 함께 결박한다**: 불변성은 desugar가 먼저 정규화하기 때문에
+    성립하고, 위치 규칙 자체가 만드는 성질이 아니다. 비정규화 입력에 이 투영을
+    쓰면 두 인코딩의 signature가 갈린다(적대 검증이 실측했다). 따라서
+    파이프라인은 반드시 desugar → signature 순서여야 한다.
+    """
+    from _stage2_canonical_core import desugar
+    a = FA("x", TRUE, IMP(P("d", V("x")), P("b", V("x"))))
+    b = FA("x", P("d", V("x")), P("b", V("x")))
+    assert v2.signature(desugar(a)) == v2.signature(desugar(b))
+
+
+def test_left_right_direction_survives_the_marker():
+    """표지를 붙여도 R→B와 B→R은 구별돼야 한다(판정 `preserve`)."""
+    assert not same(FA("x", TRUE, IMP(P("d", V("x")), _INNER)),
+                    FA("x", TRUE, IMP(_INNER, P("d", V("x")))))
+
+
+def test_no_provenance_in_the_signature():
+    """판정 `forbidden: desugar_origin_tag_in_scoring_signature`.
+
+    부재 증명: signature는 중첩 tuple뿐이고 문자열 원소는 정해진 어휘에서만
+    나온다. `desugar`·`origin`·`generated` 류 표지가 등장하면 실패한다.
+    """
+    from _stage2_canonical_core import desugar
+    out = repr(v2.signature(desugar(FA("x", P("d", V("x")), P("b", V("x"))))))
+    for banned in ("desugar", "origin", "generated", "provenance"):
+        assert banned not in out.lower()

@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: V2_PROJECTION_IMPLEMENTED__AWAITING_Q32C_BEFORE_REFREEZE   # D-32 수령·검증 완료(qualification 8종을 시제품으로 8/8 입증) + `O1_SCOPE_PROJECTION_V2` 신설·계약 29건 결박·커밋. V1은 바이트 보존. **재동결은 Q32-C 회신 전까지 하지 않는다** — 태깅 지시가 오면 20건 서명을 다시 찍어야 한다
-next_action_code: AWAIT_Q32C__THEN_REPROJECT_20_AND_FREEZE_V5   # ①Q32-C 회신(`docs/DESIGN_REQUEST_q_rstr_body_position.md`) ②20건 전량 재투영 → expected_ir_sha256 재생성(**20/20 변경이 정상** — V2는 모든 술어를 opaque incidence로 바꾼다) ③manifest에 measurement_contract·score_comparability(V1↔V2 직접 비교 불가) ④PRE_EXECUTION_FREEZE_AMENDMENT_V1 절차로 V5 동결. **코호트 dispatch는 그 뒤에도 별도 승인**
+state_code: D32C_APPLIED__READY_FOR_20_REPROJECTION_AND_V5   # D-32-C 수령·검증·수리 완료. 판정이 재해석을 **승인하되 `forall` 한정으로 좁혔고**, 적대 검증이 우리 구현의 과일반화(4종 전부 적용)를 적발해 수리했다. 계약 40건. **설계 차단 요인 없음** — 남은 것은 실행 절차뿐
+next_action_code: REPROJECT_20__MANIFEST__FREEZE_V5   # §3의 0-b~0-e: 20건 전량 재투영(**20/20 변경이 정상**) → manifest에 measurement_contract·score_comparability → PRE_EXECUTION_FREEZE_AMENDMENT_V1로 V5 동결 → 채점 배선 V2 교체. **desugar → signature 순서를 배선에서 재확인**(불변성이 desugar에 의존한다). 코호트 dispatch는 그 뒤에도 별도 승인
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안

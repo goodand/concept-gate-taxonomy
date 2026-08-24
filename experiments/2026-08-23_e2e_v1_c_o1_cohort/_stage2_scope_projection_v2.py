@@ -20,11 +20,23 @@ V1_SCORE_COMPARABLE = False
 LOGICAL_EQUIVALENCE_CLAIM = False
 PRIMARY_SCOPE = frozenset({"forall", "exists", "count", "prop", "not"})
 
+# 위치 규칙의 적용 범위 — **`forall` 한정**이다(D-32-C 확정).
+# 이름이 그 한정을 드러내야 한다는 것이 판정의 명시 지시다.
+Q_RSTR_BODY_SCOPE = ("forall",)
+Q_RSTR_BODY_MARKER = "FORALL_RSTR_BODY"
+
 REINTERPRETATION = (
-    "Q_RSTR_BODY is defined by position, not provenance tagging: an implies "
-    "in the direct body of a quantifier whose restriction is True is kept "
-    "as the RSTR/BODY structural marker solely because of that position. "
-    "This is a reinterpretation of the ruling text, pending confirmation."
+    "FORALL_RSTR_BODY is defined by position, not provenance tagging: an "
+    "implies in the DIRECT BODY of a **forall** whose restriction is the "
+    "canonical True is kept as the RSTR/BODY structural marker solely "
+    "because of that position. Confirmed by D-E2E-v1-32-C, which approved "
+    "the reinterpretation but narrowed it to forall only: restricted "
+    "universal (P->Q) is equivalent to True->(P->Q) for all assignments, "
+    "but the existential analogue (P&Q vs True&(P->Q)) is not -- "
+    "counterexamples P=F,Q=F and P=F,Q=T. Applying the rule to exists, "
+    "count or prop would make semantically different formulas identical. "
+    "Provenance may exist as diagnostics but must never reach the scoring "
+    "signature (encoding choice is not the measurand)."
 )
 
 
@@ -135,10 +147,14 @@ def _sig_quantifier(node: dict, kind: str, canon: _Canon) -> tuple:
         rsig = _sig(node["restriction"], canon)
         body = node["body"]
         bsig = _sig(body, canon)
-        # 위치 규칙(REINTERPRETATION): 제한식이 empty이고 body가 implies면
-        # 그 implies는 desugar 산출물의 RSTR/BODY 표지로 태깅한다.
-        if _is_empty_atom(rsig) and isinstance(body, dict) and body.get("kind") == "implies":
-            bsig = ("QRB", bsig)
+        # 위치 규칙(D-32-C): **forall 한정**. 제한식이 canonical True이고
+        # 직접 body가 implies일 때만 RSTR/BODY 표지를 붙인다.
+        # exists/count/prop에 적용하면 `P∧Q`와 `True∧(P→Q)`를 같게 만들어
+        # **의미가 다른 것을 같게** 한다(판정 `non_matches`).
+        if (kind in Q_RSTR_BODY_SCOPE
+                and _is_empty_atom(rsig)
+                and isinstance(body, dict) and body.get("kind") == "implies"):
+            bsig = (Q_RSTR_BODY_MARKER, bsig)
         if kind == "count":
             return (kind, node["rel"], node["num"], rsig, bsig)
         if kind == "prop":
