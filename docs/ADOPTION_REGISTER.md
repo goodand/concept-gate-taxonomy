@@ -53,6 +53,7 @@
 | `qa_v6_3.py` | v6.3 QA 33건 | NOT_ADOPTED | 사유: 위와 짝. `run_gates.py`는 이 파일을 돌지 않는다. [[LEGACY_REGISTER]] 등록 |
 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/test_stage2_cohort_acceptance.py` | `WIRED_GATE` | `run_gates.py:134`가 `experiments/*/test_*.py` 보유 디렉터리를 별도 프로세스로 돈다 — 루트 pytest는 `pytest.ini` `norecursedirs`로 실험을 제외하므로 **루트 수집 0건이 정상**이다 | 층 하한 생략 회피를 막는다. 음성 대조 쌍(`test_the_evasion_*`)이 같은 입력에서 판정이 뒤집히는 것을 보인다 |
 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/test_frozen_surfaces.py` | `WIRED_GATE` | `run_gates.py:134`의 실험 디렉터리 순회 | 동결 표면 11개(사전등록 3·manifest 4·freeze 4)를 바이트로 고정. **이 세션이 사전등록서에 부록을 append했는데 게이트가 13/0으로 통과한 것**이 생긴 이유다. 완전성 검사가 고정 없는 새 동결 표면을 잡고, 러너를 고정하지 **않는다는 결정**도 테스트로 고정한다 |
+| `conceptgate/server_o1_scope.py` + `scripts/run_o1_scope_mcp.sh` | `MANUAL_TOOL` | `docs/O1_SCOPE_TOOL.md` — Claude Desktop `mcpServers.o1-scope` 등재(2026-08-24) 및 CLI `--cli` | 코호트 채점 사슬을 MCP·CLI로 노출. 모델 호출 경로 없음(게이트가 소스 검사). 동반 게이트 `test_server_o1_scope.py` 19건 — 계약 해시 드리프트 거부와 **실패 형태 균일성**에 음성 테스트 |
 
 루트 `test_*.py` 28개는 `WIRED_PYTEST`다 — `pytest.ini`가 `norecursedirs`로
 `experiments/`만 제외하므로 루트 테스트는 **자동 수집**된다. 개별 행으로 적지
