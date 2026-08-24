@@ -43,6 +43,9 @@ zero-context agent를 위한 읽는 순서:
 
 | D-32 | 제한식 비-scope 내용을 opaque 붕괴(empty/nonempty·incidence 보존) · 닫힌 profile `O1_SCOPE_PROJECTION_V2` · 20건 전량 재투영 · amendment+profile 둘 다 | [[DESIGN_REQUEST_restriction_projection]] | [[DESIGN_DECISION_restriction_projection]] |
 
+**확인 요청(판정 질문 아님)**: [[CONFIRMATION_REQUEST_q_rstr_body_position]] —
+D-32 §Q32.2의 `Q_RSTR_BODY`를 provenance가 아니라 위치로 정의해도 되는지 1건.
+
 별도 계열(이 실험 전 단계): [[DESIGN_DECISION_refine_verify_v0_review]]
 
 ## 조사 왕복 (조사용 agent — 다른 workspace, zero context)
