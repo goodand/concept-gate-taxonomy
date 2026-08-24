@@ -23,6 +23,32 @@ _STRATUM_DECIDERS = {
     "proportional": lambda p: p == "_most_q",
 }
 
+# 층과 **양립하는** 양화 술어. 실물 감사(2026-08-24)가 드러낸 공백:
+# `card`의 존재만 보면 `_both_q + card(2)`가 통과한다. 그러나 `both`는
+# "정확히 둘이 존재한다"가 아니라 전제된 2원소 집합에 대한 한정·보편이고,
+# `count(eq,2)`로 옮기면 힘이 바뀐다 — D-27/D-28이 금지한 재작성이다.
+# `_all_q + card(4)`도 보편이 소실된다. 표는 **판정하지 않고 표시**한다.
+_STRATUM_QUANTIFIERS = {
+    "cardinal": ("udef_q", "_a_q", "some_q"),
+    "proportional": ("_most_q",),
+}
+
+
+def _quantifier(candidate: dict) -> str | None:
+    """이 후보에서 층과 양립하는 양화 술어. 없으면 실제로 있는 양화를 준다
+    (그러면 verdict가 mismatch가 되어 사람 감사에 올라간다)."""
+    preds = candidate.get("mrs_preds", [])
+    ok = _STRATUM_QUANTIFIERS[candidate["stratum"]]
+    for p in preds:
+        if p in ok:
+            return p
+    # 양립하지 않는 양화라도 **보여준다** — 감사자가 무엇 때문에 걸렸는지
+    # 알아야 한다. 침묵하면 표가 이유 없이 빨간 줄을 그린다.
+    for p in preds:
+        if p.endswith("_q") or p in ("udef_q", "def_explicit_q"):
+            return p
+    return None
+
 
 def _decide(candidate: dict) -> str | None:
     """이 후보의 층을 **증명하는** MRS 술어. 없으면 None."""
@@ -60,14 +86,23 @@ def audit_row(candidate: dict, *, surface_display: str) -> dict:
             f"교차 검사가 공허해진다")
 
     decider = _decide(candidate)
+    quant = _quantifier(candidate)
     reading, withheld = _surface(candidate, surface_display)
+    compatible = quant in _STRATUM_QUANTIFIERS[candidate["stratum"]]
+    if not decider:
+        verdict = "STRATUM_MRS_MISMATCH"
+    elif not compatible:
+        verdict = "STRATUM_QUANTIFIER_MISMATCH"
+    else:
+        verdict = "CONSISTENT"
     return {
         "case_id": candidate["case_id"],
         "surface_reading": reading,
         "surface_withheld": withheld,
         "mrs_predicate": decider,
+        "quantifier_predicate": quant,
         "assigned_stratum": candidate["stratum"],
-        "verdict": "CONSISTENT" if decider else "STRATUM_MRS_MISMATCH",
+        "verdict": verdict,
     }
 
 
@@ -77,7 +112,7 @@ def audit_table(candidates: list, *, surface_display: str) -> list:
 
 
 _COLUMNS = ("case_id", "surface_reading", "mrs_predicate",
-            "assigned_stratum", "verdict")
+            "quantifier_predicate", "assigned_stratum", "verdict")
 
 
 def render_markdown(rows: list) -> str:

@@ -764,3 +764,45 @@ rel_coverage:
 - rights gate(NC·SA·라이선스 버전)는 **설계로 해소되지 않는다** — 판정이
   UNRESOLVED로 둔 세 항목은 사실 확인과 법적 해석이 필요하다. full O1
   freeze의 주 차단 요인이 의미론에서 **권리로 이동**했다.
+
+---
+
+# C. 사용자 결정 — rights gate (2026-08-24)
+
+판정 Q30.5는 `nc_compatibility`·`sa_propagation`·`license_version`을
+UNRESOLVED로 두고 **"semantic compiler 설계가 결정할 수 있는 문제가
+아니다"** 라고 명시했다. 그 세 항목은 프로젝트 이용 성격에 관한 **사실**이고,
+그 사실의 정본은 사용자다. 사용자가 다음을 확정했다.
+
+```yaml
+user_decision_2026-08-24:
+  use_character: personal_research      # "우리는 개인 연구 목적이야"
+  external_distribution: none           # "외부 배포도 안 할꺼야"
+  nc_compatibility: RESOLVED            # 개인 연구는 NC와 충돌하지 않는다
+  sa_propagation: MOOT                  # SA 의무는 배포에서 발생한다 — 배포가 없다
+  license_version_ambiguity: MOOT_FOR_USE  # 3표기 기록은 유지, 사용에는 무영향
+  decision_authority: user
+```
+
+**세 표기는 그대로 보존한다**(판정의 요구) — `canonical_license`를 지정하지
+않는다. 해소된 것은 "우리 사용이 허용되는가"이고, "어느 버전이 정본인가"는
+여전히 확인되지 않았다. 둘을 섞으면 라이선스를 추정하는 것이 된다.
+
+**Q30.4는 변하지 않는다.** 이 저장소는 공개 GitHub이므로 **문장 원문을
+커밋하는 것 자체가 외부 배포**다. 즉 `surface_display: sha256`은 완화 대상이
+아니라 "외부 배포 없음"을 **이행하는 기제**다. 표면 원문은 로컬 캐시에만 둔다.
+
+따라서 상태 전이:
+
+```yaml
+rights_gate: RESOLVED_BY_USER_DECISION   # 이전: BLOCKED
+repository_redistribution: NOT_APPROVED  # 불변 — Q30.4가 정본
+full_O1_freeze:
+  status: BLOCKED
+  principal_remaining_blocker: contract_implementation_and_material_margin
+```
+
+**주 차단 요인이 권리에서 계약 구현·재료 여유로 이동했다.** 그리고 Gate C
+사람 감사(`experiments/2026-08-23_e2e_v1_c_o1_cohort/GATE_C_MRS_AUDIT_20260824.md`)
+가 `_both_q`·`_all_q` 4건을 기각해 **기수 적격이 3건(하한과 동일, 여유 0)**
+이 됐다 — 이것이 새 차단 지점이다.

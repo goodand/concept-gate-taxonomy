@@ -128,3 +128,69 @@ def test_all_consistent_still_requires_human_audit():
         gc.audit_table([CAND_CARD, CAND_PROP], surface_display="full"))
     assert summary["mismatch"] == 0
     assert summary["gate"] == "HUMAN_AUDIT_REQUIRED"
+
+
+# ---- Gate C READ가 드러낸 공백: 공기 양화 술어 (2026-08-24) ------------
+#
+# 실물 감사에서 표는 8/8 CONSISTENT를 냈으나 사람이 4건을 기각했다. 원인:
+# 표가 층 결정 술어(`card`)의 **존재**만 보고 **공기하는 양화 술어**를 보지
+# 않았다. `_both_q + card(2)`("Both products were …")를 `count(eq,2)`로 옮기면
+# "정확히 둘이 존재한다"가 되어 한정·보편의 힘이 사라진다 — D-27/D-28이 금지한
+# 힘을 바꾸는 재작성이다. `_all_q + card(4)`도 같다(보편이 소실된다).
+#
+# 표는 이것을 **판정하지 않고 표시**한다. 층 재배정은 판정 사안이다.
+
+BOTH = {"case_id": "MRS-21603011", "surface": "irrelevant",
+        "mrs_preds": ["_both_q", "card", "_product_n_1", "_popular_a_for"],
+        "stratum": "cardinal"}
+ALL4 = {"case_id": "MRS-20490024", "surface": "irrelevant",
+        "mrs_preds": ["_all_q", "card", "_demonstrator_n_1", "_arrest_v_1"],
+        "stratum": "cardinal"}
+UDEF = {"case_id": "MRS-21618050", "surface": "irrelevant",
+        "mrs_preds": ["udef_q", "card", "_irony_n_1", "_intrude_v_1"],
+        "stratum": "cardinal"}
+
+
+def test_quantifier_predicate_is_a_column():
+    row = gc.audit_row(UDEF, surface_display="sha256")
+    assert row["quantifier_predicate"] == "udef_q"
+
+
+def test_existential_quantifier_with_card_is_consistent():
+    assert gc.audit_row(UDEF, surface_display="sha256")["verdict"] == "CONSISTENT"
+
+
+def test_both_q_under_cardinal_stratum_is_flagged():
+    row = gc.audit_row(BOTH, surface_display="sha256")
+    assert row["quantifier_predicate"] == "_both_q"
+    assert row["verdict"] == "STRATUM_QUANTIFIER_MISMATCH"
+
+
+def test_all_q_with_card_is_flagged():
+    assert gc.audit_row(ALL4, surface_display="sha256")["verdict"] \
+        == "STRATUM_QUANTIFIER_MISMATCH"
+
+
+def test_proportional_most_q_is_its_own_quantifier():
+    row = gc.audit_row(CAND_PROP, surface_display="full")
+    assert row["quantifier_predicate"] == "_most_q"
+    assert row["verdict"] == "CONSISTENT"
+
+
+def test_flagging_does_not_reassign_the_stratum():
+    """표는 표시만 한다 — 층 재배정은 판정 사안이다."""
+    row = gc.audit_row(BOTH, surface_display="sha256")
+    assert row["assigned_stratum"] == "cardinal"
+
+
+def test_missing_quantifier_is_flagged_not_silently_passed():
+    bad = dict(UDEF, mrs_preds=["card", "_irony_n_1"])
+    row = gc.audit_row(bad, surface_display="sha256")
+    assert row["quantifier_predicate"] is None
+    assert row["verdict"] != "CONSISTENT"
+
+
+def test_summary_counts_quantifier_mismatches():
+    s = gc.audit_summary(gc.audit_table([UDEF, BOTH, ALL4],
+                                        surface_display="sha256"))
+    assert s["total"] == 3 and s["mismatch"] == 2

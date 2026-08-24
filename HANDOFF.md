@@ -12,8 +12,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ## 0. 기계 판독 상태 블록 (handoff 평가기 계약 — 코드는 아래 산문·정본과 1:1)
 
 ```yaml
-state_code: RULING_D30_RECEIVED_MATERIAL_UNBLOCKED_RIGHTS_BLOCKED   # D-30 수령·검증(예측 3/3 적중). 새 정의로 잠정 재스캔: 기수 11건·비례 1건 = 하한 충족 → 재료 차단 해소. **주 차단은 rights gate(NC·SA·라이선스 버전 UNRESOLVED)**
-next_action_code: IMPLEMENT_D30_CONTRACTS_THEN_RESCAN   # 구현 6항: admissible BODY target · 변수별 card · MRS_CARDINAL_RELATION_MAP_V1 · implicit_restriction_policy 동결 · CONTROL_SURFACE_PROFILE_V2 후 전체 재스캔 · surface_display 기본값 sha256. 계약 결박 전 수치(11/1)를 적격 확정으로 쓰지 말 것
+state_code: RIGHTS_RESOLVED_MATERIAL_MARGIN_ZERO   # rights gate는 사용자 결정으로 해소(개인 연구·외부 배포 없음 — D-30 §C). Gate C 사람 감사가 _both_q·_all_q 4건 기각 → **기수 적격 3건 = 하한과 동일, 여유 0**. 새 차단은 계약 구현 + 재료 여유
+next_action_code: IMPLEMENT_D30_CONTRACTS_THEN_RESCAN   # D-30 구현 6항 + Gate C가 만든 E0~E6 배제 규칙을 계약으로. 재스캔에서 한 건만 더 탈락하면 하한이 깨진다 — 여유 확보 방안(다른 component·다른 source)을 병행 검토. surface 원문은 저장소 밖(Q30.4는 완화 대상 아님)
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
