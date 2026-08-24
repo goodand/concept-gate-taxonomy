@@ -1,4 +1,8 @@
-"""정규화-검증형 개념 격자 추론기 v6.3
+"""[LEGACY — 등록부: docs/LEGACY_REGISTER.md] 후계자: conceptgate/concept_gate_v7.py
+
+이 파일은 회귀 참고용으로만 남아 있다. **확장하지 마라** — 새 기능은
+후계자에 넣는다. `scripts/run_gates.py`는 이 파일을 돌지 않으므로
+여기 넣은 변경은 어떤 게이트도 검증하지 않는다.
 
 v6.2 → v6.3 변경 5건:
 

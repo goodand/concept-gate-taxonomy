@@ -64,6 +64,7 @@ control 재선별로 **5/5 통과**를 얻었다(V4 1/6 → V5 2/6 → V5.1 5/5,
 | 이 handoff가 실제로 복원 가능한가 | [[HANDOFF_EVALUATION_20260824]] — **9/9 복원·막힌 지점 0**, 그러나 결함 2건 적발(V5.1 운영 로그 누락 · 고아 노트 1건)과 **`vault_search`가 정본·D-33에 도달 못 함**. 1차는 [[HANDOFF_EVALUATION_20260823]](3/3) |
 | 채점이 무엇을 재는가 | 같은 폴더 `_stage2_projection_pipeline_v2.py` — V1 전처리(desugar·관용구·granularity 다리) → V2 signature 합성. **이 모듈이 계약이고 V5 manifest가 해시를 pin한다**. 계약 정본은 `test_stage2_projection_pipeline_v2.py` |
 | control이 무엇을 보증하고 무엇을 보증하지 않나 | [[CONTROLS_RUN_V5_20260824|V5 실행(2/6 → 정지)]] → [[CONTROLS_RUN_V5_1_20260824|V5.1 재선별(5/5)]]. D-33 §9: `control eligibility excludes X → control PASS therefore says nothing about X` — 적격 술어가 배제한 성질은 인증되지 않는다 |
+| 무엇이 죽었고 대신 무엇을 쓰나 | [[LEGACY_REGISTER]] — 표기·후계자·복구 명령을 한 곳에. `test_legacy_register.py`가 등록부의 거짓말을 막는다(실재하지 않는 경로·후계자 없는 행·등록 안 된 표기). **버전 번호가 낮다고 legacy가 아니다** — `_stage2_scope_projection.py`(V2 채점의 전처리)·`freeze_stage2.py`(SEED 정본)·`.oracle_cache`·`vendor/`는 명시적 비-legacy로 적혀 있다 |
 | 실행 기제 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/_stage2_*.py` + `conceptgate/cg_{sbn,fol}_adapter.py`, `cg_mrs_reader.py`, `cg_fixture_resolver.py` |
 
 ## 3. 다음 실행 절차 (사용자 승인 후 — 이 문서의 유일한 고유 내용)
