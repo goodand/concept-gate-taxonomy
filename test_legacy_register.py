@@ -38,7 +38,11 @@ STATUSES = {"RETAINED", "REMOVED", "REMOVABLE"}
 # (거기에 표기를 넣었다면 그것도 등록돼야 한다).
 SEARCH_GLOBS = ("*.py", "scripts/*.py", "conceptgate/*.py", "docs/*.md")
 HEADER_LINES = 40   # "상단"의 정의 — 파일 본문 깊숙한 언급은 표기가 아니다
-MARKER = re.compile(r"\bLEGACY\b")
+# 표기는 **배너 형태**여야 한다 — 맨 단어 `LEGACY`를 찾으면 legacy 등록부를
+# 언급하는 문서까지 표기로 센다. 실측: `test_adoption_register.py`가 본문에서
+# `LEGACY_REGISTER`를 인용했다가 이 게이트에 오발로 걸렸다. 오발은 게이트
+# 신뢰를 깎고, 신뢰 잃은 게이트는 꺼진다 — 그래서 배너 토큰만 인정한다.
+MARKER = re.compile(r"\[LEGACY\b")
 
 
 def _rows() -> list[tuple[str, str, str, str]]:
