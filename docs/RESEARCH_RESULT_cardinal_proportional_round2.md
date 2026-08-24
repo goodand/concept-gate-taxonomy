@@ -20,6 +20,12 @@
 원 파일명: `2차 조사 보고서 — 비례 양화 source + 1차 BLOCKED 해소 + 방언 정합 관점 사실 확인.md`
 (공백·특수문자 파일명은 이 저장소의 `RESEARCH_RESULT_*` 규약과 어긋나 개명.
 내용은 1바이트도 바꾸지 않았고 아래 sha256이 그것을 보증한다.)
+- **회신 블록 자신의 `VERBATIM_SHA256`**: `ee9f325e68e5bcc4d17d957745e53db39c88e54b04f66a774e352abeae6f4bd3`
+  (BEGIN 다음 개행 ~ END 직전, 개행 제외. 수신 시점에 검증한 값과 동일하다.)
+- 구분자 정정 기록: `<!-- VERBATIM-END -->`가 내용 줄 끝에 붙어 있어 기계 추출이
+  불가했다 — 2026-08-24에 마커만 자기 줄로 옮겼다. **내용 문자는 불변**이고,
+  위 해시가 그것을 증명한다(정정 전 블록 바이트의 해시와 동일한 값이다).
+  헤더 6행의 `3319126def…`는 **요청서**의 해시이고 이 회신의 것이 아니다.
 
 <!-- VERBATIM-BEGIN -->
 # 2차 조사 보고서 — 비례 양화 source + 1차 BLOCKED 해소 + 방언 정합 관점 사실 확인
@@ -917,7 +923,8 @@ more than half of X ...
 3. **ERG/MRS + Redwoods**  
    formalism에서 `card_rel(CARG N)`과 quantifier RSTR/BODY가 분리되며 `_most_q`가 존재한다. Redwoods는 hand-selected ERG analyses를 갖지만, proportional record의 release-level locator는 아직 `BLOCKED`.
 
-여기까지가 2차 요청서에서 요구한 **사실 확인 범위**다. 동결 방언으로의 투영 가능성, 실제 표면 필터 통과 여부, `기수 ≥3 / 비례 ≥1` 충족 여부는 요청서가 별도 운영 실측으로 남겨 둔 사항이므로 이 보고서에서는 판정하지 않았다.<!-- VERBATIM-END -->
+여기까지가 2차 요청서에서 요구한 **사실 확인 범위**다. 동결 방언으로의 투영 가능성, 실제 표면 필터 통과 여부, `기수 ≥3 / 비례 ≥1` 충족 여부는 요청서가 별도 운영 실측으로 남겨 둔 사항이므로 이 보고서에서는 판정하지 않았다.
+<!-- VERBATIM-END -->
 
 `VERBATIM_SHA256: ee9f325e68e5bcc4d17d957745e53db39c88e54b04f66a774e352abeae6f4bd3`
 
