@@ -56,7 +56,7 @@ control 재선별로 **5/5 통과**를 얻었다(V4 1/6 → V5 2/6 → V5.1 5/5,
 | **무엇이 코호트를 막고 있나** | [[DESIGN_DECISION_referential_participant_quantification\|D-33]] — referential ∃ 경계가 미정의라 `dispatch: blocked` · `operational_patch: forbidden`. 우리가 경계를 그으면 위반이므로 **실사만 Q34로 상신**한다(§B.3·B.4가 재료) |
 | 무엇이 동결됐고 무엇이 금지인가 | 사전등록 본문은 `PREREGISTRATION_STAGE2_V4.md`가 여전히 정본이고, **동결 산출은 V5**다(`stage2_fixture_manifest_v5.json` — 투영 전용 개정). D-33이 `O1_SCOPE_PROJECTION_V3`을 예고했으므로 **V5의 measurement_contract는 잠정**이다 |
 | fixture commitment | 같은 폴더 `stage2_fixture_manifest_v5.json` (원문 0바이트 — 해시·locator만. V4에서 commitment 필드 바이트 동일, 추가된 것은 `expected_scope_signature_v2_sha256`) |
-| 선별이 조작 불가능한 이유 | 같은 폴더 `freeze_stage2_v4.py`(in-N) · `freeze_controls_v5_1.py`(control 재선별) — seed·층 술어 전부 코드가 정본 |
+| 선별이 조작 불가능한 이유 | 같은 폴더 `freeze_stage2_v4.py`(in-N 선별) · `freeze_stage2_v5.py`(V5 = 투영 전용 개정, 재투영·서명 재생성이 전부 코드) · `freeze_controls_v5_1.py`(control 재선별, 적격 술어 2층) — seed·층 술어·투영 전부 코드가 정본이고 산출은 덮어쓰기를 거부한다 |
 | 동결이 실효됐다는 선언 | 같은 폴더 `test_stage2_freeze_v4.py`의 `FREEZE_STATE`(= `V5_ACTIVE`) — SUPERSEDED 선언 하에서는 **drift가 존재해야 통과**한다(선언이 거짓일 수 없게). V5는 `test_stage2_freeze_v5.py`가 지킨다 |
 | MRS 재료가 왜 아직 부적격인가 | [[RESEARCH_RESULT_mrs_redwoods_round3\|3차 조사 회신 + 우리 검증]] §B — 전수 37,066건 실측, 적격 기수 **0건**(BODY 비제약이 유일 장애 16,584건) |
 | adapter 자격(코드 결박) | `experiments/2026-08-23_{o1,sbn,fol}_adapter_qualification/` — test_protocol이 코드 해시를 라이브와 대조: **커널·adapter를 고치면 자격이 자동 실효**된다(2026-08-24 실측: `cg_ir` 확장으로 3건 실효 → 재자격 9/9·9/9·7/7 재현) |
