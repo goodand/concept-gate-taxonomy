@@ -144,8 +144,9 @@ def test_the_evasion_is_rejected_through_ingest_cohort(tmp_path):
     """ingest_cohort는 층 하한을 유도하므로 회피가 통과하지 못한다."""
     oracle, stratum = _oracle_and_strata()
     res = R.ingest_cohort(
-        PLAN, _evasion_outputs(oracle, stratum), oracle,
-        manifest_path=MANIFEST, results_path=tmp_path / "r.json")
+        PLAN, _evasion_outputs(oracle, stratum),
+        manifest_path=MANIFEST, cache_dir=CACHE,
+        results_path=tmp_path / "r.json")
     rep = res["report"]
     assert rep["counts"]["pass"] == 16, "회피 시나리오는 전체 16/20이어야 한다"
     assert rep["acceptance"]["accepted"] is False
@@ -166,3 +167,52 @@ def test_the_evasion_succeeds_without_floors_so_the_gate_is_not_vacuous(tmp_path
     assert rep["counts"]["pass"] == 16
     assert rep["acceptance"]["accepted"] is True, (
         "층 하한 없이도 거부된다면 위 테스트는 하한을 증명하지 못한다")
+
+
+# --------------------------------------------- 오라클 유도 (같은 결함 2호) ---
+# L0 그래프 정합성 검증(2026-08-24)이 적발했다: `ingest_cohort`가 층 하한은
+# 유도하면서 **오라클은 인자로 받고 있었다.** 즉 커밋 해시 검사를 호출자가
+# 빼먹을 수 있었다 — 층 하한과 같은 모양의 구멍이 같은 함수 안에 하나 더
+# 있었다. 서명에서 `expected_irs`를 없애 그 경로를 닫았다.
+
+
+def test_cohort_oracle_is_derived_and_verified():
+    o = R.derive_cohort_oracle(MANIFEST, CACHE)
+    m = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    assert set(o) == {e["case_id"] for e in m["entries"]}
+    assert len(o) == 20
+
+
+def test_ingest_cohort_signature_has_no_omittable_contract_inputs():
+    """서명 자체가 계약이다 — 셋 중 하나라도 인자로 남으면 생략 가능해진다."""
+    import inspect
+    params = set(inspect.signature(R.ingest_cohort).parameters)
+    for forbidden in ("expected_irs", "stratum_floors", "strata", "pass_min"):
+        assert forbidden not in params, (
+            f"{forbidden}가 서명에 있으면 호출자가 그것을 빼먹을 수 있다 — "
+            f"층 하한 생략 회피가 정확히 그 경로였다")
+
+
+def test_oracle_drift_halts_on_commitment_mismatch(tmp_path):
+    """음성 — 커밋 해시가 어긋나면 멈춘다(조용히 다른 오라클로 채점 금지)."""
+    m = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    m["entries"][0]["expected_ir_sha256"] = "0" * 64
+    mp = tmp_path / "m.json"
+    mp.write_text(json.dumps(m), encoding="utf-8")
+    with pytest.raises(R.OracleDrift, match="commitment mismatch"):
+        R.derive_cohort_oracle(mp, CACHE)
+
+
+def test_oracle_drift_halts_on_cache_miss(tmp_path):
+    """음성 — 캐시가 없으면 멈춘다(재료 없이 채점 금지)."""
+    with pytest.raises(R.OracleDrift, match="unavailable"):
+        R.derive_cohort_oracle(MANIFEST, tmp_path / "empty_cache")
+
+
+def test_cohort_adapter_dispatch_matches_the_freeze_script():
+    """어댑터 분기가 동결 스크립트의 규칙과 같은가 — 다르면 채점이 다른
+    오라클을 쓴다. 동결 스크립트를 읽어 접두어 규칙을 대조한다."""
+    src = (HERE / "freeze_stage2_v5.py").read_text(encoding="utf-8")
+    assert 'case_id.startswith("PMB-")' in src, (
+        "동결 스크립트의 분기 규칙이 바뀌었다 — cohort_adapter도 함께 고쳐라")
+    assert "adapt_sbn" in src and "adapt_fol" in src

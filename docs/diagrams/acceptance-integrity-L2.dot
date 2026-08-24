@@ -1,0 +1,31 @@
+digraph L2 {
+  rankdir=LR; bgcolor="white";
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  subgraph cluster_real {
+    label="실제 코호트 plan (stage2_cohort_plan_v5.json) 을 넘기는 호출자"; style=filled; color="#eef7ee"; fontsize=9;
+    T1 [label="test_stage2_cohort_acceptance.py:146\ntest_the_evasion_is_rejected_through_ingest_cohort" fillcolor="#d5e8d4"];
+    T2 [label="test_stage2_cohort_acceptance.py:163\ntest_the_evasion_succeeds_without_floors_...\n— 우회가 통함을 증명하는 음성 대조" fillcolor="#f8cecc"];
+    OPS [label="운영 호출자\n**0 건**" shape=note fillcolor="#ffffff"];
+  }
+
+  subgraph cluster_synth {
+    label="합성 fixture (spec.cohort_path) — 실제 plan 아님"; style=filled; color="#f5f5f5"; fontsize=9;
+    T3 [label="test_stage2_run.py\n17 개 호출 + ingest_cohort 내부 위임 1\n행 손실·중복·유령 id·profile·정규화 축을 시험한다" fillcolor="#e8e8e8"];
+  }
+
+  IC [label="ingest_cohort()\n오라클·floors·strata 전부 유도\n생략 가능한 인자 없음" fillcolor="#b1cfb1"];
+  IO [label="ingest_outputs()\nfloors=None 기본값\ncontrol·시험 전용" fillcolor="#dae8fc"];
+
+  ACC_OK  [label="accepted=False\nfloors_met=False\nmq={'n':5,'pass':1}" shape=octagon fillcolor="#d5e8d4"];
+  ACC_BAD [label="accepted=True\n— 전체 16/20 인데 mq 1/5\n사전등록이 금지한 수락" shape=octagon fillcolor="#f8cecc"];
+
+  GATE [label="test_cohort_bypass_ledger.py\nAST로 실제 plan 우회 호출을 센다\n미등재 호출 → 실패" shape=note fillcolor="#d5e8d4"];
+
+  T1 -> IC -> ACC_OK;
+  T2 -> IO -> ACC_BAD [color="#b85450"];
+  T3 -> IO [style=dotted label="합성 입력"];
+  OPS -> IO [style=invis];
+  GATE -> IO [style=dashed color="#82b366" label="이 경로를 센다"];
+}

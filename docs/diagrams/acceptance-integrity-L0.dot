@@ -1,0 +1,36 @@
+digraph L0 {
+  rankdir=TB; bgcolor="white";
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11];
+  edge [fontname="Helvetica" fontsize=9];
+
+  subgraph cluster_inv {
+    label="(0) 절대 불변 — 개정은 새 파일로만"; style=filled; color="#f0f0f0"; fontsize=10;
+    INV [label="동결 표면 11개 바이트 불변\n(사전등록 3 · manifest 4 · freeze 4)\nN=20 · PASS≥16 ∧ mq 4/5 · ERROR=0" fillcolor="#e8e8f5"];
+  }
+
+  subgraph cluster_goal {
+    label="(1) 궁극 목적 — 상위 목적의 재귀"; style=filled; color="#f7f7f0"; fontsize=10;
+    G1 [label="계약 입력을 생략할 수 없다\n(오라클 · 층 하한 · strata)" fillcolor="#fff2cc"];
+    G2 [label="관측 후 계약이 바뀌지 않는다" fillcolor="#fff2cc"];
+    G3 [label="estimand 순도\n(hidden-label guessing 배제)" fillcolor="#fff2cc"];
+    G4 [label="O1 scope 컴파일 능력의\n신뢰 가능한 측정" fillcolor="#ffe6b3"];
+    G5 [label="E2E-v1 의 타당성" fillcolor="#ffe6b3"];
+    G6 [label="ConceptGate 의미→OWL\n컴파일 주장" fillcolor="#ffd280"];
+    G1 -> G2 -> G3 -> G4 -> G5 -> G6 [label="~을 위해"];
+  }
+
+  OUT [label="(2) expected_output\naccepted ∈ {True, False}\n— ingest_cohort 경로에서 부당한 True가 불가능하다\n(서명에 생략 가능한 계약 입력이 없다)" fillcolor="#d5e8d4"];
+
+  ESC [label="남는 경로: ingest_outputs (공개)\ncontrol 전용 — 모집단이 달라 층 하한이 정당하게 없다\n**코호트에 쓰면 회피가 가능하다**" shape=note fillcolor="#f8cecc"];
+
+  COND [label="(3) possible_conditions\n출력 누락 → ERROR 회계\n캐시 부재 · 커밋 해시 불일치 → OracleDrift 정지\n어댑터 분기 = 동결 스크립트 규칙" fillcolor="#dae8fc"];
+
+  CERT [label="(4) certainty\n바이트 해시 · 유도 · 음성 대조 쌍 · 서명 검사" fillcolor="#e1d5e7"];
+
+  INV -> G1 [label="가 지킨다"];
+  G1 -> OUT [label="를 보장한다"];
+  COND -> OUT [label="를 좁힌다"];
+  CERT -> INV [label="을 검사한다"];
+  CERT -> COND [label="을 검사한다"];
+  ESC -> OUT [label="가 우회한다" style=dashed color="#b85450"];
+}

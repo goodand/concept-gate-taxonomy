@@ -1,0 +1,41 @@
+digraph L1 {
+  rankdir=TB; bgcolor="white"; compound=true;
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  subgraph cluster_frozen {
+    label="동결 입력 — test_frozen_surfaces.py 가 바이트로 고정"; style=filled; color="#f0f0f0"; fontsize=9;
+    MAN [label="stage2_fixture_manifest_v5.json\nentries 20 · stratum · lf_sha256\nexpected_ir_sha256" fillcolor="#e8e8f5"];
+    FRZ [label="freeze_stage2_v5.py\n어댑터 분기 규칙의 정본" fillcolor="#e8e8f5"];
+    PRE [label="PREREGISTRATION_STAGE2_V4.md\nN=20 · PASS≥16 ∧ mq 4/5" fillcolor="#e8e8f5"];
+  }
+
+  CACHE [label=".oracle_cache/<lf_sha256>\n66 항목 — load-bearing" fillcolor="#f5f5dc"];
+  PLAN [label="stage2_cohort_plan_v5.json\ntrials 20 (trial_id · case_id · prompt)" fillcolor="#f5f5dc"];
+  OUTS [label="모델 출력\n[{trial_id, ir}]" shape=parallelogram fillcolor="#ffe6cc"];
+
+  subgraph cluster_derive {
+    label="유도 — 호출자가 넘길 수 없다"; style=filled; color="#eef7ee"; fontsize=9;
+    DO [label="derive_cohort_oracle()" fillcolor="#d5e8d4"];
+    AD [label="cohort_adapter(case_id, data)\nPMB- → adapt_sbn / 그 외 → adapt_fol" fillcolor="#d5e8d4"];
+    DA [label="derive_acceptance_inputs()\nstrata 지도 · floors · pass_min" fillcolor="#d5e8d4"];
+  }
+
+  DRIFT [label="OracleDrift — 정지\n캐시 부재 · canonical_sha256 불일치" shape=octagon fillcolor="#f8cecc"];
+  SIZE [label="ValueError — 정지\nN≠20 · stratum 크기≠n_min · plan이 유령 case" shape=octagon fillcolor="#f8cecc"];
+
+  IC [label="ingest_cohort()\n서명에 expected_irs · floors · strata · pass_min 없음" fillcolor="#b1cfb1"];
+  IO [label="ingest_outputs()\nplan trial 을 순회한다 (출력을 순회하지 않는다)\n누락 → error 행" fillcolor="#dae8fc"];
+  EV [label="evaluate_scope_v2()\nV1 전처리 → V2 signature" fillcolor="#dae8fc"];
+  SC [label="score()\ncounts · metrics · acceptance" fillcolor="#dae8fc"];
+  ACC [label="acceptance\npass_min_met ∧ no_final_error\n∧ no_unexpected_unscorable ∧ stratum_floors_met" fillcolor="#d5e8d4"];
+
+  MAN -> DO; CACHE -> DO; FRZ -> AD [style=dotted label="규칙 대조"];
+  DO -> AD; AD -> DO [style=invis];
+  DO -> DRIFT [style=dashed color="#b85450" label="검사 실패"];
+  MAN -> DA; PLAN -> DA; PRE -> DA [style=dotted label="전사 대조"];
+  DA -> SIZE [style=dashed color="#b85450" label="검사 실패"];
+  DO -> IC [label="oracle"]; DA -> IC [label="pass_min · floors · strata"];
+  PLAN -> IC; OUTS -> IC;
+  IC -> IO -> EV -> SC -> ACC;
+}

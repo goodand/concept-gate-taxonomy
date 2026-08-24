@@ -354,23 +354,82 @@ def derive_acceptance_inputs(manifest_path: Path | str,
     }
 
 
+def cohort_adapter(case_id: str, data: bytes) -> dict:
+    """코호트 어댑터 분기의 정본 — `freeze_stage2_v5.py:52-54`와 같은 규칙.
+
+    두 source가 다른 어댑터를 쓰므로 `derive_expected_irs`의 단일 `adapter_fn`
+    으로는 코호트를 처리할 수 없다. 그 분기가 동결 스크립트에만 있으면
+    채점 경로가 다른 분기를 쓸 수 있다.
+    """
+    from conceptgate import cg_fol_adapter as _fol, cg_sbn_adapter as _sbn
+    if case_id.startswith("PMB-"):
+        return _sbn.adapt_sbn(data.decode("utf-8", "replace"))
+    return _fol.adapt_fol(data.decode("utf-8"))
+
+
+def derive_cohort_oracle(manifest_path: Path | str,
+                         cache_dir: Path | str) -> dict[str, dict]:
+    """코호트 오라클을 manifest·캐시에서 **유도**한다 — 호출자가 못 넘긴다.
+
+    `derive_expected_irs`와 같은 두 검사를 한다(캐시 부재 → 정지, 커밋 해시
+    불일치 → 정지). 다른 점은 어댑터를 `case_id`로 분기한다는 것뿐이다.
+
+    **왜 별도 함수인가**: `derive_expected_irs`는 `adapter_fn` 하나를 전건에
+    적용하므로 PMB·FOLIO 혼합 모집단에 쓸 수 없다. 호출측이 그 사실을 알고
+    직접 루프를 돌면 드리프트 검사를 빼먹을 수 있다 — 실제로 2026-08-24
+    드라이런이 그렇게 했고, 그것이 이 함수가 생긴 이유다.
+
+    Raises:
+        OracleDrift: 캐시 부재 또는 커밋 해시 불일치.
+    """
+    manifest_path = Path(manifest_path)
+    cache_dir = Path(cache_dir)
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    oracle: dict[str, dict] = {}
+    for entry in manifest["entries"]:
+        case_id = entry["case_id"]
+        result = resolve_bytes(entry["lf_sha256"], cache_dir)
+        if result["execution"] != "ok":
+            raise OracleDrift(
+                f"Oracle unavailable for {case_id}: "
+                f"{result.get('reason', 'unknown error')}")
+        ir = cohort_adapter(case_id, result["data"])
+        computed = canonical_sha256(ir)
+        if computed != entry["expected_ir_sha256"]:
+            raise OracleDrift(
+                f"Oracle commitment mismatch for {case_id}: "
+                f"expected {entry['expected_ir_sha256']}, got {computed}")
+        oracle[case_id] = ir
+    return oracle
+
+
 def ingest_cohort(plan_path: Path | str,
                   outputs: list[dict],
-                  expected_irs: dict[str, dict],
                   *,
                   manifest_path: Path | str,
+                  cache_dir: Path | str,
                   results_path: Path | str,
                   certified: dict | None = None,
                   expected_unscorable: dict | None = None) -> dict:
-    """본 코호트 채점의 **유일한 진입점.** 층 하한을 생략할 수 없다.
+    """본 코호트 채점의 **유일한 진입점.** 생략할 수 있는 것이 없다.
 
-    `ingest_outputs`를 직접 부르면 `stratum_floors`를 빼먹을 수 있고 그러면
-    사전등록이 금지한 수락이 통과한다(위 주석의 실측). 코호트는 이 함수로만
-    채점한다 — `ingest_outputs`는 control·시험용으로 남긴다.
+    이 함수의 서명에는 `expected_irs`도 `stratum_floors`도 `strata`도 없다 —
+    셋 다 manifest에서 **유도**한다. `ingest_outputs`를 직접 부르면 그 셋을
+    빼먹을 수 있고, 층 하한을 빼먹으면 사전등록이 금지한 수락이 통과하고
+    (위 주석의 실측) 오라클을 손으로 넘기면 커밋 해시 검사가 통째로 빠진다.
+
+    L0 그래프 정합성 검증(2026-08-24)이 후자를 적발했다: 층 하한만 유도하고
+    오라클은 인자로 받고 있었다 — **같은 결함의 두 번째 사례**를 같은 함수가
+    갖고 있었다.
+
+    `ingest_outputs`는 control·시험용으로 남는다(모집단이 다르므로 층 하한이
+    정당하게 없다).
     """
+    oracle = derive_cohort_oracle(manifest_path, cache_dir)
     acc = derive_acceptance_inputs(manifest_path, plan_path)
     return ingest_outputs(
-        plan_path, outputs, expected_irs,
+        plan_path, outputs, oracle,
         results_path=results_path,
         pass_min=acc["pass_min"],
         stratum_floors=acc["stratum_floors"],
