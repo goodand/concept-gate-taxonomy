@@ -119,7 +119,19 @@ fixture가 estimand에 포함되는지가 재료 문제로 돌아간다.
 `export_dispatch_args(plan)`으로 인자를 내고 **Workflow 하네스**로만 돌린다
 (`agentType: "o1-compiler"`, `model: haiku`, `schema`= plan의
 `provenance.output_schema`). **프롬프트를 손으로 재구성하지 마라** — 실측으로
-바이트 불일치 0/20이 나왔다(개행 하나 차이). mechanical retry는 dispatch층
+바이트 불일치 0/20이 나왔다(개행 하나 차이).
+
+**dispatch 직전에 반드시 실행한다**(기제 — 규율만으로는 잊는다):
+
+```text
+python3 scripts/verify_dispatch_prompts.py \
+    experiments/2026-08-23_e2e_v1_c_o1_cohort/stage2_cohort_plan_v5.json \
+    <Workflow에 넘길 args JSON>
+```
+
+`ALL_VERBATIM`이 아니면 **dispatch하지 마라**(exit 1). 이 검사는 정규화하지
+않는다 — 개행 하나가 사전등록 위반의 전부이기 때문이다. 그리고 이 게이트는
+**호출을 잊는 것은 막지 못한다**. 그래서 여기 절차에 있다. mechanical retry는 dispatch층
 1회만(생성 전 인프라 실패), semantic retry 금지.
 
 채점: `ingest_outputs`에 `pass_min=16`,

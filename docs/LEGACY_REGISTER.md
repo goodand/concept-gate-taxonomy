@@ -55,7 +55,7 @@ worktree의 커밋으로 처리할 수 없으므로(다른 디렉터리) 기록�
 | 대상 | 용량 | 복구 방법 | 상태 |
 |---|---:|---|---|
 | 완전 push된 worktree 디렉터리 4개 (아래 §참조 분류·§More READ 참고) | **190M** | `git worktree add <경로> <브랜치>` | **T1 2개 제거 완료(91M)** · T2 판정 아래 · T3 보류 |
-| `.vault-harness/vault-md-retrieval/retrieval_index.sqlite3`(82M) + 평가 JSON 7건(~7.6M) | **~90M** | `build_retrieval_index.py` 재실행 | **양 세션 모두 권한 없음 — 사용자 판단 대기.** workspace CLAUDE.md가 `.vault-harness/` 수정·이동·삭제·이름변경을 금지한다. 소관 세션 검토(2026-08-24): 인덱스 해시는 결과의 증인이 **아니다**(평가 JSON 7건에 `index_sha256` 0건 — 그쪽 최초 가설 반증). 그러나 ① `vault-retrieval` MCP의 **살아 있는 의존성**(`DEFAULT_DB`) ② 재생성이 코퍼스를 바꿔(3163 → 실제 vault) **144회 recall 측정을 재현 불가로** 만든다. 평가 JSON은 재생성 불가라 보존 합의 |
+| `.vault-harness/vault-md-retrieval/retrieval_index.sqlite3`(81.6M) + 평가 JSON 7건(~7.6M) | **~90M** | `build_retrieval_index.py` 재실행 | **사용자 판단 대기**(양측 권한 없음 — workspace CLAUDE.md가 `.vault-harness/` 수정·이동·삭제를 금지). **근거가 2026-08-24에 교체됐다** — 아래 §"동결 판본 소실" |
 
 **총 회수 가능 추정 282M / workspace 1.5G.**
 
@@ -230,3 +230,47 @@ workspace 1.5G → **1.4G**.
 **다른 세션의 편의**가 깨지는 것이고, 그 세션의 작업 디렉터리는 다른
 저장소(`evidence-evaluator`)다. 미추적 2건(재생성되는 HMAC 키·빈 디렉터리)은
 1차 More READ에서 무해 판정했다.
+
+## 동결 판본 소실 — 92M 항목의 근거가 교체됐다 (2026-08-24)
+
+처음 판정할 때 나와 소관 세션이 합의한 근거는 **"재생성하면 144회 recall
+측정을 재현 불가로 만든다"**였다. 개발자 회신이 평가 기록에 `index_sha256`이
+있다고 알려 대조가 이뤄졌고, **그 근거가 이미 사라진 것이었다.** 내가 독립으로
+재확인했다.
+
+```text
+기록된 해시  (performance_v1_codex_guard_replay_summary_20260802.json)
+  22be923fb2f42d2252089fcb8e3536d33b334e12ecaa6fb089a19dd26a7f0a04
+
+현재 retrieval_index.sqlite3 (81.6M)
+  e5c03f2c9db0489f4f9897882e4c6bbd74f8ae7f88d2ff3041a6ecaa362c29e9
+                                                        → 불일치
+
+하네스 안의 모든 sqlite:
+  e5c03f2c…  81.6M  retrieval_index.sqlite3              ← built_at 2026-08-14
+  df0f1b3c…   3.0M  instances/perfect-structure-goodantak/…
+  e3b0c442…   0.0M  vault_index.sqlite    ← 빈 문자열 해시(0바이트)
+  e3b0c442…   0.0M  vault-index.sqlite    ← 같음
+```
+
+`index_sha256`은 `hashlib.sha256(db_path.read_bytes())` — **파일 바이트
+전체**다(`multiturn_retrieval.py:1524`). 다르면 다른 파일이고, `22be923f`는
+어디에도 없다.
+
+**정정된 상태**
+
+| | 실제 |
+|---|---|
+| 현재 81.6M 파일의 정체 | **동결 자산이 아니다.** 2026-08-14 재생성분이고 그 뒤 vault가 또 변해 경로 26%가 죽었다 |
+| 동결 판본 `22be923f` | **보존돼 있지 않다 — 소실** |
+| 그 위에서 측정된 144회 수치 | **이미 재현 불가.** 삭제 여부와 무관하다 |
+| "동결 선언을 운영 편의로 뒤집는다"는 우려 | **뒤집을 동결이 남아 있지 않다** |
+
+**그래도 결론은 "지워도 된다"가 아니다 — 이유가 바뀐다.** 이것은 이제
+`DEFAULT_DB`이고 workspace CLAUDE.md가 규정한 1차 진입점의 실체다. 지우면
+규정된 검색 경로가 끊긴다. **"동결이라 못 지운다"가 아니라 "쓰는 중이라 못
+지운다"**다. 양측 권한 없음은 불변이다.
+
+**새로 생긴 것**: 재생성은 이제 **잃을 것이 없는 조치**다. 재현성 논거가
+사라졌으므로 26% 죽은 경로와 10일 노후를 고치는 데 반대 근거가 없다. 실행은
+`.vault-harness/` 쓰기라 사용자 승인 사안이다.
