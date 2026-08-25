@@ -109,3 +109,35 @@ def test_the_directory_has_a_readme_stating_the_measurement():
         t = readme.read_text(encoding="utf-8")
         for token in ("classify_facts", "thin_signal", "as-built"):
             assert token in t, f"{d}/README.md에 {token}이 없다"
+
+
+# ───────────────────────── pytest 수집 범위 고정 (2026-08-25) ─────────────────
+# `norecursedirs` 에서 `.claude` 를 빼면, Claude Code 가 만든 중첩 worktree
+# (`.claude/worktrees/<name>/`)의 테스트가 이 브랜치 suite 로 수집되고 같은
+# 이름의 `conceptgate` 패키지가 sys.modules 를 선점한다 — 이쪽 테스트가 저쪽
+# 코드를 검사하게 된다.
+#
+# 실측(trunk worktree, 2026-08-25): 수집 250개 중 119개가 다른 브랜치 것.
+# 같은 테스트가 단독 48 passed / 전체 수집 11 failed.
+#
+# 이 저장소는 `experiments` 를 같은 이유로 이미 제외하고 있다. 목록이 조용히
+# 줄어들면 그 사고가 돌아오므로 여기서 고정한다.
+
+def test_pytest_excludes_nested_worktrees_from_collection():
+    import configparser
+    ini = Path(__file__).resolve().parent / "pytest.ini"
+    cfg = configparser.ConfigParser()
+    cfg.read(ini, encoding="utf-8")
+    dirs = cfg["pytest"]["norecursedirs"].split()
+    for required in (".claude", "experiments", "vendor"):
+        assert required in dirs, (
+            f"norecursedirs 에서 {required!r} 가 빠졌다. "
+            f"{'중첩 worktree' if required == '.claude' else required} 를 수집하면 "
+            "같은 이름의 패키지가 sys.modules 를 선점해 남의 코드로 테스트가 돈다")
+
+
+def test_the_exclusion_reason_is_written_next_to_it():
+    """이유 없는 제외 목록은 다음 사람이 지운다."""
+    t = (Path(__file__).resolve().parent / "pytest.ini").read_text(encoding="utf-8")
+    assert "sys.modules" in t, "왜 제외하는지가 pytest.ini 에 없다"
+    assert "worktree" in t, "`.claude` 제외의 대상이 무엇인지 적혀 있지 않다"
