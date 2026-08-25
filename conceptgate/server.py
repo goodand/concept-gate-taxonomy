@@ -200,9 +200,9 @@ class BearerTokenAuth(Middleware):
         #   - HTTP transport인데 실패 → fail-closed로 거부
         try:
             headers = get_http_headers(include_all=True)
-        except Exception:
-            # stdio에서는 HTTP 컨텍스트가 없어 정상적으로 예외.
-            # HTTP 배포에서는 이 경로로 오지 않음.
+        except Exception as exc:  # stdio: 컨텍스트 없음이 정상 / HTTP: 인증 실패
+            if os.environ.get("MCP_TRANSPORT", "stdio").strip().lower() == "http":
+                raise ToolError("Unauthorized: request headers unavailable") from exc
             return
 
         auth = headers.get("authorization", "")
