@@ -13,7 +13,7 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 
 ```yaml
 state_code: D36_RECEIVED__R2_IS_CONSTRAINT_BUT_R1_R4_NOT_A_THEOREM   # D-36 도착·검증·저장 완료. R2(독립 검증 가능성)가 실제 구속 조건임은 확인됐으나 **R1~R4는 정리가 아니라 후보 분해**다. `ANA` 100% 구조 일관성은 **부분 증거일 뿐** — 삼층(L1 encoding / L2 correctness / L3 qualification)을 **합치지 마라**가 핵심. V5는 여전히 잠정. **코호트 dispatch 누계 0건**
-next_action_code: SEPARATE_L1_L2_L3__R4_EQUIVALENCE_QUESTION_UNRAISED   # 회신 없이 할 수 있는 둘: (1) `sbn_spec.py` **원천** 확보(전사만 보유, D-36 §5가 material이라 했다 — 단 충분조건 아님) (2) role 어휘 **198종 미검토** 실사, 재고부터(`EQU` 12,501 포함). **신규 상신 후보 1건**: D-36 §2가 미결로 남긴 R4 재해석 — 두 source가 같은 annotation mechanism을 가져야 하는가, 아니면 **동일 measurand에 의미적으로 동등한 qualification**이면 되는가. 금지 유지: `operational_patch`·`immediate_projection`·V3 제작·`ANA` 배제 되돌리기
+next_action_code: SUBMIT_Q37_R4_EQUIVALENCE__OR_ACQUIRE_SBN_SPEC   # 회신 없이 할 수 있는 셋: (1) **Q37 상신 후보** — D-36 §2 가 강조하고 우리가 안 다룬 R4 재해석(두 source 가 같은 annotation mechanism 을 가져야 하는가, 아니면 **동일 measurand 에 의미적으로 동등한 qualification** 이면 되는가). (2) `sbn_spec.py` **원천** 확보(전사만 보유). (3) role 어휘 **198종 미검토** 실사, 재고부터(`EQU` 12,501). 금지 유지: `operational_patch`·`immediate_projection`·V3 제작·`ANA` 배제 되돌리기. **코호트 dispatch 누계 0건**
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
@@ -87,8 +87,15 @@ Q36으로 상신했고 회신 대기다.
 
 ## 3. 다음 실행 절차 (사용자 승인 후 — 이 문서의 유일한 고유 내용)
 
-전제: 게이트 `python3 scripts/run_gates.py` = 13 passed / 0 failed / 1
-blocked(owlready2 — 무관). 실험 폴더 `python3 -m pytest .` = 373 passed.
+전제: 게이트 **`../concept-gate-taxonomy/venv/bin/python scripts/run_gates.py`**
+= **14 passed / 0 failed / 0 blocked**. 코호트 실험 404 passed.
+
+**게이트 실행 방법이 바뀌었다.** `python3` 로 돌리면 owlready2 가 없어
+`test_server.py` 가 BLOCKED 가 되고, 그 BLOCKED 가 실제 결함을 엿새 동안
+가렸다(회고 §22 G156·G157). `CLAUDE.md` 가 명한 `venv/bin/python` 의 venv 는
+**존재한 적이 없었다** — 이제 `concept-gate-taxonomy/venv` 에 만들어 두었고
+SRC 는 그것을 **빌려 쓴다**(worktree 마다 133M 을 두지 않기 위해).
+`conceptgate` 는 cwd 를 따르므로 각 worktree 의 것이 쓰인다(실측).
 
 ### 이미 끝난 것 (다시 하지 마라)
 
@@ -101,6 +108,19 @@ blocked(owlready2 — 무관). 실험 폴더 `python3 -m pytest .` = 373 passed.
 - **코호트 plan 20건 생성** — `stage2_cohort_plan_v5.json`. **dispatch 0건.**
 - **기제 부채 상환 완료**(§19) — 인용 검사기·프롬프트 바이트 게이트·ADOPTION
   원장·문서 규약 4종. 게이트 4개 중 2개가 음성 확인에서 자기 결함을 드러냈다.
+- **D-36 도착·검증·저장** — 검증 설계 → 적대검증(4축) → 검증 → 저장.
+  `VERBATIM_SHA256: ee8a01b9…`. 설계가 네 곳 깨졌고 **내 §E1 제안이 실측에
+  반박됐다**(`Name ?` 는 오류가 아니라 구조 표시된 하위종 394건).
+- **관계 구분 수리 배포 완료** — `assemble_concepts` 가 운영 어휘를 조용히
+  무시하고 `is_a` 를 먹여 **부분이 하위클래스가 됐다**(`dog --is_a--> tail`).
+  유도로 수리, cherry-pick `17da1da`, **배포본에서 실측 확인**
+  (`tail --component_of--> dog`).
+- **배포본 인증 켜짐** — `MCP_API_TOKEN` 미설정이 원인이었다(코드는 정상).
+  `~/check_conceptgate_lock.sh` 로 확인한다.
+- **Java 해석 수리**(커밋 대기) — 판정 W2 §4 가 명령한 "부재 ≠ 실행 실패"
+  분기가 macOS stub 에 발동하지 않았다. `cg_owl._resolve_java()` 로 exit code
+  를 보게 하고 `ReasonerUnavailable(FileNotFoundError)` 로 기존 배선 재사용.
+  **`server.py` 편집 0** — 그 파일 380-382행이 E2.4 fixture 에 원문 인용된다.
 - **경계 실사 3라운드**(Q34·Q34-B·Q35) — PMB gold 12,053 전수, FOLIO 적격 풀
   799 전수, role 주석 층 발견. **경계는 얻지 못했고 얻을 수 없는 이유를 얻었다.**
 
@@ -184,6 +204,17 @@ trials_raw 보존 + 결과는 동결과 **별도 커밋**(방법론 §1). 결과
 
 ## 5. 열린 항목 (차단 아님)
 
+- **행 인용 파괴에 게이트가 없다**(회고 §22 G160) — `conceptgate/server.py`
+  380-382행과 `concept_gate_v7.py` 1192-1193행이 실험 fixture 에 **원문 인용**
+  된다. 그 위쪽을 편집하면 행이 밀려 실험이 깨진다. 이 구간에 **3회** 깨뜨렸고
+  매번 되돌렸다. 편집 전 확인이 규율로만 있다 — 다음 세션의 상환 후보.
+  확인 명령은 §3 검증 절에 있다(`file_lines` locator 전수 스캔).
+- **`test_guard_negative_coverage` 가 DST 에서 실패한다** — 그 브랜치에 음성
+  테스트 없는 가드가 있다는 뜻이고 SRC 는 통과한다. DST 고유 부채.
+- **`.vault-harness` 처분** — 색인 부분은 종결(동료 세션이 83M 회수). 그러나
+  지배적 소비자는 **`.venv-neural` 853M**(가상환경)이고 **한 번도 후보로
+  올라온 적이 없다**. 총 1.1G. 수정·이동·삭제 금지 대상이라 보고만 한다.
+
 - **`concept-gate-e2.2-wt`의 h1a 구현 분기 병합 결정**(3차 정리 라운드가 발견 — `_h1a_diag*` 대 다른 4개 worktree의 `_h1a_score`/`_h1a_policy`, 정본 미결정).
 - **신규 기제 부채 3건**(§21.6): 수치 민감도 필수 보고 · **적대검증 대상 동결
   기록**(대상 sha256을 회신 요구에 넣고 불일치 시 회신 무효, ~30행) · 재고 목록
@@ -229,3 +260,34 @@ D-33 수신 처리(검증 설계 → 설계 적대검증 → 검증 → 기록)�
 - 4~6항의 함정 3개(2차 라운드에서 실측된 것): worktree 삭제 안전성의 기준은
   병합이 아니라 **push**다 · **상호 참조는 참조가 아니다**(닫힌 고리는 둘 다
   후보) · **캐시라도 테스트가 읽으면 하중 자산**이다.
+
+## 7. 편집 구간 경계 (compaction ledger — 2026-08-29 신설)
+
+**왜 있는가.** 삭제·병합 후보의 범위는 "이 작업 구간이 무엇을 건드렸나"로
+좁혀진다. 그런데 그 구간을 아는 주체는 main agent 하나뿐이고, main agent 는
+**가장 최근에 고친 파일은 기억하지만 구간의 시작점은 compaction 에서 잃는다.**
+사용자도 최신 것은 기억하지만 시작점은 마찬가지다. 그래서 경계를 파일에 남긴다.
+
+**규약.** compaction 이 일어날 때마다 아래 표에 한 행을 더한다. 기록할 것은
+**그 compaction 이후 처음 수정한 파일**과 시각이다. 되돌아볼 때 이 표의 두 행
+사이가 곧 한 구간이고, 그 구간의 편집 집합이 후보군의 상한이다.
+세션 ID·세션 이름·cwd 는 적지 않는다(워크스페이스 규칙).
+
+| # | compaction 시각 | 직후 처음 수정한 파일 |
+|---:|---|---|
+| 1 | 2026-08-29 (이 세션 2회차) | `docs/WORKSPACE_CLEANUP_20260829_ROUND5.md` (§4 조사 회신 반영) |
+
+**이 세션의 실측 구간** (미커밋 파일 mtime, 1회차 compaction 이전 구간 포함):
+
+```text
+2026-08-29 17:59  test_cg_owl.py · test_server.py
+2026-08-29 18:05  conceptgate/cg_owl.py · test_java_resolution.py
+2026-08-29 18:08  docs/H1A_PROBLEM_ANALYSIS.md
+2026-08-29 18:09  HANDOFF.md
+2026-08-29 18:14  docs/WORKSPACE_CLEANUP_20260829_ROUND5.md
+```
+
+**한계 — 이 표가 답하지 못하는 것.** 1회차 compaction 의 경계는 이 규약이
+생기기 전에 지나가서 기록이 없다. 그리고 위 mtime 은 **미커밋 파일만** 보여준다
+— 이 구간에 커밋까지 마친 편집(예: `cg_normalizer.py`, `server_o1_scope.py`)은
+`git log` 로 따로 찾아야 한다. 다음 구간부터는 표의 행이 그 일을 대신한다.

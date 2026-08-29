@@ -68,7 +68,7 @@ worktree의 커밋으로 처리할 수 없으므로(다른 디렉터리) 기록�
 |---|---|---:|---:|---:|---:|
 | ~~`concept-gate-codex-mcp-wt`~~ **제거 완료(소관 세션, 2026-08-24)** | workspace 루트 | 53M | 93 | **0** | 93. 그쪽이 `git worktree remove`로 제거하고 `~/.claude.json`의 `preEnterOriginalCwd`를 정정했다(백업 후). 브랜치 `codex/mcp-provider-isolation`=`2cc7b1b`은 origin 보존 |
 | `concept-gate-redteam-wt` | workspace 루트 | 43M | 49 | **0** | 49 (notes 36 · md 5 · 스냅샷 8) |
-| `claude-provider-adapter` | `concept-gate-taxonomy/.claude/worktrees/` | 46M | 30 | **0** | 30 (notes 15 · md 7 · 스냅샷 8) |
+| ~~`claude-provider-adapter`~~ **제거 완료(2026-08-29, 사용자 승인)** | `concept-gate-taxonomy/.claude/worktrees/` | 46M | 30 | **0** | 30. `git worktree remove` 로 제거(평 `rm` 아님). 브랜치 `claude-provider-adapter`=`d7b588b` 은 origin 보존. 제거 직전 재실측: dirty 0 · 무시된 파일 3건 전부 `__pycache__` · 비밀정보 0 |
 | `input-length-guard` | `concept-gate-taxonomy/.claude/worktrees/` | 48M | 30 | **0** | 30 (notes 15 · md 7 · 스냅샷 8) |
 
 위험해 보였던 범주를 전건 실측했다.
