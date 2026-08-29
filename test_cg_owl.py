@@ -7,7 +7,7 @@ P3  모순 개념은 unsatisfiable로 탐지된다
 
 실행에는 Java(HermiT)가 필요 — 없으면 skip.
 """
-import shutil
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -16,26 +16,36 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent))
 
+pytest.importorskip("owlready2", reason="owlready2 미설치 (선택 의존성)")
+
+from conceptgate import cg_owl  # noqa: E402
+
+# 기계별 java 위치는 **여기에만** 둔다 — 배포되는 conceptgate/ 에는 넣지
+# 않는다(brew 는 openjdk 를 PATH 에 링크하지 않는다). 유효성 판정은
+# `cg_owl._resolve_java()` 에 위임한다 — 그것이 exit code 로 stub 을 거른다.
+_KNOWN = ("/opt/homebrew/opt/openjdk/bin/java",)
+if not os.environ.get("CONCEPTGATE_JAVA"):
+    for _cand in _KNOWN:
+        try:
+            if subprocess.run([_cand, "-version"], capture_output=True,
+                              timeout=10).returncode == 0:
+                os.environ["CONCEPTGATE_JAVA"] = _cand
+                break
+        except Exception:
+            continue
+    cg_owl._reset_java_probe()
+
 
 def _java_available() -> bool:
-    java = shutil.which("java") or "/opt/homebrew/opt/openjdk/bin/java"
-    try:
-        subprocess.run([java, "-version"], capture_output=True, timeout=10)
-        return True
-    except Exception:
-        return False
+    """수리 전에는 `subprocess.run` 이 예외만 안 내면 True 였다 — macOS 는
+    `/usr/bin/java` 에 stub 을 두고 그것은 실행되며 `exit 1` 을 낸다. 그래서
+    **Java 가 없는 기계에서도 True 를 반환해** skip 대신 16건이 실패했다.
+    이제 exit code 를 보는 `cg_owl._resolve_java()` 에 위임한다."""
+    return cg_owl._resolve_java() is not None
 
 
 pytestmark = pytest.mark.skipif(not _java_available(),
                                 reason="Java(HermiT) 없음")
-
-pytest.importorskip("owlready2", reason="owlready2 미설치 (선택 의존성)")
-
-# owlready2가 java를 찾도록 PATH 보강
-import os
-os.environ["PATH"] = "/opt/homebrew/opt/openjdk/bin:" + os.environ.get("PATH", "")
-
-from conceptgate import cg_owl
 
 
 # ── P1: primitive → Bird/Airplane spurious is-a 차단 ─────────────────

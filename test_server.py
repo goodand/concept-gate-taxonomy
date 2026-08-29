@@ -561,7 +561,8 @@ async def test_normalizer_protocol():
         else:
             check("3-11 classify_owl: 미가용 시 구조화 오류",
                   cls_res["errors"][0]["code"] in
-                  ("REASONER_UNAVAILABLE", "OWLREADY2_UNAVAILABLE"))
+                  ("REASONER_UNAVAILABLE", "OWLREADY2_UNAVAILABLE",
+                   "REASONER_DEPENDENCY_UNAVAILABLE"))
 
         # 3-12. classify_owl 경계 가드 — 변형 payload는 crash가 아니라
         # 구조화 오류 (아키텍처 분석 §7.5: concepts=[7]이 TypeError였음)
@@ -605,7 +606,8 @@ async def test_normalizer_protocol():
         else:
             check("3-13b classify_owl: 미가용 시 구조화 오류",
                   pc["errors"][0]["code"] in
-                  ("REASONER_UNAVAILABLE", "OWLREADY2_UNAVAILABLE"))
+                  ("REASONER_UNAVAILABLE", "OWLREADY2_UNAVAILABLE",
+                   "REASONER_DEPENDENCY_UNAVAILABLE"))
 
         pbad1 = (await client.call_tool("map_owl", {"bundle": {
             "snapshot": phase_snap, "concepts": [
