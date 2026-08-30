@@ -44,7 +44,7 @@ CONCEPTS = {"문제", "검증", "등급", "규칙", "단계", "불변식", "출�
 # 문서군 이름 — 등록부 §문서군 표와 1:1. 저장소 밖(notes/, evidence-evaluator/)은
 # 게이트가 읽지 못하므로 EXTERNAL 로만 등재되고 정의 위치 실재 검사에서 제외된다.
 GROUPS_IN_REPO = {"retro", "rulings", "directive", "roadmap"}
-GROUPS_OUTSIDE = {"mechspec", "ev-eval", "vault-tool", "h1a-scope"}
+GROUPS_OUTSIDE = {"mechspec", "ev-eval", "ev-eval-code", "vault-tool", "h1a-scope"}
 
 
 def _rows() -> list[dict]:

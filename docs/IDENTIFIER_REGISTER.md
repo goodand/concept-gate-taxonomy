@@ -56,7 +56,8 @@ append-only 규약과 같은 형태다. 기존 문서의 `G164`·`I3` 는 그대
 | `roadmap` | `docs/obligation_layer_roadmap.md` | ✅ | `미분류` | ? (?) |
 | `h1a-scope` | `../concept-gate-h1a-scope-wt/` (md + `qa_v7.py`) | ❌ 다른 worktree |
 | `mechspec` | `../notes/research/logical-revision/*.md` | ❌ vault, git 미추적 | `미분류` | ? (?) |
-| `ev-eval` | `../evidence-evaluator/docs/**/*.md` | ❌ 다른 저장소 | `미분류` | ? (?) |
+| `ev-eval` | `../evidence-evaluator/docs/**/*.md` | ❌ 다른 저장소 (**문서**) |
+| `ev-eval-code` | `../evidence-evaluator/evidence_evaluator/*.py` | ❌ 다른 저장소 (**코드**) | `미분류` | ? (?) |
 | `vault-tool` | `vault_search` 가 붙이는 `authority_class` | ❌ 도구 산출 | `미분류` | ? (?) |
 
 ## 상태
@@ -120,7 +121,7 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 
 | 개념 | 글자 | 뜻 |
 |---|---|---|
-| `문제` | **B D F G I R W X** | 발견된 결함·이슈·finding·BLOCKER || ? (?) 
+| `문제` | **A B D E F G I R S T W X** | 발견된 결함·이슈·finding·BLOCKER || ? (?) 
 | `검증` | **B C D F M N V** | 검증 항목·방법·테스트 케이스·수신 검증 || ? (?) 
 | `등급` | **L M P S Z** | 권위 등급·레벨·줌·슬롯·능력 축 || ? (?) 
 | `규칙` | D E J K | 배제 규칙·공백 항목·trial 계획 || ? (?) 
@@ -150,6 +151,33 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 그것도 재번호 비용(124회)과 이득(집계 가능)을 비교해야 하며, 이 등록부는 결정하지
 않고 기록한다. **개념 열을 통한 집계는 재번호 없이도 가능하다** — 그것이 이 표의 용도다.
 
+### 문서군은 저장소가 아니라 **발행 단위**다 (2026-08-31, 게이트가 잡음)
+
+`ev-eval` 의 실패 코드 9글자를 넣으니 게이트가 `(글자, 문서군)` **중복 3건**
+(`C`·`D`·`I`)을 냈다. 한 저장소가 같은 글자로 **두 계열**을 돌리기 때문이다 —
+실패 코드는 `evidence_evaluator/contract.py`(코드), 이슈 번호는 `docs/feedback/*.md`(문서).
+
+키를 늘리는 대신 **문서군을 갈랐다**: `ev-eval`(문서) / `ev-eval-code`(코드).
+애초에 다른 발행 단위였고 내가 저장소 하나를 통째로 한 군으로 잡은 것이 잘못이었다.
+`h1a-scope` 도 같은 형태다(`qa_v7.py` 코드 + `docs/` 문서) — 지금은 한 군이고,
+그쪽에서 같은 글자 충돌이 나면 같은 방식으로 가른다.
+
+### 상호 목격자 — 절반만 닫힌다 (2026-08-31)
+
+`evidence-evaluator` 소관 세션이 자기 저장소에 목격자를 걸었다(커밋 `8520567`,
+`tests/test_failure_code_letters_are_pinned.py`). **글자만이 아니라 코드까지** 고정한다 —
+우리가 인용하는 것은 `X1` 이지 `X` 가 아니고, 글자만 보면 `R1` 을 지우고 `R9` 를 더해도
+통과하기 때문이다. 독 4종(글자 추가·코드 교체·뜻 비움·글자 삭제)으로 발동을 확인했고,
+**주입마다 파일 해시가 실제로 바뀌었는지도** 봤다(우리 세션의 뮤테이션 도구 결함 보고가
+그쪽 검증 절차를 바꿨다).
+
+**닫힌 절반**: `ev-eval` 의 `FAILURE_CODES` 글자·코드가 말없이 바뀌는 일은 없다.
+**안 닫힌 절반**: 우리 등록부의 변경을 그쪽이 아는 길은 없다 — 한쪽이 상대를 import 해야
+풀리는데 그쪽 `SEMANTIC_BOUNDARY` 가 그 방향 의존을 경계한다. **어느 절반인지 여기 적는다.**
+
+그쪽 목격자에 가드가 하나 더 있다 — **회고 `I` 계열이 `I1` 까지 내려오면 실패**한다.
+그날 아래 `I@ev-eval` 두 행을 충돌로 승격해야 한다.
+
 ## 계열
 
 | 글자 | 문서군 | 뜻 | 개념 | 영문 (유형) | 정의 위치 | 발행 형식 (표 첫 셀 내부 — 게이트가 `^\| … \|` 골격을 붙인다) | FQN (인용 접두) | 상태 |
@@ -162,7 +190,7 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 | `P` | `ev-eval` | 회고 P 를 인용(`P24` 3회, 같은 뜻) + 자체 권위 등급 P0/P1/P2 | `등급` | Priority (initial) | — | — | `ev-eval:P` | `EXTERNAL` |
 | `I` | `directive` | 권한 경계 불변식 I1~I11 (I3 = Verify 는 graph 를 쓰지 않는다) | `불변식` | Invariant (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:147` | — (verbatim) | `directive:I` | `COLLIDES` |
 | `I` | `mechspec` | 상태·갱신 허용성 불변식 I1~I7 (I3 = verified-region protection · I7 = safe abstention) | `불변식` | Invariant (initial) | — | — | `mechspec:I` | `EXTERNAL` |
-| `I` | `ev-eval` | 이슈 번호 I136~I231 (우리 `G` 와 같은 역할, append-only) | `문제` | Issue (initial) | — | — | `ev-eval:I` | `EXTERNAL` |
+| `I` | `ev-eval` | 이슈 번호 **I136~I231**(86개, 우리 `G` 와 같은 역할·append-only). **같은 저장소 안에서 `I1` 실패 코드와 공존** — 번호대가 안 겹쳐 아직 사고가 없을 뿐이다 | `문제` | Issue (initial) | — | — | `ev-eval:I` | `EXTERNAL` |
 | `M` | `retro` | 검증 방법 M1~M19 (M8 = 전문 재독) | `검증` | Method (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:222` | `\*{0,2}M(\d+)\*{0,2}` | `retro:M` | `COLLIDES` |
 | `M` | `roadmap` | 마일스톤 M0~M3 | `단계` | Milestone (initial) | `docs/obligation_layer_roadmap.md:28` | — | `roadmap:M` | `COLLIDES` |
 | `M` | `rulings` | D-19 능력 축 M1~M3 (Measurement · Semantic compilation · Certification) | `등급` | Measurement axis (initial) | `docs/DESIGN_DECISION_e2e_v1_experiment_design.md:129` | — (verbatim) | `rulings:M` | `COLLIDES` |
@@ -197,6 +225,15 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 | `E` | `roadmap` | 회고 E 인용 | `(인용)` | (인용) | — | — | `retro:E` | `CITES_ONLY` |
 | `L` | `retro` | 단일 소유 (drill-down 레벨 L0~L2) | `등급` | Level (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:1423` | — | `retro:L` | `OWNER` |
 | `S` | `mechspec` | 기제 슬롯 S1~S14 (atp-v4) — 단일 소유 | `등급` | Slot (initial) | — | — | `mechspec:S` | `EXTERNAL` |
+| `I` | `ev-eval-code` | `FAILURE_CODES` I1 — 해석 주장 미근거 — **회고 I136~I231 과 같은 저장소 안 순방향 충돌** | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:I` | `EXTERNAL` |
+| `D` | `ev-eval-code` | `FAILURE_CODES` D0 — 실패 코드 (동료 세션이 내 삼중항 누락을 정정, 2026-08-31) | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:D` | `EXTERNAL` |
+| `R` | `ev-eval-code` | `FAILURE_CODES` R1 R2 — 실패 코드 | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:R` | `EXTERNAL` |
+| `A` | `ev-eval-code` | `FAILURE_CODES` A1 — 실패 코드 | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:A` | `EXTERNAL` |
+| `S` | `ev-eval-code` | `FAILURE_CODES` S1 — 실패 코드 | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:S` | `EXTERNAL` |
+| `T` | `ev-eval-code` | `FAILURE_CODES` T1 — 실패 코드 | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:T` | `EXTERNAL` |
+| `E` | `ev-eval-code` | `FAILURE_CODES` E0 E1 — 실패 코드 | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:E` | `EXTERNAL` |
+| `V` | `ev-eval-code` | `FAILURE_CODES` V1 — 실패 코드 | `검증` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:V` | `EXTERNAL` |
+| `C` | `ev-eval-code` | `FAILURE_CODES` C1~C4 — 실패 코드 | `검증` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:C` | `EXTERNAL` |
 | `X` | `ev-eval` | 실패 코드 `X1: citation outside exposed context` | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval:X` | `EXTERNAL` |
 | `X` | `h1a-scope` | mermaid 노드 id (`X1["버림"]`) — 그림 문법 | `(인용)` | — (arbitrary) | `docs/feedback/design_review_*_round2.md` | — | `h1a-scope:X` | `FP_DIAGRAM` |
 | `N` | `h1a-scope` | 검사 항목 `N1 Scior TSV에서 RA02 로드` | `검증` | — (arbitrary) | `qa_v7.py` | — | `h1a-scope:N` | `EXTERNAL` |
