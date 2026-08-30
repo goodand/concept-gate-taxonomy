@@ -203,7 +203,24 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
   형식이 `—` 이고 게이트의 형식 검사에서 제외된다 — verbatim 문서는 우리가 형식을
   정할 수 없고, 나머지는 발행이 표와 산문에 혼재해 아직 하나로 고정하지 못했다.
 - `EXTERNAL` 행의 정의 위치는 게이트가 검증하지 않는다. 낡을 수 있다.
-- A~Z 중 **A·H·T·U** 는 어느 문서군에서도 계열로 쓰이지 않아 등재하지 않았다.
-  N·J·K·X·Y 도 같다. 새로 쓰기 시작하면 인벤토리 검사가 잡는다.
+- **범위 정정 (2026-08-31)**: 위 A~Z 전수는 **`concept-gate-h1-wt/docs` 의 6 문서군에만**
+  돌린 것이다. 넓힌 실측에서 이 문서가 "쓰이지 않는다"고 적었던 넷 중 셋이 실재했다:
+
+  | 글자 | 넓힌 범위 실측 | 정체 |
+  |---|---:|---|
+  | `H` | **354** (notes 261 · experiments 90) | H1a·H3 — **실험 이름**, 계열 아님(위양성) |
+  | `T` | **346** (ev-eval 230 · vault-backlinks 102) | `contract.py:60` 의 `"T1": "answer without a reproducible authority-read…"` — **실재 계열**(코드 안 dict 키) |
+  | `A` | 29 | `§A9`·`A2. 의미보존 압축` — 문서 절 번호. 계열 경계 |
+  | `U` | 2 | `FOLIO U2+E1` — 산발 |
+
+  즉 **`T` 는 진짜 누락**이고 나머지 셋은 위양성이었다. `T` 는 `ev-eval`·`vault-backlinks-mcp`
+  소관이라 이 등록부에는 `EXTERNAL` 로만 들어갈 수 있다.
+- **아직 등재되지 않은 문서군이 둘 있다** — `h1-wt/experiments`(md 1,932 식별자·19글자,
+  `Q785 L216 M204 R130 V120`)와 `h1-wt/experiments` 코드(809·15글자). 이 등록부의
+  문서군 표에 없으므로 게이트의 인벤토리 검사도 그곳을 보지 않는다.
+- **코드도 계열을 쓴다.** `evidence-evaluator` 코드 652건(T126 C116 E116 Z102),
+  `vault-backlinks-mcp` 137건(Z51 T50). "코드는 점 이름공간이라 이 문제가 없다"는
+  `cg_obligations.py` 한 파일에서만 참이다 — `conceptgate/` 의 P72 는 주석 안
+  **회고 패턴 인용**이고 발행은 아니다.
 - haiku 감사 2축의 판정(COLLIDES/CITES_ONLY)은 lead 가 **표본만** 재실측했다
   (W1 · O 소유 · M 다섯째 계열 기각 · I 범위 136~231). 나머지는 회신 그대로다.
