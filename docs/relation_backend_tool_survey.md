@@ -3,7 +3,7 @@
 > [!주의] 이 문서의 성격
 > 사용자가 외부에서 받아온 세 건의 비평/추천을 **압축·인용**한 것이다. 이 세션이
 > 직접 검증한 사실이 아니다 — 언급된 repo 존재·release 버전·라이선스 등은
-> 재검증하지 않았다(참고: [[reference|Project_in_progress/benchmark-references.md]]
+> 재검증하지 않았다(참고: [[notes/research/evidence-normalization/benchmark-references|벤치마크·자료조사 참고문헌 색인]]
 > 는 반대로 이 세션이 직접 grep해 만든 색인이라 성격이 다르다). 이 문서는 어떤
 > 도구도 채택·기각하지 않는다.
 
@@ -44,7 +44,7 @@
 | `certify()` — 단, 구조 검증용이지 semantic oracle 아님 | repair율 단독 1차 지표 → `unsafe_finalize`/`metadata_laundering`을 별도 harm 지표로 분리 |
 | E1의 자기보고 배제 원칙, MixRig positive control fixture | — |
 
-실제 구현은 [[isa_certificate_only_ab README|experiments/2026-07-18_isa_certificate_only_ab/README.md]]
+실제 구현은 [[experiments/2026-07-18_isa_certificate_only_ab/README|isa_certificate_only_ab README]]
 (E2)와 커밋 `0986bc3`, 그리고 read-only 감사 결과(mixrig 안전판정 가드 일부
 누락 — 별도 패치 후보로 이미 기록됨)를 참고.
 

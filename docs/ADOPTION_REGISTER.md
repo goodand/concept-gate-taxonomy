@@ -45,6 +45,7 @@
 | `scripts/run_gates.py` | 병합 게이트 단일 진입점 | INFRASTRUCTURE | `CLAUDE.md` |
 | `scripts/verify_finding_citations.py` | 적대검증 finding의 인용 실재 확인 → 없으면 자동 폐기 | MANUAL_TOOL | `.claude/skills/adversarial-review/SKILL.md` |
 | `scripts/verify_dispatch_prompts.py` | dispatch 인자 프롬프트가 plan과 바이트 동일한지 | MANUAL_TOOL | `HANDOFF.md` |
+| `scripts/wikilink_graph.py` | 저장소 안 `[[wikilink]]` 해소 — 죽은 링크·모호한 basename·범위 밖(EXTERNAL)을 가른다 | WIRED_PYTEST | `test_wikilink_graph.py` |
 | `qa_v7.py` | v7 QA 스위트 | WIRED_GATE | `scripts/run_gates.py` |
 | `fuzz_normalizer_types.py` | 정규화기 타입 fuzz | WIRED_GATE | `scripts/run_gates.py` |
 | `test_server.py` | MCP 서버 표면 검사(스크립트로 실행) | WIRED_GATE | `scripts/run_gates.py` |
