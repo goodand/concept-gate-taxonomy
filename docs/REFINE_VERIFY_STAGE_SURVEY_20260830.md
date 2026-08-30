@@ -198,3 +198,146 @@ raw 문자열이 **하나라도** 섞이면 `diagnostic_only` — 가장 약한 
   맞다**(`SCHEMA_VERSION`·`VERIFIER`·`_EXECUTION_SEVERITY`·`_VERDICT_BY_VALUE`·
   `CERTIFICATE_DOMAIN`·`CERTIFICATE_SCHEMA`). 전부 상수·사설 배관이고 그것을
   **싣는 기제**는 검증돼 있다.
+
+---
+
+## 8. Refine 의 상위 목적 — 저장소 최초 기록 (2026-08-30)
+
+§4 는 "Refine 의 존재 이유가 저장소 어디에도 없다"를 공백으로 남겼다. 그 공백을
+채운다. **출처: 다른 workspace 세션의 설계 판정, 사용자가 전달.** 아래 계층과
+경계는 그쪽 결정이고, 각 항에 붙은 **실측**은 이 세션이 코드에 대조한 것이다.
+
+### 8.1 목적 계층
+
+```text
+상위 목적
+└─ Source 의 의미를 Semantic Graph 로 표현하되,
+   Verify 가 독립적으로 검증할 수 있는 상태까지 구성한다.
+   ├─ 1. 의미 후보 구성 (entity/predicate/relation/quantifier/modality/scope)
+   ├─ 2. canonical semantic structure 로 구성
+   ├─ 3. 부족·불확실을 명시적으로 남긴다 (unknown/provisional/unresolved)
+   ├─ 4. Verify 가 낸 obligation 을 해결하도록 graph 를 수정 (local repair)
+   └─ 5. Verify 와 반복하며 certification 가능한 상태로 수렴시킨다
+```
+
+한 문장: **Source 에 대한 가능한 semantic interpretation 을 구성하고, 검증
+결과에 따라 수정하여 Certified Projection 의 후보가 되는 Semantic Graph 를
+수렴시키는 것.**
+
+**Refine 을 "semantic correctness 확보"라고 부르면 안 된다** — correctness 를
+*판정*하는 권한은 Verify 에 있다. 정확히는
+`Refine = semantic construction + revision` /
+`Verify = semantic validation + certification eligibility` 이고, 둘을 묶은 상위가
+`Semantic Compilation = Source → validated/certifiable semantic representation`
+이다.
+
+### 8.2 네 경계 질문 — 판정과 실측
+
+**(a) Refine 성공의 단위** — 회차 단위로 보면 **FAIL 은 Refine 실패가 아니다.**
+오히려 `FAIL + well-formed + 국소화 가능한 진단`은 loop 가 정상 작동했다는
+증거다. 수락 기준:
+
+```text
+Refine Success = Graph Produced AND Well-Formed AND Verifiable
+                 AND (if FAIL) Diagnostic Well-Formed AND Localizable
+Cycle  Success = Refine Success AND Verify == PASS
+```
+
+→ **`Refine success ≠ semantic correctness` 를 명시적 불변식으로 둘 것.**
+E2E 실험에서 Refine 성능과 semantic accuracy 를 한 PASS/FAIL 로 섞지 않기
+위해서다. LLM 이 틀린 `is_a` 를 냈어도 Verify 가
+`RELATION_ADMISSIBILITY / target: edge_17 / source evidence supports part_of`
+를 정확히 냈다면 **그 회차 Refine 은 정상 기능한 것**이다.
+
+**(b) unknown / provisional / unresolved 는 서로 다른 것에 붙는다** — 하나의
+enum 으로 합치지 마라.
+
+| 상태 | 붙는 대상 |
+|---|---|
+| `provisional` | candidate claim / relation / interpretation **자체** |
+| `unknown` | 특정 semantic **property 의 값** |
+| `unresolved` | 미해결 ambiguity 또는 semantic **decision** |
+
+즉 assertion state / property state / verification state 를 **분리**한다.
+**Refine 은 불확실성을 표현할 수 있어야 하지만 불확실성을 진실로 확정해서는
+안 된다.**
+
+**실측**: 현재 코드에는 claim `lifecycle` 이 `candidate`/`certified`/`rejected`
+뿐이고 `UNKNOWN` 은 Verify 쪽 `Verdict` 에만 있다. 위 3층 분리는 **아직
+그래프 쪽에 없다.**
+
+**(c) canonicalization 은 둘로 갈린다** — 이 항은 그쪽 세션이 **자기 문장을
+정정**한 것이다("서로 다른 surface 표현을 동일 표현으로 정리"는 너무 넓었다).
+
+| 작업 | 권한 |
+|---|---|
+| `"사는 곳"` → `resides_in` 의미 해석 | **Refine** |
+| alpha-renaming (`x`→`v0`), 결정적 node 정렬, alias 정규화, syntactic sugar 해제 | **Shared Kernel** |
+| 두 표현이 실제로 같은 관계인지 판단 | Refine/Verify 의 semantic authority |
+| 두 graph 의 논리적 동치 증명 | Reasoner/Verifier |
+
+**Kernel 은 semantic interpretation 을 canonicalize 할 권한이 없다.**
+그렇지 않으면 `canonicalization → interpretation → truth` 가 한 칸씩 미끄러져
+**Shared Kernel 이 semantic authority 가 된다.** 이것은 I9(Kernel 은 표현은
+정규화하되 불확실성을 진실로 바꾸지 마라)를 **한 단계 넓히는** 판정이다 —
+I9 는 불확실성을, 이 판정은 **해석**을 금지한다.
+
+**(d) v0 는 5항(수렴)에 대한 증거를 산출하지 않는다.** "수렴을 목표로 한다"와
+"수렴했음을 관찰할 수 있다"는 다른 문제다.
+
+| 주장 | v0 가 증거 산출? |
+|---|---|
+| Refine 이 Graph 를 생성한다 | 예 |
+| Verify 가 FAIL/obligation 을 생성한다 | 예 |
+| obligation 을 Refine 이 받아 수정한다 | 예 |
+| 수정 전후 Graph 가 달라졌다 | 예 |
+| 1회 repair 가 obligation 을 **해결했다** | **Verify₁ 이 있어야 예** |
+| 반복적으로 수렴한다 / oscillation 이 없다 | **아니오** |
+
+→ **"v0 가 5항을 검증한다"고 쓰면 과장이다. "5항을 향한 transition 을
+관찰한다"가 정확하다.**
+
+### 8.3 실측 — 우리 v0 는 **경우 A** 다
+
+판정이 가른 두 경우:
+
+```text
+경우 A   G₀ → Verify → FAIL → O₀ → Refine → G₁ → STOP
+         "1회 repair 가 수행됐다"는 증거만. G₁ 이 G₀ 보다 나아졌다는 것조차 미입증
+경우 B   G₀ → Verify → FAIL → O₀ → Refine → G₁ → Verify
+         "그 obligation 을 해결하는 방향으로 한 단계 수렴했다"는 증거
+```
+
+`test_e2e_v0_refine_verify.py:141-201` 실측:
+
+| 단계 | 실제 | 판정 |
+|---|---|---|
+| `[5]` repair `:176-177` | 테스트가 손으로 쓴 dict | stand-in |
+| repair 직후 | fingerprint 상이 · 옛 obligation 이 stale | **바뀌었다**만 증명 |
+| **재검증** | **없음** | **경우 A** |
+| `[6]` verdicts `:186` | `all_pass = {name: Verdict.PASS for name in ...required}` — **전부 손으로** | 계산 아님 |
+
+즉 `[4]` 의 obligation(`source.span_evidence` UNKNOWN, "ev3 미인용")은 수리가
+`ev3` 를 넣은 뒤에도 **한 번도 재검사되지 않는다.**
+
+**그러나 2-pass 승격은 새 검사기 없이 가능하다.** `source.span_evidence` 는
+실제 생산자가 있다 — `cg_obligations.py:327,332`(`results_from_normalizer`).
+테스트가 인스턴스를 손으로 만들었을 뿐이다. (lead 자기정정: 처음엔 생산자도
+없다고 볼 뻔했고, 측정이 그것을 막았다.)
+
+### 8.4 다음 할 일 — 최소 2-pass 실험
+
+판정의 권고: loop scheduler 와 oscillation detector 까지 만들어 **아키텍처를
+키우기 전에**, 먼저
+
+```text
+G₀ → Verify → Obligation → Refine → G₁ → Verify
+```
+
+를 만들어 **obligation 이 실제로 다음 revision 의 개선을 유도하는지** 확인한다.
+그 결과가 좋으면 그때 `G₀ → G₁ → … → PASS` 를 일반화하고 fingerprint 기반
+oscillation/termination 관찰을 붙인다.
+
+**우리 쪽 구체 작업**: `[6]` 의 `all_pass` 손작성을 걷어내고 `repaired` 에
+`results_from_normalizer` 를 다시 돌려 `source.span_evidence` 가 UNKNOWN →
+PASS 로 바뀌는지 단언한다. 이것 하나가 경우 A → 경우 B 전이다.
