@@ -261,3 +261,13 @@ def test_off_form_issuance_would_be_caught(tmp_path):
     issued |= {int(m.group(1)) for m in re.finditer(r"^#{1,4}\s.*\bG(\d+)\b", text, re.M)}
     canonical = {int(m.group(1)) for m in re.finditer(r"^\|\s*" + row["pattern"] + r"\s*\|", text, re.M)}
     assert sorted(issued - canonical) == [3], "절 제목 발행 G3 이 형식 밖으로 잡혀야 한다"
+
+def test_retro_pattern_restatement_has_a_plain_definition():
+    """회고 P 는 `| **P9** | 정의 |` 로 정의되고 뒤 절 누계표에서 `| **P9**(설명) |` 로
+    재기술된다. **재기술만 있고 정의가 없으면** 그 패턴은 발행된 적이 없다 —
+    P24·P25·P26 이 그랬다(이 세션이 만든 결함, 사전 게이트가 잡음)."""
+    text = re.sub(r"```.*?```", "", (ROOT / "docs" / "H1A_PROBLEM_ANALYSIS.md").read_text(), flags=re.S)
+    plain = {int(n) for n in re.findall(r"^\|\s*\*{0,2}P(\d+)\*{0,2}\s*\|", text, re.M)}
+    paren = {int(n) for n in re.findall(r"^\|\s*\*{0,2}P(\d+)\*{0,2}\([^)]*\)\s*\|", text, re.M)}
+    orphan = sorted(paren - plain)
+    assert not orphan, f"정의 행 없이 누계표 재기술만 있는 P: {orphan}"

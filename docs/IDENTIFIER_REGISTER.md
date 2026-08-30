@@ -52,7 +52,7 @@
 |---|---|---|---|---|---|---|
 | `G` | `retro` | 이슈(발견된 결함) G1~G164. 판정문·ev-eval 은 인용만 — `G32` 를 회고가 제기하고 판정 §6 이 "통일하지 않는다"로 답한 것이 증거 | `docs/H1A_PROBLEM_ANALYSIS.md:165` | `\*{0,2}G(\d+)(?:\s[^*]*)?\*{0,2}` | `회고 G` | `OWNER` |
 | `G` | `rulings` | 회고 G 를 인용 | — | — | `회고 G` | `CITES_ONLY` |
-| `P` | `retro` | 패턴(반복되는 실패 형태) P1~P26 | `docs/H1A_PROBLEM_ANALYSIS.md:536` | `\*{0,2}P(\d+)\*{0,2}(?:\([^)]*\))?` | `회고 P` | `COLLIDES` |
+| `P` | `retro` | 패턴(반복되는 실패 형태) P1~P26. 정의는 표 첫 셀 `**P<n>**` 단독, 뒤 절 누계표는 `**P<n>**(설명)` 으로 **재기술** — 재기술만 있고 정의가 없으면 발행 아님(게이트 검사) | `docs/H1A_PROBLEM_ANALYSIS.md:536` | `\*{0,2}P(\d+)\*{0,2}(?:\([^)]*\))?` | `회고 P` | `COLLIDES` |
 | `P` | `directive` | 구현 단계 P0~P4 (P0 architecture integrity · P4 oracle evaluation) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:1940` | — (verbatim, 형식 미강제) | `DIRECTIVE Phase` | `COLLIDES` |
 | `P` | `vault-tool` | 권위 등급 `P0-active-experiment` · `P2-path-stable-worktree` | — | — | `vault 등급 P` | `EXTERNAL` |
 | `P` | `ev-eval` | 회고 P 를 인용(`P24` 3회, 같은 뜻) + 자체 권위 등급 P0/P1/P2 | — | — | `ev-eval P` | `EXTERNAL` |
