@@ -679,3 +679,103 @@ MOC 가 하는 일은 정확히 `graph_fingerprint` 가 하는 일이다 — **"
 4. `authority_class` 가 경로 파생이라는 것을 **알고 쓴다** — `notes/` 에 둔
    설계 문서는 검색에서 권위를 얻지 못한다. 정본으로 삼을 문서는 위치를
    옮기거나, 저자 간선으로 명시적으로 끌어와야 한다.
+
+---
+
+## 12. 간선 추가 — 두 계열이 이제 서로를 안다 (2026-08-30)
+
+사용자 지시: "추가해야 할 backlink 를 추가하는 작업을 해라. 우리는 의미론적으로
+두 가지 이상을 연결해야 하는 상황이다." §11 의 게이트는 **있는 링크가 죽었나**를
+재지 **있어야 할 링크가 없나**는 못 잰다 — 후자는 의미론적 판단이라 손으로 했다.
+
+### 12.1 간선 타입을 정하기 전에 관계를 실측했다
+
+두 문서가 "같은 부품"(§10.2)이라는 내 서술은 **부정확**했다. 공유 어휘 실측:
+
+| 어휘 | mechanism_spec | DIRECTIVE |
+|---|---:|---:|
+| `obligation` · `Candidate` · `provenance` | 35 · 13 · 14 | 38 · 15 · 17 |
+| `commitment` · `rollback` · `abstention` | 31 · 17 · 8 | **0 · 0 · 0** |
+| `Refine` · `Verify` · `Certified` · `canonical` | **0 · 1 · 0 · 0** | 41 · 45 · 31 · 31 |
+
+**공유하는 것은 obligation·candidate·provenance 셋뿐이고 나머지는 상보적이다.**
+mechanism_spec 은 상태 갱신 대수, DIRECTIVE 는 권한 경계 — **같은 obligation 위에
+세운 두 층**이다. 그래서 간선 타입은 `supersedes` 가 아니라 **`complements`** 다.
+
+그리고 `atp-v4` 헤더가 이렇게 적어 뒀다: "**현재 확정된** `mechanism_spec.md` 를
+기준으로". 초안이 아니라 **확정 기준**이었고, DIRECTIVE 는 그것을 모른 채 6주 뒤
+쓰였다.
+
+### 12.2 넣은 간선 — 세 결절점, 양방향
+
+| 어디에 | 무엇을 | 타입 |
+|---|---|---|
+| `DIRECTIVE` 헤더 | → `mechanism_spec` · `atp-v4` · 이 SURVEY | 선행 설계(상보) |
+| `mechanism_spec` frontmatter + 본문 인용 블록 | → `DIRECTIVE` · `DESIGN_IMPL_v0` · 이 SURVEY | `complemented_by` · `implemented_in` |
+| `obligation_layer_roadmap` 헤더 | → `mechanism_spec` · `DIRECTIVE` | L3 갱신 대수의 정본 |
+
+세 곳 모두에 **I 번호 충돌 경고**를 함께 적었다 — 이쪽 I3 ≠ 그쪽 I3. 이것을 안
+적으면 연결이 오히려 오독을 만든다.
+
+`obligation_layer_roadmap` 은 5 worktree 에 동일 사본(sha `78731601`)이다. **h1-wt
+것만 고쳤다** — 규약(worktree 간 손복사 금지, commit→merge 만). 나머지 넷은
+머지로 받는다.
+
+### 12.3 검증 — 도구로, grep 이 아니라
+
+- **색인 재구축** → fresh, 간선 **21,258 → 21,269**(+11). 넣은 wikilink 가 그래프에
+  실제로 들어갔다.
+- **`vault_search`** "DIRECTIVE 의 obligation 갱신 대수 선행 설계" → `mechanism_spec`
+  이 **2위**, preview 첫 줄이 새 관계 블록. `roadmap` 6위.
+- **`vault_backlinks(mechanism_spec)`** → concept-gate 저자 간선 **0 → 2**
+  (DIRECTIVE · SURVEY).
+- 게이트 43/43 · 전체 14/0/0. 새 간선은 저장소 밖이므로 `EXTERNAL` 로 옳게 분류.
+
+### 12.4 부수 발견 둘 — 둘 다 결판났다
+
+**① `vault_backlinks` 가 사본을 오인한다.** `mechanism_spec` 의 backlink 에
+`concept-gate-e2.2-wt/docs/obligation_layer_roadmap.md` 가 잡혔는데 그 파일에는
+문자열이 **0건**(양성 대조 `obligation` 12건). 내가 고친 것은 **h1-wt** 사본이다.
+도구가 basename 으로 해소해 사본을 오인한 것 — DIRECTIVE(사본 1개)에서는 재현되지
+않으므로 확정. 이것이 `10fb68f` 가 "세는 방법 자체가 틀렸다"고 한 그 문제이고,
+§11 의 게이트가 `AMBIGUOUS` 를 별도 판정으로 둔 이유다.
+
+**② DIRECTIVE 헤더의 `본문 sha256: df10ee…` 는 내 절단으로 재현되지 않는다.**
+편집 전 HEAD 와 현재의 본문(`# 실험 운영 에이전트용…` 이후)이 같은 `9453da…` 이므로
+**본문 무변경은 확정**이고(diff 도 순수 삽입 19행), 기록된 값은 트랜스크립트 추출
+시점의 다른 절단이다. 어느 절단인지 헤더가 적지 않아 **재현 불가한 해시**로 남아
+있다 — 사슬 문서의 `VERBATIM-BEGIN/END` 규약이 이 문서에는 없다.
+
+### 12.5 아직 안 한 것
+
+- `notes/projects/concept-gate/HANDOFF.md:45` 는 `mechanism_spec.md` 를 **백틱
+  산문**으로만 언급한다 — grep 은 잡고 backlink 는 안 잡는다(CLAUDE.md 가 기록한
+  그 함정). 그 문서는 다른 세션 소관으로 보여 건드리지 않았다.
+- 두 불변식 체계의 **통합 표**(§10.7 의 1순위)는 이 절이 아니다 — 이 절은 서로를
+  가리키게만 했다. 합치는 것은 별도 작업이다.
+
+### 12.6 zero-context 검증 — haiku 가 도구로 찾는가 (사용자 지시)
+
+§12.3 의 `vault_search` 검증은 **내가 답을 알고 쿼리를 짠 것**이라 진짜 검증이
+아니다. 연결의 목적이 "다음 세션이 찾을 수 있게"이므로 그 세션을 흉내 냈다 —
+zero-context haiku 에게 문서명·경로·`mechanism_spec`·`abstention`·I 번호를 **전부
+빼고 개념만** 줬다("no safe update exists 에 대한 정의된 결과가 있나").
+
+| 질문 | 결과 | 도달 경로 |
+|---|---|---|
+| 갱신·롤백·기권 규칙은 무엇이 정하나 | `mechanism_spec` §4~7 을 `path:line` 인용 | **`obligation_layer_roadmap` 헤더 → 1홉** |
+| 권위 문서가 둘인가, 상충하나 | 양방향 포인터 텍스트를 **둘 다** 인용, **I3 충돌**까지 정확 | DIRECTIVE 헤더 |
+| handoff 첫 지시 | `RULING_CHAIN_INDEX` 진입점 | HANDOFF 직접 |
+
+**통과.** 그리고 haiku 가 스스로 적은 한 문장이 이 절의 결론이다:
+
+> "No direct `vault_search` queries were needed — the documents chain from each
+> other through explicit wikilinks."
+
+즉 **검색이 아니라 저자 간선으로 갔다.** 첫 도달은 세 결절점 중 마지막에 넣은
+`obligation_layer_roadmap` 이었다 — 새 세션이 "obligation 시스템 구현"으로 들어오면
+그 로드맵부터 읽기 때문이다. **§11.4 의 우려(`N0` 권위가 검색 순위를 깎는다)는
+저자 간선이 있으면 무력화된다** — 검색 순위를 탈 필요 없이 링크로 닿는다.
+
+haiku 의 인용 행 번호 4건(`:10` · `:348` · `:545-547` · DIRECTIVE `:14`)을 재실측했다.
+**전부 실제 내용과 일치** — 회신이 정직했다.

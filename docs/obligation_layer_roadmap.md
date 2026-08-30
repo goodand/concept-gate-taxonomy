@@ -2,6 +2,13 @@
 
 - **기원**: `docs/feedback/expansion_strategy_review_20260717.md` blocker 3축 → 해소 설계 논의(2026-07-18)
 - **방법론**: 큰 아키텍처는 이 문서에 보존 → 현재 실제 문제만 최소 구현 → 실측 → 트리거 충족 시 다음 계층 추가
+- **L3 의 갱신 대수 정본 (2026-08-30 연결)**: 아래 L3 "obligation 시스템" 이
+  받은 obligation 을 **어떻게 갱신·롤백·기권하는가**는 이 문서가 아니라
+  [[notes/research/logical-revision/mechanism_spec|Mechanism Spec]] 이 정의한다
+  (feedback algebra 9종 · rollback frontier · obligation lifecycle · abstention).
+  이 로드맵은 그 명세를 **알지 못한 채** 쓰였고, 이후 M1 의 `cg_obligations.py` 가
+  그 명세의 obligation 층만 구현했다. 권한 경계 층은
+  [[DESIGN_DIRECTIVE_refine_verify_semantic_compilation|Refine ↔ Verify DIRECTIVE]].
 
 ## 목적 계층
 

@@ -11,6 +11,18 @@
   않음 — 전사 오류 방지, D-H1a-16 복원과 같은 방법). 본문 sha256: `df10eecffda4d3d7e07723efc81da22d4219a0c3c1b42d77c5993bba163f278e`
 - 지시문 §35가 요구하는 7항목 응답과 구현 계획은 **별도 문서로 후속** —
   이 파일은 지시 원문의 정본 보존이다
+- **선행 설계 (2026-08-30 연결 — 수신 당시 이 간선이 없었다)**: 이 지시가
+  다루는 obligation·candidate·provenance 위의 **상태 갱신 대수**는 6주 먼저
+  [[notes/research/logical-revision/mechanism_spec|Mechanism Spec]] 이 확정해
+  두었다(feedback algebra 9종 · rollback frontier · obligation lifecycle ·
+  **abstention** — 이 지시에는 없는 개념). 그 명세의 자산 배치는
+  [[notes/research/logical-revision/atp-verifier-inferential-subtree-subflow-research.v4|ATP v4]]
+  (기제 슬롯 S1~S14). 관계는 **상보적**이다 — 이 지시는 권한 경계(Refine/Verify/
+  Certified/Kernel)를, Mechanism Spec 은 갱신 허용성(commitment/rollback/abstention)을
+  다룬다. **주의: 두 문서가 각자 I1~I7/I11 을 매기며 내용이 다르다** —
+  이쪽 I3 는 "Verify 는 graph 를 쓰지 않는다", 그쪽 I3 는 "verified-region
+  protection". 인용할 때 계열을 밝혀라. 단절의 발견과 실측은
+  [[REFINE_VERIFY_STAGE_SURVEY_20260830]] §10~§11.
 
 ## 운영 세션의 저장 전 검증 (2026-08-22)
 
