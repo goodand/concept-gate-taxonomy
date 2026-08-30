@@ -569,3 +569,113 @@ Refine 의 설계가 6주 먼저 존재했는데 그것을 대체하려는 계�
 2. `mechanism_spec` 의 feedback 클래스 9종을 우리 obligation 어휘와 대조한다 —
    `OBLIGATION_REGISTRY` 9종과 **개수가 같다.** 우연인지 대응인지 확인해야 한다.
 3. 그 뒤에 §8.4 의 **2-pass 실험**. 이것은 여전히 새 재료가 필요 없다.
+
+---
+
+## 11. 관계 그래프 점검 — **분류가 아니라 위치가 권위를 정하고 있었다** (2026-08-30)
+
+사용자 지시: "분류 체계를 잡는 것도 중요하지만 **backlink 로 relation graph 를
+점검하는 것이 더 먼저**다. 우리가 만드는 validator 와 마찬가지로 md 들도
+graph 로 표현되고 있다."
+
+§10.2 는 두 계열의 단절을 **grep 으로** 판정했다. grep 은 "어디 있나"에 답하지
+관계를 보지 않는다. `evidence-vault-mcp` / `vault-retrieval` 로 다시 쟀다.
+
+### 11.1 먼저 색인이 stale 이었고, 원인이 이 세션이었다
+
+`index_freshness` 최초 호출: `freshness: stale` ·
+**`negative_claims_supported: false`** · `NO_NEGATIVE_CONCLUSION` **blocking**.
+
+미색인 2건 중 하나가 이 SURVEY, 해시 불일치 3건 중 둘이 오늘 고친
+`HANDOFF.md`·`RULING_CHAIN_INDEX.md` 였다. **내 작업이 색인을 낡게 만들었고,
+그 상태에서 §10 의 부재 주장을 했다.**
+
+사용자 승인을 받아 재구축: `freshness: fresh` · 검사 6종 전부 통과 ·
+문서 **2,362** · 간선 **21,258** · referral target **2,343** ·
+`negative_claims_supported: true`.
+
+### 11.2 backlink 실측 — 단절은 사실이나 **형태가 달랐다**
+
+`vault_backlinks` (색인 비의존 — Obsidian CLI/파일시스템 그래프, `exhaustive: true`):
+
+| 노드 | inbound |
+|---|---|
+| `notes/research/logical-revision/mechanism_spec.md` | **8** — MOC 6 · 형제 `atp-v4` 1 · **이 SURVEY 1(오늘)** |
+| `concept-gate-h1-wt/docs/DESIGN_DIRECTIVE_…` | **10** — MOC 7 · `gap_analysis` · `diagrams/README` · **이 SURVEY** |
+
+**정정**: §10.2 는 "서로를 모른다"고 썼다. 그래프상으로는 **MOC 4개를
+공유하므로 2홉에 도달 가능**하다(`concept-gate-architecture` ·
+`evidence-provenance` · `logical-revision-atp` · `ontology-relations`).
+**저자가 만든 간선이 없을 뿐이다.** 워크스페이스 규약이 그 차이를 이미 적어
+뒀다 — **"Generated MOCs are navigation artifacts, not source authority."**
+
+### 11.3 그 MOC 는 관계가 아니라 **동거**이고, 29% 가 죽어 있다
+
+`notes/00-moc/by-topic/logical-revision-atp.md` 실측:
+
+```text
+총 링크 117 · 고유 basename 30      → 같은 문서가 평균 4번 (worktree 사본)
+살아 있는 링크 83 · **죽은 링크 34 (29%)**
+죽은 링크의 대상: concept-gate-codex-mcp-wt 18 · concept-gate-redteam-wt 16
+                 → 둘 다 오늘 아침 제거를 확인한 worktree
+```
+
+그리고 DIRECTIVE 와 `mechanism_spec` 은 이 파일 안에서 **약 100행 떨어진 다른
+섹션**(`## docs` 대 `## research`)에 있다. 이 MOC 는 "둘이 관련 있다"고 말하지
+않는다 — **"둘 다 이 주제 태그를 받았다"**고 말할 뿐이다.
+
+`index_freshness` 의 `DEAD_PATHS` 검사는 이것을 못 잡는다. 그 검사는 **색인된
+경로가 디스크에 있는가**를 보지, **문서 안의 wikilink 가 어디를 가리키는가**를
+보지 않는다.
+
+### 11.4 기계적 원인 — **권위가 내용이 아니라 경로에서 나온다**
+
+`vault_search`(색인 fresh) 가 붙인 분류:
+
+| 문서 | `role` | `authority_class` |
+|---|---|---|
+| `notes/research/logical-revision/mechanism_spec.md` | **`spec`** | **`N0-navigation-note`** |
+| `notes/research/…/atp-v4.md` | note | `N0-navigation-note` |
+| `notes/00-moc/…` | note | `N0-navigation-view` |
+| `concept-gate-h1-wt/docs/DESIGN_DIRECTIVE_…` | note | `P2-path-stable-worktree` |
+| `concept-gate-taxonomy/docs/expansion_strategy_…` | note | `P2-canonical-authority` |
+| `…/experiments/…` | — | `P0-active-experiment` |
+
+**`authority_class` 는 경로를 따라간다.** `notes/` 아래면 내용이 무엇이든
+`N0` 다. `role` 은 `spec` 으로 **옳게** 붙었는데 권위는 위치가 정했다.
+
+즉 **Refine 의 설계 명세가 검색·순회에서 최하위 권위로 취급된다.** 저자 간선이
+없는 것과 겹쳐서, DIRECTIVE 쪽에서 그래프를 걸어도 그것이 유의미한 가중치로
+떠오르지 않는다. 6주간 아무도 못 본 것이 **부주의가 아니라 구조**였다.
+
+### 11.5 사용자 지적이 옳았던 이유 — 이것은 우리 validator 와 **같은 문제**다
+
+MOC 가 하는 일은 정확히 `graph_fingerprint` 가 하는 일이다 — **"뭔가 관련
+있다"는 거친 신호를 주고 무엇이 어떻게 관련되는지는 말하지 않는다.**
+`stale_obligations` 가 불투명한 revision 번호를 비교하듯, MOC 는 불투명한 주제
+태그를 공유한다.
+
+없는 것은 **타입 있는 간선**이다. 그리고 그것을 만드는 기제가 이미 우리
+저장소에 있다 — `_h1a_policy_audit.compare()` 가 정책 그래프에 대해 내는
+`STATE_MISMATCH` · `NO_OBSERVED_COUNTERPART` · `UNRESOLVED` … (§9).
+
+```text
+지금:  A --[같은 주제 태그]--> MOC <--[같은 주제 태그]-- B     (동거)
+필요:  A --[supersedes | refines | conflicts-with | same-component]--> B  (관계)
+```
+
+**분류(어느 태그에 넣을까)보다 관계(둘이 무슨 사이인가)가 먼저**라는 지적은
+이 실측에서 그대로 확인된다. 태그는 둘 다 옳게 붙어 있었고 — 그래서 못 봤다.
+
+### 11.6 이 절이 바꾸는 것
+
+1. §10.2 의 "서로를 모른다" → **"저자 간선이 없고 MOC 로만 2홉 연결된다"**로 정정.
+2. **부재 주장 전에 `index_freshness` 를 먼저 호출한다.** 이 세션은 자기가 만든
+   staleness 위에서 부재를 주장했다. CLAUDE.md §"부재를 단정하기 전"에 이
+   단계가 빠져 있다.
+3. **MOC 의 죽은 링크는 어떤 게이트도 잡지 않는다.** 등록부의 거짓말은
+   `test_legacy_register.py` 가 막는데, **MOC 의 거짓말은 아무도 안 막는다.**
+   29% 는 그냥 방치된 수치다.
+4. `authority_class` 가 경로 파생이라는 것을 **알고 쓴다** — `notes/` 에 둔
+   설계 문서는 검색에서 권위를 얻지 못한다. 정본으로 삼을 문서는 위치를
+   옮기거나, 저자 간선으로 명시적으로 끌어와야 한다.
