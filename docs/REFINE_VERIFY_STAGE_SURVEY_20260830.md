@@ -779,3 +779,19 @@ zero-context haiku 에게 문서명·경로·`mechanism_spec`·`abstention`·I �
 
 haiku 의 인용 행 번호 4건(`:10` · `:348` · `:545-547` · DIRECTIVE `:14`)을 재실측했다.
 **전부 실제 내용과 일치** — 회신이 정직했다.
+
+### 12.7 두 가지 정정 — 커밋 직후 실측
+
+**① "양방향 연결"의 한 방향은 버전 관리 밖이다.** `notes/` 는 git 미추적이다
+(workspace 루트도 git 아님). 즉 `mechanism_spec.md` 에 넣은 역방향 간선
+(`complemented_by` · `implemented_in` · 본문 관계 블록)은 **파일시스템과 검색
+색인에만 존재**하고 어느 커밋에도 없다. `ec992f6` 이 "양방향"이라 적은 것은
+그래프상 참이지 저장소상 참이 아니다. vault 쪽은 그 자체 규율(MOC 재생성·
+`generate_vault_mocs.py`)로 관리되므로 이 문서는 그 사실을 **적는 것**으로
+그친다 — `notes/` 를 git 에 넣는 것은 이 세션의 결정이 아니다.
+
+**② `vault_backlinks` 의 사본 오인은 새 결함이 아니다.** evidence-evaluator
+쪽 `docs/HANDOFF.md:289` 가 이미 **D1a** 로 등재했다 — "바이트 동일 사본 9벌 중
+**worktree 사본**이 정본 슬롯을 가져간다". §12.4① 은 그 문제의 backlink 판이다.
+도구 소관 세션의 것이라 그쪽 문서는 건드리지 않고 여기 참조만 남긴다:
+`evidence-evaluator/docs/HANDOFF.md:289-290 (D1a·D1b)`.
