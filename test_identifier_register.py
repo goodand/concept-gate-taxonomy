@@ -36,6 +36,7 @@ REGISTER = ROOT / "docs" / "IDENTIFIER_REGISTER.md"
 
 # 닫힌 어휘 — 등록부 §상태 표와 1:1
 STATUSES = {"OWNER", "CITES_ONLY", "COLLIDES", "EXTERNAL"}
+CONCEPTS = {"문제", "검증", "등급", "규칙", "단계", "불변식", "출처", "요건", "버전", "패턴", "(인용)"}
 # 문서군 이름 — 등록부 §문서군 표와 1:1. 저장소 밖(notes/, evidence-evaluator/)은
 # 게이트가 읽지 못하므로 EXTERNAL 로만 등재되고 정의 위치 실재 검사에서 제외된다.
 GROUPS_IN_REPO = {"retro", "rulings", "directive", "roadmap"}
@@ -55,15 +56,16 @@ def _rows() -> list[dict]:
             break
         if in_table and line.startswith("| `") and not line.startswith("| 글자"):
             cells = [c.strip() for c in line.strip("|").split("|")]
-            if len(cells) < 7:
+            if len(cells) < 8:
                 continue
             rows.append({
                 "letter": cells[0].strip("`"), "group": cells[1].strip("`"),
-                "meaning": cells[2], "defined_at": cells[3].strip("`"),
+                "meaning": cells[2], "concept": cells[3].strip("`"),
+                "defined_at": cells[4].strip("`"),
                 # 등록부의 `—` 는 "형식 미고정, 검사 제외"다 — 빈 형식으로 읽는다
-                "pattern": "" if cells[4].strip("`").startswith("—") else cells[4].strip("`"),
-                "cite_prefix": cells[5],
-                "status": cells[6].strip("`"),
+                "pattern": "" if cells[5].strip("`").startswith("—") else cells[5].strip("`"),
+                "cite_prefix": cells[6],
+                "status": cells[7].strip("`"),
             })
     return rows
 
@@ -79,6 +81,39 @@ def test_register_exists_and_is_not_empty():
 def test_status_vocabulary_is_closed():
     for r in _rows():
         assert r["status"] in STATUSES, (r["letter"], r["group"], r["status"])
+
+
+def test_concept_vocabulary_is_closed():
+    """역방향(뜻 → 글자)의 키. 새 개념을 지어내면 잡힌다 — §개념 표에 먼저 추가할 것."""
+    for r in _rows():
+        assert r["concept"] in CONCEPTS, (r["letter"], r["group"], r["concept"])
+
+
+def test_cites_only_rows_do_not_introduce_a_concept():
+    for r in _rows():
+        if r["status"] == "CITES_ONLY":
+            assert r["concept"] == "(인용)", (r["letter"], r["group"])
+
+
+def test_reverse_table_agrees_with_rows():
+    """§개념 표의 글자 목록 == 실제 행. 표가 낡으면 잡힌다."""
+    text = REGISTER.read_text()
+    m = re.search(r"## 개념.*?\n(\| 개념 \|.*?)\n\n### 정규화", text, re.S)
+    assert m, "§개념 표가 없다"
+    declared = {}
+    for line in m.group(1).splitlines():
+        if line.startswith("| `"):
+            c = [x.strip() for x in line.strip("|").split("|")]
+            letters = set(re.findall(r"\b([A-Z])\b", c[1]))
+            if letters:
+                declared[c[0].strip("`")] = letters
+    actual: dict[str, set[str]] = {}
+    for r in _rows():
+        if r["status"] != "CITES_ONLY":
+            actual.setdefault(r["concept"], set()).add(r["letter"])
+    for concept, letters in declared.items():
+        assert actual.get(concept, set()) == letters, (
+            f"§개념 `{concept}` 표 {sorted(letters)} ≠ 행 실제 {sorted(actual.get(concept, set()))}")
 
 
 def test_group_vocabulary_is_closed():
@@ -235,9 +270,9 @@ def test_a_false_row_would_be_caught(tmp_path, monkeypatch):
     """등록부에 실재하지 않는 정의 위치를 심으면 실재 검사가 운다."""
     fake = tmp_path / "IDENTIFIER_REGISTER.md"
     fake.write_text(
-        "# x\n\n## 계열\n\n| 글자 | 문서군 | 뜻 | 정의 위치 | 발행 형식 | 인용 접두 | 상태 |\n"
-        "|---|---|---|---|---|---|---|\n"
-        "| `Z` | `retro` | fake | `docs/NOPE.md:1` | `\\*\\*Z(\\d+)\\*\\*` | `회고 Z` | `OWNER` |\n"
+        "# x\n\n## 계열\n\n| 글자 | 문서군 | 뜻 | 개념 | 정의 위치 | 발행 형식 | 인용 접두 | 상태 |\n"
+        "|---|---|---|---|---|---|---|---|\n"
+        "| `Z` | `retro` | fake | `등급` | `docs/NOPE.md:1` | `\\*\\*Z(\\d+)\\*\\*` | `회고 Z` | `OWNER` |\n"
     )
     monkeypatch.setattr(__import__(__name__), "REGISTER", fake)
     rows = _rows()
