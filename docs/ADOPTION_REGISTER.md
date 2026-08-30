@@ -46,6 +46,7 @@
 | `scripts/verify_finding_citations.py` | 적대검증 finding의 인용 실재 확인 → 없으면 자동 폐기 | MANUAL_TOOL | `.claude/skills/adversarial-review/SKILL.md` |
 | `scripts/verify_dispatch_prompts.py` | dispatch 인자 프롬프트가 plan과 바이트 동일한지 | MANUAL_TOOL | `HANDOFF.md` |
 | `scripts/wikilink_graph.py` | 저장소 안 `[[wikilink]]` 해소 — 죽은 링크·모호한 basename·범위 밖(EXTERNAL)을 가른다 | WIRED_PYTEST | `test_wikilink_graph.py` |
+| `scripts/identifier_scan.py` | md·py 안 `[A-Z]<번호>` 출현을 **블록 구조**로 분류한다 — 표 첫 셀/절 제목(발행)·산문/인라인코드/링크(인용)·mermaid 펜스/절 번호/파이썬 이름(위양성). 출현은 원문에서 열거하고 구조는 덮는 데만 쓰므로 **못 덮은 것이 `UNRESOLVED` 로 남는다** | WIRED_PYTEST | `test_identifier_scan.py` |
 | `test_identifier_register.py` | 식별자 등록부(`docs/IDENTIFIER_REGISTER.md`) 게이트 — 상태 어휘·정의 위치 실재·**발행 형식 강제**·인벤토리 누락·음성 증명 | WIRED_PYTEST | `docs/IDENTIFIER_REGISTER.md` |
 | `qa_v7.py` | v7 QA 스위트 | WIRED_GATE | `scripts/run_gates.py` |
 | `fuzz_normalizer_types.py` | 정규화기 타입 fuzz | WIRED_GATE | `scripts/run_gates.py` |
