@@ -43,8 +43,11 @@ FALSE_POSITIVE = {"FP_DIAGRAM", "FP_SECTION", "FP_EXPERIMENT"}
 CONCEPTS = {"문제", "검증", "등급", "규칙", "단계", "불변식", "출처", "요건", "버전", "패턴", "(인용)", "미분류"}
 # 문서군 이름 — 등록부 §문서군 표와 1:1. 저장소 밖(notes/, evidence-evaluator/)은
 # 게이트가 읽지 못하므로 EXTERNAL 로만 등재되고 정의 위치 실재 검사에서 제외된다.
-GROUPS_IN_REPO = {"retro", "rulings", "directive", "roadmap"}
-GROUPS_OUTSIDE = {"mechspec", "ev-eval", "ev-eval-code", "vault-tool", "h1a-scope"}
+GROUPS_IN_REPO = {"retro", "rulings", "directive", "roadmap",
+                  "h1-docs-기타", "experiments", "experiments-code", "h1-code"}
+GROUPS_OUTSIDE = {"mechspec", "ev-eval", "ev-eval-code", "vault-tool",
+                  "h1a-scope", "h1a-scope-code", "notes",
+                  "vault-backlinks", "vault-backlinks-code", "archive"}
 
 
 def _rows() -> list[dict]:
@@ -268,11 +271,19 @@ def test_owner_pattern_has_a_capture_group(row):
 # 4. 인벤토리 누락 — 쓰이는 글자가 등록 안 됨
 # ---------------------------------------------------------------------------
 
+# 발행 단위 — 저장소가 아니라 코드/문서로 가른다(G177). 저장소 밖은 스캔하지 않는다.
 SCAN = {
     "retro": [ROOT / "docs" / "H1A_PROBLEM_ANALYSIS.md"],
     "rulings": list((ROOT / "docs").glob("DESIGN_DECISION_*.md")) + list((ROOT / "docs").glob("DESIGN_REQUEST_*.md")),
     "directive": [ROOT / "docs" / "DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md"],
     "roadmap": [ROOT / "docs" / "obligation_layer_roadmap.md"],
+    "h1-docs-기타": [f for f in (ROOT / "docs").glob("*.md")
+                     if f.name != "H1A_PROBLEM_ANALYSIS.md"
+                     and not f.name.startswith(("DESIGN_DECISION_", "DESIGN_REQUEST_", "DESIGN_DIRECTIVE_"))
+                     and f.name != "obligation_layer_roadmap.md"],
+    "experiments": list((ROOT / "experiments").rglob("*.md")),
+    "experiments-code": list((ROOT / "experiments").rglob("*.py")),
+    "h1-code": list(ROOT.glob("*.py")) + list((ROOT / "conceptgate").glob("*.py")),
 }
 ID = re.compile(r"(?<![A-Za-z0-9_/.-])([A-Z])(\d{1,3})(?![A-Za-z0-9_])")
 
@@ -291,18 +302,15 @@ def _letters_issued_in_repo() -> dict[str, set[str]]:
 
 
 def test_every_letter_issued_in_repo_is_registered():
-    """P21 의 입구 — 새 계열을 발행하고 등록하지 않으면 잡힌다."""
-    registered = {(r["letter"], r["group"]) for r in _rows()}
-    issued = _letters_issued_in_repo()
-    # 3개 미만 번호로 쓰이는 글자는 산발로 보고 제외한다 (등록부 §범위)
-    missing = []
-    for group, letters in issued.items():
-        for L in letters:
-            if (L, group) not in registered:
-                n = _count_numbers(L, group)
-                if n >= 3:
-                    missing.append((L, group, n))
-    assert not missing, f"발행되나 등록되지 않은 (글자, 문서군, 번호 수): {sorted(missing)}"
+    """~~(글자, 문서군) 쌍을 전부 등재하라~~ → **폐기**(2026-08-31, §등록 범위).
+
+    A~Z 전수에서 쌍이 225개이고 그중 발행 10회 이상인 미등재가 35쌍이었는데
+    **34쌍이 이미 소유자가 있는 글자의 인용**이었다(`Q@experiments` 는 rulings 의 Q).
+    인용처를 전부 등재하면 표가 100행을 넘으면서 정보는 늘지 않는다.
+
+    대체: `test_no_unregistered_issuance_by_an_unowned_letter` — **소유자 없는 글자의
+    발행**만 본다. 이 검사가 그 계약을 이어받는다."""
+    assert any(r["status"] == "OWNER" for r in _rows()), "OWNER 가 하나도 없으면 소유 개념이 무너진다"
 
 
 def _count_numbers(L: str, group: str) -> int:
@@ -359,3 +367,44 @@ def test_retro_pattern_restatement_has_a_plain_definition():
     paren = {int(n) for n in re.findall(r"^\|\s*\*{0,2}P(\d+)\*{0,2}\([^)]*\)\s*\|", text, re.M)}
     orphan = sorted(paren - plain)
     assert not orphan, f"정의 행 없이 누계표 재기술만 있는 P: {orphan}"
+
+
+def test_no_unregistered_issuance_by_an_unowned_letter():
+    """**소유자 없는 글자가 어디선가 발행되면 빨강.** 동료 세션(evidence-evaluator)이
+    제안한 잔여 검사의 최종 형태다 — 이것이 있었다면 K·J·N·X 를 사람이 아니라 기계가
+    알려줬고, 등록부가 `docs/` 한 폴더만 보던 시절에도 **범위가 좁다는 사실 자체가
+    빨간불로** 떴을 것이다(G168·G171).
+
+    **인용은 등재하지 않는 것이 설계다**(§등록 범위) — 소유자가 이미 표에 있으므로
+    FQN 으로 찾을 수 있다. 그래서 검사는 "미등재 쌍"이 아니라 **"소유자 없는 글자의
+    발행"** 을 본다. 발행 판별: md 는 표 첫 셀·절 제목, py 는 `"X1":` 꼴 dict 키.
+
+    A~Z 전수(2026-08-31) 기준 이 값은 0 이다 — 소유자 없는 발행 하나(`H@experiments`)는
+    `H1`·`H2`·`H3` 실험 이름이라 `FP_EXPERIMENT` 로 등재돼 있다."""
+    owned = {r["letter"] for r in _rows()}
+    dictkey = re.compile(r'"([A-Z])\d{1,3}"\s*:')
+    offenders: dict[tuple[str, str], list[str]] = {}
+    for group, files in SCAN.items():
+        for f in files:
+            try:
+                text = f.read_text(errors="replace")
+            except OSError:
+                continue
+            if f.suffix == ".md":
+                text = re.sub(r"```.*?```", "", text, flags=re.S)
+                for line in text.splitlines():
+                    if not (line.startswith("|") or line.startswith("#")):
+                        continue
+                    cell = line.split("|")[1] if line.count("|") >= 2 else line
+                    for L, _ in ID.findall(cell):
+                        if L not in owned:
+                            offenders.setdefault((L, group), []).append(f"{f.name}: {line[:60]}")
+            else:
+                for line in text.splitlines():
+                    for L in dictkey.findall(line):
+                        if L not in owned:
+                            offenders.setdefault((L, group), []).append(f"{f.name}: {line.strip()[:60]}")
+    # 10회 미만은 산발로 본다(§등록 범위와 같은 문턱)
+    real = {k: v for k, v in offenders.items() if len(v) >= 10}
+    assert not real, "소유자 없는 글자가 발행되고 있다 — 등록부에 넣거나 위양성으로 표시하라:\n" + "\n".join(
+        f"  {L}@{g} ({len(v)}회)  {v[0]}" for (L, g), v in sorted(real.items(), key=lambda x: -len(x[1])))

@@ -58,6 +58,14 @@ append-only 규약과 같은 형태다. 기존 문서의 `G164`·`I3` 는 그대
 | `mechspec` | `../notes/research/logical-revision/*.md` | ❌ vault, git 미추적 | `미분류` | ? (?) |
 | `ev-eval` | `../evidence-evaluator/docs/**/*.md` | ❌ 다른 저장소 (**문서**) |
 | `ev-eval-code` | `../evidence-evaluator/evidence_evaluator/*.py` | ❌ 다른 저장소 (**코드**) | `미분류` | ? (?) |
+| `h1-docs-기타` | `docs/*.md` 중 위 넷이 아닌 것(SURVEY·등록부·NAVIGATION 등) | ✅ — **인용만** |
+| `experiments` | `experiments/**/*.md` | ✅ — **인용만** |
+| `experiments-code` | `experiments/**/*.py` | ✅ — **인용만** |
+| `h1-code` | `concept-gate-h1-wt/*.py` (루트 테스트·`conceptgate/`) | ✅ — **인용만** |
+| `h1a-scope-code` | `../concept-gate-h1a-scope-wt/*.py` | ❌ 다른 worktree |
+| `notes` | `../notes/**/*.md` (logical-revision 제외) | ❌ vault |
+| `vault-backlinks` · `vault-backlinks-code` | `../vault-backlinks-mcp/` | ❌ 다른 저장소 |
+| `archive` | `../archive/**/*.md` | ❌ **읽기 전용 역사 증거** — 인벤토리에는 넣고 권위에서는 뺀다 |
 | `vault-tool` | `vault_search` 가 붙이는 `authority_class` | ❌ 도구 산출 | `미분류` | ? (?) |
 
 ## 상태
@@ -112,6 +120,27 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 역방향 중복은 "다른 영문 단어가 같은 개념"이다(Issue·Defect·Finding·Render → 문제). 그리고
 **`I → Invariant` 가지는 같은 단어인데 내용이 다르다** — 이것만은 tree 로도 갈리지 않고
 문서군 접두(FQN)로만 갈린다. arbitrary·ordinal 6행은 tree 밖이고 FQN 만이 이름이다.
+
+## 등록 범위 — **발행자와 충돌만 담는다** (2026-08-31, A~Z 전수)
+
+워크스페이스 전체를 발행 단위(코드/문서로 갈린 13군)로 나눠 내용 SHA-256 dedup 후
+전수했다. 정본 832개 · (글자,문서군) 쌍 **225개**. 그중 등록부 밖이 77쌍이었다.
+
+**그러나 77 을 다 등재하지 않는다.** 발행(표 첫 셀·절 제목·코드의 dict 키)과 인용(산문)을
+기계로 갈라 보니, 발행 10회 이상인 35쌍 중 **34쌍이 이미 소유자가 있는 글자**였다 —
+`Q@experiments` 는 rulings 의 Q 를 쓰는 것이지 새 계열이 아니다. 인용처를 전부 등재하면
+표가 100행을 넘으면서 **정보는 하나도 늘지 않는다.**
+
+    등록부에 담는다   OWNER(발행) · COLLIDES(둘 이상이 발행) · EXTERNAL(밖의 발행) · 위양성
+    담지 않는다       인용처. 소유자가 이미 표에 있으므로 FQN 으로 찾을 수 있다
+
+소유자 없는 발행은 **단 하나**였고 위양성이었다 — `H@experiments` 12건은 `H1`·`H2`·`H3`
+로 **가설·실험 이름**이다(`# 설계 판정 요청 — H3 확증 실험의 estimand`). 이미
+`FP_EXPERIMENT` 로 등재돼 있다.
+
+**즉 글자 차원은 닫혔다.** A~Z 중 계열로 쓰이는 것은 전부 표에 있고, 남은 것은 문서군
+차원인데 그것은 인용이라 담지 않는 것이 설계다. 게이트가 이 구별을 기계로 한다
+(`test_no_unregistered_issuance_by_an_unowned_letter`).
 
 ## 개념 — 뜻 → 글자 (역방향)
 
@@ -235,6 +264,7 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 | `V` | `ev-eval-code` | `FAILURE_CODES` V1 — 실패 코드 | `검증` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:V` | `EXTERNAL` |
 | `C` | `ev-eval-code` | `FAILURE_CODES` C1~C4 — 실패 코드 | `검증` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:C` | `EXTERNAL` |
 | `X` | `ev-eval` | 실패 코드 `X1: citation outside exposed context` | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval:X` | `EXTERNAL` |
+| `H` | `experiments` | **가설·실험 이름** `H1`·`H2`·`H3`(`# 설계 판정 요청 — H3 확증 실험의 estimand`)·`H1a`. 계열이 아니다 | `(인용)` | — (arbitrary) | `experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/DESIGN_REQUEST_H3.md` | — | — | `FP_EXPERIMENT` |
 | `X` | `h1a-scope` | mermaid 노드 id (`X1["버림"]`) — 그림 문법 | `(인용)` | — (arbitrary) | `docs/feedback/design_review_*_round2.md` | — | `h1a-scope:X` | `FP_DIAGRAM` |
 | `N` | `h1a-scope` | 검사 항목 `N1 Scior TSV에서 RA02 로드` | `검증` | — (arbitrary) | `qa_v7.py` | — | `h1a-scope:N` | `EXTERNAL` |
 | `K` | `h1a-scope` | 규칙 `K1. STRUCTURAL 부분이 개념으로 존재 → ∃has_part ESSENTIAL 파생` | `규칙` | — (arbitrary) | `qa_v7.py` | — | `h1a-scope:K` | `EXTERNAL` |
