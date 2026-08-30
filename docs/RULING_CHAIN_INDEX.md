@@ -76,6 +76,8 @@ zero-context agent를 위한 읽는 순서:
 | 6 | ERG/MRS·Redwoods locator·권리·scope | [[RESEARCH_REQUEST_mrs_redwoods_round3]] | [[RESEARCH_RESULT_mrs_redwoods_round3]] |
 
 ## 그 밖의 정본
+- [[REFINE_VERIFY_STAGE_SURVEY_20260830]] — Refine↔Verify·Graph Diff 의 **검증 단계와 구현 단계** 내부 감사(근거 축 2분할: 사양 haiku / 코드 sonnet). 결론: **Verify 는 지어지고 MCP 까지 배선됐으나 Refine 이 없어 아직 루프가 아니다**(`repair` grep 0 · `git log -S` 0 · 테스트 자신이 "Refine 자리는 하드코딩된 stand-in"이라 적음). **Graph Diff 는 사양에도 코드에도 없다** — 다섯 철자 `git log -S` 전부 0건이고 가장 가까운 `graph_fingerprint` 는 **프로덕션 호출 0**(테스트 전용). 축 A 가 낸 W5 blocker 는 **이미 해소돼 있었다**(내 위임이 `DESIGN_IMPL` 을 두 축 어디에도 안 넣은 결함)
+
 
 - 적대 검증: [[ADVERSARIAL_VALIDATION_20260823]]
 - handoff 자체의 복원 가능성 실측(zero-context 평가기): [[HANDOFF_EVALUATION_20260823]]
