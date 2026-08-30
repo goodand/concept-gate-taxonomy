@@ -116,6 +116,19 @@ def test_reverse_table_agrees_with_rows():
             f"§개념 `{concept}` 표 {sorted(letters)} ≠ 행 실제 {sorted(actual.get(concept, set()))}")
 
 
+def test_cite_prefix_is_fully_qualified():
+    """접두는 `<문서군>:<글자>` 하나의 형식이다 — 32가지 제멋대로 표기를 7 문서군 이름으로
+    고정한 것이 FQN 채택의 전체 비용이었다. 새 어휘를 만들면 잡힌다."""
+    for r in _rows():
+        fq = r["cite_prefix"].strip("`")
+        m = re.fullmatch(r"([a-z-]+):([A-Z])", fq)
+        assert m, (r["letter"], r["group"], fq, "형식은 <문서군>:<글자>")
+        assert m.group(1) in GROUPS_IN_REPO | GROUPS_OUTSIDE, (fq, "문서군 이름이 아니다")
+        assert m.group(2) == r["letter"], (fq, "글자가 행과 다르다")
+        if r["status"] != "CITES_ONLY":
+            assert m.group(1) == r["group"], (fq, "발행 행의 접두는 자기 문서군이어야 한다")
+
+
 def test_group_vocabulary_is_closed():
     for r in _rows():
         assert r["group"] in GROUPS_IN_REPO | GROUPS_OUTSIDE, (r["letter"], r["group"])
@@ -272,7 +285,7 @@ def test_a_false_row_would_be_caught(tmp_path, monkeypatch):
     fake.write_text(
         "# x\n\n## 계열\n\n| 글자 | 문서군 | 뜻 | 개념 | 정의 위치 | 발행 형식 | 인용 접두 | 상태 |\n"
         "|---|---|---|---|---|---|---|---|\n"
-        "| `Z` | `retro` | fake | `등급` | `docs/NOPE.md:1` | `\\*\\*Z(\\d+)\\*\\*` | `회고 Z` | `OWNER` |\n"
+        "| `Z` | `retro` | fake | `등급` | `docs/NOPE.md:1` | `\\*\\*Z(\\d+)\\*\\*` | `retro:Z` | `OWNER` |\n"
     )
     monkeypatch.setattr(__import__(__name__), "REGISTER", fake)
     rows = _rows()
