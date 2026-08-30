@@ -1,0 +1,263 @@
+"""식별자 등록부 게이트 — 한 글자가 문서군마다 다른 것을 뜻하는 것을 **기록**하고,
+등록되지 않은 계열·형식을 어긴 발행을 잡는다.
+
+왜 있는가 (2026-08-31)
+--------------------
+단일 대문자+번호 식별자(`P4`·`G32`·`I3`)가 여섯 문서군에서 독립적으로 발행된다.
+전수 조사(A~Z) 결과 **17글자가 2개 이상 문서군에 걸치고, 그중 14글자는 같은 번호가
+다른 것을 뜻한다** — `I3` 가 `mechanism_spec` 에서는 verified-region protection,
+`DESIGN_DIRECTIVE` 에서는 "Verify 는 graph 를 쓰지 않는다". 인용에서 계열을
+밝히지 않으면 다음 독자가 다른 문서를 읽는다(회고 G164).
+
+**이 게이트는 충돌을 없애지 않는다.** 14글자 중 우리가 소유한 계열은 소수이고
+나머지는 외부 설계 원문(verbatim 보존)·다른 저장소·도구 소관이라 재번호할 수
+없다. 게이트가 하는 일은 셋이다:
+
+1. **등록부가 현실과 맞는가** — 사용 중인 글자가 등록돼 있고, 등록된 정의 위치가
+   실재하며, 상태 어휘가 닫혀 있다 (`test_adoption_register.py` 와 같은 골격).
+2. **발행 형식이 지켜졌는가** — 회고의 G164 가 표 행이 아니라 산문으로, P24~P26 이
+   `**P25**(설명)` 꼴로 발행돼 추출기가 셋 다 놓쳤다. 이 세션이 만든 결함이다.
+   등록부가 각 계열의 발행 정규식을 적고 게이트가 그것을 강제한다.
+3. **추출기가 하나다** — G 를 세는 방법이 둘이면(`**G66**` vs `**G66 BLOCKER**`)
+   161 과 164 두 답이 나온다. 등록부의 정규식이 유일한 정의다.
+
+무엇을 재지 않나: 뜻이 실제로 다른가는 사람이 판정해 등록부에 적는다(haiku 감사
+2축이 그 판정을 했다). 게이트는 그 판정을 **검증하지 않고 보존**한다.
+"""
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent
+REGISTER = ROOT / "docs" / "IDENTIFIER_REGISTER.md"
+
+# 닫힌 어휘 — 등록부 §상태 표와 1:1
+STATUSES = {"OWNER", "CITES_ONLY", "COLLIDES", "EXTERNAL"}
+# 문서군 이름 — 등록부 §문서군 표와 1:1. 저장소 밖(notes/, evidence-evaluator/)은
+# 게이트가 읽지 못하므로 EXTERNAL 로만 등재되고 정의 위치 실재 검사에서 제외된다.
+GROUPS_IN_REPO = {"retro", "rulings", "directive", "roadmap"}
+GROUPS_OUTSIDE = {"mechspec", "ev-eval", "vault-tool"}
+
+
+def _rows() -> list[dict]:
+    """등록부 §계열 표의 행. 열: 글자 | 문서군 | 뜻 | 정의 위치 | 발행 형식 | 인용 접두 | 상태"""
+    assert REGISTER.exists(), "docs/IDENTIFIER_REGISTER.md 가 없다"
+    rows = []
+    in_table = False
+    for line in REGISTER.read_text().splitlines():
+        if line.startswith("## 계열"):
+            in_table = True
+            continue
+        if in_table and line.startswith("## "):
+            break
+        if in_table and line.startswith("| `") and not line.startswith("| 글자"):
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if len(cells) < 7:
+                continue
+            rows.append({
+                "letter": cells[0].strip("`"), "group": cells[1].strip("`"),
+                "meaning": cells[2], "defined_at": cells[3].strip("`"),
+                # 등록부의 `—` 는 "형식 미고정, 검사 제외"다 — 빈 형식으로 읽는다
+                "pattern": "" if cells[4].strip("`").startswith("—") else cells[4].strip("`"),
+                "cite_prefix": cells[5],
+                "status": cells[6].strip("`"),
+            })
+    return rows
+
+
+# ---------------------------------------------------------------------------
+# 1. 등록부 형식
+# ---------------------------------------------------------------------------
+
+def test_register_exists_and_is_not_empty():
+    assert len(_rows()) >= 14, "전수 조사가 14글자를 충돌로 확정했다 — 그보다 적으면 등록부가 비었다"
+
+
+def test_status_vocabulary_is_closed():
+    for r in _rows():
+        assert r["status"] in STATUSES, (r["letter"], r["group"], r["status"])
+
+
+def test_group_vocabulary_is_closed():
+    for r in _rows():
+        assert r["group"] in GROUPS_IN_REPO | GROUPS_OUTSIDE, (r["letter"], r["group"])
+
+
+def test_letter_group_pair_is_unique():
+    """키는 (글자, 문서군) 쌍이다. 한 글자 한 행이면 P 의 세 뜻을 적을 수 없다."""
+    keys = [(r["letter"], r["group"]) for r in _rows()]
+    assert len(keys) == len(set(keys)), sorted(k for k in keys if keys.count(k) > 1)
+
+
+def test_every_collision_letter_has_at_least_two_rows():
+    """COLLIDES 는 정의상 둘 이상이 발행한다 — 한 행뿐이면 상태가 틀렸다."""
+    by_letter: dict[str, list[dict]] = {}
+    for r in _rows():
+        by_letter.setdefault(r["letter"], []).append(r)
+    for letter, rows in by_letter.items():
+        if any(r["status"] == "COLLIDES" for r in rows):
+            assert len(rows) >= 2, f"{letter}: COLLIDES 인데 행이 하나"
+
+
+def test_outside_groups_are_marked_external():
+    for r in _rows():
+        if r["group"] in GROUPS_OUTSIDE:
+            assert r["status"] == "EXTERNAL", (r["letter"], r["group"], "저장소 밖은 EXTERNAL")
+
+
+# ---------------------------------------------------------------------------
+# 2. 정의 위치 실재 (저장소 안 문서군만)
+# ---------------------------------------------------------------------------
+
+def _in_repo_rows():
+    return [r for r in _rows() if r["group"] in GROUPS_IN_REPO and r["status"] != "CITES_ONLY"]
+
+
+@pytest.mark.parametrize("row", _in_repo_rows(), ids=lambda r: f"{r['letter']}@{r['group']}")
+def test_defined_at_exists_and_contains_the_letter(row):
+    """`file:line` 이 실재하고 그 행에 그 글자의 발행이 있다."""
+    path, _, line = row["defined_at"].partition(":")
+    p = ROOT / path
+    assert p.exists(), f"{row['letter']}@{row['group']}: {path} 없음"
+    if line:
+        text = p.read_text().splitlines()
+        n = int(line)
+        assert n <= len(text), f"{path}:{line} — 파일이 {len(text)}행뿐"
+        assert re.search(rf"\b{row['letter']}\d", text[n - 1]), (
+            f"{path}:{line} 에 {row['letter']}<n> 발행이 없다: {text[n-1][:80]}")
+
+
+# ---------------------------------------------------------------------------
+# 3. 발행 형식 강제 — 등록부의 정규식이 유일한 추출기다
+# ---------------------------------------------------------------------------
+
+def _owner_rows():
+    return [r for r in _rows() if r["status"] == "OWNER" and r["group"] in GROUPS_IN_REPO and r["pattern"]]
+
+
+@pytest.mark.parametrize("row", _owner_rows(), ids=lambda r: f"{r['letter']}@{r['group']}")
+def test_owner_pattern_matches_every_issued_number(row):
+    """OWNER 문서에서 그 글자로 발행된 모든 번호가 등록된 형식으로 발행됐다.
+    G164(산문)·P24~P26(`**P25**(설명)`)이 이 검사가 잡아야 했던 것이다.
+
+    '발행'의 기준: 표 첫 셀 또는 절 제목에 등장하는 `<L><n>`. 산문 인용은 제외."""
+    path, _, _ = row["defined_at"].partition(":")
+    text = (ROOT / path).read_text()
+    text = re.sub(r"```.*?```", "", text, flags=re.S)
+    L = row["letter"]
+    # 발행 후보: 표 첫 셀(굵기·수식어 무관) 또는 절 제목
+    issued = set()
+    for m in re.finditer(rf"^\|\s*\*{{0,2}}{L}(\d+)\b[^|]*\|", text, re.M):
+        issued.add(int(m.group(1)))
+    for m in re.finditer(rf"^#{{1,4}}\s.*\b{L}(\d+)\b", text, re.M):
+        issued.add(int(m.group(1)))
+    # 산문 속 굵은 `**G<n>**` 는 보통 인용이다 — 그러나 그 번호가 **표 첫 셀 어디에도
+    # 없으면** 인용할 대상이 없으므로 산문 발행이다(G164 가 그랬다). 표에 있는 번호는
+    # 인용으로 보고 건드리지 않는다 — 전임 링크 게이트를 죽인 위양성을 피하기 위해.
+    in_tables = {int(m.group(1)) for m in re.finditer(rf"^\|\s*\*{{0,2}}{L}(\d+)\b", text, re.M)}
+    for m in re.finditer(rf"(?<![|#])\*\*{L}(\d+)\*\*", text):
+        n = int(m.group(1))
+        if n not in in_tables:
+            issued.add(n)
+    # 등록된 형식으로 발행된 것
+    # 등록부는 셀 내부 모양만 적는다(표 셀 안에 `|` 를 둘 수 없으므로). 골격은 여기서.
+    cell_re = re.compile(r"^\|\s*" + row["pattern"] + r"\s*\|", re.M)
+    canonical = {int(m.group(1)) for m in cell_re.finditer(text)}
+    off_form = sorted(issued - canonical)
+    assert not off_form, (
+        f"{L}@{row['group']}: 등록 형식 `{row['pattern']}` 을 벗어나 발행된 번호 {off_form}")
+
+
+@pytest.mark.parametrize("row", _owner_rows(), ids=lambda r: f"{r['letter']}@{r['group']}")
+def test_owner_pattern_has_a_capture_group(row):
+    assert re.compile(row["pattern"]).groups >= 1, "형식 정규식은 번호를 캡처해야 한다"
+
+
+# ---------------------------------------------------------------------------
+# 4. 인벤토리 누락 — 쓰이는 글자가 등록 안 됨
+# ---------------------------------------------------------------------------
+
+SCAN = {
+    "retro": [ROOT / "docs" / "H1A_PROBLEM_ANALYSIS.md"],
+    "rulings": list((ROOT / "docs").glob("DESIGN_DECISION_*.md")) + list((ROOT / "docs").glob("DESIGN_REQUEST_*.md")),
+    "directive": [ROOT / "docs" / "DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md"],
+    "roadmap": [ROOT / "docs" / "obligation_layer_roadmap.md"],
+}
+ID = re.compile(r"(?<![A-Za-z0-9_/.-])([A-Z])(\d{1,3})(?![A-Za-z0-9_])")
+
+
+def _letters_issued_in_repo() -> dict[str, set[str]]:
+    """문서군별로 '발행'(표 첫 셀·절 제목) 형태로 등장하는 글자. 산문 인용은 제외."""
+    out: dict[str, set[str]] = {}
+    for group, files in SCAN.items():
+        for f in files:
+            text = re.sub(r"```.*?```", "", f.read_text(errors="replace"), flags=re.S)
+            for line in text.splitlines():
+                if line.startswith("|") or line.startswith("#"):
+                    for L, _ in ID.findall(line.split("|")[1] if line.startswith("|") and "|" in line[1:] else line):
+                        out.setdefault(group, set()).add(L)
+    return out
+
+
+def test_every_letter_issued_in_repo_is_registered():
+    """P21 의 입구 — 새 계열을 발행하고 등록하지 않으면 잡힌다."""
+    registered = {(r["letter"], r["group"]) for r in _rows()}
+    issued = _letters_issued_in_repo()
+    # 3개 미만 번호로 쓰이는 글자는 산발로 보고 제외한다 (등록부 §범위)
+    missing = []
+    for group, letters in issued.items():
+        for L in letters:
+            if (L, group) not in registered:
+                n = _count_numbers(L, group)
+                if n >= 3:
+                    missing.append((L, group, n))
+    assert not missing, f"발행되나 등록되지 않은 (글자, 문서군, 번호 수): {sorted(missing)}"
+
+
+def _count_numbers(L: str, group: str) -> int:
+    nums = set()
+    for f in SCAN[group]:
+        text = re.sub(r"```.*?```", "", f.read_text(errors="replace"), flags=re.S)
+        for line in text.splitlines():
+            if line.startswith("|") or line.startswith("#"):
+                nums.update(n for l, n in ID.findall(line) if l == L)
+    return len(nums)
+
+
+# ---------------------------------------------------------------------------
+# 5. 음성 증명 — 게이트가 실제로 우는가
+# ---------------------------------------------------------------------------
+
+def test_a_false_row_would_be_caught(tmp_path, monkeypatch):
+    """등록부에 실재하지 않는 정의 위치를 심으면 실재 검사가 운다."""
+    fake = tmp_path / "IDENTIFIER_REGISTER.md"
+    fake.write_text(
+        "# x\n\n## 계열\n\n| 글자 | 문서군 | 뜻 | 정의 위치 | 발행 형식 | 인용 접두 | 상태 |\n"
+        "|---|---|---|---|---|---|---|\n"
+        "| `Z` | `retro` | fake | `docs/NOPE.md:1` | `\\*\\*Z(\\d+)\\*\\*` | `회고 Z` | `OWNER` |\n"
+    )
+    monkeypatch.setattr(__import__(__name__), "REGISTER", fake)
+    rows = _rows()
+    assert rows and rows[0]["defined_at"] == "docs/NOPE.md:1"
+    with pytest.raises(AssertionError):
+        test_defined_at_exists_and_contains_the_letter(rows[0])
+
+
+def test_off_form_issuance_would_be_caught(tmp_path):
+    """`**G164** — 산문` 처럼 표 밖 발행이 있으면 형식 검사가 운다."""
+    doc = tmp_path / "doc.md"
+    doc.write_text(
+        "| **G1** | ok |\n| **G2** | ok |\n"
+        "### 절 제목에 G3 발행\n"
+    )
+    row = {"letter": "G", "group": "retro", "defined_at": f"{doc.relative_to(tmp_path)}:1",
+           "pattern": r"\*\*G(\d+)\*\*", "status": "OWNER"}
+    # ROOT 대신 tmp_path 기준으로 같은 로직을 돌린다
+    text = doc.read_text()
+    issued = {int(m.group(1)) for m in re.finditer(r"^\|\s*\*{0,2}G(\d+)\b[^|]*\|", text, re.M)}
+    issued |= {int(m.group(1)) for m in re.finditer(r"^#{1,4}\s.*\bG(\d+)\b", text, re.M)}
+    canonical = {int(m.group(1)) for m in re.finditer(r"^\|\s*" + row["pattern"] + r"\s*\|", text, re.M)}
+    assert sorted(issued - canonical) == [3], "절 제목 발행 G3 이 형식 밖으로 잡혀야 한다"
