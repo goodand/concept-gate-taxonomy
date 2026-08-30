@@ -35,12 +35,16 @@ ROOT = Path(__file__).resolve().parent
 REGISTER = ROOT / "docs" / "IDENTIFIER_REGISTER.md"
 
 # 닫힌 어휘 — 등록부 §상태 표와 1:1
-STATUSES = {"OWNER", "CITES_ONLY", "COLLIDES", "EXTERNAL"}
-CONCEPTS = {"문제", "검증", "등급", "규칙", "단계", "불변식", "출처", "요건", "버전", "패턴", "(인용)"}
+STATUSES = {"OWNER", "CITES_ONLY", "COLLIDES", "EXTERNAL",
+            # 위양성 — 정규식에는 걸리나 식별자가 아니다. 다음 전수 조사가 같은
+            # 판정을 다시 하지 않도록 등록부에 남긴다(동료 세션 제안, 2026-08-31).
+            "FP_DIAGRAM", "FP_SECTION", "FP_EXPERIMENT"}
+FALSE_POSITIVE = {"FP_DIAGRAM", "FP_SECTION", "FP_EXPERIMENT"}
+CONCEPTS = {"문제", "검증", "등급", "규칙", "단계", "불변식", "출처", "요건", "버전", "패턴", "(인용)", "미분류"}
 # 문서군 이름 — 등록부 §문서군 표와 1:1. 저장소 밖(notes/, evidence-evaluator/)은
 # 게이트가 읽지 못하므로 EXTERNAL 로만 등재되고 정의 위치 실재 검사에서 제외된다.
 GROUPS_IN_REPO = {"retro", "rulings", "directive", "roadmap"}
-GROUPS_OUTSIDE = {"mechspec", "ev-eval", "vault-tool"}
+GROUPS_OUTSIDE = {"mechspec", "ev-eval", "vault-tool", "h1a-scope"}
 
 
 def _rows() -> list[dict]:
@@ -84,6 +88,19 @@ def test_status_vocabulary_is_closed():
         assert r["status"] in STATUSES, (r["letter"], r["group"], r["status"])
 
 
+def test_no_unclassified_concept_remains():
+    """**잔여를 센다** — 동료 세션(evidence-evaluator)의 `test_scanner_residual.py` 규율.
+
+    "이 분류가 옳은가"는 게이트가 못 본다. 그러나 "분류되지 않은 것이 있는가"는 본다.
+    `미분류` 는 표시로 남겨두면 안 되고 **0 이어야 한다** — 0 이 아니면 사람이 판정해
+    §개념 표에 넣거나, 계열이 아님을 확인해 행을 지운다.
+
+    이 게이트가 없었다면 H·T·A 가 등재 없이 존재하는 것을 계속 놓쳤다(G168)."""
+    unclassified = [(r["letter"], r["group"]) for r in _rows() if r["concept"] == "미분류"]
+    assert not unclassified, (
+        f"개념이 분류되지 않은 계열 {unclassified} — §개념 표에 넣거나 행을 지워라")
+
+
 def test_concept_vocabulary_is_closed():
     """역방향(뜻 → 글자)의 키. 새 개념을 지어내면 잡힌다 — §개념 표에 먼저 추가할 것."""
     for r in _rows():
@@ -92,7 +109,7 @@ def test_concept_vocabulary_is_closed():
 
 def test_cites_only_rows_do_not_introduce_a_concept():
     for r in _rows():
-        if r["status"] == "CITES_ONLY":
+        if r["status"] in {"CITES_ONLY"} | FALSE_POSITIVE:
             assert r["concept"] == "(인용)", (r["letter"], r["group"])
 
 
@@ -110,7 +127,7 @@ def test_reverse_table_agrees_with_rows():
                 declared[c[0].strip("`")] = letters
     actual: dict[str, set[str]] = {}
     for r in _rows():
-        if r["status"] != "CITES_ONLY":
+        if r["status"] not in {"CITES_ONLY"} | FALSE_POSITIVE:
             actual.setdefault(r["concept"], set()).add(r["letter"])
     for concept, letters in declared.items():
         assert actual.get(concept, set()) == letters, (
@@ -121,8 +138,10 @@ def test_cite_prefix_is_fully_qualified():
     """접두는 `<문서군>:<글자>` 하나의 형식이다 — 32가지 제멋대로 표기를 7 문서군 이름으로
     고정한 것이 FQN 채택의 전체 비용이었다. 새 어휘를 만들면 잡힌다."""
     for r in _rows():
+        if r["status"] in FALSE_POSITIVE:
+            continue          # 위양성 행은 식별자가 아니므로 FQN 을 요구하지 않는다
         fq = r["cite_prefix"].strip("`")
-        m = re.fullmatch(r"([a-z-]+):([A-Z])", fq)
+        m = re.fullmatch(r"([a-z0-9-]+):([A-Z])", fq)
         assert m, (r["letter"], r["group"], fq, "형식은 <문서군>:<글자>")
         assert m.group(1) in GROUPS_IN_REPO | GROUPS_OUTSIDE, (fq, "문서군 이름이 아니다")
         assert m.group(2) == r["letter"], (fq, "글자가 행과 다르다")
@@ -137,8 +156,7 @@ def test_english_column_declares_kind_and_initial_matches():
     """`영문 (유형)` 열. initial 형은 **글자 == 영문 첫 글자**여야 한다 — 실측 30/30.
     arbitrary·ordinal 은 영문이 `—` 이고 검사하지 않는다(tree 밖, FQN 만이 이름)."""
     for r in _rows():
-        if r["status"] == "CITES_ONLY":
-            assert "(인용)" in r["english"], (r["letter"], r["group"])
+        if r["status"] in {"CITES_ONLY"} | FALSE_POSITIVE:
             continue
         m = re.fullmatch(r"(.+?)\s*\((initial|arbitrary|ordinal)[^)]*\)", r["english"].strip())
         assert m, (r["letter"], r["group"], r["english"], "형식은 `영문 (유형)`")
@@ -173,7 +191,8 @@ def test_every_collision_letter_has_at_least_two_rows():
 def test_outside_groups_are_marked_external():
     for r in _rows():
         if r["group"] in GROUPS_OUTSIDE:
-            assert r["status"] == "EXTERNAL", (r["letter"], r["group"], "저장소 밖은 EXTERNAL")
+            assert r["status"] in {"EXTERNAL"} | FALSE_POSITIVE, (
+                r["letter"], r["group"], "저장소 밖은 EXTERNAL 또는 위양성")
 
 
 # ---------------------------------------------------------------------------
@@ -181,7 +200,8 @@ def test_outside_groups_are_marked_external():
 # ---------------------------------------------------------------------------
 
 def _in_repo_rows():
-    return [r for r in _rows() if r["group"] in GROUPS_IN_REPO and r["status"] != "CITES_ONLY"]
+    return [r for r in _rows() if r["group"] in GROUPS_IN_REPO
+            and r["status"] not in {"CITES_ONLY"} | FALSE_POSITIVE]
 
 
 @pytest.mark.parametrize("row", _in_repo_rows(), ids=lambda r: f"{r['letter']}@{r['group']}")

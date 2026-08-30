@@ -54,6 +54,7 @@ append-only 규약과 같은 형태다. 기존 문서의 `G164`·`I3` 는 그대
 | `rulings` | `docs/DESIGN_DECISION_*.md` · `docs/DESIGN_REQUEST_*.md` | ✅ | `미분류` | ? (?) |
 | `directive` | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md` (+ 동반 yaml) | ✅ — **외부 설계 원문, verbatim** | `미분류` | ? (?) |
 | `roadmap` | `docs/obligation_layer_roadmap.md` | ✅ | `미분류` | ? (?) |
+| `h1a-scope` | `../concept-gate-h1a-scope-wt/` (md + `qa_v7.py`) | ❌ 다른 worktree |
 | `mechspec` | `../notes/research/logical-revision/*.md` | ❌ vault, git 미추적 | `미분류` | ? (?) |
 | `ev-eval` | `../evidence-evaluator/docs/**/*.md` | ❌ 다른 저장소 | `미분류` | ? (?) |
 | `vault-tool` | `vault_search` 가 붙이는 `authority_class` | ❌ 도구 산출 | `미분류` | ? (?) |
@@ -65,7 +66,10 @@ append-only 규약과 같은 형태다. 기존 문서의 `G164`·`I3` 는 그대
 | `OWNER` | 이 문서군이 이 글자의 계열을 **발행**한다. 발행 형식이 게이트로 강제된다 || `미분류` | ? (?) 
 | `CITES_ONLY` | 이 문서군은 이 글자를 발행하지 않고 다른 OWNER 의 번호를 **같은 뜻으로** 인용만 한다 || `미분류` | ? (?) 
 | `COLLIDES` | 이 문서군이 이 글자를 발행하는데 **다른 문서군도 같은 글자를 다른 뜻으로** 발행한다 || `미분류` | ? (?) 
-| `EXTERNAL` | 저장소 밖 문서군의 발행. 게이트가 읽지 못하므로 기록만 한다 || `미분류` | ? (?) 
+| `EXTERNAL` | 저장소 밖 문서군의 발행. 게이트가 읽지 못하므로 기록만 한다 |
+| `FP_DIAGRAM` | **위양성 — mermaid 노드 id** (`N1[...]` · `B -->|Yes| X1`). 그림 문법이지 식별자가 아니다 |
+| `FP_SECTION` | **위양성 — 절 번호** (`§A9`) |
+| `FP_EXPERIMENT` | **위양성 — 실험 이름** (`H1a` · `H3`) || `미분류` | ? (?) 
 
 ## 기호 → 영문 → 뜻 — tree 는 **일부에서만** 성립한다
 
@@ -116,10 +120,10 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 
 | 개념 | 글자 | 뜻 |
 |---|---|---|
-| `문제` | **B D F G I R W** | 발견된 결함·이슈·finding·BLOCKER || ? (?) 
-| `검증` | **B C D F M V** | 검증 항목·방법·테스트 케이스·수신 검증 || ? (?) 
+| `문제` | **B D F G I R W X** | 발견된 결함·이슈·finding·BLOCKER || ? (?) 
+| `검증` | **B C D F M N V** | 검증 항목·방법·테스트 케이스·수신 검증 || ? (?) 
 | `등급` | **L M P S Z** | 권위 등급·레벨·줌·슬롯·능력 축 || ? (?) 
-| `규칙` | D E | 배제 규칙·공백 항목·trial 계획 || ? (?) 
+| `규칙` | D E J K | 배제 규칙·공백 항목·trial 계획 || ? (?) 
 | `단계` | M P | 구현 단계·마일스톤 || ? (?) 
 | `불변식` | I | 두 설계 문서의 불변식 (내용 상이) || ? (?) 
 | `출처` | O R | 오라클 슬롯·참조 문헌 || ? (?) 
@@ -134,7 +138,7 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 
 | 개념 | 고정(외부·verbatim) 최빈 | 우리 소유 최대 | 판정 |
 |---|---|---|---|
-| 문제 | `I@ev-eval` 230 | **`G@retro` 547·164개** | 우리가 2.4배 크다 — 표준을 따르면 **큰 것을 작은 것에 맞춰 재번호**. 하지 않는다 |
+| 문제 | `I@ev-eval` 230 | **`G@retro` 547** | 우리가 2.4배 크다(**언급** 기준 — 재번호 비용은 언급이 정한다). 표준을 따르면 **큰 것을 작은 것에 맞춰 재번호**. 하지 않는다 |
 | 검증 | `V@rulings` 287 | `M@retro` 124 | 고정이 크다 — **유일한 정당 후보.** 단 M1~M19 인용 124회 재작성 비용 |
 | 등급 | `S@mechspec` 65 | `L@retro` 13 | 후보이나 L0~L2 는 drill-down 레벨, S 는 기제 슬롯 — **같은 개념이 아닐 수 있다** |
 | 규칙 | `D@directive` 7 | `E@retro` 41 | 우리가 6배 크다. 하지 않는다 |
@@ -150,7 +154,7 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 
 | 글자 | 문서군 | 뜻 | 개념 | 영문 (유형) | 정의 위치 | 발행 형식 (표 첫 셀 내부 — 게이트가 `^\| … \|` 골격을 붙인다) | FQN (인용 접두) | 상태 |
 |---|---|---|---|---|---|---|---|---|
-| `G` | `retro` | 이슈(발견된 결함) G1~G164. 판정문·ev-eval 은 인용만 — `G32` 를 회고가 제기하고 판정 §6 이 "통일하지 않는다"로 답한 것이 증거 | `문제` | — (arbitrary) | `docs/H1A_PROBLEM_ANALYSIS.md:165` | `\*{0,2}G(\d+)(?:\s[^*]*)?\*{0,2}` | `retro:G` | `OWNER` |
+| `G` | `retro` | 이슈(발견된 결함) G1~G170(**정의** 수; 언급은 548건 — 두 숫자를 섞지 마라). 판정문·ev-eval 은 인용만 — `G32` 를 회고가 제기하고 판정 §6 이 "통일하지 않는다"로 답한 것이 증거 | `문제` | — (arbitrary) | `docs/H1A_PROBLEM_ANALYSIS.md:165` | `\*{0,2}G(\d+)(?:\s[^*]*)?\*{0,2}` | `retro:G` | `OWNER` |
 | `G` | `rulings` | 회고 G 를 인용 | `(인용)` | (인용) | — | — | `retro:G` | `CITES_ONLY` |
 | `P` | `retro` | 패턴(반복되는 실패 형태) P1~P26. 정의는 표 첫 셀 `**P<n>**` 단독, 뒤 절 누계표는 `**P<n>**(설명)` 으로 **재기술** — 재기술만 있고 정의가 없으면 발행 아님(게이트 검사) | `패턴` | Pattern (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:536` | `\*{0,2}P(\d+)\*{0,2}(?:\([^)]*\))?` | `retro:P` | `COLLIDES` |
 | `P` | `directive` | 구현 단계 P0~P4 (P0 architecture integrity · P4 oracle evaluation) | `단계` | Phase (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:1940` | — (verbatim, 형식 미강제) | `directive:P` | `COLLIDES` |
@@ -193,6 +197,11 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 | `E` | `roadmap` | 회고 E 인용 | `(인용)` | (인용) | — | — | `retro:E` | `CITES_ONLY` |
 | `L` | `retro` | 단일 소유 (drill-down 레벨 L0~L2) | `등급` | Level (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:1423` | — | `retro:L` | `OWNER` |
 | `S` | `mechspec` | 기제 슬롯 S1~S14 (atp-v4) — 단일 소유 | `등급` | Slot (initial) | — | — | `mechspec:S` | `EXTERNAL` |
+| `X` | `ev-eval` | 실패 코드 `X1: citation outside exposed context` | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval:X` | `EXTERNAL` |
+| `X` | `h1a-scope` | mermaid 노드 id (`X1["버림"]`) — 그림 문법 | `(인용)` | — (arbitrary) | `docs/feedback/design_review_*_round2.md` | — | `h1a-scope:X` | `FP_DIAGRAM` |
+| `N` | `h1a-scope` | 검사 항목 `N1 Scior TSV에서 RA02 로드` | `검증` | — (arbitrary) | `qa_v7.py` | — | `h1a-scope:N` | `EXTERNAL` |
+| `K` | `h1a-scope` | 규칙 `K1. STRUCTURAL 부분이 개념으로 존재 → ∃has_part ESSENTIAL 파생` | `규칙` | — (arbitrary) | `qa_v7.py` | — | `h1a-scope:K` | `EXTERNAL` |
+| `J` | `h1a-scope` | 규칙 `J1. 반대칭: A has B + B has A → ERROR` | `규칙` | — (arbitrary) | `qa_v7.py` | — | `h1a-scope:J` | `EXTERNAL` |
 | `Z` | `retro` | 다이어그램 줌 Z0~Z3 — 단일 소유 | `등급` | Zoom (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:2933` | — | `retro:Z` | `OWNER` |
 
 ## 이 등록부가 확인하지 않은 것
@@ -218,6 +227,24 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 - **아직 등재되지 않은 문서군이 둘 있다** — `h1-wt/experiments`(md 1,932 식별자·19글자,
   `Q785 L216 M204 R130 V120`)와 `h1-wt/experiments` 코드(809·15글자). 이 등록부의
   문서군 표에 없으므로 게이트의 인벤토리 검사도 그곳을 보지 않는다.
+- **동료 세션(`evidence-evaluator` 소관)이 내 계수를 반박했고 절반 맞았다** — 그쪽 214 대
+  내 652. 반증 가능한 예측("사본이 원인이면 T 126→약 44")으로 검정: 워크트리 사본 제외 시
+  **652→330 · T 126→63**. 사본은 원인의 **절반**이고, 나머지는 **이중 계수**였다 —
+  `evidence-evaluator/vault-backlinks-mcp`(150건)를 최상위에서 **또 한 번**(137건) 셌다.
+- **정의 수와 언급 수는 다른 숫자다.** `FAILURE_CODES` 의 `T` 는 **정의 1개·언급 62건**이고,
+  `retro:G` 는 **정의 170개·언급 548건**이다. 이 등록부의 "G1~G164" 는 정의였고 광역 측정의
+  "639" 는 언급이었는데 **라벨이 없어 같은 표에서 섞였다.** 재번호 비용은 언급이, 계열 크기는
+  정의가 정한다.
+- **동료 세션이 등록부 밖 계열 넷을 찾았고 독립 재현됐다** (2026-08-31). 방법이 핵심이다 —
+  **내용 SHA-256 dedup 먼저**(문서 사본이 3배 부풀린다), 그 다음 등록부 글자 집합과 **차집합**,
+  마지막에 **사람이 실물 확인**(이 단계를 빼면 `H` 같은 위양성이 그대로 들어간다).
+  정본 4,377개에서: **X 64 · N 50 · K 37 · J 35.**
+  X 는 **저장소를 가로지르는 순방향 충돌** — `ev-eval:X1`(실패 코드) 대 `h1a-scope:X1`(mermaid
+  노드). 후자는 그림 문법이라 사람은 식별자로 안 읽지만 **인벤토리는 구별하지 못한다.**
+  N·K·J 는 `concept-gate-h1a-scope-wt/qa_v7.py` — **세 번째 미등재 문서군**이고 코드와 문서가
+  같은 계열을 양쪽에서 발행한다.
+- **위양성 유형을 상태 어휘에 넣었다** (`FP_DIAGRAM`·`FP_SECTION`·`FP_EXPERIMENT`). 전에는
+  그 판단이 내 머릿속에만 있어 다음 전수 조사가 같은 판정을 다시 해야 했다.
 - **코드도 계열을 쓴다.** `evidence-evaluator` 코드 652건(T126 C116 E116 Z102),
   `vault-backlinks-mcp` 137건(Z51 T50). "코드는 점 이름공간이라 이 문제가 없다"는
   `cg_obligations.py` 한 파일에서만 참이다 — `conceptgate/` 의 P72 는 주석 안
