@@ -341,3 +341,92 @@ oscillation/termination 관찰을 붙인다.
 **우리 쪽 구체 작업**: `[6]` 의 `all_pass` 손작성을 걷어내고 `repaired` 에
 `results_from_normalizer` 를 다시 돌려 `source.span_evidence` 가 UNKNOWN →
 PASS 로 바뀌는지 단언한다. 이것 하나가 경우 A → 경우 B 전이다.
+
+---
+
+## 9. 정정 — §2 의 "Graph Diff 는 코드에도 없다" 는 **범위가 틀렸다** (2026-08-30)
+
+§2 는 Graph Diff 가 사양에도 코드에도 없다고 썼다. **사양 쪽은 맞고 코드 쪽은
+틀렸다.** 재사용 재료 조사(vault, haiku)가 낸 `git log -S 'graph diff'` 4건을
+추적하다 나왔다.
+
+### 9.1 이미 존재한다 — 다만 kernel 이 아니라 실험에
+
+`docs/KERNEL_INTEGRATION_SURVEY.md:37` 이 **이미 기록해 두었다**:
+
+```text
+| semantic graph diff | ❌ | **H1a에만 존재** (`_h1a_policy_audit.py`) |
+```
+
+실물: `experiments/2026-07-29_h1a_source_authority_unresolved/_h1a_policy_audit.py`
+(312행). docstring: **"Expected-vs-observed policy graph comparison"**.
+공개 심볼 `expected_graph` · `compare` · `audit_arm`.
+
+`compare(observed, expected)` 는 **해시 비교가 아니라 claim 단위 구조 비교**이고
+타입 있는 finding 어휘를 낸다:
+
+| finding kind | 뜻 |
+|---|---|
+| `NO_OBSERVED_COUNTERPART` | 기대한 family 에 대응하는 claim 이 관측 쪽에 없다 |
+| `NO_EXPECTED_COUNTERPART` | 관측된 것에 대응하는 정본 축이 없다(템플릿 규칙) |
+| `MIXED_EXPECTATION` | 접힌 축들이 불일치해 단일 기대 상태가 없다 |
+| `UNRESOLVED` | **컴파일러가 결정하지 못했다** |
+| `STATE_MISMATCH` | 산문이 정본과 다르게 말한다 — drift |
+| `CONDITIONAL_STATE` | 예외절이 붙은 규칙은 무조건 그 상태가 아니다 |
+| `STRUCTURAL_DEFECT` · `REQUIRES_REVIEWER_ADJUDICATION` | 구조 결함 · 판정자 회부 |
+
+### 9.2 왜 §2 가 놓쳤나 — **내가 방금 성문화한 규약을 내가 어겼다**
+
+`git log -S` 로 다섯 철자(`graph_diff`·`GraphDiff`·`diff_graph`·
+`semantic_diff`·`graph_delta`)를 돌려 0건을 얻고 부재로 적었다. **그 다섯은 내가
+지어낸 것**이다. 이 모듈은 그 어휘를 하나도 쓰지 않는다 — `compare` ·
+`expected_graph` 를 쓴다.
+
+CLAUDE.md §"부재를 단정하기 전" 이 명시한 절차는 **이웃에서 어휘를 채취하라**
+였고, `KERNEL_INTEGRATION_SURVEY.md` 는 설계 문서에서 **1홉**이다. 그래프를
+걸었다면 즉시 나왔다. **규약을 쓴 그 세션이 같은 날 그 규약을 어겼다**(P23).
+
+축 B(코드)도 못 잡았는데, 내가 범위를 `conceptgate/cg_obligations.py` 와
+그 테스트로 못박았기 때문이다 — `experiments/` 는 범위 밖이었다. **위임 범위가
+곧 발견의 상한이다.**
+
+### 9.3 그래서 §2 를 어떻게 고쳐 읽어야 하나
+
+| 주장 | 판정 |
+|---|---|
+| 사양(DIRECTIVE)에 Graph Diff 가 정식 단계로 없다 | **유지** — 스쳐 지나가는 언급뿐 |
+| `conceptgate/` 제품 코드에 없다 | **유지** — `KERNEL_INTEGRATION_SURVEY` 도 ❌ 로 적었다 |
+| ~~저장소 어디에도 없다~~ | **정정** — H1a 실험에 **작동하는 구조 비교기**가 있다 |
+| `graph_fingerprint` 가 프로덕션 미호출 | 유지(별개 사실) |
+
+**대상이 다르다는 것은 함께 적어야 한다.** `_h1a_policy_audit` 는 *정책 DSL 에서
+유도한 기대*와 *렌더된 산문에서 관측한 것*을 비교한다. 우리가 필요한 것은 *같은
+의미 그래프의 revision t 대 t+1* 이다. **같은 것이 아니다.** 재사용 가능한 것은
+비교 대상이 아니라 **기제**다 — claim 단위 대응, 타입 있는 finding, 그리고 아래.
+
+### 9.4 재사용 가치가 높은 세 성질
+
+1. **보고하되 판정하지 않는다.** docstring: "Reports rather than raises: this
+   module is an auditor, and the freeze gate is what decides." → **I11 그 자체**
+   (obligation 은 수리 힌트이지 답이 아니다)를 이미 구현한 선례다.
+2. **다른 arm 끼리 비교를 거부한다.** `AuditContractError` — "comparing different
+   arms would manufacture divergences that are not there". 비교 전제를 계약으로
+   강제한다.
+3. **증명된 검출기의 일치와 미증명 검출기의 일치를 섞지 않는다.**
+   `agreed` 대 `agreed_by_unproven_detector` 를 별도 필드로 낸다. 2026-08-16
+   리뷰어 R3 가 잡은 것 — 한 필드에 섞였을 때 독자가 **도구가 얻지 못한 coverage
+   주장**을 읽게 됐다. `Refine success ≠ semantic correctness`(§8.2a)와 같은
+   형태의 분리다.
+
+그리고 `UNRESOLVED` 가 **first-class finding kind 로 이미 있다** — §8.2(b) 가
+요구한 3층(provisional/unknown/unresolved) 중 하나가 실험 쪽에는 존재한다.
+
+### 9.5 부수 발견 — **부재 기록이 그 부재의 측정을 파괴한다**
+
+오늘 아침 다섯 철자는 각 **0건**이었다. 지금 다시 돌리면 각 **1건**이다.
+늘어난 1건은 `REFINE_VERIFY_STAGE_SURVEY_20260830.md` 자신 — **부재를 증명하려고
+철자를 나열한 이 문서가 pickaxe 에 걸린다.**
+
+내일 같은 검사를 돌리는 사람은 1건을 보고 "존재한다"고 읽을 수 있다.
+**부재 기록에는 측정 시각과 "이 기록 자체가 이후 hit 가 된다"를 함께 적어야
+한다.** 이 절이 그 사례다(P25 계열 — 측정 도구가 조용히 다른 것을 쟀다).
