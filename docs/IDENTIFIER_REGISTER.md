@@ -50,22 +50,63 @@ append-only 규약과 같은 형태다. 기존 문서의 `G164`·`I3` 는 그대
 
 | 이름 | 경로 | 저장소 안 |
 |---|---|---|
-| `retro` | `docs/H1A_PROBLEM_ANALYSIS.md` | ✅ | `미분류` |
-| `rulings` | `docs/DESIGN_DECISION_*.md` · `docs/DESIGN_REQUEST_*.md` | ✅ | `미분류` |
-| `directive` | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md` (+ 동반 yaml) | ✅ — **외부 설계 원문, verbatim** | `미분류` |
-| `roadmap` | `docs/obligation_layer_roadmap.md` | ✅ | `미분류` |
-| `mechspec` | `../notes/research/logical-revision/*.md` | ❌ vault, git 미추적 | `미분류` |
-| `ev-eval` | `../evidence-evaluator/docs/**/*.md` | ❌ 다른 저장소 | `미분류` |
-| `vault-tool` | `vault_search` 가 붙이는 `authority_class` | ❌ 도구 산출 | `미분류` |
+| `retro` | `docs/H1A_PROBLEM_ANALYSIS.md` | ✅ | `미분류` | ? (?) |
+| `rulings` | `docs/DESIGN_DECISION_*.md` · `docs/DESIGN_REQUEST_*.md` | ✅ | `미분류` | ? (?) |
+| `directive` | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md` (+ 동반 yaml) | ✅ — **외부 설계 원문, verbatim** | `미분류` | ? (?) |
+| `roadmap` | `docs/obligation_layer_roadmap.md` | ✅ | `미분류` | ? (?) |
+| `mechspec` | `../notes/research/logical-revision/*.md` | ❌ vault, git 미추적 | `미분류` | ? (?) |
+| `ev-eval` | `../evidence-evaluator/docs/**/*.md` | ❌ 다른 저장소 | `미분류` | ? (?) |
+| `vault-tool` | `vault_search` 가 붙이는 `authority_class` | ❌ 도구 산출 | `미분류` | ? (?) |
 
 ## 상태
 
 | status | 뜻 |
 |---|---|
-| `OWNER` | 이 문서군이 이 글자의 계열을 **발행**한다. 발행 형식이 게이트로 강제된다 || `미분류` 
-| `CITES_ONLY` | 이 문서군은 이 글자를 발행하지 않고 다른 OWNER 의 번호를 **같은 뜻으로** 인용만 한다 || `미분류` 
-| `COLLIDES` | 이 문서군이 이 글자를 발행하는데 **다른 문서군도 같은 글자를 다른 뜻으로** 발행한다 || `미분류` 
-| `EXTERNAL` | 저장소 밖 문서군의 발행. 게이트가 읽지 못하므로 기록만 한다 || `미분류` 
+| `OWNER` | 이 문서군이 이 글자의 계열을 **발행**한다. 발행 형식이 게이트로 강제된다 || `미분류` | ? (?) 
+| `CITES_ONLY` | 이 문서군은 이 글자를 발행하지 않고 다른 OWNER 의 번호를 **같은 뜻으로** 인용만 한다 || `미분류` | ? (?) 
+| `COLLIDES` | 이 문서군이 이 글자를 발행하는데 **다른 문서군도 같은 글자를 다른 뜻으로** 발행한다 || `미분류` | ? (?) 
+| `EXTERNAL` | 저장소 밖 문서군의 발행. 게이트가 읽지 못하므로 기록만 한다 || `미분류` | ? (?) 
+
+## 기호 → 영문 → 뜻 — tree 는 **일부에서만** 성립한다
+
+사용자: "(영문)기호 → (영문)첫글자 → 뜻은 tree 로 표현할 수 있으니까." 실측: 발행 행
+36개 중 **30개는 영문 첫 글자**(initial)이고 tree 가 성립한다. **6개는 아니다** —
+원문이 그렇게 말한다:
+
+| 유형 | 행 | 근거 |
+|---|---:|---|
+| `initial` — 글자 = 영문 뜻의 첫 글자 | 30 | P=Pattern·Phase·Priority / I=Invariant·Issue / M=Method·Milestone·Measurement / V=Version·Verification / R=Render·Reference·Requirement … |
+| `arbitrary` — 영문 약자가 아니다 | 3 | `retro:G` 표 헤더가 `\| # \| 문제 정의 \|` — 한국어 "문제"에 붙인 임의 글자. **가장 큰 계열(164개)이 여기다.** `retro:D`(trial 계획)·`rulings:W` 도 |
+| `ordinal` — 적대적 검증의 **축 순서** A·B·C·D… | 3 | `rulings:B`(D-35 지적)·`rulings:C`·`D`·`F`(D-36 검증·확인 표) — `## 2. 축 A의 부재 판정` 처럼 축 이름이 알파벳 순 |
+
+initial 형만의 tree (같은 글자가 여러 영문 단어로 갈리는 것이 순방향 충돌의 실체다):
+
+```text
+P ─┬─ Pattern       (retro)          ─→ 패턴
+   ├─ Phase         (directive)      ─→ 단계
+   └─ Priority      (vault-tool·ev-eval) ─→ 등급
+I ─┬─ Invariant     (directive·mechspec) ─→ 불변식   ← 같은 단어, 다른 내용
+   └─ Issue         (ev-eval)        ─→ 문제
+M ─┬─ Method        (retro)          ─→ 검증
+   ├─ Milestone     (roadmap)        ─→ 단계
+   └─ Measurement   (rulings)        ─→ 등급
+V ─┬─ Version       (retro)          ─→ 버전
+   └─ Verification  (directive·rulings) ─→ 검증
+R ─┬─ Render        (retro)          ─→ 문제
+   ├─ Reference     (directive)      ─→ 출처
+   └─ Requirement   (rulings)        ─→ 요건
+C ─┬─ Check         (retro)          ─→ 검증
+   └─ Case          (ev-eval)        ─→ 검증
+D ─┬─ Delta         (directive)      ─→ 규칙
+   └─ Defect        (ev-eval)        ─→ 문제
+F ── Finding        (retro·ev-eval)  ─→ 문제
+Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backlinks   (단일)
+```
+
+**tree 가 보여주는 것**: 순방향 충돌은 "같은 첫 글자를 가진 다른 영문 단어"이고(P 셋·M 셋·R 셋),
+역방향 중복은 "다른 영문 단어가 같은 개념"이다(Issue·Defect·Finding·Render → 문제). 그리고
+**`I → Invariant` 가지는 같은 단어인데 내용이 다르다** — 이것만은 tree 로도 갈리지 않고
+문서군 접두(FQN)로만 갈린다. arbitrary·ordinal 6행은 tree 밖이고 FQN 만이 이름이다.
 
 ## 개념 — 뜻 → 글자 (역방향)
 
@@ -75,17 +116,17 @@ append-only 규약과 같은 형태다. 기존 문서의 `G164`·`I3` 는 그대
 
 | 개념 | 글자 | 뜻 |
 |---|---|---|
-| `문제` | **B D F G I R W** | 발견된 결함·이슈·finding·BLOCKER |
-| `검증` | **B C D F M V** | 검증 항목·방법·테스트 케이스·수신 검증 |
-| `등급` | **L M P S Z** | 권위 등급·레벨·줌·슬롯·능력 축 |
-| `규칙` | D E | 배제 규칙·공백 항목·trial 계획 |
-| `단계` | M P | 구현 단계·마일스톤 |
-| `불변식` | I | 두 설계 문서의 불변식 (내용 상이) |
-| `출처` | O R | 오라클 슬롯·참조 문헌 |
-| `요건` | Q R | 외부 판정 질문·Q36 요건 |
-| `버전` | V | 동결 버전 |
-| `패턴` | P | 반복 실패 형태 — **역방향에서는 중복 없음** |
-| `(인용)` | — | CITES_ONLY 행 — 개념을 새로 만들지 않는다 |
+| `문제` | **B D F G I R W** | 발견된 결함·이슈·finding·BLOCKER || ? (?) 
+| `검증` | **B C D F M V** | 검증 항목·방법·테스트 케이스·수신 검증 || ? (?) 
+| `등급` | **L M P S Z** | 권위 등급·레벨·줌·슬롯·능력 축 || ? (?) 
+| `규칙` | D E | 배제 규칙·공백 항목·trial 계획 || ? (?) 
+| `단계` | M P | 구현 단계·마일스톤 || ? (?) 
+| `불변식` | I | 두 설계 문서의 불변식 (내용 상이) || ? (?) 
+| `출처` | O R | 오라클 슬롯·참조 문헌 || ? (?) 
+| `요건` | Q R | 외부 판정 질문·Q36 요건 || ? (?) 
+| `버전` | V | 동결 버전 || ? (?) 
+| `패턴` | P | 반복 실패 형태 — **역방향에서는 중복 없음** || ? (?) 
+| `(인용)` | — | CITES_ONLY 행 — 개념을 새로 만들지 않는다 || ? (?) 
 
 ### 정규화 — 고빈도를 표준으로, 저빈도를 바꾼다 (사용자 제안, 2026-08-31)
 
@@ -107,52 +148,52 @@ append-only 규약과 같은 형태다. 기존 문서의 `G164`·`I3` 는 그대
 
 ## 계열
 
-| 글자 | 문서군 | 뜻 | 개념 | 정의 위치 | 발행 형식 (표 첫 셀 내부 — 게이트가 `^\| … \|` 골격을 붙인다) | FQN (인용 접두) | 상태 |
-|---|---|---|---|---|---|---|---|
-| `G` | `retro` | 이슈(발견된 결함) G1~G164. 판정문·ev-eval 은 인용만 — `G32` 를 회고가 제기하고 판정 §6 이 "통일하지 않는다"로 답한 것이 증거 | `문제` | `docs/H1A_PROBLEM_ANALYSIS.md:165` | `\*{0,2}G(\d+)(?:\s[^*]*)?\*{0,2}` | `retro:G` | `OWNER` |
-| `G` | `rulings` | 회고 G 를 인용 | `(인용)` | — | — | `retro:G` | `CITES_ONLY` |
-| `P` | `retro` | 패턴(반복되는 실패 형태) P1~P26. 정의는 표 첫 셀 `**P<n>**` 단독, 뒤 절 누계표는 `**P<n>**(설명)` 으로 **재기술** — 재기술만 있고 정의가 없으면 발행 아님(게이트 검사) | `패턴` | `docs/H1A_PROBLEM_ANALYSIS.md:536` | `\*{0,2}P(\d+)\*{0,2}(?:\([^)]*\))?` | `retro:P` | `COLLIDES` |
-| `P` | `directive` | 구현 단계 P0~P4 (P0 architecture integrity · P4 oracle evaluation) | `단계` | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:1940` | — (verbatim, 형식 미강제) | `directive:P` | `COLLIDES` |
-| `P` | `vault-tool` | 권위 등급 `P0-active-experiment` · `P2-path-stable-worktree` | `등급` | — | — | `vault-tool:P` | `EXTERNAL` |
-| `P` | `ev-eval` | 회고 P 를 인용(`P24` 3회, 같은 뜻) + 자체 권위 등급 P0/P1/P2 | `등급` | — | — | `ev-eval:P` | `EXTERNAL` |
-| `I` | `directive` | 권한 경계 불변식 I1~I11 (I3 = Verify 는 graph 를 쓰지 않는다) | `불변식` | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:147` | — (verbatim) | `directive:I` | `COLLIDES` |
-| `I` | `mechspec` | 상태·갱신 허용성 불변식 I1~I7 (I3 = verified-region protection · I7 = safe abstention) | `불변식` | — | — | `mechspec:I` | `EXTERNAL` |
-| `I` | `ev-eval` | 이슈 번호 I136~I231 (우리 `G` 와 같은 역할, append-only) | `문제` | — | — | `ev-eval:I` | `EXTERNAL` |
-| `M` | `retro` | 검증 방법 M1~M19 (M8 = 전문 재독) | `검증` | `docs/H1A_PROBLEM_ANALYSIS.md:222` | `\*{0,2}M(\d+)\*{0,2}` | `retro:M` | `COLLIDES` |
-| `M` | `roadmap` | 마일스톤 M0~M3 | `단계` | `docs/obligation_layer_roadmap.md:28` | — | `roadmap:M` | `COLLIDES` |
-| `M` | `rulings` | D-19 능력 축 M1~M3 (Measurement · Semantic compilation · Certification) | `등급` | `docs/DESIGN_DECISION_e2e_v1_experiment_design.md:129` | — (verbatim) | `rulings:M` | `COLLIDES` |
-| `W` | `retro` | 워크스페이스 이슈 W1~W7 (W1 = 브랜치 5/77 갈라짐) | `문제` | `docs/H1A_PROBLEM_ANALYSIS.md:188` | `\*{0,2}W(\d+)\*{0,2}` | `retro:W` | `COLLIDES` |
-| `W` | `rulings` | refine_verify 리뷰 항목 W1~W5 (W1 = E2E 가 MCP 배선 미증명 · W5 = laundering BLOCKER) | `문제` | `docs/DESIGN_DECISION_refine_verify_v0_review.md:1` | — (verbatim) | `rulings:W` | `COLLIDES` |
-| `R` | `retro` | 렌더·실측 이슈 R1~R4 (R1 = 동결 rendered_prompts 드리프트) | `문제` | `docs/H1A_PROBLEM_ANALYSIS.md:456` | `\*{0,2}R(\d+)\*{0,2}` | `retro:R` | `COLLIDES` |
-| `R` | `directive` | 오라클 참조 문헌 R1~ (R1 = Bentzen S5) | `출처` | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:79` | — (verbatim) | `directive:R` | `COLLIDES` |
-| `R` | `rulings` | Q36 요건 R1~R4 (R2 = 독립 검증 가능성) | `요건` | `docs/DESIGN_REQUEST_independent_verifiability_constraint.md:46` | — | `rulings:R` | `COLLIDES` |
-| `V` | `retro` | 동결 버전 V1~V5 (V5 = 투영 전용 개정) | `버전` | `docs/H1A_PROBLEM_ANALYSIS.md:1396` | — (산문·표 혼재, 형식 미고정) | `retro:V` | `COLLIDES` |
-| `V` | `directive` | 저장 전 검증 항목 V1~V5 | `검증` | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:36` | — | `directive:V` | `COLLIDES` |
-| `V` | `rulings` | **판정문 수신 검증 항목** V1~V6 — 판정문마다 독립 발행(15+ 문서, 87행). 회고 V(동결 버전)·DIRECTIVE V(저장 전 검증)와 셋째 뜻. **게이트 인벤토리 검사가 적발** | `검증` | `docs/DESIGN_DECISION_e2e_v1_experiment_design.md:19` | — (판정문마다 표 형식 상이) | `rulings:V` | `COLLIDES` |
-| `E` | `rulings` | 회고 E 인용 (`Q31.2 E13` 꼴) | `(인용)` | — | — | `retro:E` | `CITES_ONLY` |
-| `L` | `rulings` | D-36·D-37 원문의 삼층 L1/L2/L3 — verbatim 인용 | `(인용)` | — | — | `retro:L` | `CITES_ONLY` |
-| `P` | `rulings` | DIRECTIVE Phase 인용 (`P1 legacy E2E`) | `(인용)` | — | — | `directive:P` | `CITES_ONLY` |
-| `B` | `rulings` | D-35 적대검증 finding B1~B4 | `문제` | `docs/DESIGN_DECISION_annotation_layer_admissibility.md:528` | — | `rulings:B` | `COLLIDES` |
-| `B` | `ev-eval` | MCP 테스트 케이스 B1~B7 | `검증` | — | — | `ev-eval:B` | `EXTERNAL` |
-| `C` | `retro` | 측정 감사 항목 C1~C7 | `검증` | `docs/H1A_PROBLEM_ANALYSIS.md:1224` | — | `retro:C` | `COLLIDES` |
-| `C` | `rulings` | D-36 검증 항목 C1~C3 | `검증` | `docs/DESIGN_DECISION_independent_verifiability_constraint.md:640` | — | `rulings:C` | `COLLIDES` |
-| `C` | `ev-eval` | 회수 테스트 C1~C5 | `검증` | — | — | `ev-eval:C` | `EXTERNAL` |
-| `D` | `directive` | 공백 항목 D1~D8 (D2 = fingerprint primitive) | `규칙` | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:46` | — | `directive:D` | `COLLIDES` |
-| `D` | `retro` | trial 계획 D0~D3 | `규칙` | `docs/H1A_PROBLEM_ANALYSIS.md:199` | — | `retro:D` | `COLLIDES` |
-| `D` | `rulings` | D-36 검증 항목 D1~D4 · **판정 ID `D-19`~`D-37`은 하이픈이 있어 별개** | `검증` | `docs/DESIGN_DECISION_independent_verifiability_constraint.md:727` | — | `rulings:D` | `COLLIDES` |
-| `D` | `ev-eval` | 결함 D1a/D1b | `문제` | — | — | `ev-eval:D` | `EXTERNAL` |
-| `F` | `retro` | 레드팀 finding F1~F8 | `문제` | `docs/H1A_PROBLEM_ANALYSIS.md:1927` | — | `retro:F` | `COLLIDES` |
-| `F` | `rulings` | D-36 검증 F1~F3 | `검증` | `docs/DESIGN_DECISION_independent_verifiability_constraint.md:736` | — | `rulings:F` | `COLLIDES` |
-| `F` | `ev-eval` | 결함 F1~F7 | `문제` | — | — | `ev-eval:F` | `EXTERNAL` |
-| `Q` | `rulings` | 외부 판정 질문 Q1~Q37 — 유일 발행자 | `요건` | `docs/RULING_CHAIN_INDEX.md:49` | — | `rulings:Q` | `OWNER` |
-| `Q` | `retro` | rulings Q 인용 | `(인용)` | — | — | `rulings:Q` | `CITES_ONLY` |
-| `O` | `directive` | 오라클 슬롯 O1~O3 (동반 yaml `semantic_oracle_set_handoff_v0.1.yaml`) | `출처` | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:75` | — | `directive:O` | `OWNER` |
-| `O` | `rulings` | directive O 인용 | `(인용)` | — | — | `directive:O` | `CITES_ONLY` |
-| `E` | `retro` | 배제 규칙 E0~E15 — roadmap·rulings 는 같은 측정 영역으로 인용 | `규칙` | `docs/H1A_PROBLEM_ANALYSIS.md:1984` | — | `retro:E` | `OWNER` |
-| `E` | `roadmap` | 회고 E 인용 | `(인용)` | — | — | `retro:E` | `CITES_ONLY` |
-| `L` | `retro` | 단일 소유 (drill-down 레벨 L0~L2) | `등급` | `docs/H1A_PROBLEM_ANALYSIS.md:1423` | — | `retro:L` | `OWNER` |
-| `S` | `mechspec` | 기제 슬롯 S1~S14 (atp-v4) — 단일 소유 | `등급` | — | — | `mechspec:S` | `EXTERNAL` |
-| `Z` | `retro` | 다이어그램 줌 Z0~Z3 — 단일 소유 | `등급` | `docs/H1A_PROBLEM_ANALYSIS.md:2933` | — | `retro:Z` | `OWNER` |
+| 글자 | 문서군 | 뜻 | 개념 | 영문 (유형) | 정의 위치 | 발행 형식 (표 첫 셀 내부 — 게이트가 `^\| … \|` 골격을 붙인다) | FQN (인용 접두) | 상태 |
+|---|---|---|---|---|---|---|---|---|
+| `G` | `retro` | 이슈(발견된 결함) G1~G164. 판정문·ev-eval 은 인용만 — `G32` 를 회고가 제기하고 판정 §6 이 "통일하지 않는다"로 답한 것이 증거 | `문제` | — (arbitrary) | `docs/H1A_PROBLEM_ANALYSIS.md:165` | `\*{0,2}G(\d+)(?:\s[^*]*)?\*{0,2}` | `retro:G` | `OWNER` |
+| `G` | `rulings` | 회고 G 를 인용 | `(인용)` | (인용) | — | — | `retro:G` | `CITES_ONLY` |
+| `P` | `retro` | 패턴(반복되는 실패 형태) P1~P26. 정의는 표 첫 셀 `**P<n>**` 단독, 뒤 절 누계표는 `**P<n>**(설명)` 으로 **재기술** — 재기술만 있고 정의가 없으면 발행 아님(게이트 검사) | `패턴` | Pattern (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:536` | `\*{0,2}P(\d+)\*{0,2}(?:\([^)]*\))?` | `retro:P` | `COLLIDES` |
+| `P` | `directive` | 구현 단계 P0~P4 (P0 architecture integrity · P4 oracle evaluation) | `단계` | Phase (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:1940` | — (verbatim, 형식 미강제) | `directive:P` | `COLLIDES` |
+| `P` | `vault-tool` | 권위 등급 `P0-active-experiment` · `P2-path-stable-worktree` | `등급` | Priority (initial) | — | — | `vault-tool:P` | `EXTERNAL` |
+| `P` | `ev-eval` | 회고 P 를 인용(`P24` 3회, 같은 뜻) + 자체 권위 등급 P0/P1/P2 | `등급` | Priority (initial) | — | — | `ev-eval:P` | `EXTERNAL` |
+| `I` | `directive` | 권한 경계 불변식 I1~I11 (I3 = Verify 는 graph 를 쓰지 않는다) | `불변식` | Invariant (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:147` | — (verbatim) | `directive:I` | `COLLIDES` |
+| `I` | `mechspec` | 상태·갱신 허용성 불변식 I1~I7 (I3 = verified-region protection · I7 = safe abstention) | `불변식` | Invariant (initial) | — | — | `mechspec:I` | `EXTERNAL` |
+| `I` | `ev-eval` | 이슈 번호 I136~I231 (우리 `G` 와 같은 역할, append-only) | `문제` | Issue (initial) | — | — | `ev-eval:I` | `EXTERNAL` |
+| `M` | `retro` | 검증 방법 M1~M19 (M8 = 전문 재독) | `검증` | Method (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:222` | `\*{0,2}M(\d+)\*{0,2}` | `retro:M` | `COLLIDES` |
+| `M` | `roadmap` | 마일스톤 M0~M3 | `단계` | Milestone (initial) | `docs/obligation_layer_roadmap.md:28` | — | `roadmap:M` | `COLLIDES` |
+| `M` | `rulings` | D-19 능력 축 M1~M3 (Measurement · Semantic compilation · Certification) | `등급` | Measurement axis (initial) | `docs/DESIGN_DECISION_e2e_v1_experiment_design.md:129` | — (verbatim) | `rulings:M` | `COLLIDES` |
+| `W` | `retro` | 워크스페이스 이슈 W1~W7 (W1 = 브랜치 5/77 갈라짐) | `문제` | Workspace (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:188` | `\*{0,2}W(\d+)\*{0,2}` | `retro:W` | `COLLIDES` |
+| `W` | `rulings` | refine_verify 리뷰 항목 W1~W5 (W1 = E2E 가 MCP 배선 미증명 · W5 = laundering BLOCKER) | `문제` | — (arbitrary) | `docs/DESIGN_DECISION_refine_verify_v0_review.md:1` | — (verbatim) | `rulings:W` | `COLLIDES` |
+| `R` | `retro` | 렌더·실측 이슈 R1~R4 (R1 = 동결 rendered_prompts 드리프트) | `문제` | Render (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:456` | `\*{0,2}R(\d+)\*{0,2}` | `retro:R` | `COLLIDES` |
+| `R` | `directive` | 오라클 참조 문헌 R1~ (R1 = Bentzen S5) | `출처` | Reference (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:79` | — (verbatim) | `directive:R` | `COLLIDES` |
+| `R` | `rulings` | Q36 요건 R1~R4 (R2 = 독립 검증 가능성) | `요건` | Requirement (initial) | `docs/DESIGN_REQUEST_independent_verifiability_constraint.md:46` | — | `rulings:R` | `COLLIDES` |
+| `V` | `retro` | 동결 버전 V1~V5 (V5 = 투영 전용 개정) | `버전` | Version (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:1396` | — (산문·표 혼재, 형식 미고정) | `retro:V` | `COLLIDES` |
+| `V` | `directive` | 저장 전 검증 항목 V1~V5 | `검증` | Verification (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:36` | — | `directive:V` | `COLLIDES` |
+| `V` | `rulings` | **판정문 수신 검증 항목** V1~V6 — 판정문마다 독립 발행(15+ 문서, 87행). 회고 V(동결 버전)·DIRECTIVE V(저장 전 검증)와 셋째 뜻. **게이트 인벤토리 검사가 적발** | `검증` | Verification (initial) | `docs/DESIGN_DECISION_e2e_v1_experiment_design.md:19` | — (판정문마다 표 형식 상이) | `rulings:V` | `COLLIDES` |
+| `E` | `rulings` | 회고 E 인용 (`Q31.2 E13` 꼴) | `(인용)` | (인용) | — | — | `retro:E` | `CITES_ONLY` |
+| `L` | `rulings` | D-36·D-37 원문의 삼층 L1/L2/L3 — verbatim 인용 | `(인용)` | (인용) | — | — | `retro:L` | `CITES_ONLY` |
+| `P` | `rulings` | DIRECTIVE Phase 인용 (`P1 legacy E2E`) | `(인용)` | (인용) | — | — | `directive:P` | `CITES_ONLY` |
+| `B` | `rulings` | D-35 적대검증 finding B1~B4 | `문제` | — (ordinal) | `docs/DESIGN_DECISION_annotation_layer_admissibility.md:528` | — | `rulings:B` | `COLLIDES` |
+| `B` | `ev-eval` | MCP 테스트 케이스 B1~B7 | `검증` | Backlinks (initial) | — | — | `ev-eval:B` | `EXTERNAL` |
+| `C` | `retro` | 측정 감사 항목 C1~C7 | `검증` | Check (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:1224` | — | `retro:C` | `COLLIDES` |
+| `C` | `rulings` | D-36 검증 항목 C1~C3 | `검증` | — (ordinal) | `docs/DESIGN_DECISION_independent_verifiability_constraint.md:640` | — | `rulings:C` | `COLLIDES` |
+| `C` | `ev-eval` | 회수 테스트 C1~C5 | `검증` | Case (initial) | — | — | `ev-eval:C` | `EXTERNAL` |
+| `D` | `directive` | 공백 항목 D1~D8 (D2 = fingerprint primitive) | `규칙` | Delta (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:46` | — | `directive:D` | `COLLIDES` |
+| `D` | `retro` | trial 계획 D0~D3 | `규칙` | — (arbitrary) | `docs/H1A_PROBLEM_ANALYSIS.md:199` | — | `retro:D` | `COLLIDES` |
+| `D` | `rulings` | D-36 검증 항목 D1~D4 · **판정 ID `D-19`~`D-37`은 하이픈이 있어 별개** | `검증` | — (ordinal) | `docs/DESIGN_DECISION_independent_verifiability_constraint.md:727` | — | `rulings:D` | `COLLIDES` |
+| `D` | `ev-eval` | 결함 D1a/D1b | `문제` | Defect (initial) | — | — | `ev-eval:D` | `EXTERNAL` |
+| `F` | `retro` | 레드팀 finding F1~F8 | `문제` | Finding (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:1927` | — | `retro:F` | `COLLIDES` |
+| `F` | `rulings` | D-36 검증 F1~F3 | `검증` | — (ordinal) | `docs/DESIGN_DECISION_independent_verifiability_constraint.md:736` | — | `rulings:F` | `COLLIDES` |
+| `F` | `ev-eval` | 결함 F1~F7 | `문제` | Finding (initial) | — | — | `ev-eval:F` | `EXTERNAL` |
+| `Q` | `rulings` | 외부 판정 질문 Q1~Q37 — 유일 발행자 | `요건` | Question (initial) | `docs/RULING_CHAIN_INDEX.md:49` | — | `rulings:Q` | `OWNER` |
+| `Q` | `retro` | rulings Q 인용 | `(인용)` | (인용) | — | — | `rulings:Q` | `CITES_ONLY` |
+| `O` | `directive` | 오라클 슬롯 O1~O3 (동반 yaml `semantic_oracle_set_handoff_v0.1.yaml`) | `출처` | Oracle (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:75` | — | `directive:O` | `OWNER` |
+| `O` | `rulings` | directive O 인용 | `(인용)` | (인용) | — | — | `directive:O` | `CITES_ONLY` |
+| `E` | `retro` | 배제 규칙 E0~E15 — roadmap·rulings 는 같은 측정 영역으로 인용 | `규칙` | Exclusion (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:1984` | — | `retro:E` | `OWNER` |
+| `E` | `roadmap` | 회고 E 인용 | `(인용)` | (인용) | — | — | `retro:E` | `CITES_ONLY` |
+| `L` | `retro` | 단일 소유 (drill-down 레벨 L0~L2) | `등급` | Level (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:1423` | — | `retro:L` | `OWNER` |
+| `S` | `mechspec` | 기제 슬롯 S1~S14 (atp-v4) — 단일 소유 | `등급` | Slot (initial) | — | — | `mechspec:S` | `EXTERNAL` |
+| `Z` | `retro` | 다이어그램 줌 Z0~Z3 — 단일 소유 | `등급` | Zoom (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:2933` | — | `retro:Z` | `OWNER` |
 
 ## 이 등록부가 확인하지 않은 것
 

@@ -56,16 +56,17 @@ def _rows() -> list[dict]:
             break
         if in_table and line.startswith("| `") and not line.startswith("| 글자"):
             cells = [c.strip() for c in line.strip("|").split("|")]
-            if len(cells) < 8:
+            if len(cells) < 9:
                 continue
             rows.append({
                 "letter": cells[0].strip("`"), "group": cells[1].strip("`"),
                 "meaning": cells[2], "concept": cells[3].strip("`"),
-                "defined_at": cells[4].strip("`"),
+                "english": cells[4],
+                "defined_at": cells[5].strip("`"),
                 # 등록부의 `—` 는 "형식 미고정, 검사 제외"다 — 빈 형식으로 읽는다
-                "pattern": "" if cells[5].strip("`").startswith("—") else cells[5].strip("`"),
-                "cite_prefix": cells[6],
-                "status": cells[7].strip("`"),
+                "pattern": "" if cells[6].strip("`").startswith("—") else cells[6].strip("`"),
+                "cite_prefix": cells[7],
+                "status": cells[8].strip("`"),
             })
     return rows
 
@@ -127,6 +128,25 @@ def test_cite_prefix_is_fully_qualified():
         assert m.group(2) == r["letter"], (fq, "글자가 행과 다르다")
         if r["status"] != "CITES_ONLY":
             assert m.group(1) == r["group"], (fq, "발행 행의 접두는 자기 문서군이어야 한다")
+
+
+ABBREV_KINDS = {"initial", "arbitrary", "ordinal"}
+
+
+def test_english_column_declares_kind_and_initial_matches():
+    """`영문 (유형)` 열. initial 형은 **글자 == 영문 첫 글자**여야 한다 — 실측 30/30.
+    arbitrary·ordinal 은 영문이 `—` 이고 검사하지 않는다(tree 밖, FQN 만이 이름)."""
+    for r in _rows():
+        if r["status"] == "CITES_ONLY":
+            assert "(인용)" in r["english"], (r["letter"], r["group"])
+            continue
+        m = re.fullmatch(r"(.+?)\s*\((initial|arbitrary|ordinal)[^)]*\)", r["english"].strip())
+        assert m, (r["letter"], r["group"], r["english"], "형식은 `영문 (유형)`")
+        word, kind = m.group(1).strip(), m.group(2)
+        if kind == "initial":
+            assert word[0].upper() == r["letter"], (r["letter"], r["group"], word, "initial 인데 첫 글자가 다르다")
+        else:
+            assert word == "—", (r["letter"], r["group"], "arbitrary/ordinal 은 영문이 — 여야 한다")
 
 
 def test_group_vocabulary_is_closed():
@@ -284,8 +304,8 @@ def test_a_false_row_would_be_caught(tmp_path, monkeypatch):
     fake = tmp_path / "IDENTIFIER_REGISTER.md"
     fake.write_text(
         "# x\n\n## 계열\n\n| 글자 | 문서군 | 뜻 | 개념 | 정의 위치 | 발행 형식 | 인용 접두 | 상태 |\n"
-        "|---|---|---|---|---|---|---|---|\n"
-        "| `Z` | `retro` | fake | `등급` | `docs/NOPE.md:1` | `\\*\\*Z(\\d+)\\*\\*` | `retro:Z` | `OWNER` |\n"
+        "|---|---|---|---|---|---|---|---|---|\n"
+        "| `Z` | `retro` | fake | `등급` | Zoom (initial) | `docs/NOPE.md:1` | `\\*\\*Z(\\d+)\\*\\*` | `retro:Z` | `OWNER` |\n"
     )
     monkeypatch.setattr(__import__(__name__), "REGISTER", fake)
     rows = _rows()
