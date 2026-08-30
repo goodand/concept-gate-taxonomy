@@ -430,3 +430,142 @@ CLAUDE.md §"부재를 단정하기 전" 이 명시한 절차는 **이웃에서 
 내일 같은 검사를 돌리는 사람은 1건을 보고 "존재한다"고 읽을 수 있다.
 **부재 기록에는 측정 시각과 "이 기록 자체가 이후 hit 가 된다"를 함께 적어야
 한다.** 이 절이 그 사례다(P25 계열 — 측정 도구가 조용히 다른 것을 쟀다).
+
+---
+
+## 10. 구현 재료 조사 — **재료는 있다. 없는 것은 연결이다** (2026-08-30)
+
+사용자 질문: "구현을 하기 위한 재료들이 이 workspace 에 있나?" haiku 3축 위임
+(재사용·subtree / logical-revision·Goedel-Prover / benchmark). lead 가 판정을
+뒤집을 수 있는 주장을 직접 재실측했다.
+
+### 10.1 가장 큰 발견 — **Refine 의 설계는 이미 있다**
+
+`notes/research/logical-revision/mechanism_spec.md` (**680행**, 2026-07-12).
+lead 실측한 절 구조:
+
+```text
+Core entities · Global loop · Internal state schema
+Commitment/entailment/obligation interaction
+Feedback algebra          ← 진단 어휘 9종
+Update algebra and policy order
+Rollback frontier and proof object boundary
+Obligation lifecycle
+Verified region and proof object locking
+Invariant system          ← I1~I7
+Convergence and termination  ← success / **abstention**
+```
+
+**이것이 Refine 이다.** §3.2 가 "Refine 은 없다"고 쓴 것은 **코드**에 대해서는
+맞지만 **설계**에 대해서는 틀렸다. 설계는 6주 먼저 존재했다.
+
+feedback 클래스 9종(원문):
+
+| class | 갱신 대상 |
+|---|---|
+| Pass | candidate object |
+| Syntax failure / Type failure | local (typed) segment |
+| **Non-entailment** | unsupported claim or edge |
+| **Contradiction** | conflict set |
+| **Missing premise / Missing witness** | obligation set |
+| Bad decomposition | decomposition graph |
+| **Evidence insufficient** | retrieval layer **또는 abstention path** |
+
+이것은 I11("obligation 은 수리 힌트이지 정답 graph 가 아니다")이 요구하는
+진단 어휘의 **완성된 후보**다. 그리고 `Evidence insufficient → abstention` 은
+DIRECTIVE 계열에 **아예 없는 개념**이다.
+
+### 10.2 두 계열이 서로를 모른다 — 그리고 **I 번호가 충돌한다**
+
+lead 실측:
+
+```text
+DIRECTIVE 가 mechanism_spec 을 언급        : 0건
+mechanism_spec 이 Refine/Verify 를 언급    : 1건
+mechanism_spec 을 가리키는 문서 8개         : 전부 notes/ (MOC 6 + 프로젝트 HANDOFF 1 + v4)
+                                            → concept-gate-h1-wt/docs/ 에서는 0건
+```
+
+**두 설계가 같은 부품을 두고 6주 간격으로 따로 쓰였고 서로를 모른다.**
+
+그리고 **같은 `I` 라벨에 완전히 다른 내용이 들어 있다**:
+
+| 번호 | `mechanism_spec` | `DESIGN_DIRECTIVE` |
+|---|---|---|
+| I1 | No active contradiction | Semantic Graph is state |
+| I2 | Support or obligation | Refine 만 asserted graph 를 수정 |
+| I3 | **Verified-region protection** | Verify 는 graph 를 수정하지 않는다 |
+| I4 | Provenance requirement | Shared definitions 허용, shared judgments 위험 |
+| I5 | **Minimal rollback** | Open vocabulary, closed inference |
+| I6 | **Bounded correction**(retry 한도) | Candidate/Certified/Entailed 구분 |
+| I7 | **Safe abstention** | Oracle 은 evaluation-only |
+
+**"I3" 이라고만 쓰면 어느 계열인지 알 수 없다.** 이 SURVEY 를 포함해 오늘
+커밋한 문서들이 `I2·I3·I7·I9·I11` 을 **DIRECTIVE 뜻으로** 인용했다. 앞으로
+계열 접두를 붙여야 한다(예: `D-I3` / `M-I3`).
+
+**둘은 모순이 아니라 다른 축이다.** `mechanism_spec` 은 **상태·갱신 허용성**
+(모순 없음·지지 또는 의무·최소 롤백·재시도 한도·기권), DIRECTIVE 는 **권한
+경계**(누가 무엇을 쓸 수 있는가). 합쳐야 하고, 합칠 때 번호를 정리해야 한다.
+
+### 10.3 외부 재료 — 이미 실사가 끝나 있다
+
+`atp-verifier-inferential-subtree-subflow-research` **v4**(기제 슬롯 S1~S14 ·
+논문→슬롯 대응) / **v3**(841행, 파일 단위 vendoring 결정 · 라이선스 실사).
+
+v4 §6 매트릭스의 결론(원문): **"현재 핵심은 theorem prover 하나를 더 붙이는
+것이 아니라, mechanism core 를 직접 세우고 외부 repo 를 부품으로만 쓰는
+것이다."** 외부 자산이 대신 못 하는 것 넷 —
+**Commitment formation · Typed feedback translation · Rollback frontier
+control · Obligation management**.
+
+v3 의 vendoring 우선순위(라이선스 확인 완료):
+
+| # | 대상 | 방식 | 라이선스 |
+|---|---|---|---|
+| 1 | `hanwenzhu/LeanArchitect` | git dependency 권장(subtree 가능) | Apache-2.0 |
+| 2 | RobustPABench 결정론적 edit core | 필요한 함수만 `third_party/robust_pa/` 로 | MIT |
+| 3 | Gödel's Poetry AST/hole extraction | PyPI 또는 별도 service(subtree 아님) | Apache-2.0 |
+| 4 | LLMLean | Lean package git dependency(선택) | MIT |
+| 5 | C2C `prompt.py` | subtree 대신 **50~100 LOC 자체 재구현** | MIT(1파일 공개) |
+
+### 10.4 우리 저장소 안의 재료
+
+- **Graph Diff 기제** — `_h1a_policy_audit.py` (§9). claim 단위 구조 비교 +
+  타입 있는 finding + 보고/판정 분리.
+- **Obligation 커널** — `cg_obligations.py`. 이미 배선·검증 완료(§3.1).
+- **gUFO 규칙** — `vendor/scior` 이미 read-only subtree, `cg_gufo.py` 어댑터
+  경유(lead 실측: 두 경로 다 실재).
+
+### 10.5 재료가 **없는** 칸
+
+| 필요 | 재료 |
+|---|---|
+| 양화·양상·scope IR | **없음.** 두 계열 모두 상위 정규화 층으로 미룬다 |
+| 수렴의 **수학적** 증명 | **없음.** `mechanism_spec` 도 retry 예산 소진에 의한 **운영적** 종료다 |
+| 진동 주입 벤치마크 | **없음.** v4 로드맵 Phase 5 로 예정만 |
+
+### 10.6 오라클·벤치마크 (축 3 보고 — **lead 미재실측**)
+
+승인 4종으로 보고됐다: **WikiSem v0.3**(OSU, ~5,046문장, typed lambda) ·
+**PMB 5.1.0**(Gold 11,987문서, ODC-BY) · **FOLIO v0.0**(Yale-LILY,
+CC-BY-SA-4.0, 양화≥2 가 86건) · **Redwoods DeepBank 1.1**(MRS, **WSJ 텍스트
+권리 BLOCKED**). 탈락 7종은 대부분 **라이선스 미확정**이 사유다.
+
+**이 절만 lead 재실측을 하지 않았다** — 기존 `RESEARCH_RESULT_*` 정본이
+이미 있고 그것이 판정 사슬에 실려 있으므로, 재실측이 필요하면 그 정본을
+직접 읽어야 한다. 이 절은 **포인터이지 근거가 아니다.**
+
+### 10.7 답
+
+**재료는 있다. 그것도 많다.** 부족한 것은 재료가 아니라 **연결**이다 —
+Refine 의 설계가 6주 먼저 존재했는데 그것을 대체하려는 계열이 그 존재를
+모른다. §9 가 Graph Diff 에서 겪은 것과 **같은 형태**이고, P26(정정이 정본까지
+도달하지 않는다)의 더 큰 판이다.
+
+**다음 작업 순서 제안** — 코드를 쓰기 전에 연결부터:
+
+1. 두 불변식 체계를 **한 표로 합치고 번호 충돌을 해소**한다(`D-I*` / `M-I*`).
+2. `mechanism_spec` 의 feedback 클래스 9종을 우리 obligation 어휘와 대조한다 —
+   `OBLIGATION_REGISTRY` 9종과 **개수가 같다.** 우연인지 대응인지 확인해야 한다.
+3. 그 뒤에 §8.4 의 **2-pass 실험**. 이것은 여전히 새 재료가 필요 없다.
