@@ -13,7 +13,7 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 
 ```yaml
 updated: 2026-09-01            # 이 문서를 마지막으로 고친 날. 제목의 2026-08-23 은 **마일스톤**이지 갱신일이 아니다
-state_code: D37_RECEIVED__L2_ENTRY_IDENTIFIED   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 Q33 회신 대기). 이 세션 갈래(08-31): TWO_PASS_VERIFY1 완료 — test_two_pass_verify1.py(계약 8, 적대검증 채택·기각 반영)가 경우 B 를 계산으로 증명(SURVEY §8.5). 수렴 자체는 여전히 증명 밖(§8.2)
+state_code: D37_RECEIVED__L2_ENTRY_IDENTIFIED   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 회신 대기가 아니라 권한 부재 — 2026-09-01 전수 대조: 미회신 상신 0건). 이 세션 갈래(08-31): TWO_PASS_VERIFY1 완료 — test_two_pass_verify1.py(계약 8, 적대검증 채택·기각 반영)가 경우 B 를 계산으로 증명(SURVEY §8.5). 수렴 자체는 여전히 증명 밖(§8.2)
 next_action_code: M1_CERTIFICATE_REDESIGN   # 2026-09-01 정정: 사다리 정본(obligation_layer_roadmap.md)이 L2=0% 의 원인과 다음 걸음을 이미 지목하고 있었고, 08-31 세션은 그것을 보지 않고 L3 도구를 굳혔다. 다음 걸음 = certificate 를 "경고 신호"에서 **"모델이 유지해야 할 전역 불변조건 + 출력 상태 계약을 명시하는 reasoning contract"** 로 재설계(roadmap :64-66 이 착수 전이라 명시). 근거는 이미 실증됨 — E2.2.3 OFAT 60 trial: A_ONLY(전역 일관성 **자연어** 규칙)=20/20 단독 필요충분, C_ONLY(schema minItems)=0/20 무효. 08-31 세션의 D7(스키마는 형태만 강제)이 그 결론을 독립 재현했다. 실을 자리도 이미 있다 — ObligationResult.invariant(08-31 가산, 서명 본체 포함). 대기 항목은 이 아래로: (a) invariant 값 채움 ← 이제 M1 재설계의 **핵심 기제**이지 별건 아님, (b) e2e 손 사전 치환(L3), (c) 누계표, (d) Q33 회신(코호트 = L2 의 측정 갈래, 외부 판정 대기라 내가 못 움직임), (e) push
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
@@ -76,7 +76,7 @@ V5 동결(투영 `O1_SCOPE_PROJECTION_V2`)과 control 재선별 **5/5**(V4 1/6 �
 
 끊는 간선은 apparatus 밖의 권위 하나이고, 그 요건 넷 중 **병목은 R2(정확성의
 독립 검증 가능성)** 다 — R1은 후보 넷이 다 채우고 R2는 둘만 채운다. 그것을
-Q36으로 상신했고 회신 대기다.
+Q36으로 상신했고 **회신은 이미 왔다** — D-36(`docs/DESIGN_DECISION_independent_verifiability_constraint.md`, 수신 2026-08-24)이 `independent_verifiability: genuine_constraint` 로 확정하고 R1~R4 를 "정리가 아니라 후보 분해"로 규정했다. 2026-09-01 전수 대조: **미회신 상신 0건**(요청 27건 전부 판정·회신 도달, 최신은 D-37 수신 08-30). 즉 코호트가 막힌 것은 회신 대기가 아니라 **판정을 받고도 경계를 정할 권한이 우리에게 없다**는 것이다.
 
 **코호트 dispatch 누계 0건**이며 `dispatch: blocked` ·
 `immediate_projection: forbidden` · `operational_patch: forbidden`이 모두 유효하다.
