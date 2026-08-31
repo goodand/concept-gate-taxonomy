@@ -245,6 +245,30 @@ def test_grounded_is_sound_about_citations_not_about_findings(tmp_path):
     assert vfc.is_grounded(false_but_cited, [target]) is True   # 그리고 틀렸다
 
 
+def test_undecided_findings_are_reported_not_swallowed(tmp_path, capsys):
+    """판단불가는 **그대로 낸다** — 삼키면 그것이 이 도구가 막으려는 실패다.
+
+    규칙이 결정하지 못한 것을 조용히 통과시키면 `kept` 가 성공처럼 읽힌다.
+    3값 어휘로 그것은 `BLOCKED` 이고 자동 허용이 아니다 — 종단 상태는
+    "사람이 읽거나 생성자에게 되먹인다"이며, 그러면 규칙 층은 **자기가 못
+    하는 것을 못 한다고 말하는 것으로 충분하다.**"""
+    target = tmp_path / "t.py"
+    target.write_text("real_symbol = 1\n", encoding="utf-8")
+    findings = tmp_path / "f.json"
+    findings.write_text(json.dumps({"findings": [
+        {"id": 1, "claim": "실측: `TypeError: absent_thing is missing` 로 죽는다"},
+        {"id": 2, "note": "인용 없는 판단"},
+        {"id": 3, "claim": "코드에 `real_symbol` 이 있다"},
+    ]}, ensure_ascii=False), encoding="utf-8")
+    rc = vfc.main([str(findings), str(target)])
+    out = capsys.readouterr().out
+    assert rc == 0                          # 폐기 없음 — 그러나 수락도 아니다
+    assert "UNDECIDED  id=1" in out and "execution_output" in out
+    assert "UNDECIDED  id=2" in out and "no_citation" in out
+    assert "UNDECIDED  id=3" not in out     # 근거 있는 것은 보류가 아니다
+    assert "판정 보류 2건" in out
+
+
 def test_the_g134_case_is_reproduced_against_the_real_document():
     """실물 회귀 — Q33 상신서에 `p02`가 없다는 것을 문서로 확인한다.
 

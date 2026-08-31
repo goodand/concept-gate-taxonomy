@@ -261,6 +261,22 @@ def main(argv: list[str]) -> int:
         check_result = check(finding, targets)
         print(f"  DISCARDED id={finding.get('id')} missing={check_result['missing']}")
 
+    # 판단불가는 삼키지 않고 **그대로 낸다**. 규칙이 결정하지 못한 것을 조용히
+    # 통과시키면 그것이 이 도구가 막으려는 실패 모드 자체다 — `BLOCKED` 는
+    # 자동 허용이 아니고(`CLAUDE.md` 3값 어휘), 사람에게 보이거나 생성자에게
+    # 되먹여지는 것이 그 종단 상태다.
+    ungrounded = []
+    for finding in result["kept"]:
+        r = check(finding, targets)
+        if r["verdict"] == "NOT_CHECKABLE":
+            kinds = sorted(set(r["uncheckable"].values())) or ["no_citation"]
+            print(f"  UNDECIDED  id={finding.get('id')} 사유={kinds} "
+                  f"— 규칙으로 판정 못 함. 사람이 읽거나 생성자에게 되먹여라")
+            ungrounded.append(finding.get("id"))
+    if ungrounded:
+        print(f"판정 보류 {len(ungrounded)}건 (id={ungrounded}) — 수락 아님. "
+              f"수락 기준은 is_grounded(≥1 CITATION_FOUND) 다")
+
     return 1 if result["discarded"] else 0
 
 
