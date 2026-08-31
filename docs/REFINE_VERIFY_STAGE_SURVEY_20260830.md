@@ -342,6 +342,29 @@ oscillation/termination 관찰을 붙인다.
 `results_from_normalizer` 를 다시 돌려 `source.span_evidence` 가 UNKNOWN →
 PASS 로 바뀌는지 단언한다. 이것 하나가 경우 A → 경우 B 전이다.
 
+### 8.5 경우 B 도달 (2026-08-31) — 단, §8.4 권고와 생산자가 다르다
+
+`test_two_pass_verify1.py`(계약 8, 전부 초록)가 두 패스를 **같은 실제 생산자**
+로 계산한다:
+
+```text
+Verify₀  results_from_claim_anchoring(G₀, E_r1) → UNKNOWN ("인용 evidence 본문 없음")
+repair   ev3 본문 공급(이것이 fix) + revision 갱신(메타데이터)
+Verify₁  같은 생산자(G₁, E_r2)                → PASS (r2 결박)
+```
+
+- **§8.4 의 생산자 지목은 정정됐다.** `results_from_normalizer` 는 normalizer
+  성공 응답 형식을 요구해 repair 산출물(claim dict)과 **형식 불일치**다
+  (`docs/DESIGN_DRAFT_two_pass_verify1.md` 정정 기록). 채택한 obligation 은
+  `claim.evidence_anchoring`(`cg_obligations.py:574`) — §8.4 가 명명한
+  `source.span_evidence` 와 **다른 obligation** 이므로, 기존 e2e `[4]`/`[6]`
+  의 손 사전은 그대로 남아 있고 이 파일과 모순되지 않는다(적대검증 확인).
+- **적대검증(2026-08-31) 통과 후 판정.** MAJOR 2 채택(fix 책임 분해 테스트
+  신설 · "무관한 수리"→"미수리" 명명 정정), 수정안 1건은 재실측으로 기각
+  (그 입력의 정답은 PASS 다) — 채택·기각 전문은 테스트 모듈 docstring.
+- **§8.2 는 그대로다.** 이것은 "그 obligation 을 해결하는 방향으로 한 단계"
+  까지이고, 반복 수렴·oscillation 부재는 여전히 증명 밖이다(repair 1회).
+
 ---
 
 ## 9. 정정 — §2 의 "Graph Diff 는 코드에도 없다" 는 **범위가 틀렸다** (2026-08-30)

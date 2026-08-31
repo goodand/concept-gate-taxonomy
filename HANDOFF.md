@@ -13,15 +13,15 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 
 ```yaml
 updated: 2026-08-31            # 이 문서를 마지막으로 고친 날. 제목의 2026-08-23 은 **마일스톤**이지 갱신일이 아니다
-state_code: D37_RECEIVED__TOOLING_HARDENED   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 Q33 회신 대기). 이 세션 갈래(08-31, 커밋 43): 식별자 분류기·FQN 래칫·축 지도·pre_compact 도구·ObligationResult.invariant(생성물 상수)·정리 6라운드 완결
-next_action_code: TWO_PASS_VERIFY1   # SURVEY §8.3: [6] 의 손으로 쓴 all_pass 를 results_from_normalizer 실제 계산으로 — 경우 A→B 로 올라가 '한 단계 수렴' 증거가 생긴다(수렴 자체는 v0 불가, §8.2). 생산자는 cg_obligations.py:341 에 이미 있다. **주의**: invariant 필드는 자리만 있고 값 채움은 설계 판단 대기(회고 2부 §미해결) — Verify1 을 먼저 해도 되나 그 판정은 불변식을 안 단다
+state_code: D37_RECEIVED__CASE_B_REACHED   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 Q33 회신 대기). 이 세션 갈래(08-31): TWO_PASS_VERIFY1 완료 — test_two_pass_verify1.py(계약 8, 적대검증 채택·기각 반영)가 경우 B 를 계산으로 증명(SURVEY §8.5). 수렴 자체는 여전히 증명 밖(§8.2)
+next_action_code: AWAIT_USER_DECISIONS   # 실행 가능한 다음 수는 전부 사용자 판단 대기: (a) invariant 값 채움(판정↔불변식 대응 근거가 문서에 5건뿐 — 회고 2부 §미해결), (b) 기존 e2e [4][6] 손 사전을 results_from_normalizer 계산으로 치환할지(SURVEY §8.4 — §8.5 와 다른 obligation 이라 중복 아님, 그러나 별도 결정), (c) 누계표 분리+게이트(표기 고정 전제), (d) Q33 회신(코호트 갈래), (e) 미푸시 커밋 push 승인
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
 authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/stage2_fixture_manifest_v5.json  # V5 = 최신 동결(투영 전용 개정). 사전등록 본문은 PREREGISTRATION_STAGE2_V4.md가 여전히 정본
 # 코드별 authority 근거절 — 위 코드를 주장할 때는 아래 절을 인용하라:
 #   state_code             ← stage2_fixture_manifest_v5.json amendment (V5 = 투영 전용 개정, dispatch 0) + stage2_controls_results_v5_1.json (5/5)
-#   next_action_code       ← docs/DESIGN_REQUEST_referential_participant_quantification.md (Q33 — 회신 전 코호트 금지)
+#   next_action_code       ← docs/REFINE_VERIFY_STAGE_SURVEY_20260830.md §8.4~8.5 (b) · 회고 2부 §미해결 (a·c) · docs/DESIGN_REQUEST_referential_participant_quantification.md (d — Q33 회신 전 코호트 금지)
 #   NO_COHORT_WITHOUT_USER_APPROVAL ← CLAUDE.md "## 실행 승인" 절 (저장소 전역 운영 규칙 — 사전등록은 실행 허가가 아니다)
 #   NO_FROZEN_SURFACE_EDITS         ← PREREGISTRATION_STAGE2_V4.md (D-19 §12; 개정은 D-24 §9 절차로만)
 ```
@@ -41,7 +41,8 @@ L3 기술   obligation 시스템 (+ 필요 시 warm reasoner + content-addressed
 
 | Task (아래 절) | 사다리 | 왜 그 층인가 |
 |---|---|---|
-| `TWO_PASS_VERIFY1` (`next_action_code`) | **L2** | Verify₁ 없이는 "repair 가 obligation 을 해결했다"는 증거가 없다 — 보증이 아니라 주장이다(SURVEY §8.2) |
+| ~~`TWO_PASS_VERIFY1`~~ **완료 2026-08-31** | **L2** | Verify₁ 없이는 "repair 가 obligation 을 해결했다"는 증거가 없다 — `test_two_pass_verify1.py` 가 그 증거를 계산으로 만들었다(SURVEY §8.5). 수렴은 여전히 밖(§8.2) |
+| e2e `[4]`/`[6]` 손 사전 치환 (`next_action_code` b, 대기) | **L2** | `source.span_evidence` 쪽의 같은 전이 — §8.5 와 다른 obligation 이라 중복 아님 |
 | 코호트 실행 (§3, Q33 대기) | **L2 의 측정** | H1 실험은 L2 보증이 실제 corpus 에서 성립하는지 잰다 |
 | `invariant` 값 채움 (설계 판단 대기) | **L3** | 판정이 불변식을 지목해야 obligation 시스템이 감사 가능하다. 단 **L2 직결이 아니다** — 그래프 충실도가 아니라 검증 장치의 계보다(회고 2부 G261) |
 | 누계표 분리·P27 등재 (대기) | **사다리 밖** | 작업 위생이지 L1~L3 어디에도 안 걸린다. 그래서 우선순위가 낮은 것이 **맞다** |
