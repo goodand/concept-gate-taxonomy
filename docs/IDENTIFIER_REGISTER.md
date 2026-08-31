@@ -151,7 +151,7 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 | 개념 | 글자 | 뜻 |
 |---|---|---|
 | `문제` | **A B D E F G I R S T W X** | 발견된 결함·이슈·finding·BLOCKER || ? (?) 
-| `검증` | **B C D F M N V** | 검증 항목·방법·테스트 케이스·수신 검증 || ? (?) 
+| `검증` | **B C D F I M N V** | 검증 항목·방법·테스트 케이스·수신 검증 || ? (?) 
 | `등급` | **L M P S Z** | 권위 등급·레벨·줌·슬롯·능력 축 || ? (?) 
 | `규칙` | D E J K | 배제 규칙·공백 항목·trial 계획 || ? (?) 
 | `단계` | M P | 구현 단계·마일스톤 || ? (?) 
@@ -267,6 +267,7 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 | `H` | `experiments` | **가설·실험 이름** `H1`·`H2`·`H3`(`# 설계 판정 요청 — H3 확증 실험의 estimand`)·`H1a`. 계열이 아니다 | `(인용)` | — (arbitrary) | `experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/DESIGN_REQUEST_H3.md` | — | — | `FP_EXPERIMENT` |
 | `X` | `h1a-scope` | mermaid 노드 id (`X1["버림"]`) — 그림 문법 | `(인용)` | — (arbitrary) | `docs/feedback/design_review_*_round2.md` | — | `h1a-scope:X` | `FP_DIAGRAM` |
 | `N` | `h1a-scope` | 검사 항목 `N1 Scior TSV에서 RA02 로드` | `검증` | — (arbitrary) | `qa_v7.py` | — | `h1a-scope:N` | `EXTERNAL` |
+| `I` | `h1a-scope` | 검사 항목 `I1. STRUCTURAL은 비-essential`… I1~I7, `R.check` 이름으로 발행 — **directive I1~I11·mechspec I1~I7 과 교집합 구간(I1~I7) 순방향 충돌, 발행자 셋째** | `검증` | — (arbitrary) | `qa_v7.py:495` | — | `h1a-scope:I` | `EXTERNAL` |
 | `K` | `h1a-scope` | 규칙 `K1. STRUCTURAL 부분이 개념으로 존재 → ∃has_part ESSENTIAL 파생` | `규칙` | — (arbitrary) | `qa_v7.py` | — | `h1a-scope:K` | `EXTERNAL` |
 | `J` | `h1a-scope` | 규칙 `J1. 반대칭: A has B + B has A → ERROR` | `규칙` | — (arbitrary) | `qa_v7.py` | — | `h1a-scope:J` | `EXTERNAL` |
 | `Z` | `retro` | 다이어그램 줌 Z0~Z3 — 단일 소유 | `등급` | Zoom (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:2933` | — | `retro:Z` | `OWNER` |
