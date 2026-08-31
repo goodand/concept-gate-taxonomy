@@ -67,6 +67,35 @@ _CITATION_RE = re.compile(
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 
+# 정적 파일에 있을 수 **없는** 인용 부류. 이것들을 EVIDENCE_NOT_FOUND 로 내면
+# 도구가 늑대 소년이 된다 — 2026-08-31 실측: 스키마 강제 위임의 회신 12건 중
+# 11건이 폐기됐고 폐기 사유 인용 37건을 전수 분류하니 아래 부류가 대부분이었다.
+# 판별기는 **좁게** 만든다: 넓히면 환각한 파일 인용이 이 문으로 빠져나간다
+# (G134 회귀 계약이 그것을 지킨다).
+_UNCHECKABLE_KINDS = (
+    # 예외·트레이스백: `TypeError: ...` `AttributeError: ...`
+    ("execution_output", re.compile(r"^\s*\w*(?:Error|Exception|Warning):\s")),
+    # REPL/실행 출력의 화살표 표기: `... -> pass` `... → UNKNOWN`
+    ("execution_output", re.compile(r"(?:->|→)\s*\S")),
+    # 셸 명령: 실행한 것이지 파일 내용이 아니다
+    ("shell_command", re.compile(r"^\s*(?:grep|rg|git|python3?|pytest|find|sed)\s")),
+    # 생략부호로 축약된 것은 **구성상** verbatim 인용이 아니다
+    ("elided_paraphrase", re.compile(r"\.\.\.|…")),
+)
+
+
+def uncheckable_kind(citation: str) -> str | None:
+    """이 인용이 정적 파일 대조로 판정할 수 **없는** 부류인가.
+
+    반환값은 부류 이름 또는 None. 부류가 있으면 호출자는 그 인용을
+    `EVIDENCE_NOT_FOUND` 의 근거로 쓰지 않는다 — "파일에 없다"가 참이지만
+    그것이 finding 의 참·거짓과 무관하기 때문이다.
+    """
+    for kind, pattern in _UNCHECKABLE_KINDS:
+        if pattern.search(citation):
+            return kind
+    return None
+
 
 class AllTargetsUnreadable(Exception):
     """Raised by check() when every target failed to read.
@@ -113,10 +142,15 @@ def citations(finding: dict) -> list[str]:
 
 def check(finding: dict, targets: list[Path]) -> dict:
     """Verify a finding's citations actually occur in one of the targets."""
-    cites = citations(finding)
-    result = {"id": finding.get("id"), "citations": cites, "missing": []}
+    all_cites = citations(finding)
+    # 정적 대조가 불가능한 부류는 검사 대상에서 뺀다(폐기 근거로 쓰지 않는다).
+    unckd = {c: k for c in all_cites if (k := uncheckable_kind(c))}
+    cites = [c for c in all_cites if c not in unckd]
+    result = {"id": finding.get("id"), "citations": cites, "missing": [],
+              "uncheckable": unckd}
 
     if not cites:
+        # 검사 가능한 인용이 하나도 없다 — 부재의 증명이 아니라 미확인이다.
         result["verdict"] = "NOT_CHECKABLE"
         return result
 

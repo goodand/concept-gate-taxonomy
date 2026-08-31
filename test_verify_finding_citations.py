@@ -150,34 +150,67 @@ def test_partition_accounting_is_exhaustive(tmp_path):
 # ---- 게이트가 공허하지 않다는 증거 -------------------------------------
 
 def test_execution_output_is_not_judged_as_a_missing_file_citation(tmp_path):
-    """오탐 부류 — **실행 출력**은 정적 파일에 있을 수 없다 (2026-08-31 실측).
+    """오탐 부류 — **실행 출력**은 정적 파일에 있을 수 없다 (2026-08-31).
 
-    이 계약이 왜 생겼나: 스키마 강제 위임의 회신 12건을 이 도구에 태우니
-    **11건이 `EVIDENCE_NOT_FOUND`** 였고 거의 전부 오탐이었다 — 폐기된
-    "인용"이 `TypeError: ...` 같은 실행 출력과 산문 요약이었다. 대상 파일에
-    없는 것이 당연하고, 그것은 finding 이 거짓이라는 뜻이 **아니다.**
+    왜 생겼나: 스키마 강제 위임의 회신 12건을 태우니 11건이 폐기됐고, 폐기
+    근거 인용 37건을 **전수 분류**하니 대부분이 실행 출력·셸 명령·생략부호
+    축약이었다. 기존 14개 계약은 위음성(공백·ANSI·스마트쿼트)에 셋 이상을
+    쓰면서 위양성에는 `MIN_CITATION` 하나뿐이었고, 그 비대칭이 이것을
+    통과시켰다.
 
-    기존 14개 계약은 **위음성**(공백·ANSI·스마트쿼트)에 셋 이상을 쓰면서
-    **위양성**에는 `MIN_CITATION` 하나뿐이었고, 그것도 과거 오탐 4건 뒤에
-    생겼다. 이 비대칭이 오늘의 11/12 를 통과시켰다.
-
-    **이 계약은 현행 동작을 고정하지 않는다 — 결함을 기록한다.** 아래
-    단언은 도구가 지금 무엇을 하는지이고, 옳은 처리는 스키마가 인용의
-    **종류**(파일 인용 vs 실행 출력)를 가르는 것이다. 그 설계가 들어오면
-    이 계약이 뒤집혀야 하는 쪽이다."""
+    이 계약은 초판에서 **결함을 기록**했고(현행 동작 = 폐기), 규칙 기반
+    트러블슈팅으로 뒤집혔다 — docstring 이 예고한 그 방향이다."""
     target = tmp_path / "t.py"
     target.write_text("x = 1\n", encoding="utf-8")
     exec_output = {"id": 1, "claim": "실측: `TypeError: argument of type 'int' "
                                      "is not iterable` 로 죽는다"}
-    verdict = vfc.check(exec_output, [target])["verdict"]
-    # 현행: 실행 출력을 파일 인용으로 검사해 폐기한다(오탐).
-    assert verdict == "EVIDENCE_NOT_FOUND"
-    # 그리고 그것이 finding 의 참·거짓과 무관하다는 것이 이 계약의 요점이다 —
-    # 같은 문장의 판정은 실행으로만 갈린다.
+    r = vfc.check(exec_output, [target])
+    assert r["verdict"] == "NOT_CHECKABLE"
+    assert r["missing"] == []
+    assert "execution_output" in r["uncheckable"].values()
+
+
+def test_each_uncheckable_kind_is_recognized():
+    """부류별 판별 — 오늘 코퍼스 37건에서 도출한 넷."""
+    assert vfc.uncheckable_kind("TypeError: bad operand") == "execution_output"
+    assert vfc.uncheckable_kind("call(x) -> pass") == "execution_output"
+    assert vfc.uncheckable_kind('grep -rn "bytes" a.py') == "shell_command"
+    assert vfc.uncheckable_kind("certify(... evidence ...)") == "elided_paraphrase"
+
+
+def test_a_hallucinated_file_citation_cannot_escape_through_the_discriminator(tmp_path):
+    """음성 증명 — 판별기가 도피구가 되면 안 된다.
+
+    부류 판별을 넓히면 **환각한 파일 인용이 이 문으로 빠져나간다.** 평범한
+    코드/문서 인용은 어느 부류에도 걸리지 않아야 하고, 없으면 폐기되어야
+    한다. 이 계약이 없으면 "전부 NOT_CHECKABLE" 구현이 위 셋을 통과한다."""
+    target = tmp_path / "t.py"
+    target.write_text("real_symbol = 1\n", encoding="utf-8")
+    for fake in ("`nonexistent_symbol_xyz`", "`def totally_absent_function`"):
+        r = vfc.check({"id": 9, "claim": f"코드에 {fake} 가 있다"}, [target])
+        assert r["verdict"] == "EVIDENCE_NOT_FOUND", fake
+        assert r["uncheckable"] == {}, fake
+    ok = vfc.check({"id": 10, "claim": "코드에 `real_symbol` 이 있다"}, [target])
+    assert ok["verdict"] == "CITATION_FOUND"
 
 
 def test_the_g134_case_is_reproduced_against_the_real_document():
-    """실물 회귀 — Q33 상신서에 `p02`가 없다는 것을 문서로 확인한다."""
+    """실물 회귀 — Q33 상신서에 `p02`가 없다는 것을 문서로 확인한다.
+
+    **이 계약이 판별기의 상한이다**: G134 의 환각 인용은 `claim` 필드에
+    있었으므로 `claim` 스캔을 끄면 이 catch 가 죽는다. 그래서 남은 오탐
+    (산문 요약이 `claim` 에 인용부호로 들어오는 것)은 규칙으로 못 가른다 —
+    `claim` 은 본디 요약이 들어오는 자리다. 그것은 **스키마 문제**이고
+    (파일 인용 전용 필드 분리), 모델이 그 구분을 지키는지는 arm 설계가
+    필요한 실험이다.
+
+    규칙으로 못 가르는 것 둘 더(2026-08-31 실측, 미수리):
+    - **낡은 인용**: 회신이 읽은 시점엔 실재했는데 그 뒤 내가 그 줄을
+      고쳤다(`cited = [t for t in ...]`, 커밋 f748d87). 환각과 구별 불가 —
+      가르려면 인용을 revision 에 결박해야 한다(`stale_obligations` 와 같은
+      형태). `git log -S` 로 확인 가능하나 도구가 아직 안 한다.
+    - **문자열 연결 경계**: f-string 이 두 줄로 쪼갠 문장은 공백 정규화로도
+      못 찾는다(`검사할 어휘 없음 — …` 실측)."""
     doc = ROOT / "docs" / "DESIGN_REQUEST_referential_participant_quantification.md"
     if not doc.exists():
         pytest.skip("Q33 상신서가 없는 체크아웃")
