@@ -130,3 +130,38 @@ def test_a_missing_file_is_an_error_not_an_empty_report(tmp_path, capsys):
     """없는 파일에 대해 "경계 0건"을 내면 **부재와 미확인이 섞인다.**"""
     assert cl.main([str(tmp_path / "nope.jsonl")]) == 2
     assert "없다" in capsys.readouterr().out
+
+
+def test_since_rejects_a_malformed_date(tmp_path, capsys):
+    """적대검증 blocker(2026-08-31). `--since 2026-8-1` 은 사전식 비교에서
+    `"2026-08-01" >= "2026-8-1"` 이 **False** 라 모든 경계를 조용히 제외하고,
+    빈 표가 "경계가 없다"로 읽힌다. 형식을 강제해 그 침묵을 없앤다."""
+    p = _write(tmp_path, _boundary("2026-08-01T12:00:00Z"))
+    assert cl.main([str(p), "--since", "2026-8-1"]) == 2
+    assert "YYYY-MM-DD" in capsys.readouterr().out
+
+
+def test_a_single_scan_backs_both_the_list_and_the_stats(tmp_path):
+    """적대검증 major. 두 번 읽으면 그 사이에 기록이 자라(세션 진행 중) 총계와
+    통계가 어긋난다 — 같은 실행이 서로 다른 파일을 본 셈이 된다."""
+    p = _write(tmp_path, _boundary("2026-08-30T16:49:09Z"))
+    found, stats = cl.scan(p)
+    assert len(found) == stats["boundaries"] == 1
+
+
+def test_utc_and_local_are_both_reported(tmp_path):
+    """적대검증 minor → 실제로는 내 해석을 틀리게 만든 원인이었다. 기록은 UTC
+    이고 파일 mtime·사람의 시계는 로컬이라, 하나만 남기면 9시간 어긋난 해석이
+    나온다(2026-08-31 에 실제로 그렇게 틀렸다)."""
+    (b,) = cl.iter_boundaries(_write(tmp_path, _boundary("2026-08-30T16:49:09Z")))
+    assert b.timestamp == "2026-08-30T16:49:09"
+    assert b.local and b.local != b.timestamp
+    assert "기록(UTC)" in cl.render([b]) and "로컬" in cl.render([b])
+
+
+def test_an_unparsable_timestamp_yields_no_guessed_local(tmp_path):
+    """시간대는 지어낼 수 있는 종류의 값이 아니다 — 못 읽으면 빈칸."""
+    p = _write(tmp_path, {"type": "system", "subtype": "compact_boundary",
+                          "timestamp": "언제인지 모름", "compactMetadata": {}})
+    (b,) = cl.iter_boundaries(p)
+    assert b.local == "" and "—" in cl.render([b])

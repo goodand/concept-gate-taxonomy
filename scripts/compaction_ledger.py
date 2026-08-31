@@ -8,11 +8,15 @@ compaction 에서 잃는다. 그래서 표로 남긴다.
 
 **그런데 손으로 적으니 틀렸다(2026-08-31 실측).** 세 가지가 동시에:
 
-    적은 것                    기계 진실
-    "08-31 01:42 compaction"   실제는 08-30T16:49:09 — 01:42 는 9시간 뒤 첫 편집
-                               (시각 열에 파일 mtime 을 적었다)
-    "08-30 여러 회"             08-30 은 1회뿐 — "여러"는 지어낸 것
-    3행                        12건
+    적은 것            기계 진실
+    "08-30 여러 회"     1회뿐 — "여러"는 지어낸 것
+    3행                12건
+    시각 열의 출처      compaction 시각이 아니라 **첫 편집 파일의 mtime** 을 적었다
+
+**그리고 그 지적 자체도 한 번 틀렸다.** 처음엔 "01:42 는 9시간 뒤"라고 적었는데,
+기록은 **UTC**(`16:49:09Z`)이고 mtime 은 **로컬**(KST, `01:42`)이라 실제 차이는
+**7분**이었다 — 손으로 적은 값이 거의 맞았고 내 비교가 시간대를 섞은 것이다.
+그래서 이 도구는 UTC 와 로컬을 **둘 다** 낸다.
 
 시점은 **기억할 것이 아니라 잴 것**이었다. 세션 기록에 구조 필드로 남는다:
 
@@ -37,19 +41,31 @@ compaction 에서 잃는다. 그래서 표로 남긴다.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
+_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
 
 @dataclass(frozen=True)
 class Boundary:
-    """compaction 한 번. `trigger` 는 `auto`(한도 도달) 또는 `manual`(/compact)."""
+    """compaction 한 번. `trigger` 는 `auto`(한도 도달) 또는 `manual`(/compact).
 
-    timestamp: str          # ISO8601, 초까지
+    `timestamp` 는 **기록 원문 그대로**(UTC `Z`)이고 `local` 은 그것을 이 기계의
+    시간대로 옮긴 것이다. 둘 다 남기는 이유: 기록은 UTC 인데 사람이 보는 시계와
+    파일 mtime 은 로컬이라, 하나만 남기면 **9시간 어긋난 해석**이 나온다.
+    2026-08-31 에 실제로 그렇게 틀렸다 — 로컬 01:49 인 경계를 UTC 16:49 로 읽고
+    "손으로 적은 01:42 는 9시간 뒤"라고 결론냈으나, 실제 차이는 **7분**이었다.
+    """
+
+    timestamp: str          # 기록 원문, UTC
     trigger: str
     pre_tokens: int | None
+    local: str = ""         # 이 기계의 시간대로 옮긴 것
 
 
 def iter_boundaries(path: Path) -> Iterator[Boundary]:
@@ -61,6 +77,19 @@ def iter_boundaries(path: Path) -> Iterator[Boundary]:
     for _, b in _scan(path):
         if b is not None:
             yield b
+
+
+def scan(path: Path) -> tuple[list[Boundary], dict[str, int]]:
+    """경계 목록과 읽기 통계를 **한 번의 스캔으로** 함께 낸다."""
+    found: list[Boundary] = []
+    total = unparsed = 0
+    for ok, b in _scan(path):
+        total += 1
+        if not ok:
+            unparsed += 1
+        if b is not None:
+            found.append(b)
+    return found, {"lines": total, "unparsed": unparsed, "boundaries": len(found)}
 
 
 def read_stats(path: Path) -> dict[str, int]:
@@ -95,19 +124,31 @@ def _scan(path: Path) -> Iterator[tuple[bool, Boundary | None]]:
                 continue
             meta = obj.get("compactMetadata") or {}
             pre = meta.get("preTokens")
+            raw = str(obj.get("timestamp", ""))
             yield True, Boundary(
-                timestamp=str(obj.get("timestamp", ""))[:19],
+                timestamp=raw[:19],
                 trigger=str(meta.get("trigger", "?")),
                 pre_tokens=int(pre) if isinstance(pre, int) else None,
+                local=_to_local(raw),
             )
+
+
+def _to_local(raw: str) -> str:
+    """기록의 UTC 타임스탬프를 이 기계의 시간대로. 못 읽으면 빈 문자열 —
+    **추측한 값을 넣지 않는다.** 시간대는 지어낼 수 있는 종류의 값이 아니다."""
+    try:
+        cleaned = raw.replace("Z", "+00:00")
+        return f"{dt.datetime.fromisoformat(cleaned).astimezone():%Y-%m-%d %H:%M:%S}"
+    except (ValueError, TypeError):
+        return ""
 
 
 def render(boundaries: list[Boundary]) -> str:
     """`HANDOFF.md` §7 에 붙일 수 있는 markdown 표."""
-    out = ["| # | compaction 시각 | 유발 | 직전 토큰 |", "|---:|---|---|---:|"]
+    out = ["| # | 기록(UTC) | 로컬 | 유발 | 직전 토큰 |", "|---:|---|---|---|---:|"]
     for i, b in enumerate(boundaries, 1):
         pre = f"{b.pre_tokens:,}" if b.pre_tokens is not None else "—"
-        out.append(f"| {i} | `{b.timestamp}` | {b.trigger} | {pre} |")
+        out.append(f"| {i} | `{b.timestamp}` | `{b.local or '—'}` | {b.trigger} | {pre} |")
     return "\n".join(out)
 
 
@@ -121,9 +162,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"기록 파일이 없다: {args.transcript}")
         return 2
 
-    found = list(iter_boundaries(args.transcript))
+    if args.since and not _DATE_RE.fullmatch(args.since):
+        # 사전식 비교라 `2026-8-1` 은 조용히 **전부 제외**한다 — 빈 표가
+        # "경계가 없다"로 읽힌다. 형식을 강제해서 그 침묵을 없앤다.
+        print(f"--since 는 YYYY-MM-DD 여야 한다 (받은 값: {args.since})")
+        return 2
+
+    # **한 번만 읽는다.** 두 번 읽으면 그 사이에 기록이 자라(세션 진행 중)
+    # 총계와 통계가 어긋난다 — 같은 실행이 서로 다른 파일을 본 셈이 된다.
+    found, stats = scan(args.transcript)
     shown = [b for b in found if not args.since or b.timestamp[:10] >= args.since]
-    stats = read_stats(args.transcript)
 
     print(render(shown))
     print()
