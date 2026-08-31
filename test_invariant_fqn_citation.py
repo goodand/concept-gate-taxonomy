@@ -102,6 +102,25 @@ BASELINE: dict[str, int] = {
 }
 
 
+def _fqn_pattern(group: str, token: str) -> re.Pattern[str]:
+    r"""`<문서군>:<토큰>` 을 **양쪽 경계와 함께** 찾는 패턴.
+
+    경계 셋이 세 번의 검증에서 하나씩 붙었다(2026-08-31):
+      1차 적대검증 — 줄 단위는 세탁된다 → 토큰 단위로.
+      2차 적대검증 — 오른쪽이 뚫린다: `directive:I10` 이 접두 없는
+                     directive:I1 표기를 면제 → `(?!\d)`.
+      A 산출물 재검증 — **왼쪽도 뚫린다**: 문서군 이름 앞에 글자가 더 붙은
+                     형태가 directive:I1 표기를 똑같이 면제한다
+                     → `(?<![\w-])`. 앞의 두 번이 **모두 오른쪽만** 본 것이
+                     원인이다 — 경계는 양쪽이 한 쌍이다.
+
+    `re.escape` 는 문서군 이름이 정규식으로 해석되지 않게 한다 — 지금
+    이름들엔 메타문자가 없지만, 등록부에서 **도출**하므로 미래의 이름을
+    이 게이트가 통제하지 못한다.
+    """
+    return re.compile(rf"(?<![\w-]){re.escape(group)}:{re.escape(token)}(?!\d)")
+
+
 def bare_citations(root: Path) -> list[sc.Occurrence]:
     """`root` 아래에서 교집합 구간의 맨 인용을 모은다.
 
@@ -116,7 +135,7 @@ def bare_citations(root: Path) -> list[sc.Occurrence]:
             continue
         if o.path in OWNER_FILES:
             continue
-        if any(re.search(rf"{g}:{o.token}(?!\d)", o.raw) for g in FQN_GROUPS):
+        if any(_fqn_pattern(g, o.token).search(o.raw) for g in FQN_GROUPS):
             continue
         # int() 방어 코드는 적대적 검증 지적을 **기각**한 자리다: 분류기의
         # IDENT_RE 가 `[A-Z]\d{1,3}` 를 보장하므로 여기서 ValueError 가 난다면
@@ -169,6 +188,15 @@ def test_a_longer_fqn_does_not_wash_a_shorter_bare_token(tmp_path):
         "I1 is important but directive:I10 overrides it\n")   # (directive:I1 해소)
     assert [o.token for o in bare_citations(tmp_path)] \
         == ["I1"]                                              # (directive:I1 해소)
+
+
+def test_a_word_ending_in_a_group_name_does_not_wash(tmp_path):
+    """왼쪽 경계. A 산출물 재검증에서 나온 셋째 세탁 — 앞의 두 수정이 모두
+    오른쪽만 조인 탓이다. 이름 앞에 글자가 붙으면 directive:I1 해소가 아니다."""
+    (tmp_path / "a.md").write_text(
+        "맨 표기 I1 인데 xdirective:I1 만 있다\n")     # (directive:I1 해소)
+    assert [o.token for o in bare_citations(tmp_path)] \
+        == ["I1", "I1"]                                # (directive:I1 해소)
 
 
 def test_fqn_groups_are_derived_from_the_register():
