@@ -92,7 +92,7 @@ BASELINE: dict[str, int] = {
     "docs/H1A_PROBLEM_ANALYSIS.md": 25,
     "docs/IDENTIFIER_REGISTER.md": 22,
     "docs/PROGRESS_REPORT_refine_verify_v0_for_design_agent.md": 9,
-    "docs/REFINE_VERIFY_STAGE_SURVEY_20260830.md": 34,
+    "docs/REFINE_VERIFY_STAGE_SURVEY_20260830.md": 33,
     "docs/feedback/session_retrospective_20260806_h1a_typed_scope.md": 1,
     "experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/OPERATIONS_PLAN.md": 1,
     "experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/PROBLEM_1_sufficient_consistent.md": 4,

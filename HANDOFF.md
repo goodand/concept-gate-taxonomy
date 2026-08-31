@@ -14,7 +14,7 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ```yaml
 updated: 2026-08-31            # 이 문서를 마지막으로 고친 날. 제목의 2026-08-23 은 **마일스톤**이지 갱신일이 아니다
 state_code: D37_RECEIVED__R4_IS_DOWNSTREAM_OF_M   # D-37 도착·검증·저장 완료(`VERBATIM_SHA256: 5274ece0…`). R4는 기제 동일성이 아니라 **M 상대적 qualification 동등성**이고 **R2와 독립인 축**이다. 그리고 R4는 **M 없이 평가 불가** — M은 D-34 3항 사슬(`semantic definition → qualification evidence → measurement implementation`)의 **비어 있는 첫 항**이다. 즉 **R4를 풀어 경계로 가려던 방향은 성립하지 않는다.** 우리 상신문 §4는 **기각**됐다(금지된 다리의 역방향 반복). **코호트 dispatch 누계 0건**
-next_action_code: OBLIGATION_FQN_FIELD__RATCHET_LIVE   # FQN 래칫 게이트 가동(G195~G197, 커밋 예정): 모호 구간 1~9(qa_v7 이 h1a-scope:I9 까지 발행 — 등록부 낡은 행을 적대검증이 정정), 토큰+숫자경계 해소·접두는 등록부 도출, baseline 116건 동결(2차 적대검증 반영). 다음 = 대안 B: ObligationResult 가 불변식 FQN 을 싣는 것(SURVEY §14.2). 그 뒤 2-pass Verify₁ 승격(§8.3, 생산자 cg_obligations.py:327)
+next_action_code: OBLIGATION_FQN_FIELD   # A(FQN 래칫 게이트)·C(축 지도 §14.1a 18행) **완료**. 다음 = **B: ObligationResult 가 불변식 FQN 을 싣는다**(SURVEY §14.2) — 요구는 문서가 아니라 판정에 관한 것이라 목적을 직격한다. 지도가 드러낸 것: mechspec:I1~I7 은 코드가 이름으로 부르는 곳 0건(G205) — B 는 그 격차를 좁히는 첫 수단이기도 하다. 그 뒤 2-pass Verify1 승격(§8.3, 생산자 cg_obligations.py:327)
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안

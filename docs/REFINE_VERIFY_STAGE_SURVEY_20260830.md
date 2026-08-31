@@ -922,13 +922,62 @@ PROSE 낙수 세탁 · skip 의 PASS 세탁)이 정확히 이 지점이다.
 **그러므로 통합 표(`I1..I18` 재번호)는 만들지 않는다** — 축 정보를 지우면서
 얻는 것이 없다. 두 문서 `:22` 의 상호 경고 + 이 절 + 등록부 FQN 규약이 지도다.
 
+### 14.1a 축 지도 — 18행 (2026-08-31 보강)
+
+§14.1 은 축을 **서술**했을 뿐 지도가 아니었다("directive:I5 는 어느 축이고 반대
+축에 짝이 있나"를 찾을 행이 없다). 77쌍 대조 데이터는 위임 agent 안에서 죽고
+요약 숫자만 남았다. 그래서 **행 단위로 다시 만든다** — 지도는 노드마다 한 행이다.
+
+**권한 경계·표현 체계 축** (`docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md`)
+
+| FQN | 요지 | 반대축 짝 | 코드가 이름으로 언급 |
+|---|---|---|---|
+| `directive:I1` | Semantic Graph is state | — | `test_e2e_v0_refine_verify.py` |
+| `directive:I2` | Refine 만 asserted graph 를 수정한다 | — | `test_e2e_v0_refine_verify.py` |
+| `directive:I3` | Verify 는 asserted graph 를 수정하지 않는다 | — | `test_p1_legacy_e2e.py` · `test_e2e_v0_refine_verify.py` |
+| `directive:I4` | 공유 정의는 허용, 공유 **판단**은 위험 | — | 없음 |
+| `directive:I5` | 열린 어휘, 닫힌 추론 의미론 | — | 없음 |
+| `directive:I6` | Candidate / Certified / Entailed 구분 | — | `test_p1_legacy_e2e.py` · `cg_obligations.py` |
+| `directive:I7` | Oracle 은 evaluation-only | — | 없음 |
+| `directive:I8` | FAIL / UNKNOWN / ERROR 구분 | — | `test_e2e_v0_refine_verify.py` · `cg_obligations.py` |
+| `directive:I9` | Kernel 은 표현은 정규화해도 **불확실성을 진리로** 정규화하면 안 된다 | **`mechspec:I2`** | `test_e2e_v0_refine_verify.py` · `cg_ir.py` |
+| `directive:I10` | certification dependency 는 비순환 | — | `test_e2e_v0_refine_verify.py` · `cg_obligations.py` |
+| `directive:I11` | Verify obligation 은 repair hint 이지 정답 graph 가 아니다 | — | `test_e2e_v0_refine_verify.py` |
+
+**상태 계약 축** (`notes/research/logical-revision/mechanism_spec.md:540-546`, vault·git 미추적)
+
+| FQN | 요지 | 반대축 짝 | 코드가 이름으로 언급 |
+|---|---|---|---|
+| `mechspec:I1` | No active contradiction | — | 없음 (저장소 밖 계열) |
+| `mechspec:I2` | Support or obligation — 근거 없는 commitment 가 정당한 척 남으면 안 된다 | **`directive:I9`** | 없음 |
+| `mechspec:I3` | Verified-region protection | — | 없음 |
+| `mechspec:I4` | Provenance requirement | — | 없음 |
+| `mechspec:I5` | Minimal rollback | — | 없음 |
+| `mechspec:I6` | Bounded correction (retry 한계) | — | 없음 |
+| `mechspec:I7` | Safe abstention | — | 없음 |
+
+**이 지도가 답하는 것 셋**
+
+1. **어느 축인가** — 표가 갈라져 있다. 같은 번호가 두 표에 있으면 다른 것이다.
+2. **짝이 있는가** — 유일한 쌍은 `mechspec:I2` × `directive:I9`(§14.1 인용 참조).
+   나머지 76쌍은 DISJOINT 이므로 빈칸이 **측정 결과**이지 미조사가 아니다.
+3. **기계가 지키는가** — 마지막 열. **상태 계약 축은 전부 "없음"이다.**
+   그쪽은 vault 문서이고 저장소 코드가 그 번호를 부르지 않는다 — 즉 **`mechspec:I1~I7`
+   은 현재 아무 코드도 강제하지 않는다.** 이것이 이 지도의 가장 값진 칸이다.
+
+**확인하지 않은 것.** §11 이 "`directive:I3`·`directive:I7` 은 코드로 강제돼 있다 —
+`test_cg_evaluate.py:138-164` 가 AST 로"라고 적었는데, 그 테스트의 docstring 은
+**G32**(Evaluate 어휘와 Verify 의 Verdict 통일 금지)를 말한다. 경계를 강제하는 것은
+맞으나 그것이 저 두 불변식의 집행인지는 **귀속이 확인되지 않았다**. 위 마지막
+열은 "이름으로 언급"만 실측한 것이고 "의미상 강제"는 별개 조사다.
+
 ### 14.2 판정의 지시 대상을 확정하는 실행 수단 (통합 표가 하려던 일)
 
 | 수단 | 상태 |
 |---|---|
-| **A. FQN 강제 게이트** — 소유 문서 밖 맨 `I1~I7` 인용 금지 | 범위 실측 완료: 교집합 구간 맨 인용 56건 = 실사용 ~20 · 충돌을 *설명하는* 언급 ~15 · **제3 발행 15**(아래) — 다음 작업 단위 |
+| **A. FQN 강제 게이트** — 소유 문서 밖 맨 인용 금지 | **완료**(`test_invariant_fqn_citation.py`). 모호 구간은 실측 결과 `1~9`(1~7 이 아니다 — `qa_v7.py` 가 `h1a-scope:I9` 까지 발행). baseline 116건 동결, 양쪽 경계·등록부 도출 접두, 음성 증명 6종 |
 | **B. 판정 객체가 FQN 을 실어 나른다** — `ObligationResult` 의 불변식 id 를 FQN 으로 | 미착수. 요구는 문서가 아니라 판정에 관한 것이므로 이것이 목적을 직격한다 |
-| **C. 축 지도** | **이 절이 그것이다** (76/1/0/0 측정 포함) |
+| **C. 축 지도** | **완료 — §14.1a 18행.** 처음엔 §14.1(축 *서술*)을 지도라고 적었으나 행이 없어 조회가 불가능했다. 사용자 지적으로 보강 |
 
 ### 14.3 부수 발견 — 교집합 구간의 발행자는 셋이었다
 
