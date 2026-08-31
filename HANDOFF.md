@@ -13,8 +13,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 
 ```yaml
 updated: 2026-08-31            # 이 문서를 마지막으로 고친 날. 제목의 2026-08-23 은 **마일스톤**이지 갱신일이 아니다
-state_code: D37_RECEIVED__CASE_B_REACHED   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 Q33 회신 대기). 이 세션 갈래(08-31): TWO_PASS_VERIFY1 완료 — test_two_pass_verify1.py(계약 8, 적대검증 채택·기각 반영)가 경우 B 를 계산으로 증명(SURVEY §8.5). 수렴 자체는 여전히 증명 밖(§8.2)
-next_action_code: AWAIT_USER_DECISIONS   # 실행 가능한 다음 수는 전부 사용자 판단 대기: (a) invariant 값 채움(판정↔불변식 대응 근거가 문서에 5건뿐 — 회고 2부 §미해결), (b) 기존 e2e [4][6] 손 사전을 results_from_normalizer 계산으로 치환할지(SURVEY §8.4 — §8.5 와 다른 obligation 이라 중복 아님, 그러나 별도 결정), (c) 누계표 분리+게이트(표기 고정 전제), (d) Q33 회신(코호트 갈래), (e) 미푸시 커밋 push 승인
+state_code: D37_RECEIVED__L2_ENTRY_IDENTIFIED   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 Q33 회신 대기). 이 세션 갈래(08-31): TWO_PASS_VERIFY1 완료 — test_two_pass_verify1.py(계약 8, 적대검증 채택·기각 반영)가 경우 B 를 계산으로 증명(SURVEY §8.5). 수렴 자체는 여전히 증명 밖(§8.2)
+next_action_code: M1_CERTIFICATE_REDESIGN   # 2026-09-01 정정: 사다리 정본(obligation_layer_roadmap.md)이 L2=0% 의 원인과 다음 걸음을 이미 지목하고 있었고, 08-31 세션은 그것을 보지 않고 L3 도구를 굳혔다. 다음 걸음 = certificate 를 "경고 신호"에서 **"모델이 유지해야 할 전역 불변조건 + 출력 상태 계약을 명시하는 reasoning contract"** 로 재설계(roadmap :64-66 이 착수 전이라 명시). 근거는 이미 실증됨 — E2.2.3 OFAT 60 trial: A_ONLY(전역 일관성 **자연어** 규칙)=20/20 단독 필요충분, C_ONLY(schema minItems)=0/20 무효. 08-31 세션의 D7(스키마는 형태만 강제)이 그 결론을 독립 재현했다. 실을 자리도 이미 있다 — ObligationResult.invariant(08-31 가산, 서명 본체 포함). 대기 항목은 이 아래로: (a) invariant 값 채움 ← 이제 M1 재설계의 **핵심 기제**이지 별건 아님, (b) e2e 손 사전 치환(L3), (c) 누계표, (d) Q33 회신(코호트 = L2 의 측정 갈래, 외부 판정 대기라 내가 못 움직임), (e) push
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
@@ -41,8 +41,9 @@ L3 기술   obligation 시스템 (+ 필요 시 warm reasoner + content-addressed
 
 | Task (아래 절) | 사다리 | 왜 그 층인가 |
 |---|---|---|
-| ~~`TWO_PASS_VERIFY1`~~ **완료 2026-08-31** | **L2** | Verify₁ 없이는 "repair 가 obligation 을 해결했다"는 증거가 없다 — `test_two_pass_verify1.py` 가 그 증거를 계산으로 만들었다(SURVEY §8.5). 수렴은 여전히 밖(§8.2) |
-| e2e `[4]`/`[6]` 손 사전 치환 (`next_action_code` b, 대기) | **L2** | `source.span_evidence` 쪽의 같은 전이 — §8.5 와 다른 obligation 이라 중복 아님 |
+| ~~`TWO_PASS_VERIFY1`~~ **완료 2026-08-31** | **L3** ← *정정* | 초판은 이것을 **L2** 로 걸었다. 틀렸다(2026-09-01 정본 대조): 이 하네스가 돌린 `claim.evidence_anchoring` 은 자기 docstring 이 **"이것은 semantic support 판정이 아니다"**(`cg_obligations.py:579`)라고 선언한 결정론적 어휘 검사다. 2-pass 는 **순환 기제**를 증명했고 그 기제는 L2 의 **전제조건**이지 L2 달성이 아니다. G261 과 같은 형태의 과장 |
+| e2e `[4]`/`[6]` 손 사전 치환 (대기) | **L3** ← *정정* | 같은 이유. `source.span_evidence` 도 `cg_normalizer._span_evidence` 의 거울이다 |
+| **M1 certificate 재설계** (`next_action_code`) | **L2 진입** | 정본이 이미 지목했다 — `obligation_layer_roadmap.md:65`, *"그 함의를 반영한 certificate 재설계는 아직 착수 전"*. L2 가 0% 인 이유는 등록 obligation 7종 **전부가 결정론 검사의 거울**이라는 것이고(`:20-23`), M1 은 그것을 깨는 첫 걸음으로 이미 설계·실증까지 됐다 |
 | 코호트 실행 (§3, Q33 대기) | **L2 의 측정** | H1 실험은 L2 보증이 실제 corpus 에서 성립하는지 잰다 |
 | `invariant` 값 채움 (설계 판단 대기) | **L3** | 판정이 불변식을 지목해야 obligation 시스템이 감사 가능하다. 단 **L2 직결이 아니다** — 그래프 충실도가 아니라 검증 장치의 계보다(회고 2부 G261) |
 | 누계표 분리·P27 등재 (대기) | **사다리 밖** | 작업 위생이지 L1~L3 어디에도 안 걸린다. 그래서 우선순위가 낮은 것이 **맞다** |
