@@ -40,6 +40,14 @@
   그 입력에 UNKNOWN 을 요구하는 테스트는 멀쩡한 생산자를 빨갛게 만든다.
 - **채택(MINOR)**: `graph_revision` 은 생산자가 claim 에서 읽어 **기록만**
   한다(`cg_obligations.py:595,606,613`) — 본체 테스트에 주석으로 명시.
+
+## 프로토콜 (나) 기록 — 건너뛴 단계와 사유
+
+4단(workspace 재사용)에서 완료 — `results_from_claim_anchoring` 채택, 신규
+코드 0줄. 그래서 **5단(subtree) PASS**(조기 중지), **8단(Sonnet 구현 위임)
+PASS**(위임할 구현이 없다). 7단 적대검증은 실행했고 결과가 위 절이다.
+위반 2건((다)1 위임 순서 · (나)2 Dirty 시점 미실측)의 전말은
+`docs/DESIGN_DRAFT_two_pass_verify1.md` §5.
 """
 from __future__ import annotations
 
