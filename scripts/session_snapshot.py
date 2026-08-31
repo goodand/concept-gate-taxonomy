@@ -40,6 +40,7 @@ class Snapshot:
     unpushed: int | None = None
     recent: list[str] = field(default_factory=list)
     handoff: dict[str, str] | None = None
+    touched: list[str] = field(default_factory=list)   # 최근 수정 파일 (mtime 순)
 
 
 def _git(root: Path, *args: str) -> str | None:
@@ -104,6 +105,29 @@ def handoff_pointer(root: Path) -> dict[str, str] | None:
     return {k: v for k, v in _YAML_CODE.findall(text)}
 
 
+def last_touched(root: Path, limit: int = 5) -> list[str]:
+    """구간의 **닫는 괄호** — 가장 최근에 수정된 파일(추적 여부 무관, mtime 순).
+
+    여는 괄호(compaction 경계 직후 첫 편집)는 `compaction_ledger` 가 담당한다.
+    이것이 없으면 "이 구간이 어디까지 갔나"를 다음 세션이 커밋 로그로만 추정하는데,
+    **미커밋 편집은 커밋 로그에 없다**(사용자 지적, 2026-08-31).
+    """
+    out = _git(root, "status", "--porcelain")
+    dirty = [_unquote(l[3:].strip()) for l in (out or "").splitlines() if len(l) >= 4]
+    # 커밋된 최신 편집도 후보에 넣는다 — clean 트리에서도 답이 나와야 한다.
+    committed = (_git(root, "log", "-1", "--name-only", "--format=") or "").splitlines()
+    seen, cands = set(), []
+    for rel in dirty + [c for c in committed if c]:
+        if rel in seen:
+            continue
+        seen.add(rel)
+        f = root / rel
+        if f.is_file():
+            cands.append((f.stat().st_mtime, rel))
+    cands.sort(reverse=True)
+    return [rel for _, rel in cands[:limit]]
+
+
 def snapshot(root: Path) -> Snapshot:
     branch = (_git(root, "rev-parse", "--abbrev-ref", "HEAD") or "?").strip()
     ahead = _git(root, "rev-list", "--count", "@{u}..HEAD")
@@ -115,6 +139,7 @@ def snapshot(root: Path) -> Snapshot:
         unpushed=int(ahead.strip()) if ahead and ahead.strip().isdigit() else None,
         recent=[l for l in (log or "").splitlines() if l],
         handoff=handoff_pointer(root),
+        touched=last_touched(root),
     )
 
 
@@ -145,6 +170,8 @@ def render(s: Snapshot) -> str:
         out.append("- 산문 설명은 싣지 않는다 — 정본을 읽어라")
     else:
         out.append("- `HANDOFF.md` 를 읽지 못했다 (없음 또는 접근 불가)")
+    out += ["", "## 최근 수정 파일 (구간의 닫는 괄호 — mtime 순)", ""]
+    out += [f"- `{t}`" for t in s.touched] or ["- 없음"]
     out += ["", "## 최근 커밋", ""]
     out += [f"- `{l}`" for l in s.recent] or ["- 없음"]
     return "\n".join(out)

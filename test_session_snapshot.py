@@ -154,3 +154,24 @@ def test_a_non_repo_directory_is_an_error_not_an_empty_report(tmp_path):
 def test_main_succeeds_on_a_repo(tmp_path, capsys):
     assert ss.main([str(_repo(tmp_path))]) == 0
     assert "advisory" in capsys.readouterr().out
+
+
+def test_last_touched_includes_uncommitted_edits(tmp_path):
+    """구간의 닫는 괄호. 미커밋 편집이 빠지면 커밋 로그로만 추정하게 되고,
+    **미커밋 편집은 커밋 로그에 없다** — 이 함수가 존재하는 이유다."""
+    r = _repo(tmp_path)
+    (r / "마지막.py").write_text("x\n")
+    got = ss.last_touched(r)
+    assert got and got[0] == "마지막.py"
+    assert "a.txt" in got            # 커밋된 최신 편집도 후보다
+
+
+def test_last_touched_works_on_a_clean_tree(tmp_path):
+    """clean 트리에서도 답이 나와야 한다 — 마지막 커밋의 파일이 닫는 괄호다."""
+    assert ss.last_touched(_repo(tmp_path)) == ["a.txt"]
+
+
+def test_the_render_shows_the_closing_bracket(tmp_path):
+    r = _repo(tmp_path)
+    (r / "끝.py").write_text("x\n")
+    assert "끝.py" in ss.render(ss.snapshot(r))

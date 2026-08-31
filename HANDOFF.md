@@ -339,7 +339,8 @@ python3 scripts/compaction_ledger.py ~/.claude/projects/<프로젝트>/<세션>.
 "9시간 뒤"라고 결론냈으나 실제 차이는 **7분**이었다. 그래서 표가 UTC·로컬을
 **둘 다** 낸다.
 
-**compaction 이 잃는 나머지 절반**(진행 중인 미커밋 작업)은 `scripts/session_snapshot.py`
+**compaction 이 잃는 나머지 절반**(진행 중 미커밋 작업 + **최종 수정 파일** —
+구간의 닫는 괄호. 여는 괄호는 위 ledger 가 담당한다)은 `scripts/session_snapshot.py`
 가 낸다 — 손으로 유지하지 않고 `git`·이 문서에서 **생성**하며, 그 산출물은
 **advisory** 다(정본과 어긋나면 이 문서가 이긴다):
 
