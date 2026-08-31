@@ -77,3 +77,30 @@ claim 을 직접 받고, "인용 evidence 본문 없음 → UNKNOWN"(`:590`)이 
 **위반 요약**: (다)1(쿼리 생성 위임 먼저) 1건 · (나)2 Dirty 시점 미실측 1건.
 둘 다 결과 무사였으나 절차 위반은 위반이다 — 다음 구현 진입 시 첫 행동을
 "범위 분할 + subagent 위임"으로 시작할 것.
+
+## 6. (나)1 사후 실행 — 선례 지도 (2026-08-31, subagent 2건 위임 + lead 재실측)
+
+사용자 지적("workspace 에서 기존에 이 문제를 다룬 적이 있는지 탐색은 한 거야?")
+로 실행. **답: 안 했었고, 사후에 하니 선례가 있었다.** 세 계열이고, lead 가
+각 대표 실물을 재실측했다.
+
+| 계열 | 실물 (재실측 확인) | 우리 하네스와의 관계 |
+|---|---|---|
+| **실행 선례** (2026-07-18~19) | `archive/worktrees/concept-gate-agent-publish-vault/experiments/2026-07-18_obligation_certificate_ab/evaluate.py` — "수리본을 파이프라인+certify 에 통과시켜 post-repair verdict 를 계산(자기보고 배제)". 후속 실험이 `mechanically_certified` 로 사전등록까지 | **같은 개념, 다른 층.** 그쪽은 실험 채점기의 재투입, 우리는 conceptgate 계약 층의 같은-생산자 재판정 + 음성 쌍 + stale 결박(그쪽에 없음) |
+| **설계 명세 선례** | `notes/research/logical-revision/mechanism_spec.md:553~715` — verify→repair→재검증 고정점 루프, retry limit(I6), abstention 종료 | **정합.** §8.2 의 "수렴은 증명 밖" 경계는 이 명세의 루프를 아직 안 만들었다는 말과 일치. v4 U4("국소 repair 가 전역 모순 은닉")·U6("pass 의 의미가 충분히 강한가")는 후속 위험 목록으로 유효 |
+| **반대 방향 판정** | e2.2-wt `…/PROBLEM_1_sufficient_consistent.md:571-588` — E2.4 채점은 repair 재투입 검증을 **요구하지 않음**을 명시하고 범위 밖 처리(후에 §15 가 단일 repair 회귀 테스트로 부분 복구) | **충돌 아님.** E2.4 계약 채점의 범위 결정이지 conceptgate 층 금지가 아니다 |
+
+추가 확인 둘:
+
+- **production 층은 의도적 non-re-checking 이다** — 우리 트리
+  `cg_obligations.py:291`("옮길 뿐 재검사하지 않는다") ·
+  `docs/mechanism.md:126`. 우리 하네스는 이것을 **어기지 않는다** — gate 이관
+  판정을 재검사하는 것이 아니라 새 revision 에 생산자를 다시 돌리는 것이다.
+- **라벨 어휘의 부재가 실증됐다**: `two_pass`·`Verify1`·`경우 B` 는 workspace
+  전체 0건(git log -S 로도 08-31 이전 0건). 선례는 전부 **다른 이름**
+  (`post_verdict`·`mechanically_certified`·`재투입`·`fixed point`)으로 존재했다
+  — CLAUDE.md "어휘는 채취한다" 규율이 없었으면 이 탐색도 0건으로 끝났다.
+
+**판정**: 완성된 하네스와 충돌하는 선례 없음 — 재작업 불요. 그러나 4단을
+제때 했다면 07-18 채점기의 재투입 패턴을 처음부터 인용·계승했을 것이다.
+잔여(subagent 자기보고): `*-execution-audit/` 2곳·`재검증` 히트 다수 미열람.
