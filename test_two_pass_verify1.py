@@ -71,6 +71,7 @@ coverage 충돌·무작위 표본·범위 한정 불가로 기각, in-process �
     2차: 13/14 — 생존 1(`any→all`, 픽스처가 인용 1개뿐이라 구별 불가)
          → 계약 신설로 사살, 14/14.
     3차(동료 검토 채택으로 생산자 수리 후): 지점 14→21, **21/21 kill.**
+    4차(타입 검증 추가 후): 지점 21→33, **33/33 kill.**
 
 **수치의 정본은 docstring 이 아니라 측정기다** — 산문 수치는 코드가 바뀌면
 조용히 거짓이 된다(동료 검토 ④, P4 형태). 재측정:
@@ -91,8 +92,25 @@ coverage 충돌·무작위 표본·범위 한정 불가로 기각, in-process �
   것 — 경계 목격자 계약 신설.
 - **③ 채택(주석)**: invariant 계약은 값 채움 판단이 내려지면 갱신 대상.
 - **④ 채택**: 뮤테이션 측정기를 scripts/ 로 승격, 수치를 시점 기록으로 격하.
-- 기각 없음 — probe 8건 전부 동료 주장과 일치했다. certify 결합·bytes
-  입력은 동료도 가설로 표시했고 여기서도 미실측 가설로 남긴다.
+- 기각 없음 — probe 8건 전부 동료 주장과 일치했다.
+
+## 미실측 가설 2건의 해소 (2026-08-31, 스키마 강제 워크플로 → lead 재실측)
+
+동료와 내가 "미실측 가설"로 남긴 둘을 스키마 강제 위임(`schema` 옵션이
+JSON 반환을 강제)으로 공격하고 값 큰 둘을 직접 재실측했다.
+
+- **`invariant` 분지 도달 불가 = 거짓**(REFUTED). `prior_certificates` 경로로
+  지금 돈다 — 위 `test_invariant_stays_none_here` 주석에 정정을 적었다.
+- **비-str 본문 = 조용한 오판**(CONFIRMED, 수리함). dict 본문이 키만 검사되어
+  값이 주장을 부정해도 PASS + `certify` `ok:True` 였다 — 신뢰 경계 타입 검증을
+  생산자에 넣고 계약(`test_illtyped_evidence_body_...`)으로 고정했다.
+
+**부수 관찰 — 결정론 필터의 오탐**: 그 JSON 12건을
+`scripts/verify_finding_citations.py` 에 태우니 11건이 `EVIDENCE_NOT_FOUND` 로
+폐기됐는데, 폐기된 인용은 대부분 **실행 출력과 산문 요약**이었다(정적 파일에
+있을 수 없다). 도구 자신이 경고한 오탐 형태다. 스키마가 인용의 **종류**
+(파일 인용 vs 실행 출력)를 가르지 않으면 결정론 필터는 늑대 소년이 된다 —
+다음 위임 스키마에 그 필드를 나눈다.
 
 ## 프로토콜 (나) 기록 — 건너뛴 단계와 사유
 
@@ -254,6 +272,31 @@ def test_what_anchoring_does_not_measure_negation_and_substring():
     assert substring.verdict is Verdict.PASS
 
 
+def test_illtyped_evidence_body_is_unknown_not_a_silent_pass():
+    """신뢰 경계 타입 검증(워크플로 실측 → lead 재실측, 2026-08-31).
+
+    `t in body` 는 body 가 str 이 아니어도 **동작한다** — dict 면 키만 보고
+    list 면 원소 완전일치가 된다. 그래서 **값이 주장을 정면으로 부정하는
+    dict 본문**이 PASS + RULE_CHECKED + "문자 등장" 이라는 거짓 evidence
+    문장을 받고 `certify` 까지 `ok:True` 로 통과했다. MAJOR-1(어휘 축의
+    공허한 가드)과 같은 결함이 **본문 축**에 남아 있던 것이다.
+
+    죽는 편(bytes·int)이 오히려 안전했다는 것이 이 검사의 근거다 — 조용한
+    오판만 위험하다. 이제 넷 다 UNKNOWN 이고, 타입 오류를 "빈 본문"(수리
+    대기)으로 위장하지 않는다."""
+    claim = dict(CLAIM_R1, graph_revision=2)
+    lying_dict = _verify(claim, {"ev3": {"충돌출처": "이 주장은 거짓이다",
+                                         "액체금속": None}})
+    assert lying_dict.verdict is Verdict.UNKNOWN
+    assert "문자열이 아니다" in lying_dict.reason
+    for body in ({"ev3": ["충돌출처", "액체금속"]}, {"ev3": b"x"}, {"ev3": 42}):
+        assert _verify(claim, body).verdict is Verdict.UNKNOWN, body
+    # 어휘 축도 같다 — concept=5 와 본문 [5, 9] 가 짝을 맞추면 값 동일성
+    # 검사가 되어 통과했다(같은 뿌리).
+    assert _verify(dict(claim, concept=5), {"ev3": "충돌출처"}).verdict \
+        is Verdict.UNKNOWN
+
+
 def test_verify_does_not_mutate_the_graph():
     """directive:I3 — Verify 는 asserted graph 를 수정하지 않는다.
     fingerprint 전/후 동일로 증명한다."""
@@ -278,6 +321,17 @@ def test_invariant_stays_none_here():
 
     주의(동료 검토 ③): 그 설계 판단이 내려져 생산자가 invariant 를 채우기
     시작하면 **이 계약이 판단의 반대편을 고정한다** — 그때 이 계약을 갱신
-    하는 것까지가 그 판단의 일부다. 여기 적어 두는 이유다."""
+    하는 것까지가 그 판단의 일부다. 여기 적어 두는 이유다.
+
+    정정(워크플로 실측 → lead 재실측, 2026-08-31): 검사 분지가 "도달 불가"
+    라는 읽기는 **거짓이다.** 게이트 어댑터를 하나도 고치지 않아도 호출자가
+    준 인증서(`prior_certificates`)가 invariant 를 실어 오면 검사가 돈다 —
+    실측: 접두 없는 맨 번호와 미등록 문서군은 `CertificateError: signed
+    result violates obligation invariants` 로 **거부**되고 `directive:I3` 는
+    통과했다(그 단언의 소관은 `test_obligation_invariant_fqn.py` 다 — 맨
+    번호 리터럴을 쓸 면제를 가진 파일이 그쪽이고, 이 파일은 안 가졌다). 즉
+    이것은 미래를 기다리는 죽은 코드가 아니라 **신뢰 경계에서 지금 작동하는
+    입력 검증**이고, 이 계약이 절제하는 것은 그 분지가 아니라 이 파일의
+    `_verify` 가 값을 채우지 않는다는 사실뿐이다."""
     o1 = _verify(dict(CLAIM_R1, graph_revision=2), EVIDENCE_R2)
     assert o1.invariant is None

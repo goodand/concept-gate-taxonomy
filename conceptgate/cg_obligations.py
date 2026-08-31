@@ -586,7 +586,33 @@ def results_from_claim_anchoring(
     out: List[ObligationResult] = []
     for c in claims:
         ids = c.get("cited_evidence_ids", [])
-        cited = [t for t in (evidence_texts.get(e) for e in ids) if t]
+        raw = [(e, evidence_texts.get(e)) for e in ids]
+        # 신뢰 경계 타입 검증. `t in body` 는 body 가 str 이 아니어도 **동작한다** —
+        # dict 면 키만 보고 list 면 원소 완전일치로 의미가 바뀌므로, 값이 주장을
+        # 정면으로 부정하는 dict 가 PASS + RULE_CHECKED + "문자 등장" 을 받고
+        # certify 까지 ok:True 로 통과했다(2026-08-31 실측). 죽는 편(bytes·int)이
+        # 오히려 안전했다 — 조용한 오판을 막는 것이 이 검사의 목적이다.
+        illtyped = [e for e, t in raw if t is not None and not isinstance(t, str)]
+        if illtyped:
+            out.append(ObligationResult(
+                "claim.evidence_anchoring", Verdict.UNKNOWN, Assurance.PROPOSED,
+                DeciderKind.LOCAL_RULE,
+                reason=f"{c['id']}: evidence 본문이 문자열이 아니다 {illtyped} — "
+                       f"문자 결박을 주장할 수 없음(타입 오류를 '빈 본문'으로 "
+                       f"위장하지 않는다)",
+                graph_revision=c.get("graph_revision")))
+            continue
+        bad_terms = [k for k in ("concept", "feature")
+                     if c.get(k) is not None and not isinstance(c.get(k, ""), str)]
+        if bad_terms:
+            out.append(ObligationResult(
+                "claim.evidence_anchoring", Verdict.UNKNOWN, Assurance.PROPOSED,
+                DeciderKind.LOCAL_RULE,
+                reason=f"{c['id']}: claim 어휘가 문자열이 아니다 {bad_terms} — "
+                       f"문자 결박을 주장할 수 없음",
+                graph_revision=c.get("graph_revision")))
+            continue
+        cited = [t for _, t in raw if t]
         if not cited:
             # 매달린 인용(키 부재 = 그래프 무결성 결함 후보)과 빈 본문(수리
             # 대기 = 정상 중간 상태)은 다른 사건이다 — 접으면 Refine 이 무엇을

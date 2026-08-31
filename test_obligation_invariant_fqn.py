@@ -190,6 +190,52 @@ def test_the_certificate_schema_string_was_raised():
 
 
 # ---------------------------------------------------------------------------
+# 3a. 통합 경로 — 호출자가 준 인증서의 지목도 검사된다 (2026-08-31)
+# ---------------------------------------------------------------------------
+#
+# 스키마 강제 워크플로가 실측으로 잡은 공백: 위 §2 는 `validate_result` 를
+# **직접** 부르고 §3 은 서명 훼손을 노린다. 그래서 "잘못된 FQN 을 실은 인증서가
+# `certify_relation_claims` 에서 거부되는가"라는 **통합 경로를 밟는 테스트가
+# 0건**이었다. 그 공백이 "이 검사 분지는 도달 불가"라는 오독을 낳았다 — 실제로는
+# 게이트 어댑터를 하나도 고치지 않아도 `prior_certificates` 로 지금 돈다.
+
+def _cert_with_invariant(tmp_path, value):
+    from conceptgate import cg_identity
+    key_path = tmp_path / "k.json"
+    claim = {"claim_id": "c1", "id": "c1", "concept": "a", "feature": "b",
+             "cited_evidence_ids": ["e1"], "graph_revision": 1}
+    cert = ob.issue_claim_certificate(
+        claim, [_result(invariant=value)], issuer_tool="test", key_path=key_path)
+    return cert, claim, key_path
+
+
+def test_a_caller_supplied_certificate_with_a_bare_number_is_rejected(tmp_path):
+    """신뢰 경계 — 호출자가 준 JSON 이 맨 번호를 실어 오면 거부된다.
+    이것이 "미래를 기다리는 죽은 코드"가 아니라 **지금 작동하는 입력 검증**
+    임의 증거다(MCP 표면 `server.py` 의 `prior_certificates` 로 노출)."""
+    cert, claim, key_path = _cert_with_invariant(tmp_path, "I3")
+    with pytest.raises(ob.CertificateError) as exc:
+        ob.certify_relation_claims([claim], {"e1": "abc"},
+                                   prior_certificates=[cert], key_path=key_path)
+    assert "invariant" in str(exc.value).lower()
+
+
+def test_a_caller_supplied_certificate_with_an_unknown_group_is_rejected(tmp_path):
+    cert, claim, key_path = _cert_with_invariant(tmp_path, "nosuch:I3")
+    with pytest.raises(ob.CertificateError):
+        ob.certify_relation_claims([claim], {"e1": "abc"},
+                                   prior_certificates=[cert], key_path=key_path)
+
+
+def test_a_caller_supplied_certificate_with_a_resolvable_fqn_is_accepted(tmp_path):
+    """위 둘의 짝 — 이것이 없으면 "항상 거부한다"도 통과한다."""
+    cert, claim, key_path = _cert_with_invariant(tmp_path, "directive:I3")
+    out = ob.certify_relation_claims([claim], {"e1": "abc"},
+                                     prior_certificates=[cert], key_path=key_path)
+    assert out.get("ok") is True
+
+
+# ---------------------------------------------------------------------------
 # 4. 이 층이 하지 않는 것
 # ---------------------------------------------------------------------------
 
