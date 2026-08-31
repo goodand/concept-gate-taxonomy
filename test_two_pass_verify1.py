@@ -204,7 +204,11 @@ def test_scattered_terms_across_bodies_currently_pass():
     이것이 옳은 의미인지는 **설계 판단 미결**이다(동료 검토 MAJOR-2가
     강요한 결정 — 지금은 판단 없이 이렇게 되어 있다는 사실을 고정하고,
     본문 축 결박으로 강화하려면 이 계약을 뒤집는 것이 그 판단의 형식이
-    된다). 부수 효과: 이 입력은 any→all 뮤턴트를 본문 축에서도 죽인다."""
+    된다). 부수 효과: 이 입력은 any→all 뮤턴트를 본문 축에서도 죽인다.
+
+    주의(동료 후속 지적): 이 계약은 **틀릴 수 있는 현행 행동을 고정**하고
+    있다 — 판단이 내려지면 **바뀌어야 하는 쪽은 이 계약이다.** 이 PASS 를
+    설계 의도로 읽지 마라. invariant 계약의 주석과 같은 형태로 남긴다."""
     claim = dict(CLAIM_R1, cited_evidence_ids=["evA", "evB"], graph_revision=2)
     o1 = _verify(claim, {"evA": "충돌출처 만 있다", "evB": "액체금속 만 있다"})
     assert o1.verdict is Verdict.PASS

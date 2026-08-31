@@ -78,6 +78,14 @@ def test_registered_path_exists_unless_removed(row):
         assert "git show" in reason or "복구" in reason, (
             f"{path}: REMOVED인데 복구 방법이 없다 — 되돌릴 수 없는 기록은 "
             "legacy 표기가 아니라 소실이다")
+        # REMOVED 는 "지금 없다"이지 "그때 지웠다"가 아니다 — 재생성되는
+        # 대상(.venv·캐시류)에서 둘이 갈린다(동료 세션 실측, 2026-08-31:
+        # REMOVED 로 적힌 .venv 가 하루 만에 35M 로 되돌아왔고 문서는
+        # 그동안 "없다"고 말했다, P4). 되살아났으면 이 단언이 울고,
+        # 그때 표를 고치는 것이 이 게이트의 일이다.
+        assert not (ROOT / path).exists(), (
+            f"{path}: REMOVED 로 적혀 있는데 실재한다 — 재생성됐거나 "
+            "복원됐다. 표의 상태를 실제에 맞게 갱신하라")
         return
     assert (ROOT / path).exists(), (
         f"{path}: 등록됐지만 실재하지 않는다. 지웠다면 status를 REMOVED로 "

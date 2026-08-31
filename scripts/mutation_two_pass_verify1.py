@@ -111,10 +111,19 @@ for idx in range(N):
     for n in [x for x in dir(t) if x.startswith("test_")]:
         try: t.__dict__[n]()
         except Exception: red.append(n)
-    (killed if red else survived).append((idx, label, len(red)))
+    (killed if red else survived).append((idx, label, red))
 
+# 분모의 재계산 가능성: 지점 열거가 조용히 줄면 100% 가 유지된다(동료 지적).
+# 완전성은 증명 못 하나, (a) 0 이면 명시 실패, (b) 연산자별 내역을 출력해
+# 사람이 대상 함수 원문에서 분모를 재도출할 수 있게 한다.
+assert N > 0, "변이 지점 0 — 열거가 깨졌다. 100% 를 믿지 마라"
+from collections import Counter
+by_kind = Counter(l[0].split(":")[0] if l else "?" for _, l, _ in killed + [(i, l, None) for i, l in survived])
 print(f"뮤턴트 {N} | killed {len(killed)} | survived {len(survived)} | exec실패 {len(execfail)}")
-if N: print(f"kill rate: {len(killed)/N*100:.0f}% (exec실패는 kill 로 세지 않음)")
-print("killed 내역:", [(i, l, r) for i, l, r in killed])
+if N: print(f"kill rate: {len(killed)/N*100:.0f}% (exec실패는 kill 로 세지 않음 — 별도 계수)")
+print("연산자별 지점:", dict(by_kind))
+print("killed 내역 (지점 → 죽인 계약):")
+for i, l, red in killed:
+    print(f"  #{i} {l[0]} L{l[1]} → {len(red)}개 빨강, 첫째: {red[0]}")
 print("SURVIVORS:", [(i, l) for i, l, _ in survived])
 print("EXEC실패:", execfail)
