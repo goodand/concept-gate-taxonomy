@@ -87,7 +87,7 @@ claim 을 직접 받고, "인용 evidence 본문 없음 → UNKNOWN"(`:590`)이 
 | 계열 | 실물 (재실측 확인) | 우리 하네스와의 관계 |
 |---|---|---|
 | **실행 선례** (2026-07-18~19) | `archive/worktrees/concept-gate-agent-publish-vault/experiments/2026-07-18_obligation_certificate_ab/evaluate.py` — "수리본을 파이프라인+certify 에 통과시켜 post-repair verdict 를 계산(자기보고 배제)". 후속 실험이 `mechanically_certified` 로 사전등록까지 | **같은 개념, 다른 층.** 그쪽은 실험 채점기의 재투입, 우리는 conceptgate 계약 층의 같은-생산자 재판정 + 음성 쌍 + stale 결박(그쪽에 없음) |
-| **설계 명세 선례** | `notes/research/logical-revision/mechanism_spec.md:553~715` — verify→repair→재검증 고정점 루프, retry limit(I6), abstention 종료 | **정합.** §8.2 의 "수렴은 증명 밖" 경계는 이 명세의 루프를 아직 안 만들었다는 말과 일치. v4 U4("국소 repair 가 전역 모순 은닉")·U6("pass 의 의미가 충분히 강한가")는 후속 위험 목록으로 유효 |
+| **설계 명세 선례** | `notes/research/logical-revision/mechanism_spec.md:553~715` — verify→repair→재검증 고정점 루프, retry limit(mechspec:I6), abstention 종료 | **정합.** §8.2 의 "수렴은 증명 밖" 경계는 이 명세의 루프를 아직 안 만들었다는 말과 일치. v4 U4("국소 repair 가 전역 모순 은닉")·U6("pass 의 의미가 충분히 강한가")는 후속 위험 목록으로 유효 |
 | **반대 방향 판정** | e2.2-wt `…/PROBLEM_1_sufficient_consistent.md:571-588` — E2.4 채점은 repair 재투입 검증을 **요구하지 않음**을 명시하고 범위 밖 처리(후에 §15 가 단일 repair 회귀 테스트로 부분 복구) | **충돌 아님.** E2.4 계약 채점의 범위 결정이지 conceptgate 층 금지가 아니다 |
 
 추가 확인 둘:
