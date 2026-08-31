@@ -56,6 +56,27 @@
 빨개졌다 — 측정 스크립트의 격리 결함이었고(하네스 결함 아님), reload 격리로
 재측정했다. pytest 는 실행마다 새로 import 하므로 이 오염 경로가 없다.
 
+## 뮤테이션 테스트 — 연산자 단위 전수 (2026-08-31, 위 손 변이 4종과 별개)
+
+위 4종은 손으로 고른 행동 변이다. 별도로 **대상 함수 2개**
+(`results_from_claim_anchoring` · `stale_obligations`) 안의 변이 지점을
+AST 로 전수 열거해 쟀다(연산자: 비교 반전 · Verdict 치환 · any↔all ·
+not 제거 · if→True/False · continue→pass; 도구 선례는
+`evidence-evaluator/docs/TOOL_SURVEY_MUTATION_20260817.md` — mutatest 는
+coverage 충돌·무작위 표본·범위 한정 불가로 기각, in-process 러너 자작):
+
+    1차: 14/14 kill (100%) — **공허했다.** 검산 결과 전부 exec 실패를
+         kill 로 오인(통파일 exec 가 dataclass 에서 죽음). P25 형태를
+         검산이 자체 적발.
+    2차(대상 함수만 추출, 실제 모듈 전역 공유, 무변이 대조군 0 빨강):
+         13/14 kill — 생존 1: `:598` any→all.
+    생존 원인: 픽스처 전부가 인용 evidence 1개 → any/all 구별 불가.
+         `test_one_anchored_body_among_several_cited_is_enough` 신설로
+         의미(any)를 고정하고 재실행 → **14/14 kill, 생존 0.**
+
+측정 한계(잔여): comprehension 안의 guard(`if t`)는 변이 지점에서 빠져
+있다 · 두 함수 밖(서명·certify 등)은 이 하네스의 담당이 아니라 잰 적 없다.
+
 ## 프로토콜 (나) 기록 — 건너뛴 단계와 사유
 
 4단(workspace 재사용)에서 완료 — `results_from_claim_anchoring` 채택, 신규
@@ -142,6 +163,19 @@ def test_vocabulary_absence_is_unknown_not_fail():
                  dict(EVIDENCE_R1, ev3="다른 이야기"))
     assert o1.verdict is Verdict.UNKNOWN
     assert "문자적으로" in o1.reason or "부재" in o1.reason
+
+
+def test_one_anchored_body_among_several_cited_is_enough():
+    """의미 고정 — 결박은 **인용 본문 중 하나면** 된다(any), 전부가 아니다(all).
+
+    뮤테이션 실측(2026-08-31)이 낳은 계약: `:598` 의 `any→all` 뮤턴트가
+    유일하게 생존했다 — 기존 픽스처 전부가 인용 evidence 를 1개만 가져
+    any 와 all 이 구별 불가였다. 인용 2개 중 1개만 결박되는 이 입력이
+    그 뮤턴트를 죽이고, 동시에 "여러 인용 중 하나에만 있어도 PASS" 라는
+    생산자 의미를 고정한다."""
+    claim = dict(CLAIM_R1, cited_evidence_ids=["ev1", "ev3"], graph_revision=2)
+    o1 = _verify(claim, EVIDENCE_R2)      # ev1="무관한 본문", ev3 만 결박
+    assert o1.verdict is Verdict.PASS
 
 
 def test_verify_does_not_mutate_the_graph():
