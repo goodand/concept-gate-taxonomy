@@ -24,6 +24,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
 from graphlib import CycleError, TopologicalSorter
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
 from . import cg_identity
@@ -161,6 +162,53 @@ class ObligationResult:
     # W2: 실행 축. 기본 OK — 기존 생산자 전부가 "검사기가 돌았다" 경우이므로
     # 가산적이다. 미가용/실패 생산자만 명시 설정한다.
     execution: ExecutionStatus = ExecutionStatus.OK
+    # SURVEY §14.2 대안 B (2026-08-31): 이 판정이 어느 불변식을 지목하는가.
+    # FQN `<문서군>:<글자><번호>`(docs/IDENTIFIER_REGISTER.md:25) — 맨 번호는
+    # 발행자마다 뜻이 달라 무엇을 어겼는지 말하지 못한다(directive:I3 ≠
+    # mechspec:I3). None = 지목 없는 기존 생산자 19곳 — graph_revision과 같은
+    # 선례로 가산 도입한다. validate_result가 FQN 형태·등록된 문서군인지만
+    # 검사하고, 불변식이 실제로 위반됐는지는 검사하지 않는다(다른 층의 일).
+    invariant: "str | None" = None
+
+
+# docs/IDENTIFIER_REGISTER.md §계열 표의 문서군 이름, 글자 `I`(불변식) 행만.
+# 손으로 베끼지 않는다 — 손으로 베낀 목록은 등록부가 바뀌면 갈라진다
+# (G199·G213, 등록부 서두). test_identifier_register.py의 _rows()는 테스트
+# 파일이라 production 코드가 import하지 않고(테스트 파일 import는 배포
+# 패키지에 테스트 트리 의존을 만든다), 같은 표 파싱을 여기 독립적으로
+# 반복한다(열 개수·구분자 계약은 그 파일과 동일 — 등록부 헤더가 정의).
+#
+# 등록부는 docs/ 아래에 있고 Dockerfile은 conceptgate/·vendor/만 이미지에
+# 복사한다(docs/는 배포물 밖, 실측: Dockerfile:18-19) — 배포 환경에는 이
+# 파일이 없다. 그 경우 빈 frozenset으로 내려간다: fail-closed(모든 FQN이
+# INVARIANT_UNKNOWN_GROUP)이지 fail-open이 아니다. 가산 필드라 기존 생산자
+# 19곳 중 누구도 invariant를 채우지 않으므로 이 저하는 지금 아무 실행 경로에도
+# 영향을 주지 않는다.
+_IDENTIFIER_REGISTER_PATH = (
+    Path(__file__).resolve().parent.parent / "docs" / "IDENTIFIER_REGISTER.md")
+
+
+def _invariant_groups_from_register() -> "frozenset[str]":
+    if not _IDENTIFIER_REGISTER_PATH.exists():
+        return frozenset()
+    groups: set = set()
+    in_table = False
+    for line in _IDENTIFIER_REGISTER_PATH.read_text().splitlines():
+        if line.startswith("## 계열"):
+            in_table = True
+            continue
+        if in_table and line.startswith("## "):
+            break
+        if in_table and line.startswith("| `") and not line.startswith("| 글자"):
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if len(cells) < 9:
+                continue
+            if cells[0].strip("`") == "I":
+                groups.add(cells[1].strip("`"))
+    return frozenset(groups)
+
+
+INVARIANT_GROUPS: "frozenset[str]" = _invariant_groups_from_register()
 
 
 def validate_result(result: ObligationResult,
@@ -202,6 +250,34 @@ def validate_result(result: ObligationResult,
         if not result.evidence:
             errors.append({"code": "MISSING_EVIDENCE",
                            "detail": "PASS는 evidence 필수 (근거 없는 판정 폐기)"})
+    if result.invariant is not None:
+        # 빈 문자열은 None(지목 안 함)도 FQN(지목함)도 아니다 — "지목했다고
+        # 적혀 있는데 아무것도 안 가리키는" 상태를 폐기한다. 콜론 없는 맨
+        # 번호(예: `directive:I3`에서 접두를 뗀 표기)도 마찬가지 — 세
+        # 발행자(directive/mechspec/h1a-scope)에 걸쳐 무엇을 어겼는지 말하지
+        # 못한다(등록부 §계열 표, `I` 행 COLLIDES).
+        if not result.invariant or ":" not in result.invariant:
+            errors.append({"code": "INVARIANT_NOT_FULLY_QUALIFIED",
+                           "detail": result.invariant})
+        else:
+            group, _, _rest = result.invariant.partition(":")
+            if not INVARIANT_GROUPS:
+                # 등록부를 **못 읽은 것**과 문서군이 **진짜 없는 것**은 다르다.
+                # `Dockerfile:23-28` 이 `conceptgate/`·`vendor/` 만 COPY 하고
+                # `docs/` 를 넣지 않아 배포 환경이 실제로 이 경로를 탄다(실측).
+                # 그때 UNKNOWN_GROUP 을 내면 정상 FQN 을 "모르는 문서군"이라
+                # **거짓으로** 말한다 — 부재와 미확인을 섞는 것이 전임 도구
+                # `handoff_reachability.py` 의 제거 사유였다
+                # (`docs/LEGACY_REGISTER.md:31`).
+                errors.append({
+                    "code": "INVARIANT_REGISTER_UNAVAILABLE",
+                    "detail": {"invariant": result.invariant,
+                               "register": str(_IDENTIFIER_REGISTER_PATH),
+                               "note": "'모르는 문서군'이 아니라 '확인 못 함'"}})
+            elif group not in INVARIANT_GROUPS:
+                errors.append({"code": "INVARIANT_UNKNOWN_GROUP",
+                               "detail": {"invariant": result.invariant,
+                                          "known_groups": sorted(INVARIANT_GROUPS)}})
     return errors
 
 
@@ -623,7 +699,11 @@ _VERDICT_BY_VALUE = {v.value: v for v in Verdict}
 # 이 모듈의 fingerprint·graph_revision, 유효성은 validate_result.
 
 CERTIFICATE_DOMAIN = "obligation-certificate"
-CERTIFICATE_SCHEMA = "obligation_certificate_v0"
+# v0 → v1 (2026-08-31): 서명 본체에 invariant FQN이 추가되며 몸체 형태가
+# 바뀌었다. 검증부는 지금 이 문자열을 대조하지 않지만(:665-690 부근에
+# schema 검사 없음), 올리지 않으면 나중에 v0/v1 문서를 구별할 근거 자체가
+# 없어진다 — 이름 자체를 못박는다(느슨한 endswith 단언은 이것을 보증 못함).
+CERTIFICATE_SCHEMA = "obligation_certificate_v1"
 
 
 class CertificateError(Exception):
@@ -653,7 +733,8 @@ def issue_claim_certificate(claim: Dict[str, Any],
             {"obligation": r.obligation, "verdict": r.verdict.value,
              "assurance": r.assurance.name, "decider": r.decider.value,
              "evidence": r.evidence, "reason": r.reason,
-             "graph_revision": r.graph_revision}
+             "graph_revision": r.graph_revision,
+             "invariant": r.invariant}
             for r in results],
     }
     return {**body, "signature": cg_identity.sign(
@@ -693,7 +774,8 @@ def _assert_certificate_grants_verdicts(
                 Assurance[row["assurance"]], DeciderKind(row["decider"]),
                 evidence=row.get("evidence", ""),
                 reason=row.get("reason", ""),
-                graph_revision=row.get("graph_revision"))
+                graph_revision=row.get("graph_revision"),
+                invariant=row.get("invariant"))
         except (KeyError, ValueError) as exc:
             raise CertificateError(
                 f"certificate result row is not well-formed: {exc!r}") from exc

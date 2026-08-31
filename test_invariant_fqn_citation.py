@@ -60,6 +60,22 @@ OWNER_FILES = frozenset({
     "qa_v7.py",                                                     # h1a-scope:I
 })
 
+# **음성 픽스처 면제** — 규칙이 우는지 보이려면 위반 형태를 써야 한다.
+# `test_obligation_invariant_fqn.py` 는 `invariant` 에 맨 번호를 넣는 **테스트 입력**(directive:I3 미해소 형태)을
+# 넣어 "맨 번호는 거부된다"를 단언한다. 그 문자열은 인용이 아니라 **자료**인데
+# 분류기는 `STRING`(인용 종류)으로 본다 — 분류기가 "함수 인자로 들어가는 문자열"과
+# "본문에서 가리키는 인용"을 가르지 못하기 때문이다.
+#
+# BASELINE 에 넣지 않는다. 그것은 **과거 동결**이지 새 파일의 통행증이 아니고,
+# 이 게이트 자신이 "표를 늘리는 것은 규약 포기"라고 적고 있다.
+#
+# 대신 면제를 **얻어내게** 한다: 아래 파일은 자기 안에 그 위반을 단언하는
+# 테스트가 실제로 있어야 면제된다(`test_a_negative_fixture_exemption_is_earned`).
+# 그렇지 않으면 아무 파일이나 이 목록에 이름을 올려 통과할 수 있다.
+NEGATIVE_FIXTURE_FILES = frozenset({
+    "test_obligation_invariant_fqn.py",   # 맨 번호·빈 문자열이 거부되는지 단언
+})
+
 # 해소는 **토큰 단위 + 숫자 경계**다: 같은 줄에 `<문서군>:<이 토큰>` 이 있고
 # 그 뒤에 숫자가 더 붙지 않아야 그 토큰이 해소된다. 두 번의 적대검증이 각각
 # 한 단계씩 조였다(2026-08-31):
@@ -133,7 +149,7 @@ def bare_citations(root: Path) -> list[sc.Occurrence]:
     for o in sc.scan_repo(root).all:
         if o.token[0] != "I" or o.kind not in sc.CITATION_KINDS:
             continue
-        if o.path in OWNER_FILES:
+        if o.path in OWNER_FILES or o.path in NEGATIVE_FIXTURE_FILES:
             continue
         if any(_fqn_pattern(g, o.token).search(o.raw) for g in FQN_GROUPS):
             continue
@@ -241,6 +257,25 @@ def test_no_new_bare_citation_beyond_the_baseline():
         "동결 시점 이후의 새 맨 인용이다 — 문서군 접두를 붙여라"
         "(정본 규약: docs/IDENTIFIER_REGISTER.md:25, 예: directive:I3):\n"
         + "\n".join(detail[:20]))
+
+
+def test_a_negative_fixture_exemption_is_earned(  # noqa: D401
+) -> None:
+    """면제를 주장하는 파일은 **실제로 그 위반을 단언**해야 한다.
+
+    이 검사가 없으면 `NEGATIVE_FIXTURE_FILES` 가 통행증이 된다 — 아무 파일이나
+    이름을 올리면 그 파일의 맨 인용 전부가 조용히 면제된다. 그것은 우리가
+    `retro` 를 유령 소유자로 넣어 회고 25건을 면제했던 결함(G199)과 같은 형태다.
+
+    **얻어내는 조건**: 그 파일 안에 이 게이트가 막는 위반 코드
+    (`INVARIANT_NOT_FULLY_QUALIFIED`)를 단언하는 줄이 있어야 한다."""
+    for name in NEGATIVE_FIXTURE_FILES:
+        path = HERE / name
+        assert path.is_file(), f"면제 목록의 파일이 없다: {name}"
+        text = path.read_text(encoding="utf-8")
+        assert "INVARIANT_NOT_FULLY_QUALIFIED" in text, (
+            f"{name} 이 음성 픽스처라고 주장하지만 그 위반을 단언하지 않는다 — "
+            "면제는 얻어내는 것이지 목록에 적어서 얻는 것이 아니다")
 
 
 def test_the_baseline_is_not_stale():

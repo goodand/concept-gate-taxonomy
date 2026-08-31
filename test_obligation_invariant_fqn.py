@@ -1,0 +1,230 @@
+"""판정이 자기가 지목하는 불변식을 FQN 으로 싣는다 (SURVEY §14.2 대안 B).
+
+## 무엇을 푸는가
+
+축 지도(SURVEY §14.1a)가 격차를 드러냈다: **상태 계약 축(`mechspec:I1`~`mechspec:I7`)
+을 코드가 이름으로 부르는 곳이 0건**이다. 권한 축은 11 중 8이 코드에 언급되는데
+그쪽은 하나도 없다. 원인은 단순하다 — **판정이 불변식을 지목할 자리가 없다.**
+
+`ObligationResult` 의 9개 필드(`obligation`·`verdict`·`assurance`·`decider`·
+`evidence`·`reason`·`depends_on`·`graph_revision`·`execution`) 어디에도 "이 판정이
+어느 불변식에 대한 것인가"가 없다. 그래서 "Verify 가 어긴 것이 무엇인가"를 물으면
+답할 수단이 없고, 축 지도가 종이 위에만 남는다.
+
+## 왜 FQN 이어야 하나
+
+같은 번호가 발행자마다 다른 뜻이다 — `directive:I3`("Verify 는 graph 를 수정하지
+않는다") ≠ `mechspec:I3`("verified-region protection") ≠ `h1a-scope:I3`. 맨 `I3` 를
+실으면 판정이 **무엇을 어겼는지 여전히 말하지 못한다.** 등록부 규약
+(`docs/IDENTIFIER_REGISTER.md:25`)의 `<문서군>:<글자><번호>` 를 그대로 쓴다.
+
+## 설계 제약 — 서명이 걸려 있다 (실측 2026-08-31)
+
+인증서 **서명 본체**(`cg_obligations.py:645-660`)가 결과를 직렬화한다:
+
+```python
+"results": [{"obligation": …, "verdict": …, …, "graph_revision": r.graph_revision}
+            for r in results]
+```
+
+새 필드를 여기 넣으면 **서명이 바뀐다.** 그리고 `"schema": CERTIFICATE_SCHEMA` 가
+본체에 있는데 **검증부는 그것을 대조하지 않는다**(`:665-690` 에 schema 검사 없음) —
+즉 스키마가 바뀌어도 옛 인증서가 조용히 통과한다. 그러므로:
+
+- 필드는 **`None` 기본값으로 가산 도입**한다. `graph_revision` 이 그 선례다
+  (`:156-163`, "None = revision 개념이 없는 호출자 — 유효하다").
+- 서명 본체에 **넣는다.** 서명되지 않은 지목은 위조 가능하고, 그러면 "어느 불변식을
+  어겼다"가 증거가 아니라 주장이 된다.
+- 스키마 문자열을 **함께 올린다.** 검증부가 지금 안 보더라도, 올리지 않으면 나중에
+  구별할 근거 자체가 없어진다.
+
+## 적대적 검증에서 기각한 것 (2026-08-31)
+
+지적 10건 중 **8건이 "구현이 아직 없다"** 였다 — `INVARIANT_GROUPS` 미정의 ·
+`invariant` 필드 부재 · `validate_result` 로직 부재 · 서명 본체 미포함 ·
+재구성 경로 미읽음 등. **그것은 TDD 빨강이지 계약 결함이 아니다.** 구현 전
+계약을 공격하라는 요청이었으므로 전부 기각한다.
+
+**위임 하네스의 구멍이 드러났다**: "구현은 아직 없다"를 프롬프트에 적었으나
+**그 부재를 결함으로 보고하지 말라**고 명시하지 않았다. 다음 계약 검증 위임에는
+그 문장을 넣는다.
+
+채택한 둘은 아래 두 테스트에 반영돼 있다(스키마 단언 약함 · 빈 문자열).
+그리고 검증자가 답하지 않은 질문(등록부 I 행과 `INVARIANT_GROUPS` 스냅샷 일치)은
+**직접 실측했다** — 5개 문서군이 정확히 일치한다.
+
+## 무엇을 하지 않는가
+
+- **필수로 만들지 않는다.** 생산자가 19곳(`cg_obligations.py`)이고 테스트까지
+  21곳이다. 전부 고치면 이 변경이 커지고, 커지면 되돌리기 어렵다.
+- **불변식의 내용을 검사하지 않는다.** 이 계약은 "지목이 해소되는가"만 본다.
+  "그 불변식을 실제로 어겼는가"는 다른 문제이고 이 층의 일이 아니다.
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+
+from conceptgate import cg_obligations as ob  # noqa: E402
+
+
+def _result(**kw):
+    base = dict(obligation="source.span_evidence", verdict=ob.Verdict.PASS,
+                assurance=ob.Assurance.RULE_CHECKED,
+                decider=ob.DeciderKind.LOCAL_RULE,
+                evidence="cg_normalizer.py:170")
+    base.update(kw)
+    return ob.ObligationResult(**base)
+
+
+# ---------------------------------------------------------------------------
+# 1. 필드가 있고, 없어도 된다 (가산 도입)
+# ---------------------------------------------------------------------------
+
+def test_the_field_defaults_to_none(_=None):
+    """기존 생산자 19곳을 고치지 않고 들어간다 — `graph_revision` 과 같은 선례."""
+    assert _result().invariant is None
+
+
+def test_an_existing_producer_still_validates():
+    """가산 도입의 핵심: 필드를 안 넣은 판정이 여전히 유효하다."""
+    assert ob.validate_result(_result()) == []
+
+
+def test_the_field_accepts_an_fqn():
+    assert _result(invariant="directive:I3").invariant == "directive:I3"
+
+
+# ---------------------------------------------------------------------------
+# 2. 지목은 해소되어야 한다 — 맨 번호는 지목이 아니다
+# ---------------------------------------------------------------------------
+
+def test_a_bare_number_is_rejected():
+    """맨 `I3` 는 세 발행자(`directive`·`mechspec`·`h1a-scope`)에 걸쳐 있어
+    **무엇을 어겼는지 말하지 못한다.** 지목의 목적을 달성하지 못하므로 위반이다."""
+    codes = {v["code"] for v in ob.validate_result(_result(invariant="I3"))}
+    assert "INVARIANT_NOT_FULLY_QUALIFIED" in codes
+
+
+def test_an_unknown_group_is_rejected():
+    """등록부에 없는 문서군은 해소되지 않는다 — 오타가 조용히 통과하면
+    지목이 있는 것처럼 보이면서 아무것도 가리키지 않는다."""
+    codes = {v["code"] for v in ob.validate_result(_result(invariant="nosuch:I3"))}
+    assert "INVARIANT_UNKNOWN_GROUP" in codes
+
+
+def test_an_empty_string_is_rejected():
+    """빈 문자열은 `None`(지목 안 함)도 FQN(지목함)도 아니다 — **"지목했다고
+    적혀 있는데 아무것도 안 가리키는"** 상태이고 그게 이 필드가 막으려던 것이다.
+    적대검증 지적(채택): 이 검사가 없으면 `"invariant": ""` 를 넣는 구현이
+    계약을 통과하면서 아무것도 보증하지 않는다."""
+    codes = {v["code"] for v in ob.validate_result(_result(invariant=""))}
+    assert "INVARIANT_NOT_FULLY_QUALIFIED" in codes
+
+
+def test_a_registered_group_passes():
+    for fqn in ("directive:I3", "mechspec:I7", "h1a-scope:I1"):
+        assert ob.validate_result(_result(invariant=fqn)) == [], fqn
+
+
+def test_the_groups_come_from_the_register_not_a_hand_copy():
+    """손으로 베낀 목록은 등록부가 바뀌면 갈라진다(G199·G213). 등록부에서
+    도출하고, 도출 결과를 스냅샷으로 고정해 의도치 않은 변화가 울게 한다."""
+    assert ob.INVARIANT_GROUPS == frozenset(
+        {"directive", "mechspec", "h1a-scope", "ev-eval", "ev-eval-code"})
+
+
+# ---------------------------------------------------------------------------
+# 3. 서명 — 지목이 서명 밖에 있으면 증거가 아니라 주장이다
+# ---------------------------------------------------------------------------
+
+def _issue(tmp_path, *results):
+    """실제 API 로 인증서를 낸다. 검증 함수 이름은 `_assert_certificate_grants_verdicts`
+    이고 `verify_claim_certificate` 가 **아니다**(2026-08-31 실측 — 계약 초안이
+    없는 이름을 불렀다)."""
+    from conceptgate import cg_identity
+    key_path = tmp_path / "k.json"
+    claim = {"claim_id": "c1", "graph_revision": 7}
+    cert = ob.issue_claim_certificate(claim, list(results),
+                                      issuer_tool="test", key_path=key_path)
+    return cert, claim, cg_identity.load_or_create_key(key_path)
+
+
+def test_the_invariant_is_inside_the_signed_body(tmp_path):
+    """서명되지 않은 지목은 위조 가능하다. 그러면 "어느 불변식을 어겼다"가
+    증거가 아니라 **주장**이 된다 — 이 필드의 목적이 사라진다."""
+    cert, _, _ = _issue(tmp_path, _result(invariant="directive:I3"))
+    assert cert["results"][0]["invariant"] == "directive:I3"
+
+
+def test_tampering_with_the_invariant_breaks_the_signature(tmp_path):
+    """음성 증명. 서명 안에 있다면 고치는 순간 검증이 깨져야 한다 — 이 검사가
+    없으면 "서명 본체에 넣었다"가 **문자열 존재 확인**으로 끝난다."""
+    cert, claim, key = _issue(tmp_path, _result(invariant="directive:I3"))
+    cert["results"][0]["invariant"] = "mechspec:I3"
+    with pytest.raises(ob.CertificateError):
+        ob._assert_certificate_grants_verdicts(cert, claim, key)
+
+
+def test_an_untampered_certificate_still_verifies(tmp_path):
+    """위 음성 증명의 짝. 이것이 없으면 "항상 예외가 난다"도 통과한다."""
+    cert, claim, key = _issue(tmp_path, _result(invariant="directive:I3"))
+    granted = ob._assert_certificate_grants_verdicts(cert, claim, key)
+    assert granted["source.span_evidence"] is ob.Verdict.PASS
+
+
+def test_the_certificate_schema_string_was_raised():
+    """스키마가 바뀌었으면 문자열도 바뀌어야 한다. 검증부가 지금 대조하지
+    않더라도(실측: `:665-690` 에 schema 검사 없음), 올리지 않으면 나중에
+    **구별할 근거 자체가 없어진다.**
+
+    초안 단언은 `!= "…_v0"` 과 `endswith("v1")` 이라 **`"cert_v1"` 같은 아무
+    문자열이나 통과**했다(적대검증 지적, 채택). 이름 자체를 못박는다 — 느슨한
+    단언은 "올렸다"를 확인하지 못하고 "달라졌다"만 확인한다."""
+    assert ob.CERTIFICATE_SCHEMA == "obligation_certificate_v1"
+
+
+# ---------------------------------------------------------------------------
+# 4. 이 층이 하지 않는 것
+# ---------------------------------------------------------------------------
+
+def test_it_does_not_check_whether_the_invariant_was_actually_violated():
+    """`PASS` 인데 불변식을 지목해도 위반이 아니다 — "이 판정은 `directive:I3`
+    에 대한 것이고 통과했다"가 정당한 문장이다. **지목과 판정은 다른 축**이고,
+    둘을 묶으면 이 필드가 verdict 의 중복이 된다."""
+    assert ob.validate_result(
+        _result(verdict=ob.Verdict.PASS, invariant="directive:I3")) == []
+
+
+# ---------------------------------------------------------------------------
+# 5. 못 읽은 것을 모른다고 말하지 않는다 (2026-08-31, 구현자 자진 보고에서)
+# ---------------------------------------------------------------------------
+
+def test_an_unreadable_register_is_not_reported_as_an_unknown_group(monkeypatch):
+    """등록부를 **못 읽은 것**과 문서군이 **진짜 없는 것**은 다르다.
+
+    구현자가 자진 보고했다: `Dockerfile:23-28` 이 `conceptgate/`·`vendor/` 만
+    COPY 하고 **`docs/` 는 안 넣는다**(실측 확인). 그래서 배포 환경에서는
+    등록부가 없고 `INVARIANT_GROUPS` 가 빈 집합이 된다 — 그러면 정상 FQN 인
+    `directive:I3` 가 `INVARIANT_UNKNOWN_GROUP` 으로 나온다.
+
+    fail-closed 라 안전하지만 **이유를 거짓으로 말한다.** 부재와 미확인을 섞는
+    것이 전임 도구 `handoff_reachability.py` 의 제거 사유였다
+    (`docs/LEGACY_REGISTER.md:31`). 별도 코드로 가른다."""
+    monkeypatch.setattr(ob, "INVARIANT_GROUPS", frozenset())
+    codes = {v["code"] for v in ob.validate_result(_result(invariant="directive:I3"))}
+    assert "INVARIANT_REGISTER_UNAVAILABLE" in codes
+    assert "INVARIANT_UNKNOWN_GROUP" not in codes
+
+
+def test_a_malformed_fqn_is_still_caught_without_the_register(monkeypatch):
+    """등록부가 없어도 **형태 검사는 등록부와 무관**하다 — 맨 번호는 여전히
+    거부된다. 등록부 부재를 이유로 모든 검사를 놓으면 fail-open 이 된다."""
+    monkeypatch.setattr(ob, "INVARIANT_GROUPS", frozenset())
+    codes = {v["code"] for v in ob.validate_result(_result(invariant="I3"))}
+    assert "INVARIANT_NOT_FULLY_QUALIFIED" in codes
