@@ -19,8 +19,14 @@
 | G₁ 이 G₀ 보다 나아졌다 | **예** — O₀ 항목에 한해 |
 | 반복 수렴한다 / oscillation 없다 | **아니오. 여전히 불가** — repair 1회 설계(§8.2). **이 한계를 계약 docstring 에 명시한다** — 안 적으면 "v0 완료"가 "수렴 입증"으로 읽힌다 |
 
-핵심 치환 하나: `[6]` 의 `all_pass = {name: Verdict.PASS …}`(손) →
-`results_from_normalizer(G₁ 응답)`(계산). **검사기 신설 없음** — 생산자는 이미 있다.
+**[정정 — 계약 작성 전 More READ]** 초판은 `results_from_normalizer` 를
+지목했으나 **형식이 안 맞는다**(그것은 normalizer 성공 응답 `resp["ok"]`·
+`source.sha256` 을 요구하고, [5] 의 repair 산출은 claim dict 다). 그리고 [4] 의
+O₀ 도 손으로 만든 것이었다 — **두 패스 모두** 계산으로 바꿔야 한다.
+
+채택 생산자: **`results_from_claim_anchoring(claims, evidence_texts)`**(`:574`) —
+claim 을 직접 받고, "인용 evidence 본문 없음 → UNKNOWN"(`:590`)이 정확히 O₀ 의
+의미이며, `graph_revision` 을 실어 나른다. **검사기 신설 없음** — 어댑터도 불요.
 
 ## 2. 계약 목록 (KNOWHOW §D 적용)
 
