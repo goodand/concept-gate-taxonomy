@@ -408,3 +408,33 @@ def test_no_unregistered_issuance_by_an_unowned_letter():
     real = {k: v for k, v in offenders.items() if len(v) >= 10}
     assert not real, "소유자 없는 글자가 발행되고 있다 — 등록부에 넣거나 위양성으로 표시하라:\n" + "\n".join(
         f"  {L}@{g} ({len(v)}회)  {v[0]}" for (L, g), v in sorted(real.items(), key=lambda x: -len(x[1])))
+
+
+def test_every_series_row_has_the_full_column_count():
+    """§계열 표의 모든 행이 **9열**이다.
+
+    2026-08-31 적대검증이 짚은 위험: 파서 둘(`_rows()` 와
+    `scripts/gen_identifier_groups.py`)이 **같은 방식으로 열 부족 행을 건너뛰면**,
+    등록부가 손상돼도 둘의 결과가 같아 아무도 울지 않는다. 실측으로 확인했다 —
+    행을 8열로 줄이니 `test_identifier_groups_sync.py` 는 울지만 **이 파일은
+    조용했다**(55 passed).
+
+    파서의 일치는 파서끼리의 문제이고, **정본의 형식은 정본이 지켜야 한다.**
+    건너뛰기가 아니라 실패로 만든다."""
+    text = REGISTER.read_text(encoding="utf-8")
+    bad = []
+    in_table = False
+    for i, line in enumerate(text.splitlines(), 1):
+        if line.startswith("## 계열"):
+            in_table = True
+            continue
+        if in_table and line.startswith("## "):
+            break
+        if not in_table or not line.startswith("| `"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if len(cells) != 9:
+            bad.append(f"  :{i} 열 {len(cells)}개 (9여야 한다) — {line[:60]}")
+    assert not bad, (
+        "§계열 표에 열 수가 틀린 행이 있다 — 파서가 조용히 건너뛰므로 "
+        "**여기서 잡지 않으면 아무도 안 잡는다**:\n" + "\n".join(bad))
