@@ -194,6 +194,61 @@ def _span_evidence(span: Any, quote: Any, text: str, stage: str,
     return quoted, []
 
 
+def resolve_cited_evidence(snapshot: Dict[str, Any],
+                           citations: Dict[str, Any]) -> Dict[str, Any]:
+    """인용 선언(id → {span, quote})을 **문서 snapshot 에서** 해소한다.
+
+    ## 무엇을 푸는가 — 끊긴 간선 (2026-09-01 실측)
+
+    `cg_obligations.results_from_claim_anchoring` 은 caller 가 준
+    `evidence_texts` dict 안에서 어휘 결박을 검사한다. 그 dict 가 **문서와
+    아무 관계가 없어도 아무도 모른다.** 실측: 원문이 "돌체는 액체금속을
+    포함하지 **않는다**" 인데 caller 가 `{"ev1": "돌체 는 액체금속 을
+    포함한다"}` 를 넣으면 `PASS` + `RULE_CHECKED` 가 나온다.
+
+    그래서 `document ⊨ …` 의 **document 쪽이 결박되지 않은 상태**였다.
+    이 함수가 그 간선이다 — 인용 본문을 caller 가 주는 것이 아니라 문서에서
+    **유도한다.** 그러면 위조는 존재할 자리가 없다(줄 수 없으므로).
+
+    ## 왜 여기 있고, 왜 새 span 로직을 쓰지 않는가
+
+    `_span_evidence` 가 span 검증의 **단일 출처**다. 예전에 세 곳이 각자
+    가졌다가 두 사본이 길이 상한과 quote 대조를 빠뜨려 위조가 통과했다
+    (그 함수 docstring). 네 번째 사본을 만들지 않는다.
+
+    `cg_obligations` 로 가지 않는 이유: 그 모듈은 **직렬화 dict 만** 받아
+    실행 결합을 피한다(`:291` "옮길 뿐 재검사하지 않는다"). 계산은 여기서
+    하고 판정은 그쪽이 이 응답에서 만든다.
+
+    반환: `{"ok", "stage", "texts", "errors"}` — 실패한 인용은 `texts` 에
+    **넣지 않는다**(부분 성공을 조용히 전체 성공으로 만들지 않는다).
+    """
+    stage = "resolve_cited_evidence"
+    text = snapshot.get("text")
+    if not isinstance(text, str):
+        return {"ok": False, "stage": stage, "texts": {},
+                "errors": [_err(stage, "SNAPSHOT_TEXT_MISSING",
+                                {"got": type(text).__name__})]}
+    texts: Dict[str, str] = {}
+    errors: List[Dict[str, Any]] = []
+    for cid in sorted(citations):
+        decl = citations[cid]
+        if not isinstance(decl, dict):
+            errors.append(_err(stage, "CITATION_NOT_OBJECT",
+                               {"citation_id": cid,
+                                "got": type(decl).__name__}))
+            continue
+        quoted, errs = _span_evidence(decl.get("span"), decl.get("quote"),
+                                      text, stage, {"citation_id": cid})
+        if errs:
+            errors.extend(errs)
+            continue
+        texts[cid] = quoted
+    return {"ok": not errors, "stage": stage, "texts": texts,
+            "errors": errors,
+            "source_sha256": snapshot.get("sha256")}
+
+
 def _sense_errors(sense_id: Any, candidates: List[Dict[str, Any]],
                   stage: str, ctx: Dict[str, Any]) -> List[Dict[str, Any]]:
     """제안된 sense_id가 실제 후보에 있는지. local:은 사전 밖 신조어용 허용."""

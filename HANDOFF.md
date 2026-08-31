@@ -43,6 +43,7 @@ L3 기술   obligation 시스템 (+ 필요 시 warm reasoner + content-addressed
 |---|---|---|
 | ~~`TWO_PASS_VERIFY1`~~ **완료 2026-08-31** | **L3** ← *정정* | 초판은 이것을 **L2** 로 걸었다. 틀렸다(2026-09-01 정본 대조): 이 하네스가 돌린 `claim.evidence_anchoring` 은 자기 docstring 이 **"이것은 semantic support 판정이 아니다"**(`cg_obligations.py:579`)라고 선언한 결정론적 어휘 검사다. 2-pass 는 **순환 기제**를 증명했고 그 기제는 L2 의 **전제조건**이지 L2 달성이 아니다. G261 과 같은 형태의 과장 |
 | e2e `[4]`/`[6]` 손 사전 치환 (대기) | **L3** ← *정정* | 같은 이유. `source.span_evidence` 도 `cg_normalizer._span_evidence` 의 거울이다 |
+| ~~끊긴 간선: document 결박~~ **완료 2026-09-01** | **L2 전제조건** | 사슬 감사가 드러낸 것: `claim.evidence_anchoring` 은 caller 가 준 `evidence_texts` **안에서** 검사하므로 그 dict 가 문서와 무관해도 PASS 였다. 실측 — 원문 "포함하지 **않는다**" + 날조 "포함한다" → `PASS`·`RULE_CHECKED`. 즉 검사되던 명제가 "document ⊨ claim" 이 아니라 "caller 가 준 문장 ⊨ claim" 이었다. `claim.evidence_provenance` 로 결박(`test_evidence_provenance.py`, 계약 9) |
 | **M1 certificate 재설계** (`next_action_code`) | **L2 진입** | 정본이 이미 지목했다 — `obligation_layer_roadmap.md:65`, *"그 함의를 반영한 certificate 재설계는 아직 착수 전"*. L2 가 0% 인 이유는 등록 obligation 7종 **전부가 결정론 검사의 거울**이라는 것이고(`:20-23`), M1 은 그것을 깨는 첫 걸음으로 이미 설계·실증까지 됐다 |
 | 코호트 실행 (§3, Q33 대기) | **L2 의 측정** | H1 실험은 L2 보증이 실제 corpus 에서 성립하는지 잰다 |
 | `invariant` 값 채움 | **L3 → L2 기제로 재분류** | 08-31 에는 "감사 가능성"(L3)으로만 걸었다. 정본 대조 후: M1 재설계가 요구하는 것이 **certificate 가 전역 불변조건을 명시하는 것**이고 그 자리가 바로 이 필드다. 별건 대기가 아니라 M1 의 핵심 기제다 |

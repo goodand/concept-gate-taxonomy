@@ -142,6 +142,12 @@ OBLIGATION_REGISTRY: Dict[str, ObligationSpec] = {
     "claim.evidence_anchoring": ObligationSpec(
         DeciderKind.LOCAL_RULE, Assurance.RULE_CHECKED,
         "cg_obligations.results_from_claim_anchoring", Verdict.UNKNOWN),
+    # 2026-09-01: 끊긴 간선. anchoring 은 caller 가 준 evidence 안에서만
+    # 검사하므로 그 evidence 가 문서와 무관해도 PASS 가 났다(실측). 이 의무는
+    # 인용 본문이 **문서 snapshot 에서 유도됐는가**를 판정한다.
+    "claim.evidence_provenance": ObligationSpec(
+        DeciderKind.LOCAL_RULE, Assurance.RULE_CHECKED,
+        "cg_normalizer.resolve_cited_evidence", Verdict.UNKNOWN),
 }
 
 
@@ -655,6 +661,67 @@ def results_from_claim_anchoring(
                 evidence=f"{c['id']}: concept·feature가 인용 evidence "
                          f"{c.get('cited_evidence_ids')}에 문자 등장",
                 graph_revision=c.get("graph_revision")))
+    return out
+
+
+def results_from_cited_evidence(
+        resp: Dict[str, Any],
+        claims: List[Dict[str, Any]]) -> List[ObligationResult]:
+    """claim.evidence_provenance — 인용 본문이 **문서에서 유도됐는가**.
+
+    입력은 `cg_normalizer.resolve_cited_evidence` 의 직렬화 응답이다(실행
+    결합 없음 — 이 모듈의 규약). 그 함수가 문서 snapshot 에서 span 을 해소
+    하고, 여기서는 그 결과를 판정으로 옮긴다.
+
+    **왜 UNKNOWN 이 아니라 FAIL 인가.** 어휘 부재는 의미적 비지지의 증명이
+    아니어서 `claim.evidence_anchoring` 은 UNKNOWN 을 낸다. 그러나 선언된
+    span 에서 인용문이 **일치하지 않는다**는 것은 부재가 아니라 **불일치의
+    적극적 증거**다 — `_span_evidence` 가 `QUOTE_MISMATCH` 를 오류로 내는
+    것과 같은 이유이고, `source.span_evidence` 의 `on_unavailable` 도 FAIL 이다.
+
+    인용을 **선언하지 않은** claim 은 판정 대상이 아니다(UNKNOWN) — 인용이
+    없다는 것과 인용이 위조라는 것은 다른 사건이다.
+    """
+    resolved = set((resp.get("texts") or {}))
+    failed_ids = {
+        (e.get("detail") or {}).get("citation_id")
+        for e in (resp.get("errors") or [])
+    } - {None}
+    out: List[ObligationResult] = []
+    for c in claims:
+        cited = list(c.get("cited_evidence_ids", []))
+        rev = c.get("graph_revision")
+        if not cited:
+            out.append(ObligationResult(
+                "claim.evidence_provenance", Verdict.UNKNOWN, Assurance.PROPOSED,
+                DeciderKind.LOCAL_RULE,
+                reason=f"{c['id']}: 인용 선언 없음 — 유도 여부를 판정할 대상이 없음",
+                graph_revision=rev))
+            continue
+        bad = [e for e in cited if e in failed_ids]
+        missing = [e for e in cited if e not in resolved and e not in failed_ids]
+        if bad:
+            out.append(ObligationResult(
+                "claim.evidence_provenance", Verdict.FAIL, Assurance.RULE_CHECKED,
+                DeciderKind.LOCAL_RULE,
+                reason=f"{c['id']}: 인용 {bad} 이 문서 snapshot 에서 해소되지 "
+                       f"않음 — 인용 본문이 문서에서 유도되지 않았다",
+                graph_revision=rev))
+        elif missing:
+            out.append(ObligationResult(
+                "claim.evidence_provenance", Verdict.UNKNOWN, Assurance.PROPOSED,
+                DeciderKind.LOCAL_RULE,
+                reason=f"{c['id']}: 인용 {missing} 에 대한 해소 시도 기록이 "
+                       f"없음 — 판정 보류(부재와 미확인을 가른다)",
+                graph_revision=rev))
+        else:
+            out.append(ObligationResult(
+                "claim.evidence_provenance", Verdict.PASS, Assurance.RULE_CHECKED,
+                DeciderKind.LOCAL_RULE,
+                evidence=f"{c['id']}: 인용 {cited} 이 문서 "
+                         f"{resp.get('source_sha256', '')[:16]} 의 선언된 span "
+                         f"에서 유도됨",
+                graph_revision=rev))
     return out
 
 
