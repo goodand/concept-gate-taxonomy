@@ -151,7 +151,8 @@ def _issue(tmp_path, *results):
     key_path = tmp_path / "k.json"
     claim = {"claim_id": "c1", "graph_revision": 7}
     cert = ob.issue_claim_certificate(claim, list(results),
-                                      issuer_tool="test", key_path=key_path)
+                                      issuer_tool="test", key_path=key_path,
+        profile=ob.LEGACY_RELATION_PROFILE)
     return cert, claim, cg_identity.load_or_create_key(key_path)
 
 
@@ -211,7 +212,8 @@ def _cert_with_invariant(tmp_path, value):
     claim = {"claim_id": "c1", "id": "c1", "concept": "a", "feature": "b",
              "cited_evidence_ids": ["e1"], "graph_revision": 1}
     cert = ob.issue_claim_certificate(
-        claim, [_result(invariant=value)], issuer_tool="test", key_path=key_path)
+        claim, [_result(invariant=value)], issuer_tool="test", key_path=key_path,
+        profile=ob.LEGACY_RELATION_PROFILE)
     return cert, claim, key_path
 
 

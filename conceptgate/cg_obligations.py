@@ -876,19 +876,34 @@ def issue_claim_certificate(claim: Dict[str, Any],
 
 def _assert_certificate_grants_verdicts(
         cert: Dict[str, Any], claim: Dict[str, Any], key: bytes,
-        registry: Dict[str, ObligationSpec] | None = None
+        registry: Dict[str, ObligationSpec] | None = None,
+        expected_profile: "CertificationProfile | None" = None
 ) -> Dict[str, Verdict]:
-    """authenticity → 결박 → 유효성 순서로 검사하고, 통과 시에만
-    certificate가 나르는 {obligation: Verdict}를 돌려준다.
+    """authenticity → schema → 결박 → 계약(profile) → 유효성 순서로 검사하고,
+    통과 시에만 certificate가 나르는 {obligation: Verdict}를 돌려준다.
 
     순서가 계약이다: 서명이 깨진 문서의 '결박 오류'를 먼저 보고하면
     공격자에게 조작 진행도를 알려주는 oracle이 된다 — authenticity 먼저.
+
+    **schema·profile 을 여기서 읽는다 (2026-09-01, D-38 구현 적대검증 채택).**
+    v0→v1 때도 v1→v2 때도 "검증부는 지금 이 문자열을 대조하지 않는다"는
+    주석을 남겼다 — 같은 주석을 세 번째로 쓰는 대신 대조를 넣는다. profile
+    commitment 는 서명 아래 있었지만 아무도 읽지 않아서, `_v0` 에만 commit
+    한 인증서와 `profile: None` 인증서가 `_v1` 검증에서 인증됐다(실측).
+    서명 아래에 넣는 이유는 verifier 가 **읽기** 때문이다 — 읽지 않으면
+    필드는 주석과 같은 지위다.
     """
     if not cg_identity.verify_signature(cert, key, domain=CERTIFICATE_DOMAIN):
         raise CertificateError(
             "certificate signature is absent or does not verify -- a "
             "hand-written or edited-after-signing document is refused "
             "(host-only key; the caller cannot manufacture this)")
+    if cert.get("schema") != CERTIFICATE_SCHEMA:
+        raise CertificateError(
+            f"certificate schema {cert.get('schema')!r} != "
+            f"{CERTIFICATE_SCHEMA!r} -- a document from an older signing "
+            f"contract is not silently re-interpreted under the new one "
+            f"(fail-closed; reissue under the current schema)")
     if cert.get("subject_fingerprint") != cg_identity.claim_fingerprint(claim):
         raise CertificateError(
             f"certificate subject {cert.get('subject_fingerprint')!r} does "
@@ -899,6 +914,17 @@ def _assert_certificate_grants_verdicts(
             f"certificate revision {cert.get('graph_revision')!r} != claim "
             f"revision {claim.get('graph_revision')!r} -- stale certificate "
             f"(revision binding)")
+    if expected_profile is not None:
+        committed = cert.get("profile")
+        expected = profile_commitment(expected_profile)
+        if committed != expected:
+            raise CertificateError(
+                f"certificate profile commitment {committed!r} != expected "
+                f"{expected!r} -- a certificate committed to another "
+                f"certification contract (or to none) cannot grant verdicts "
+                f"under this one. None is not a wildcard: an uncommitted "
+                f"certificate passing every profile is exactly the bypass "
+                f"this field exists to close")
     granted: Dict[str, Verdict] = {}
     for row in cert.get("results", []):
         try:
@@ -991,7 +1017,8 @@ def certify_relation_claims(
                 raise CertificateError(
                     f"certificate subject {cert.get('subject_fingerprint')!r} "
                     f"matches none of the presented claims (subject binding)")
-            granted = _assert_certificate_grants_verdicts(cert, subject, key)
+            granted = _assert_certificate_grants_verdicts(
+                cert, subject, key, expected_profile=profile)
             authenticated.setdefault(subject["id"], {}).update(granted)
 
     anchoring = results_from_claim_anchoring(claims, evidence_texts)

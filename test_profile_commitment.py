@@ -30,6 +30,28 @@ D-38(`docs/DESIGN_DECISION_certification_profile_amendment.md`) 셋:
 판정 ㄷ가 "제품 계약 변경에 별도 backward-compatibility 규칙이 필요하다는
 근거"라고 지목한 바로 그 지점이다. 그래서 이 변경은 **기본값을 건드리지
 않는다**(마지막 계약이 그것을 고정한다).
+
+## 구현 적대검증에서 채택·기각한 것 (2026-09-01)
+
+- **채택(blocker 2, 뿌리 하나)**: profile 을 서명에 넣었는데 **검증부가 읽지
+  않았다** — `_v0` 에만 commit 한 인증서와 `profile: None` 인증서가 `_v1`
+  검증에서 `certifying` 을 받았고(재실측 확인), 생산 발급자(server)는 profile
+  을 넘기지도 않았다. 수리: `_assert_certificate_grants_verdicts` 가 schema
+  와 commitment 를 대조하고, `certify_relation_claims` 가 자기 profile 을
+  넘기고, server 발급자가 `_v0` 를 명시한다(암묵 동작의 명시화 — V8 무관).
+  검증자 정식화가 정확했다: **"서명 아래에 넣는 이유는 verifier 가 읽기
+  때문이다 — 읽지 않으면 필드는 주석과 같은 지위다."**
+- **채택(major)**: schema=`v1` 인 낡은 인증서가 조용히 통과했다 — v0→v1 때도
+  "검증부는 대조하지 않는다"는 주석을 남겼고 같은 주석을 세 번째로 쓰는 대신
+  대조를 넣었다. fail-closed: 저장된 인증서 0건이라 비용 0.
+- **기록(major, 미수선)**: `profile_id → CertificationProfile` 레지스트리가
+  없어 판정이 약속한 "exact required-set 재구성"은 불가하고 후보 검증만
+  가능하다. 지금 집행은 호출자가 기대 profile 을 넘기므로 재구성이 필요
+  없다 — 레지스트리는 필요해질 때 만든다(YAGNI).
+- **기록(minor 2)**: required_hash 정의가 판정 원문(`H(required)`)과 달리
+  profile_id 를 포함한다(별칭 구별에 필요했음을 검증자도 실측 확인) ·
+  commitment 는 `allowed_na`·`applies_to_claim_kind` 를 결박하지 않는다
+  (`is_certified` 가 읽지 않는 동안은 무해, 읽기 시작하면 결함으로 전환).
 """
 from __future__ import annotations
 
@@ -124,6 +146,80 @@ def test_an_untampered_certificate_still_verifies(tmp_path):
     granted = ob._assert_certificate_grants_verdicts(
         cert, CLAIM, ci.load_or_create_key(key_path))
     assert granted["claim.evidence_anchoring"] is ob.Verdict.PASS
+
+
+# ---------------------------------------------------------------------------
+# 1a. 집행 — 구별 가능한 것은 구별되어야 한다 (적대검증 blocker 의 계약화)
+# ---------------------------------------------------------------------------
+
+def _valid_results():
+    out = []
+    for name in ob.RELATION_CLAIM_V1_PROFILE.required:
+        spec = ob.OBLIGATION_REGISTRY[name]
+        out.append(ob.ObligationResult(name, ob.Verdict.PASS,
+                                       spec.min_assurance, spec.decider,
+                                       evidence="x"))
+    return out
+
+
+def test_a_certificate_committed_to_v0_cannot_certify_under_v1(tmp_path):
+    """적대검증이 잰 그 우회(D2). commitment 는 서명 아래 있었지만 아무도
+    읽지 않아서 `_v0` 인증서가 `_v1` 검증을 통과했다 — 이제 거부된다."""
+    kp = tmp_path / "k.json"
+    cert = ob.issue_claim_certificate(CLAIM, _valid_results(), issuer_tool="t",
+                                      key_path=kp,
+                                      profile=ob.LEGACY_RELATION_PROFILE)
+    with pytest.raises(ob.CertificateError, match="profile commitment"):
+        ob.certify_relation_claims([CLAIM], {"ev1": "돌체 액체금속"},
+                                   prior_certificates=[cert],
+                                   profile=ob.RELATION_CLAIM_V1_PROFILE,
+                                   key_path=kp)
+
+
+def test_an_uncommitted_certificate_is_not_a_wildcard(tmp_path):
+    """`profile: None` 이 모든 profile 을 통과하면 이 필드가 닫으려던 우회가
+    형태만 바꿔 열린다(D3) — None 은 wildcard 가 아니다."""
+    kp = tmp_path / "k.json"
+    cert = ob.issue_claim_certificate(CLAIM, _valid_results(), issuer_tool="t",
+                                      key_path=kp)                 # 미선언
+    with pytest.raises(ob.CertificateError, match="profile commitment"):
+        ob.certify_relation_claims([CLAIM], {"ev1": "돌체 액체금속"},
+                                   prior_certificates=[cert],
+                                   profile=ob.LEGACY_RELATION_PROFILE,
+                                   key_path=kp)
+
+
+def test_a_matching_commitment_certifies(tmp_path):
+    """위 두 음성의 짝 — 없으면 "항상 거부" 구현이 통과한다."""
+    kp = tmp_path / "k.json"
+    cert = ob.issue_claim_certificate(CLAIM, _valid_results(), issuer_tool="t",
+                                      key_path=kp,
+                                      profile=ob.RELATION_CLAIM_V1_PROFILE)
+    out = ob.certify_relation_claims([CLAIM], {"ev1": "돌체 액체금속"},
+                                     prior_certificates=[cert],
+                                     profile=ob.RELATION_CLAIM_V1_PROFILE,
+                                     key_path=kp)
+    assert out["certified_claim_ids"] == ["c1"]
+    assert out["authority"] == "certifying"
+
+
+def test_a_stale_schema_certificate_is_refused_not_reinterpreted(tmp_path):
+    """적대검증 3a. schema=`v1` 문서가 조용히 통과했다 — 옛 서명 계약의
+    문서를 새 계약 아래 재해석하지 않는다(fail-closed). 서명은 유효해야
+    하므로 위조가 아니라 **정직하게 낡은** 문서를 만들어 검사한다."""
+    kp = tmp_path / "k.json"
+    import conceptgate.cg_obligations as mod
+    orig = mod.CERTIFICATE_SCHEMA
+    try:
+        mod.CERTIFICATE_SCHEMA = "obligation_certificate_v1"
+        old_cert = ob.issue_claim_certificate(CLAIM, _valid_results(),
+                                              issuer_tool="t", key_path=kp,
+                                              profile=ob.LEGACY_RELATION_PROFILE)
+    finally:
+        mod.CERTIFICATE_SCHEMA = orig
+    key = ci.load_or_create_key(kp)
+    with pytest.raises(ob.CertificateError, match="schema"):
+        ob._assert_certificate_grants_verdicts(old_cert, CLAIM, key)
 
 
 # ---------------------------------------------------------------------------

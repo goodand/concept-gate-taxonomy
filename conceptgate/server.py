@@ -960,7 +960,11 @@ def issue_claim_certificates(claims: list, bundle: dict) -> dict:
     all_results = source_results + relation_results
     certificates = [
         cg_obligations.issue_claim_certificate(
-            claim, all_results, issuer_tool="issue_claim_certificates")
+            claim, all_results, issuer_tool="issue_claim_certificates",
+            # D-38 적대검증 1c: 검증부가 commitment 를 대조하기 시작하므로
+            # 발급자가 계약을 명시해야 한다. 현재 암묵 동작(_v0)의 명시화이지
+            # 기본값 변경이 아니다 — V8 미결 판단을 건드리지 않는다.
+            profile=cg_obligations.LEGACY_RELATION_PROFILE)
         for claim in claims]
     return {
         "ok": True,

@@ -45,7 +45,8 @@ def test_issued_certificate_certifies_and_promotes_authority(key_path):
     """정품 경로: 발급 → 검증 → 인증 + authority 승격."""
     cert = issue_claim_certificate(CLAIM, _gate_results(),
                                    issuer_tool="run_pipeline",
-                                   key_path=key_path)
+                                   key_path=key_path,
+        profile=LEGACY_RELATION_PROFILE)
     out = certify_relation_claims([CLAIM], EVIDENCE,
                                   prior_certificates=[cert],
                                   key_path=key_path)
@@ -77,7 +78,8 @@ def test_a_certificate_edited_after_signing_is_refused(key_path):
         results[0].decider, evidence="위반", reason="실측 위반", graph_revision=7)
     cert = issue_claim_certificate(CLAIM, results,
                                    issuer_tool="run_pipeline",
-                                   key_path=key_path)
+                                   key_path=key_path,
+        profile=LEGACY_RELATION_PROFILE)
     cert["results"][0]["verdict"] = "pass"
     with pytest.raises(CertificateError, match="signature"):
         certify_relation_claims([CLAIM], EVIDENCE,
@@ -90,7 +92,8 @@ def test_a_certificate_for_a_different_claim_is_refused(key_path):
     other = dict(CLAIM, id="c2", concept="바퀴")
     cert = issue_claim_certificate(other, _gate_results(),
                                    issuer_tool="run_pipeline",
-                                   key_path=key_path)
+                                   key_path=key_path,
+        profile=LEGACY_RELATION_PROFILE)
     with pytest.raises(CertificateError, match="subject"):
         certify_relation_claims([CLAIM], EVIDENCE,
                                 prior_certificates=[cert],
@@ -102,7 +105,8 @@ def test_a_certificate_for_a_stale_revision_is_refused(key_path):
     old_claim = dict(CLAIM, graph_revision=6)
     cert = issue_claim_certificate(old_claim, _gate_results(),
                                    issuer_tool="run_pipeline",
-                                   key_path=key_path)
+                                   key_path=key_path,
+        profile=LEGACY_RELATION_PROFILE)
     # 같은 내용이 revision 7로 재조립됐다고 하자 — fingerprint가 달라지므로
     # subject에서 먼저 걸리지만, subject가 우연히 같아도 revision 검사가 있다.
     with pytest.raises(CertificateError):
@@ -118,7 +122,8 @@ def test_an_embedded_result_violating_assurance_caps_is_refused(key_path):
                             Assurance.RULE_CHECKED, DeciderKind.LLM,
                             evidence="LLM이 그렇게 말함", graph_revision=7)]
     cert = issue_claim_certificate(CLAIM, bad, issuer_tool="run_pipeline",
-                                   key_path=key_path)
+                                   key_path=key_path,
+        profile=LEGACY_RELATION_PROFILE)
     with pytest.raises(CertificateError, match="ASSURANCE_EXCEEDS_DECIDER_CAP"):
         certify_relation_claims([CLAIM], EVIDENCE,
                                 prior_certificates=[cert],
@@ -139,7 +144,8 @@ def test_mixing_certificates_and_raw_strings_does_not_promote(key_path):
     가장 약한 입력이 전체의 지위를 정한다(fail-closed)."""
     cert = issue_claim_certificate(CLAIM, _gate_results(),
                                    issuer_tool="run_pipeline",
-                                   key_path=key_path)
+                                   key_path=key_path,
+        profile=LEGACY_RELATION_PROFILE)
     out = certify_relation_claims([CLAIM], EVIDENCE,
                                   prior_certificates=[cert],
                                   prior_verdicts={"c1": {"relation.is_a": "pass"}},
@@ -159,7 +165,8 @@ def test_the_certificate_guard_fires_when_called_directly(key_path):
 
     good = issue_claim_certificate(CLAIM, _gate_results(),
                                    issuer_tool="run_pipeline",
-                                   key_path=key_path)
+                                   key_path=key_path,
+        profile=LEGACY_RELATION_PROFILE)
     other = dict(CLAIM, id="c9", concept="바퀴")
     with pytest.raises(CertificateError, match="subject"):
         _assert_certificate_grants_verdicts(good, other, key)
@@ -167,7 +174,8 @@ def test_the_certificate_guard_fires_when_called_directly(key_path):
     aged = dict(CLAIM)
     cert_aged = issue_claim_certificate(aged, _gate_results(),
                                         issuer_tool="run_pipeline",
-                                        key_path=key_path)
+                                        key_path=key_path,
+        profile=LEGACY_RELATION_PROFILE)
     cert_aged_body = {k: v for k, v in cert_aged.items() if k != "signature"}
     cert_aged_body["graph_revision"] = 6
     resigned = {**cert_aged_body, "signature": ci.sign(

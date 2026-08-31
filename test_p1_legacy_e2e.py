@@ -95,7 +95,8 @@ def test_p1_certified_only_from_authenticated_real_gate_results(key_path):
 
     cert = issue_claim_certificate(claim, results,
                                    issuer_tool="run_pipeline",
-                                   key_path=key_path)
+                                   key_path=key_path,
+        profile=LEGACY_RELATION_PROFILE)
     out = certify_relation_claims([claim], evidence,
                                   prior_certificates=[cert],
                                   key_path=key_path)
@@ -123,7 +124,8 @@ def test_p1_preserves_candidate_certified_derived_provenance(key_path):
             name, Verdict.PASS, Assurance.RULE_CHECKED, DeciderKind.LOCAL_RULE,
             evidence="e", graph_revision=1))
     cert = issue_claim_certificate(candidate, results,
-                                   issuer_tool="run_pipeline", key_path=key_path)
+                                   issuer_tool="run_pipeline", key_path=key_path,
+        profile=LEGACY_RELATION_PROFILE)
     out = certify_relation_claims([candidate], ev,
                                   prior_certificates=[cert], key_path=key_path)
 
