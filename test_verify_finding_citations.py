@@ -226,6 +226,25 @@ def test_a_hallucination_disguised_as_uncheckable_is_not_grounded(tmp_path):
                            [target])
 
 
+def test_grounded_is_sound_about_citations_not_about_findings(tmp_path):
+    """건전성의 범위 — `is_grounded` 의 이름이 부르는 오해를 막는다.
+
+    실측(2026-08-31): 코드를 **정확히 인용하면서** 완전히 틀린 해석을 붙인
+    finding 이 통과한다. 규칙이 결정할 수 있는 명제는 "이 문자열이 이 파일에
+    있다"이고 "이 코드가 결함이다"가 아니다.
+
+    이 계약이 없으면 `is_grounded` 가 수락 기준으로 쓰일 때 "규칙 기반으로
+    맞는 것만 통과시킨다"는 성질이 있다고 잘못 읽힌다 — 그 성질을 얻으려면
+    명제를 **실행 가능한 것**으로 좁혀야 한다."""
+    target = tmp_path / "t.py"
+    target.write_text("def add(a, b):\n    return a + b\n", encoding="utf-8")
+    false_but_cited = {"id": 1,
+                       "claim": "`return a + b` 는 두 인자를 곱한다 — 곱셈 버그",
+                       "evidence": "t.py:2 `return a + b`"}
+    assert vfc.check(false_but_cited, [target])["verdict"] == "CITATION_FOUND"
+    assert vfc.is_grounded(false_but_cited, [target]) is True   # 그리고 틀렸다
+
+
 def test_the_g134_case_is_reproduced_against_the_real_document():
     """실물 회귀 — Q33 상신서에 `p02`가 없다는 것을 문서로 확인한다.
 

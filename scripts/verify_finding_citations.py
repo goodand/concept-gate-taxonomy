@@ -218,6 +218,17 @@ def is_grounded(finding: dict, targets: list[Path]) -> bool:
     스키마 미충족 재생성(형태 층)은 도구가 이미 한다. 이것은 **의미 층**의
     수락 기준이고, 루프에는 `mechspec:I6`(explicit retry limit)과 abstention 이
     함께 와야 한다 — 수렴은 보장되지 않는다.
+
+    **건전성의 범위 — 이름이 오해를 부르므로 못박는다.** 이 함수가 건전한
+    대상은 "**이 문자열이 이 파일에 있다**"이고, "**이 finding 이 참이다**"가
+    아니다. 실측(2026-08-31): `return a + b` 를 정확히 인용하면서 "두 인자를
+    곱한다 — 곱셈 버그"라고 주장하는 finding 이 `CITATION_FOUND` ·
+    `is_grounded=True` 로 통과한다. 해석은 규칙이 결정하지 못한다.
+
+    그래서 재생성 루프의 수락 기준으로 이것을 쓸 때 얻는 것은 **"인용이
+    실재한다"까지**다. finding 자체를 규칙으로 건전하게 수락하려면 명제를 더
+    좁혀 **실행 가능한 것**으로 만들어야 한다(입력 → 관측된 판정). 오늘 채택한
+    지적은 전부 그 형태의 probe 로 갈렸고, 인용 검사로 갈린 것은 하나도 없다.
     """
     return check(finding, targets)["verdict"] == "CITATION_FOUND"
 
