@@ -149,6 +149,33 @@ def test_partition_accounting_is_exhaustive(tmp_path):
 
 # ---- 게이트가 공허하지 않다는 증거 -------------------------------------
 
+def test_execution_output_is_not_judged_as_a_missing_file_citation(tmp_path):
+    """오탐 부류 — **실행 출력**은 정적 파일에 있을 수 없다 (2026-08-31 실측).
+
+    이 계약이 왜 생겼나: 스키마 강제 위임의 회신 12건을 이 도구에 태우니
+    **11건이 `EVIDENCE_NOT_FOUND`** 였고 거의 전부 오탐이었다 — 폐기된
+    "인용"이 `TypeError: ...` 같은 실행 출력과 산문 요약이었다. 대상 파일에
+    없는 것이 당연하고, 그것은 finding 이 거짓이라는 뜻이 **아니다.**
+
+    기존 14개 계약은 **위음성**(공백·ANSI·스마트쿼트)에 셋 이상을 쓰면서
+    **위양성**에는 `MIN_CITATION` 하나뿐이었고, 그것도 과거 오탐 4건 뒤에
+    생겼다. 이 비대칭이 오늘의 11/12 를 통과시켰다.
+
+    **이 계약은 현행 동작을 고정하지 않는다 — 결함을 기록한다.** 아래
+    단언은 도구가 지금 무엇을 하는지이고, 옳은 처리는 스키마가 인용의
+    **종류**(파일 인용 vs 실행 출력)를 가르는 것이다. 그 설계가 들어오면
+    이 계약이 뒤집혀야 하는 쪽이다."""
+    target = tmp_path / "t.py"
+    target.write_text("x = 1\n", encoding="utf-8")
+    exec_output = {"id": 1, "claim": "실측: `TypeError: argument of type 'int' "
+                                     "is not iterable` 로 죽는다"}
+    verdict = vfc.check(exec_output, [target])["verdict"]
+    # 현행: 실행 출력을 파일 인용으로 검사해 폐기한다(오탐).
+    assert verdict == "EVIDENCE_NOT_FOUND"
+    # 그리고 그것이 finding 의 참·거짓과 무관하다는 것이 이 계약의 요점이다 —
+    # 같은 문장의 판정은 실행으로만 갈린다.
+
+
 def test_the_g134_case_is_reproduced_against_the_real_document():
     """실물 회귀 — Q33 상신서에 `p02`가 없다는 것을 문서로 확인한다."""
     doc = ROOT / "docs" / "DESIGN_REQUEST_referential_participant_quantification.md"
