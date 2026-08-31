@@ -194,6 +194,38 @@ def test_a_hallucinated_file_citation_cannot_escape_through_the_discriminator(tm
     assert ok["verdict"] == "CITATION_FOUND"
 
 
+def test_a_hallucination_disguised_as_uncheckable_is_not_grounded(tmp_path):
+    """재생성 루프의 수락 기준 — Goodhart 방어 (2026-08-31 실측).
+
+    부류 판별기(`uncheckable_kind`)는 정직하지만 **재생성 압력이 붙으면
+    도피구가 된다**: 같은 환각 심볼을 트레이스백·화살표 출력·셸 명령·
+    생략부호로 위장하니 넷 다 `NOT_CHECKABLE` 이었다. "폐기 안 됨"을
+    재시도 수락 기준으로 쓰면 생성자는 그 포장을 학습하고, 환각 탐지기가
+    환각 세탁기가 된다.
+
+    그래서 수락 기준은 `is_grounded`(≥1 CITATION_FOUND)이지 `kept` 가
+    아니다 — `NOT_CHECKABLE` 은 이 저장소 어휘로 `BLOCKED` 이고 자동
+    허용이 아니다."""
+    target = tmp_path / "t.py"
+    target.write_text("real_symbol = 1\n", encoding="utf-8")
+    disguises = [
+        "실측: `AttributeError: nonexistent_symbol_xyz is missing` 로 죽는다",
+        "실행: `nonexistent_symbol_xyz -> pass` 를 확인했다",
+        "확인: `grep -n nonexistent_symbol_xyz t.py` 로 확인했다",
+        "코드에 `nonexistent_symbol_xyz(...)` 가 있다",
+    ]
+    for d in disguises:
+        f = {"id": 1, "claim": d}
+        # 폐기되지 않는다 — 그래서 kept 를 수락 기준으로 쓰면 통과한다.
+        assert vfc.check(f, [target])["verdict"] == "NOT_CHECKABLE", d
+        assert f in vfc.partition([f], [target])["kept"], d
+        # 그러나 근거가 없다 — 이것이 루프가 봐야 하는 신호다.
+        assert not vfc.is_grounded(f, [target]), d
+    # 짝: 실재하는 인용은 근거가 있다(없으면 "항상 False" 구현이 통과한다).
+    assert vfc.is_grounded({"id": 2, "claim": "코드에 `real_symbol` 이 있다"},
+                           [target])
+
+
 def test_the_g134_case_is_reproduced_against_the_real_document():
     """실물 회귀 — Q33 상신서에 `p02`가 없다는 것을 문서로 확인한다.
 

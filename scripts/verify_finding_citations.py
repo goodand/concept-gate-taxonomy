@@ -201,6 +201,27 @@ def partition(findings: list[dict], targets: list[Path]) -> dict:
     return {"kept": kept, "discarded": discarded, "counts": counts}
 
 
+def is_grounded(finding: dict, targets: list[Path]) -> bool:
+    """이 finding 이 **확인된 인용에 근거하는가** — `kept` 와 다른 질문이다.
+
+    `partition` 의 `kept` 는 "폐기되지 않았다"이고 `NOT_CHECKABLE` 을 포함한다.
+    그것을 성공으로 읽으면 안 된다 — 이 저장소의 3값 어휘에서 그것은 `BLOCKED`
+    이고, `CLAUDE.md` 가 "BLOCKED 는 exit code 에 반영되지 않으므로 판정 보류이지
+    자동 허용이 아니다"라고 못박은 바로 그 자리다.
+
+    **재생성 루프를 붙일 때 이 함수가 수락 기준이어야 한다** (2026-08-31 실측).
+    "폐기 안 됨"을 기준으로 재시도를 돌리면 생성자는 **인용을 검사 불가 부류로
+    포장하도록 보상받는다** — 같은 환각 심볼을 트레이스백·화살표 출력·셸 명령·
+    생략부호 넷으로 위장하니 전부 `NOT_CHECKABLE` 이었다(부류 판별기가 통째로
+    도피구가 된다). 그러면 환각 탐지기가 환각 세탁기로 바뀐다.
+
+    스키마 미충족 재생성(형태 층)은 도구가 이미 한다. 이것은 **의미 층**의
+    수락 기준이고, 루프에는 `mechspec:I6`(explicit retry limit)과 abstention 이
+    함께 와야 한다 — 수렴은 보장되지 않는다.
+    """
+    return check(finding, targets)["verdict"] == "CITATION_FOUND"
+
+
 def _load_findings(path: Path) -> list[dict]:
     data = json.loads(path.read_text(encoding="utf-8"))
     if isinstance(data, dict):
