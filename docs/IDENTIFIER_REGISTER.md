@@ -264,7 +264,7 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 | `V` | `ev-eval-code` | `FAILURE_CODES` V1 — 실패 코드 | `검증` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:V` | `EXTERNAL` |
 | `C` | `ev-eval-code` | `FAILURE_CODES` C1~C4 — 실패 코드 | `검증` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval-code:C` | `EXTERNAL` |
 | `X` | `ev-eval` | 실패 코드 `X1: citation outside exposed context` | `문제` | — (arbitrary) | `evidence_evaluator/contract.py` | — | `ev-eval:X` | `EXTERNAL` |
-| `H` | `experiments` | **가설·실험 이름** `H1`·`H2`·`H3`(`# 설계 판정 요청 — H3 확증 실험의 estimand`)·`H1a`. 계열이 아니다 | `(인용)` | — (arbitrary) | `experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/DESIGN_REQUEST_H3.md` | — | — | `FP_EXPERIMENT` |
+| `H` | `experiments` | **가설·실험 이름** `H1`·`H2`·`H3`(`# 설계 판정 요청 — H3 확증 실험의 estimand`)·`H1a`. 계열이 아니다 | `(인용)` | — (arbitrary) | `experiments/2026-07-25_e2.4_repo_grounded_contract_transfer/DESIGN_REQUEST_H3.md` | — | `experiments:H` | `FP_EXPERIMENT` |
 | `X` | `h1a-scope` | mermaid 노드 id (`X1["버림"]`) — 그림 문법 | `(인용)` | — (arbitrary) | `docs/feedback/design_review_*_round2.md` | — | `h1a-scope:X` | `FP_DIAGRAM` |
 | `N` | `h1a-scope` | 검사 항목 `N1 Scior TSV에서 RA02 로드` | `검증` | — (arbitrary) | `qa_v7.py` | — | `h1a-scope:N` | `EXTERNAL` |
 | `I` | `h1a-scope` | 검사 항목 `I1. STRUCTURAL은 비-essential`… **I1~I9**, `R.check` 이름으로 발행(처음 I1~I7 로 적었다가 적대검증 재실측으로 정정, 2026-08-31) — **directive I1~I11·mechspec I1~I7 과 교집합 구간(I1~I7) 순방향 충돌, 발행자 셋째** | `검증` | — (arbitrary) | `qa_v7.py:495` | — | `h1a-scope:I` | `EXTERNAL` |

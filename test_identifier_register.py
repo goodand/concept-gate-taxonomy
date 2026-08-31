@@ -438,3 +438,29 @@ def test_every_series_row_has_the_full_column_count():
     assert not bad, (
         "§계열 표에 열 수가 틀린 행이 있다 — 파서가 조용히 건너뛰므로 "
         "**여기서 잡지 않으면 아무도 안 잡는다**:\n" + "\n".join(bad))
+
+
+def test_required_cells_are_not_empty():
+    """열 **개수**가 맞아도 셀이 **비어 있으면** 그 행은 아무것도 말하지 않는다.
+
+    2026-08-31 동료 세션(`ev-eval`) 지적: 그쪽 목격자 19개가 전부 초록인 상태에서
+    적대검증이 `evidence_line=""` 가 통과하는 것을 찾았다 — 검사를
+    `if ev.strip() and …` 로 감싸 **빈 값이 검사를 건너뛰었다.**
+
+    우리 쪽에 그 형태가 있는지 실측했다: **뜻 열을 빈 값으로 만들어도 48개 전부
+    초록**이었다. 오늘 아침 `test_every_series_row_has_the_full_column_count` 로
+    열 **개수**를 막았으나 **내용**은 안 봤다 — **대칭 결함을 한쪽만 고친
+    것**(P27)이고 이번엔 밖에서 지적받아 알았다.
+
+    **필수**: 글자·문서군·뜻·개념·인용접두·상태.
+    **비워도 되는 것**: `english`·`defined_at`·`pattern` 은 `—`(형식 미고정)나
+    `(인용)` 이 정당한 값인 자리다 — 필수로 만들면 위양성이 난다."""
+    REQUIRED = ("letter", "group", "meaning", "concept", "cite_prefix", "status")
+    bad = []
+    for r in _rows():
+        for key in REQUIRED:
+            if not str(r.get(key, "")).strip(" `*—"):
+                bad.append(f"  {r.get('letter','?')}@{r.get('group','?')} — `{key}` 가 비었다")
+    assert not bad, (
+        "필수 열이 빈 행이 있다 — 열 개수만 맞고 내용이 없으면 그 행은 "
+        "**아무것도 말하지 않는다**:\n" + "\n".join(bad))
