@@ -13,15 +13,15 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 
 ```yaml
 updated: 2026-09-01            # 이 문서를 마지막으로 고친 날. 제목의 2026-08-23 은 **마일스톤**이지 갱신일이 아니다
-state_code: D37_RECEIVED__L2_ENTRY_IDENTIFIED   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 회신 대기가 아니라 권한 부재 — 2026-09-01 전수 대조: 미회신 상신 0건). 이 세션 갈래(08-31): TWO_PASS_VERIFY1 완료 — test_two_pass_verify1.py(계약 8, 적대검증 채택·기각 반영)가 경우 B 를 계산으로 증명(SURVEY §8.5). 수렴 자체는 여전히 증명 밖(§8.2)
-next_action_code: M1_CERTIFICATE_REDESIGN   # 2026-09-01 정정: 사다리 정본(obligation_layer_roadmap.md)이 L2=0% 의 원인과 다음 걸음을 이미 지목하고 있었고, 08-31 세션은 그것을 보지 않고 L3 도구를 굳혔다. 다음 걸음 = certificate 를 "경고 신호"에서 **"모델이 유지해야 할 전역 불변조건 + 출력 상태 계약을 명시하는 reasoning contract"** 로 재설계(roadmap :64-66 이 착수 전이라 명시). 근거는 이미 실증됨 — E2.2.3 OFAT 60 trial: A_ONLY(전역 일관성 **자연어** 규칙)=20/20 단독 필요충분, C_ONLY(schema minItems)=0/20 무효. 08-31 세션의 D7(스키마는 형태만 강제)이 그 결론을 독립 재현했다. 실을 자리도 이미 있다 — ObligationResult.invariant(08-31 가산, 서명 본체 포함). 대기 항목은 이 아래로: (a) invariant 값 채움 ← 이제 M1 재설계의 **핵심 기제**이지 별건 아님, (b) e2e 손 사전 치환(L3), (c) 누계표, (d) Q33 회신(코호트 = L2 의 측정 갈래, 외부 판정 대기라 내가 못 움직임), (e) push
+state_code: D38_RECEIVED__PROFILE_AMENDMENT_RULED   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 회신 대기가 아니라 권한 부재 — 2026-09-01 전수 대조: 미회신 상신 0건). 이 세션 갈래(08-31): TWO_PASS_VERIFY1 완료 — test_two_pass_verify1.py(계약 8, 적대검증 채택·기각 반영)가 경우 B 를 계산으로 증명(SURVEY §8.5). 수렴 자체는 여전히 증명 밖(§8.2)
+next_action_code: D38_V8_DETERMINATION   # 2026-09-01 정정: 사다리 정본(obligation_layer_roadmap.md)이 L2=0% 의 원인과 다음 걸음을 이미 지목하고 있었고, 08-31 세션은 그것을 보지 않고 L3 도구를 굳혔다. 다음 걸음 = certificate 를 "경고 신호"에서 **"모델이 유지해야 할 전역 불변조건 + 출력 상태 계약을 명시하는 reasoning contract"** 로 재설계(roadmap :64-66 이 착수 전이라 명시). 근거는 이미 실증됨 — E2.2.3 OFAT 60 trial: A_ONLY(전역 일관성 **자연어** 규칙)=20/20 단독 필요충분, C_ONLY(schema minItems)=0/20 무효. 08-31 세션의 D7(스키마는 형태만 강제)이 그 결론을 독립 재현했다. 실을 자리도 이미 있다 — ObligationResult.invariant(08-31 가산, 서명 본체 포함). 대기 항목은 이 아래로: (a) invariant 값 채움 ← 이제 M1 재설계의 **핵심 기제**이지 별건 아님, (b) e2e 손 사전 치환(L3), (c) 누계표, (d) Q33 회신(코호트 = L2 의 측정 갈래, 외부 판정 대기라 내가 못 움직임), (e) push
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
 authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/stage2_fixture_manifest_v5.json  # V5 = 최신 동결(투영 전용 개정). 사전등록 본문은 PREREGISTRATION_STAGE2_V4.md가 여전히 정본
 # 코드별 authority 근거절 — 위 코드를 주장할 때는 아래 절을 인용하라:
 #   state_code             ← stage2_fixture_manifest_v5.json amendment (V5 = 투영 전용 개정, dispatch 0) + stage2_controls_results_v5_1.json (5/5)
-#   next_action_code       ← docs/obligation_layer_roadmap.md :20-23(L2=0% 진단) · :64-66(M1 재설계 착수 전) · :95-113(E2.2.3 OFAT: A_ONLY 20/20 · C_ONLY 0/20) + docs/HARNESS_KNOWHOW.md §D7(스키마는 형태만 강제 — 08-31 독립 재현)
+#   next_action_code       ← docs/DESIGN_DECISION_certification_profile_amendment.md §수신 검증 V8(미결 판단이 처분 1의 전제) · docs/obligation_layer_roadmap.md :20-23(L2=0% 진단) · :64-66(M1 재설계 착수 전) · :95-113(E2.2.3 OFAT: A_ONLY 20/20 · C_ONLY 0/20) + docs/HARNESS_KNOWHOW.md §D7(스키마는 형태만 강제 — 08-31 독립 재현)
 #   NO_COHORT_WITHOUT_USER_APPROVAL ← CLAUDE.md "## 실행 승인" 절 (저장소 전역 운영 규칙 — 사전등록은 실행 허가가 아니다)
 #   NO_FROZEN_SURFACE_EDITS         ← PREREGISTRATION_STAGE2_V4.md (D-19 §12; 개정은 D-24 §9 절차로만)
 ```
