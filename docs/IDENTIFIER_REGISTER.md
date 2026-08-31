@@ -64,7 +64,7 @@ append-only 규약과 같은 형태다. 기존 문서의 `G164`·`I3` 는 그대
 | `h1-code` | `concept-gate-h1-wt/*.py` (루트 테스트·`conceptgate/`) | ✅ — **인용만** |
 | `h1a-scope-code` | `../concept-gate-h1a-scope-wt/*.py` | ❌ 다른 worktree |
 | `notes` | `../notes/**/*.md` (logical-revision 제외) | ❌ vault |
-| `vault-backlinks` · `vault-backlinks-code` | `../vault-backlinks-mcp/` | ❌ 다른 저장소 |
+| `vault-backlinks` · `vault-backlinks-code` | **`../evidence-evaluator/vault-backlinks-mcp/`**(작업본, br. `index-freshness-preflight`, 22py) — 최상위 `../vault-backlinks-mcp/` 는 **br. `main` 의 별도 체크아웃**(20py, 공유 파일 4개도 내용 상이). **같은 이름·다른 브랜치 둘이다**(2026-08-31 실측, 동료 회신이 계기) | ❌ 다른 저장소 |
 | `archive` | `../archive/**/*.md` | ❌ **읽기 전용 역사 증거** — 인벤토리에는 넣고 권위에서는 뺀다 |
 | `vault-tool` | `vault_search` 가 붙이는 `authority_class` | ❌ 도구 산출 | `미분류` | ? (?) |
 
@@ -216,10 +216,10 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 | `P` | `retro` | 패턴(반복되는 실패 형태) P1~P26. 정의는 표 첫 셀 `**P<n>**` 단독, 뒤 절 누계표는 `**P<n>**(설명)` 으로 **재기술** — 재기술만 있고 정의가 없으면 발행 아님(게이트 검사) | `패턴` | Pattern (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:536` | `\*{0,2}P(\d+)\*{0,2}(?:\([^)]*\))?` | `retro:P` | `COLLIDES` |
 | `P` | `directive` | 구현 단계 P0~P4 (P0 architecture integrity · P4 oracle evaluation) | `단계` | Phase (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:1940` | — (verbatim, 형식 미강제) | `directive:P` | `COLLIDES` |
 | `P` | `vault-tool` | 권위 등급 `P0-active-experiment` · `P2-path-stable-worktree` | `등급` | Priority (initial) | — | — | `vault-tool:P` | `EXTERNAL` |
-| `P` | `ev-eval` | 회고 P 를 인용(`P24` 3회, 같은 뜻) + 자체 권위 등급 P0/P1/P2 | `등급` | Priority (initial) | — | — | `ev-eval:P` | `EXTERNAL` |
+| `P` | `ev-eval` | **셋이 겹쳐 있다**(2026-08-31 실측): **공유** `P24`(정정이 같은 결함을 실어 온다 — 뜻까지 동일) · **재정의** `P25`(그쪽 "계측기에 잰 범위를 함께 출력" 대 우리 "도구가 딴 것을 쟀다") · **충돌** 저번호대 `P0`~`P14`(그쪽 `P4`=게이트가 게이트를 가림, 우리 `P4`=문서가 자기 상태를 잘못 서술). 동료는 "공유 계열"이라 했으나 실측은 `P24` 에서만 참이다 | `등급` | Priority (initial) | — | — | `ev-eval:P` | `EXTERNAL` |
 | `I` | `directive` | 권한 경계 불변식 I1~I11 (I3 = Verify 는 graph 를 쓰지 않는다) | `불변식` | Invariant (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:147` | — (verbatim) | `directive:I` | `COLLIDES` |
 | `I` | `mechspec` | 상태·갱신 허용성 불변식 I1~I7 (I3 = verified-region protection · I7 = safe abstention) | `불변식` | Invariant (initial) | — | — | `mechspec:I` | `EXTERNAL` |
-| `I` | `ev-eval` | 이슈 번호 **I136~I231**(86개, 우리 `G` 와 같은 역할·append-only). **같은 저장소 안에서 `I1` 실패 코드와 공존** — 번호대가 안 겹쳐 아직 사고가 없을 뿐이다 | `문제` | Issue (initial) | — | — | `ev-eval:I` | `EXTERNAL` |
+| `I` | `ev-eval` | 이슈 번호 **I136~I240**(2026-08-31 동료 회신, 그날 I240 까지 증가. 우리 `G` 와 같은 역할·append-only). **같은 저장소 안에서 `I1` 실패 코드와 공존** — 번호대가 안 겹쳐 아직 사고가 없을 뿐이다 | `문제` | Issue (initial) | — | — | `ev-eval:I` | `EXTERNAL` |
 | `M` | `retro` | 검증 방법 M1~M19 (M8 = 전문 재독) | `검증` | Method (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:222` | `\*{0,2}M(\d+)\*{0,2}` | `retro:M` | `COLLIDES` |
 | `M` | `roadmap` | 마일스톤 M0~M3 | `단계` | Milestone (initial) | `docs/obligation_layer_roadmap.md:28` | — | `roadmap:M` | `COLLIDES` |
 | `M` | `rulings` | D-19 능력 축 M1~M3 (Measurement · Semantic compilation · Certification) | `등급` | Measurement axis (initial) | `docs/DESIGN_DECISION_e2e_v1_experiment_design.md:129` | — (verbatim) | `rulings:M` | `COLLIDES` |
@@ -273,6 +273,15 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 | `Z` | `retro` | 다이어그램 줌 Z0~Z3 — 단일 소유 | `등급` | Zoom (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:2933` | — | `retro:Z` | `OWNER` |
 
 ## 이 등록부가 확인하지 않은 것
+
+- **`.vault-harness/vault-md-retrieval` 의 발행 계열** — 동료가 `R` 계열이 이슈
+  등록부(`R06`·`R14`·`R19`)라고 보고했으나 **우리는 확인하지 않았다.** 그 트리는
+  사용자 지시로 **탐색 영역이 아니다**("다른 세션에서 다루는 것"). 문서군으로
+  등재하지 않는 이유도 그것이다 — **재지 못한 것을 등재하면 등록부가 거짓이 된다.**
+  (부수 실측: 최상위 `.vault-harness` 는 `evidence-evaluator/.vault-harness` 로
+  가는 **심볼릭 링크**라 한 트리다. `find` 가 링크를 안 따라가 "py 0개"로 보였던
+  것은 측정 오류였다 — P25 의 또 한 사례.)
+- **`selftest-harness/` 가 자체 발행자인지** — 동료 자신도 "불확실"이라고 적었다.
 
 - `M@mechspec` 은 **계열이 아니다** — `mechanism_spec.md:86-89` 의 `M1[Pass] M2[Syntax failure]` 는 mermaid 다이어그램 노드 ID 다. 제외했다(M 은 4중 → **3중**).
 - **회고 G 의 발행 형식은 시간에 따라 바뀌었다** — G1~G8 은 `| G1 |`(굵기 없음), 이후는 `| **G9** |`, 일부는 `| **G66 BLOCKER** |`. 형식을 하나로 강제하면 초기 24개가 위반이 되므로 정규식을 관행에 맞춰 넓혔다(굵기 선택·수식어 허용). **표 첫 셀**이라는 핵심은 유지한다 — G164 산문·P25 괄호형이 그것을 벗어난 것이었다.
