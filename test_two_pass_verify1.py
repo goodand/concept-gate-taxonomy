@@ -68,14 +68,31 @@ coverage 충돌·무작위 표본·범위 한정 불가로 기각, in-process �
     1차: 14/14 kill (100%) — **공허했다.** 검산 결과 전부 exec 실패를
          kill 로 오인(통파일 exec 가 dataclass 에서 죽음). P25 형태를
          검산이 자체 적발.
-    2차(대상 함수만 추출, 실제 모듈 전역 공유, 무변이 대조군 0 빨강):
-         13/14 kill — 생존 1: `:598` any→all.
-    생존 원인: 픽스처 전부가 인용 evidence 1개 → any/all 구별 불가.
-         `test_one_anchored_body_among_several_cited_is_enough` 신설로
-         의미(any)를 고정하고 재실행 → **14/14 kill, 생존 0.**
+    2차: 13/14 — 생존 1(`any→all`, 픽스처가 인용 1개뿐이라 구별 불가)
+         → 계약 신설로 사살, 14/14.
+    3차(동료 검토 채택으로 생산자 수리 후): 지점 14→21, **21/21 kill.**
 
-측정 한계(잔여): comprehension 안의 guard(`if t`)는 변이 지점에서 빠져
-있다 · 두 함수 밖(서명·certify 등)은 이 하네스의 담당이 아니라 잰 적 없다.
+**수치의 정본은 docstring 이 아니라 측정기다** — 산문 수치는 코드가 바뀌면
+조용히 거짓이 된다(동료 검토 ④, P4 형태). 재측정:
+`python3 scripts/mutation_two_pass_verify1.py` (위 수치는 2026-08-31,
+동료 검토 반영 커밋 시점). 측정 한계(잔여): comprehension guard 일부는
+변이 지점에서 빠져 있다 · 두 함수 밖(서명·certify 등)은 담당 밖.
+
+## 동료 검토에서 채택한 것 (2026-08-31, 전건 probe 재실측 후)
+
+- **MAJOR-1 채택**: 어휘 둘 다 빈 입력에 PASS+RULE_CHECKED+거짓 evidence
+  문장 — 생산자 수리(어휘 없음 → UNKNOWN) + 계약.
+- **MAJOR-2 채택**: any 는 본문 축이 아니라 **어휘 축** — 계약 docstring
+  정정 + 흩어진 결박 현행(PASS) 고정 계약(강화 여부는 설계 판단 미결).
+- **MAJOR-3 채택**: 매달린 인용 ≠ 빈 본문 — 생산자가 reason 을 가르고,
+  픽스처 서사도 정정(초판 EVIDENCE_R1 은 키 부재였는데 주석이 "본문
+  없음"이라 적었다 — P4).
+- **① 채택**: 부정문·부분문자열 PASS 는 결함이 아니라 이 층이 재지 않는
+  것 — 경계 목격자 계약 신설.
+- **③ 채택(주석)**: invariant 계약은 값 채움 판단이 내려지면 갱신 대상.
+- **④ 채택**: 뮤테이션 측정기를 scripts/ 로 승격, 수치를 시점 기록으로 격하.
+- 기각 없음 — probe 8건 전부 동료 주장과 일치했다. certify 결합·bytes
+  입력은 동료도 가설로 표시했고 여기서도 미실측 가설로 남긴다.
 
 ## 프로토콜 (나) 기록 — 건너뛴 단계와 사유
 
@@ -101,7 +118,9 @@ from conceptgate.cg_obligations import (                       # noqa: E402
 CLAIM_R1 = {"id": "c1", "concept": "충돌출처", "feature": "액체금속",
             "cited_evidence_ids": ["ev3"], "graph_revision": 1,
             "lifecycle": "candidate"}
-EVIDENCE_R1 = {"ev1": "무관한 본문"}                            # ev3 본문 없음
+# ev3 는 **빈 본문**(수리 대기) — 키 자체가 없는 매달린 인용과 다른 사건이다
+# (동료 검토 MAJOR-3: 초판은 키 부재였는데 주석이 "본문 없음"이라 적었다 — P4).
+EVIDENCE_R1 = {"ev1": "무관한 본문", "ev3": ""}
 # G₁ (r2): repair 가 ev3 본문을 공급하고 새 revision 을 만든다.
 EVIDENCE_R2 = dict(EVIDENCE_R1, ev3="충돌출처 는 액체금속 을 포함한다")
 
@@ -115,7 +134,7 @@ def test_pass0_is_computed_unknown_not_hand_written():
     """Verify₀ 부터 계산이다 — 기존 e2e [4] 는 O₀ 를 손으로 만들었다."""
     o0 = _verify(CLAIM_R1, EVIDENCE_R1)
     assert o0.verdict is Verdict.UNKNOWN
-    assert "본문 없음" in o0.reason
+    assert "빈 본문" in o0.reason
     assert o0.graph_revision == 1
 
 
@@ -166,16 +185,69 @@ def test_vocabulary_absence_is_unknown_not_fail():
 
 
 def test_one_anchored_body_among_several_cited_is_enough():
-    """의미 고정 — 결박은 **인용 본문 중 하나면** 된다(any), 전부가 아니다(all).
+    """뮤테이션이 낳은 계약 — `any→all` 뮤턴트(유일 생존)를 죽이는 입력.
 
-    뮤테이션 실측(2026-08-31)이 낳은 계약: `:598` 의 `any→all` 뮤턴트가
-    유일하게 생존했다 — 기존 픽스처 전부가 인용 evidence 를 1개만 가져
-    any 와 all 이 구별 불가였다. 인용 2개 중 1개만 결박되는 이 입력이
-    그 뮤턴트를 죽이고, 동시에 "여러 인용 중 하나에만 있어도 PASS" 라는
-    생산자 의미를 고정한다."""
+    정정(동료 검토 MAJOR-2, 채택): 초판 docstring 은 "인용 본문 중 하나면
+    된다(any)"라 적었으나 **코드의 any 는 본문 축이 아니라 어휘 축**이다
+    (`for t in terms` 바깥, `for body in cited` 안). 이 입력(ev3 가 두 어휘를
+    다 담음)은 두 축을 구별하지 못하고, 뮤턴트를 죽인다는 사실만 고정한다.
+    축 구별은 아래 흩어진-결박 계약이 한다."""
     claim = dict(CLAIM_R1, cited_evidence_ids=["ev1", "ev3"], graph_revision=2)
     o1 = _verify(claim, EVIDENCE_R2)      # ev1="무관한 본문", ev3 만 결박
     assert o1.verdict is Verdict.PASS
+
+
+def test_scattered_terms_across_bodies_currently_pass():
+    """현행 의미 고정 — **어휘 축 any**: concept 과 feature 가 서로 다른
+    본문에 흩어져 어느 본문도 claim 전체를 결박하지 않아도 PASS 다.
+
+    이것이 옳은 의미인지는 **설계 판단 미결**이다(동료 검토 MAJOR-2가
+    강요한 결정 — 지금은 판단 없이 이렇게 되어 있다는 사실을 고정하고,
+    본문 축 결박으로 강화하려면 이 계약을 뒤집는 것이 그 판단의 형식이
+    된다). 부수 효과: 이 입력은 any→all 뮤턴트를 본문 축에서도 죽인다."""
+    claim = dict(CLAIM_R1, cited_evidence_ids=["evA", "evB"], graph_revision=2)
+    o1 = _verify(claim, {"evA": "충돌출처 만 있다", "evB": "액체금속 만 있다"})
+    assert o1.verdict is Verdict.PASS
+
+
+def test_no_terms_means_unknown_not_vacuous_pass():
+    """공허한 가드 차단(동료 검토 MAJOR-1, 채택) — concept·feature 둘 다
+    비면 검사가 없으므로 PASS 가 아니라 UNKNOWN 이다. 초판 생산자는 이
+    입력에 PASS + RULE_CHECKED + "문자 등장"이라는 **거짓 evidence 문장**을
+    냈다(`if t` 가 빈 어휘를 검사 대상에서 빼는 P1 형태)."""
+    claim = dict(CLAIM_R1, concept="", feature="", graph_revision=2)
+    o1 = _verify(claim, EVIDENCE_R2)
+    assert o1.verdict is Verdict.UNKNOWN
+    assert "어휘 없음" in o1.reason
+
+
+def test_dangling_citation_and_hollow_body_are_told_apart():
+    """매달린 인용(키 부재 = 그래프 무결성 결함 후보)과 빈 본문(수리 대기
+    = 정상 중간 상태)은 다른 사건이다(동료 검토 MAJOR-3, 채택) — 접으면
+    Refine 이 무엇을 공급해야 하는지 알 수 없다."""
+    dangling = _verify(dict(CLAIM_R1, cited_evidence_ids=["evX"]), {})
+    hollow = _verify(dict(CLAIM_R1, cited_evidence_ids=["evX"]), {"evX": ""})
+    assert dangling.verdict is Verdict.UNKNOWN
+    assert hollow.verdict is Verdict.UNKNOWN
+    assert "매달린 인용" in dangling.reason
+    assert "빈 본문" in hollow.reason
+    assert dangling.reason != hollow.reason
+
+
+def test_what_anchoring_does_not_measure_negation_and_substring():
+    """경계 목격자(동료 검토 ①, 채택) — 이 검사는 **문자 등장**이지 의미
+    지지가 아니다(생산자 docstring 의 선언). 그 선언의 목격자가 계약에
+    없으면 다음 사람이 이것을 "결박 확인"으로 읽고 상류에서 신뢰한다.
+
+    - 부정문도 PASS 다: "포함하지 않는다"가 두 어휘를 문자로 담는다.
+    - 부분문자열도 PASS 다: "금속" 은 "액체금속" 에 결박된다(형태소 경계
+      없음). 둘 다 결함이 아니라 **이 층이 재지 않는 것**의 고정이다."""
+    negation = _verify(dict(CLAIM_R1, graph_revision=2),
+                       dict(EVIDENCE_R1, ev3="충돌출처 는 액체금속 을 포함하지 않는다"))
+    assert negation.verdict is Verdict.PASS
+    substring = _verify(dict(CLAIM_R1, concept="금속", feature="", graph_revision=2),
+                        dict(EVIDENCE_R1, ev3="액체금속 이야기"))
+    assert substring.verdict is Verdict.PASS
 
 
 def test_verify_does_not_mutate_the_graph():
@@ -198,6 +270,10 @@ def test_o0_is_stale_against_r2_and_o1_is_not():
 
 def test_invariant_stays_none_here():
     """범위 절제 — invariant 값 채움은 별도 설계 판단(회고 2부 §미해결)이다.
-    이 파일에서 슬쩍 채우면 그 판단을 우회하는 것이 된다."""
+    이 파일에서 슬쩍 채우면 그 판단을 우회하는 것이 된다.
+
+    주의(동료 검토 ③): 그 설계 판단이 내려져 생산자가 invariant 를 채우기
+    시작하면 **이 계약이 판단의 반대편을 고정한다** — 그때 이 계약을 갱신
+    하는 것까지가 그 판단의 일부다. 여기 적어 두는 이유다."""
     o1 = _verify(dict(CLAIM_R1, graph_revision=2), EVIDENCE_R2)
     assert o1.invariant is None

@@ -47,6 +47,7 @@
 | `scripts/verify_dispatch_prompts.py` | dispatch 인자 프롬프트가 plan과 바이트 동일한지 | MANUAL_TOOL | `HANDOFF.md` |
 | `scripts/wikilink_graph.py` | 저장소 안 `[[wikilink]]` 해소 — 죽은 링크·모호한 basename·범위 밖(EXTERNAL)을 가른다 | WIRED_PYTEST | `test_wikilink_graph.py` |
 | `scripts/identifier_scan.py` | md·py 안 `[A-Z]<번호>` 출현을 **블록 구조**로 분류한다 — 표 첫 셀/절 제목(발행)·산문/인라인코드/링크(인용)·mermaid 펜스/절 번호/파이썬 이름(위양성). 출현은 원문에서 열거하고 구조는 덮는 데만 쓰므로 **못 덮은 것이 `UNRESOLVED` 로 남는다** | WIRED_PYTEST | `test_identifier_scan.py` |
+| `scripts/mutation_two_pass_verify1.py` | `test_two_pass_verify1.py` 대상 함수 2개의 범위 한정 전수 뮤테이션 — kill rate 측정기. 산문 수치가 조용히 낡는 것을 막는 재측정 수단(동료 검토 ④). 게이트가 아니라 **수동 도구**(느리고, 수치의 정본은 실행 출력) | MANUAL_TOOL | `docs/DESIGN_DRAFT_two_pass_verify1.md` §7 |
 | `scripts/compaction_ledger.py` | 세션 기록의 `subtype: compact_boundary` 를 뽑아 `HANDOFF.md` §7 표를 **생성**한다 — 손으로 적었을 때 시각·횟수·개수 셋 다 틀렸다. 게이트가 아니라 **수동 도구**(기록 파일이 저장소 밖이라 게이트는 비-hermetic) | MANUAL_TOOL | `HANDOFF.md` |
 | `scripts/gen_identifier_groups.py` | 등록부 §계열 표의 `I` 행 문서군을 `conceptgate/_identifier_groups.py` 로 **생성**한다 — production 이 마크다운을 런타임 파싱하던 것을 없앴다(`Dockerfile` 이 `docs/` 를 COPY 하지 않아 배포에서 무력했다). 일치는 `test_identifier_groups_sync.py` 가 강제 | WIRED_PYTEST | `test_identifier_groups_sync.py` |
 | `scripts/session_snapshot.py` | compaction 이 잃는 것(**진행 중 미커밋·미추적**)을 `git`·`HANDOFF.md` 에서 **생성**한다. 정본을 복사하지 않고 **가리킨다**. 문서가 자기를 **advisory 로 선언**한다 — 정본과 어긋나면 정본이 이긴다 | MANUAL_TOOL | `HANDOFF.md` |

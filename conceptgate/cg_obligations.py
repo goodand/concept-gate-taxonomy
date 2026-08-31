@@ -585,17 +585,35 @@ def results_from_claim_anchoring(
     """
     out: List[ObligationResult] = []
     for c in claims:
-        cited = [evidence_texts.get(e) for e in c.get("cited_evidence_ids", [])]
-        cited = [t for t in cited if t]
+        ids = c.get("cited_evidence_ids", [])
+        cited = [t for t in (evidence_texts.get(e) for e in ids) if t]
         if not cited:
+            # 매달린 인용(키 부재 = 그래프 무결성 결함 후보)과 빈 본문(수리
+            # 대기 = 정상 중간 상태)은 다른 사건이다 — 접으면 Refine 이 무엇을
+            # 공급해야 하는지 알 수 없다 (동료 검토 MAJOR-3, 2026-08-31).
+            dangling = [e for e in ids if e not in evidence_texts]
+            hollow = [e for e in ids if e in evidence_texts]
+            parts = ([f"매달린 인용 {dangling}"] if dangling else []) + \
+                    ([f"빈 본문 {hollow}"] if hollow else []) or ["인용 없음"]
             out.append(ObligationResult(
                 "claim.evidence_anchoring", Verdict.UNKNOWN, Assurance.PROPOSED,
                 DeciderKind.LOCAL_RULE,
-                reason=f"{c['id']}: 인용 evidence 본문 없음 — 결박 판정 대상 없음",
+                reason=f"{c['id']}: 결박 판정 대상 없음 — " + " · ".join(parts),
                 graph_revision=c.get("graph_revision")))
             continue
-        terms = [c.get("concept", ""), c.get("feature", "")]
-        missing = [t for t in terms if t and not any(t in body for body in cited)]
+        terms = [t for t in (c.get("concept", ""), c.get("feature", "")) if t]
+        if not terms:
+            # 어휘가 없으면 검사가 없다 — 여기서 PASS 를 내면 "아무것도 검사
+            # 하지 않은 RULE_CHECKED" 가 된다 (공허한 가드 P1 형태, 동료 검토
+            # MAJOR-1). 검사 부재는 통과가 아니라 판정 불가다.
+            out.append(ObligationResult(
+                "claim.evidence_anchoring", Verdict.UNKNOWN, Assurance.PROPOSED,
+                DeciderKind.LOCAL_RULE,
+                reason=f"{c['id']}: 검사할 어휘 없음 — concept·feature 둘 다 비어 "
+                       f"있어 결박을 주장할 수 없음",
+                graph_revision=c.get("graph_revision")))
+            continue
+        missing = [t for t in terms if not any(t in body for body in cited)]
         if missing:
             out.append(ObligationResult(
                 "claim.evidence_anchoring", Verdict.UNKNOWN, Assurance.PROPOSED,
