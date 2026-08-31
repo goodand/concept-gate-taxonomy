@@ -184,31 +184,12 @@ class ObligationResult:
 # INVARIANT_UNKNOWN_GROUP)이지 fail-open이 아니다. 가산 필드라 기존 생산자
 # 19곳 중 누구도 invariant를 채우지 않으므로 이 저하는 지금 아무 실행 경로에도
 # 영향을 주지 않는다.
-_IDENTIFIER_REGISTER_PATH = (
-    Path(__file__).resolve().parent.parent / "docs" / "IDENTIFIER_REGISTER.md")
-
-
-def _invariant_groups_from_register() -> "frozenset[str]":
-    if not _IDENTIFIER_REGISTER_PATH.exists():
-        return frozenset()
-    groups: set = set()
-    in_table = False
-    for line in _IDENTIFIER_REGISTER_PATH.read_text().splitlines():
-        if line.startswith("## 계열"):
-            in_table = True
-            continue
-        if in_table and line.startswith("## "):
-            break
-        if in_table and line.startswith("| `") and not line.startswith("| 글자"):
-            cells = [c.strip() for c in line.strip("|").split("|")]
-            if len(cells) < 9:
-                continue
-            if cells[0].strip("`") == "I":
-                groups.add(cells[1].strip("`"))
-    return frozenset(groups)
-
-
-INVARIANT_GROUPS: "frozenset[str]" = _invariant_groups_from_register()
+# 문서군 목록은 등록부에서 **생성된** 상수를 쓴다 — 런타임 파싱을 지웠다.
+# production 이 사람이 유지하는 마크다운에 의존했고, `Dockerfile` 이 `docs/`
+# 를 COPY 하지 않아 배포에서 무력했다. 생성기는
+# `scripts/gen_identifier_groups.py`, 일치는
+# `test_identifier_groups_sync.py` 가 강제한다.
+from conceptgate._identifier_groups import INVARIANT_GROUPS
 
 
 def validate_result(result: ObligationResult,
@@ -261,20 +242,7 @@ def validate_result(result: ObligationResult,
                            "detail": result.invariant})
         else:
             group, _, _rest = result.invariant.partition(":")
-            if not INVARIANT_GROUPS:
-                # 등록부를 **못 읽은 것**과 문서군이 **진짜 없는 것**은 다르다.
-                # `Dockerfile:23-28` 이 `conceptgate/`·`vendor/` 만 COPY 하고
-                # `docs/` 를 넣지 않아 배포 환경이 실제로 이 경로를 탄다(실측).
-                # 그때 UNKNOWN_GROUP 을 내면 정상 FQN 을 "모르는 문서군"이라
-                # **거짓으로** 말한다 — 부재와 미확인을 섞는 것이 전임 도구
-                # `handoff_reachability.py` 의 제거 사유였다
-                # (`docs/LEGACY_REGISTER.md:31`).
-                errors.append({
-                    "code": "INVARIANT_REGISTER_UNAVAILABLE",
-                    "detail": {"invariant": result.invariant,
-                               "register": str(_IDENTIFIER_REGISTER_PATH),
-                               "note": "'모르는 문서군'이 아니라 '확인 못 함'"}})
-            elif group not in INVARIANT_GROUPS:
+            if group not in INVARIANT_GROUPS:
                 errors.append({"code": "INVARIANT_UNKNOWN_GROUP",
                                "detail": {"invariant": result.invariant,
                                           "known_groups": sorted(INVARIANT_GROUPS)}})

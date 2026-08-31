@@ -14,7 +14,7 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 ```yaml
 updated: 2026-08-31            # 이 문서를 마지막으로 고친 날. 제목의 2026-08-23 은 **마일스톤**이지 갱신일이 아니다
 state_code: D37_RECEIVED__R4_IS_DOWNSTREAM_OF_M   # D-37 도착·검증·저장 완료(`VERBATIM_SHA256: 5274ece0…`). R4는 기제 동일성이 아니라 **M 상대적 qualification 동등성**이고 **R2와 독립인 축**이다. 그리고 R4는 **M 없이 평가 불가** — M은 D-34 3항 사슬(`semantic definition → qualification evidence → measurement implementation`)의 **비어 있는 첫 항**이다. 즉 **R4를 풀어 경계로 가려던 방향은 성립하지 않는다.** 우리 상신문 §4는 **기각**됐다(금지된 다리의 역방향 반복). **코호트 dispatch 누계 0건**
-next_action_code: DEPLOY_REGISTER_OR_TWO_PASS   # **대안 B 완료**(G249~G252): ObligationResult.invariant 가산 도입·서명 본체 포함·문서군은 등록부 도출. **단 배포에서는 무력**하다 — Dockerfile 이 docs/ 를 COPY 하지 않아 등록부가 없다(G250). 무력하되 왜 무력한지 말한다(INVARIANT_REGISTER_UNAVAILABLE, G251). 다음 결정: (a) docs/ 를 이미지에 넣기 (b) 등록부에서 생성한 데이터를 conceptgate/ 에 두고 게이트로 일치 강제 — (b) 권장하나 승인 필요. 그 뒤 2-pass Verify1 승격(SURVEY §8.3, 생산자 cg_obligations.py:327)
+next_action_code: TWO_PASS_VERIFY1   # **대안 B 완결**(G249~G257): ObligationResult.invariant + 문서군을 **생성물**(`conceptgate/_identifier_groups.py`)로 — 런타임 마크다운 파싱 제거, 배포에서도 동작. `INVARIANT_REGISTER_UNAVAILABLE` 은 그 상태가 사라져 삭제. 다음 = 2-pass Verify1 승격(SURVEY §8.3): `[6]` 의 손으로 쓴 `all_pass` 를 `results_from_normalizer` 실제 계산으로 — 생산자는 `cg_obligations.py:327,332` 에 이미 있다. 경우 A→B 로 올라가면 '한 단계 수렴' 증거가 생긴다(수렴 자체는 v0 로 불가, §8.2)
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안

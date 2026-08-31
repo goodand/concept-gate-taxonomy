@@ -48,6 +48,7 @@
 | `scripts/wikilink_graph.py` | 저장소 안 `[[wikilink]]` 해소 — 죽은 링크·모호한 basename·범위 밖(EXTERNAL)을 가른다 | WIRED_PYTEST | `test_wikilink_graph.py` |
 | `scripts/identifier_scan.py` | md·py 안 `[A-Z]<번호>` 출현을 **블록 구조**로 분류한다 — 표 첫 셀/절 제목(발행)·산문/인라인코드/링크(인용)·mermaid 펜스/절 번호/파이썬 이름(위양성). 출현은 원문에서 열거하고 구조는 덮는 데만 쓰므로 **못 덮은 것이 `UNRESOLVED` 로 남는다** | WIRED_PYTEST | `test_identifier_scan.py` |
 | `scripts/compaction_ledger.py` | 세션 기록의 `subtype: compact_boundary` 를 뽑아 `HANDOFF.md` §7 표를 **생성**한다 — 손으로 적었을 때 시각·횟수·개수 셋 다 틀렸다. 게이트가 아니라 **수동 도구**(기록 파일이 저장소 밖이라 게이트는 비-hermetic) | MANUAL_TOOL | `HANDOFF.md` |
+| `scripts/gen_identifier_groups.py` | 등록부 §계열 표의 `I` 행 문서군을 `conceptgate/_identifier_groups.py` 로 **생성**한다 — production 이 마크다운을 런타임 파싱하던 것을 없앴다(`Dockerfile` 이 `docs/` 를 COPY 하지 않아 배포에서 무력했다). 일치는 `test_identifier_groups_sync.py` 가 강제 | WIRED_PYTEST | `test_identifier_groups_sync.py` |
 | `scripts/session_snapshot.py` | compaction 이 잃는 것(**진행 중 미커밋·미추적**)을 `git`·`HANDOFF.md` 에서 **생성**한다. 정본을 복사하지 않고 **가리킨다**. 문서가 자기를 **advisory 로 선언**한다 — 정본과 어긋나면 정본이 이긴다 | MANUAL_TOOL | `HANDOFF.md` |
 | `test_invariant_fqn_citation.py` | 소유 문서 밖 맨 불변식 인용(모호 구간 1~9)의 **증가**를 막는 래칫 — 기존 116건은 BASELINE 동결(등록부 append-only 규약), 감소 시 갱신 강제. `identifier_scan` 의 둘째 소비자 | WIRED_PYTEST | `docs/IDENTIFIER_REGISTER.md` |
 | `test_identifier_register.py` | 식별자 등록부(`docs/IDENTIFIER_REGISTER.md`) 게이트 — 상태 어휘·정의 위치 실재·**발행 형식 강제**·인벤토리 누락·음성 증명 | WIRED_PYTEST | `docs/IDENTIFIER_REGISTER.md` |

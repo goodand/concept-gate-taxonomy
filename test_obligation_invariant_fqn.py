@@ -202,29 +202,19 @@ def test_it_does_not_check_whether_the_invariant_was_actually_violated():
 
 
 # ---------------------------------------------------------------------------
-# 5. 못 읽은 것을 모른다고 말하지 않는다 (2026-08-31, 구현자 자진 보고에서)
+# 5. (삭제됨) 등록부 미확인 상태 — 2026-08-31
 # ---------------------------------------------------------------------------
-
-def test_an_unreadable_register_is_not_reported_as_an_unknown_group(monkeypatch):
-    """등록부를 **못 읽은 것**과 문서군이 **진짜 없는 것**은 다르다.
-
-    구현자가 자진 보고했다: `Dockerfile:23-28` 이 `conceptgate/`·`vendor/` 만
-    COPY 하고 **`docs/` 는 안 넣는다**(실측 확인). 그래서 배포 환경에서는
-    등록부가 없고 `INVARIANT_GROUPS` 가 빈 집합이 된다 — 그러면 정상 FQN 인
-    `directive:I3` 가 `INVARIANT_UNKNOWN_GROUP` 으로 나온다.
-
-    fail-closed 라 안전하지만 **이유를 거짓으로 말한다.** 부재와 미확인을 섞는
-    것이 전임 도구 `handoff_reachability.py` 의 제거 사유였다
-    (`docs/LEGACY_REGISTER.md:31`). 별도 코드로 가른다."""
-    monkeypatch.setattr(ob, "INVARIANT_GROUPS", frozenset())
-    codes = {v["code"] for v in ob.validate_result(_result(invariant="directive:I3"))}
-    assert "INVARIANT_REGISTER_UNAVAILABLE" in codes
-    assert "INVARIANT_UNKNOWN_GROUP" not in codes
-
-
-def test_a_malformed_fqn_is_still_caught_without_the_register(monkeypatch):
-    """등록부가 없어도 **형태 검사는 등록부와 무관**하다 — 맨 번호는 여전히
-    거부된다. 등록부 부재를 이유로 모든 검사를 놓으면 fail-open 이 된다."""
-    monkeypatch.setattr(ob, "INVARIANT_GROUPS", frozenset())
-    codes = {v["code"] for v in ob.validate_result(_result(invariant="I3"))}
-    assert "INVARIANT_NOT_FULLY_QUALIFIED" in codes
+#
+# 여기 `INVARIANT_REGISTER_UNAVAILABLE` 검사 둘이 있었다. **지웠다.**
+#
+# 그 코드는 `cg_obligations` 가 import 시점에 `docs/IDENTIFIER_REGISTER.md` 를
+# 파싱하던 시절의 것이다 — 배포 이미지에 `docs/` 가 없어 등록부를 못 읽는 상태가
+# 실재했고, 그때 "모르는 문서군"이라 말하면 거짓이므로 갈랐다.
+#
+# 이제 문서군은 `conceptgate/_identifier_groups.py` 로 **생성**되어 패키지 안에
+# 있다(`scripts/gen_identifier_groups.py`, 일치는 `test_identifier_groups_sync.py`
+# 가 강제). 런타임에 등록부를 읽지 않으므로 **"못 읽음"이라는 상태 자체가
+# 존재하지 않는다.**
+#
+# 지운 이유를 남기는 까닭: 이 코드가 왜 있었고 왜 사라졌는지 모르면, 다음 사람이
+# 같은 상황에서 다시 만들거나 반대로 필요한 자리에서 안 만든다.
