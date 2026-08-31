@@ -21,6 +21,9 @@ docs/obligation_layer_roadmap.md — 트리거 충족 전 구현 금지.
 """
 from __future__ import annotations
 
+import hashlib
+import json
+
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
 from graphlib import CycleError, TopologicalSorter
@@ -553,6 +556,45 @@ LEGACY_RELATION_PROFILE = CertificationProfile(
 )
 
 
+# D-38 ㄱ (2026-09-01): `NEW_PROFILE_IDENTITY_PREFERRED`. Q38 이 물은 변경
+# (`claim.evidence_provenance` 를 required 에 넣는 것)을 **새 identity 안에서**
+# 한다. `_v0` 는 제자리 재정의하지 않는다 — 판정 원문: "이미 배포된 profile의
+# 계약 의미를 보존해야 한다면 `_v0`를 제자리에서 재정의해서는 안 되고, 새
+# profile identity가 필요하다."
+#
+# **기본값은 바꾸지 않는다.** 배포된 도구의 기본 profile 을 이것으로 돌리면
+# 기존 호출자의 관측 가능한 출력이 바뀌고(certified_claim_ids 축소), 판정 ㄷ가
+# 그것을 "제품 계약 변경에 별도 backward-compatibility 규칙이 필요하다는
+# 근거"로 지목했다. 그 판단은 미결이다(D-38 수신 검증 V8).
+RELATION_CLAIM_V1_PROFILE = CertificationProfile(
+    profile_id="relation_claim_v1",
+    applies_to_claim_kind="relation_assertion",
+    required=LEGACY_RELATION_PROFILE.required + ("claim.evidence_provenance",),
+    allowed_na=LEGACY_RELATION_PROFILE.allowed_na,
+)
+
+
+def profile_commitment(profile: CertificationProfile) -> Dict[str, Any]:
+    """이 profile 이 **무엇을 요구했는가**를 재구성 가능한 형태로 굳힌다.
+
+    D-38 ㄴ: `profile_id` 만으로는 그 이름이 무엇을 요구했는지 재구성할 수
+    없으므로 판정이 더 강한 형태(`profile_id` + `required_hash`)를 권했다.
+    정의는 판정이 주지 않았으므로 여기서 못박는다(설계 적대검증 채택 #3 —
+    정의 없이 "구제 경로 있음"으로 두면 나중에 재구성이 불가능해진다):
+
+        required_hash = sha256(canonical_json({profile_id, sorted(required)}))
+
+    **정렬한다.** 나열 순서가 바뀌었다는 이유로 해시가 달라지면 무관한 편집이
+    인증서 불일치를 만들고, 그렇게 우는 게이트는 사람이 끈다.
+    """
+    payload = json.dumps({"profile_id": profile.profile_id,
+                          "required": sorted(profile.required)},
+                         sort_keys=True, ensure_ascii=False,
+                         separators=(",", ":"))
+    return {"profile_id": profile.profile_id,
+            "required_hash": hashlib.sha256(payload.encode("utf-8")).hexdigest()}
+
+
 def is_certified(profile: CertificationProfile,
                  check_verdicts: Dict[str, Verdict]) -> bool:
     """claim is certified iff profile.required checks가 전부 PASS (지시 §15).
@@ -782,7 +824,12 @@ CERTIFICATE_DOMAIN = "obligation-certificate"
 # 바뀌었다. 검증부는 지금 이 문자열을 대조하지 않지만(:665-690 부근에
 # schema 검사 없음), 올리지 않으면 나중에 v0/v1 문서를 구별할 근거 자체가
 # 없어진다 — 이름 자체를 못박는다(느슨한 endswith 단언은 이것을 보증 못함).
-CERTIFICATE_SCHEMA = "obligation_certificate_v1"
+# v1 → v2 (2026-09-01, D-38 ㄴ): 서명 본체에 profile commitment 가 추가되며
+# 몸체 형태가 또 바뀌었다. 판정 원문 — "현재 obligation_certificate_v1의 서명
+# payload 정의 자체가 바뀐다면, 기존 v1과 새로운 payload를 동일 schema라고
+# 부르는 것은 위험하다." 수신 검증 V5 가 08-31 v0→v1 과 같은 종류의 변경임을
+# 실측했다.
+CERTIFICATE_SCHEMA = "obligation_certificate_v2"
 
 
 class CertificateError(Exception):
@@ -792,7 +839,9 @@ class CertificateError(Exception):
 def issue_claim_certificate(claim: Dict[str, Any],
                             results: List[ObligationResult],
                             *, issuer_tool: str,
-                            key_path=None) -> Dict[str, Any]:
+                            key_path=None,
+                            profile: CertificationProfile | None = None
+                            ) -> Dict[str, Any]:
     """claim 하나에 대한 게이트 결과를 서명된 certificate로 발급.
 
     발급 주체는 **게이트를 실제로 실행한 서버측 코드**다 — MCP client가
@@ -806,6 +855,11 @@ def issue_claim_certificate(claim: Dict[str, Any],
     body = {
         "schema": CERTIFICATE_SCHEMA,
         "issuer": {"tool": issuer_tool, "verifier": VERIFIER},
+        # D-38 ㄴ: 어떤 인증 계약이 적용됐는지가 **서명 아래**에 있어야 한다.
+        # 없으면 동일 results[] 를 가진 두 문서를 verifier 가 구별하지 못한다 —
+        # 수신 검증 V3 이 그것을 실측했다(두 profile 의 payload 가 바이트 동일).
+        # 형태는 조건부로 갈리지 않는다: 주장 안 한 호출도 같은 키를 내고 None 이다.
+        "profile": profile_commitment(profile) if profile is not None else None,
         "subject_fingerprint": cg_identity.claim_fingerprint(claim),
         "graph_revision": claim.get("graph_revision"),
         "results": [
