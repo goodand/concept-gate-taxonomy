@@ -386,6 +386,64 @@ staleness 가 울었다(첫 실사례, G207). `test_guard_negative_coverage` 의
   층 격리 → 음성 증명(변조 후 **finally 복원**) → 결정론 → 부재≠빈값 → 배포.
   테스트 하나가 성질 하나만 단언한다.
 
+### D6. 하네스 안에 LLM 이 들어가면 — 오라클과 골든셋은 **다른 일**을 한다
+
+2026-08-31 실측(위임 조사 + lead 재실측 3건). 규칙 기반은 반례 하나가
+결정적이라 실험이 곧 트러블슈팅이지만, 확률적 성분은 관측 하나가 다음을
+예측하지 못해 **고정된 기준 집합**이 필요해진다.
+
+| | 담는 것 | 잡는 것 |
+|---|---|---|
+| **오라클** | 우리 시스템과 **독립적으로** 정한 정답 | "지금 답이 틀렸다" |
+| **골든·래칫** | 우리 시스템의 **현재 출력**을 동결 | "어제와 달라졌다" |
+
+**둘의 혼동은 이미 결함으로 명명되어 있다** — `docs/semantic_oracle_set_handoff_v0.1.yaml:61`
+(`INV-ORACLE-11`): *"Commitment is not correctness: a matching expected-IR hash
+proves consistency with the preregistered oracle transformation, not its
+semantic correctness."* 해시 일치는 **일관성**이고 정확성이 아니다.
+
+**새로 만들지 마라 — 두 축 모두 재사용 가능한 코드가 있다**(재실측 확인):
+
+- 오라클: `conceptgate/cg_fixture_resolver.py`(7축 commitment 재해시, source
+  불특정) · `conceptgate/cg_oracle_adapter.py`(gold → IR, 정답 lookup 금지가
+  AST 로 집행) · `evidence-evaluator/evidence_evaluator/contract.py:145`
+  (`validate_gold` 스키마 계약)
+- 골든·래칫: `experiments/.../test_frozen_surfaces.py`(FROZEN 표 + 무늬 완전성
+  + 공허성 음성 검사) · `evidence-evaluator/.../freeze.py:23`
+  (`verify_tree_freeze`, 임의 트리) · `test_guard_negative_coverage.py`(AST 순회)
+
+**LLM 자유서술을 채점할 것이면 `evidence-evaluator` 쪽이다.** concept-gate 의
+오라클은 **논리식 동일성** 대조용이라 자연어에 안 붙는다. 그쪽 gold 6건
+(`private_eval/handoff-confirmatory-v1/gold/CONF-0{1..6}.json`)은 정답을
+**코드화된 라벨**로 갖는다 — 재실측 확인: `state_code` · `next_action_code` ·
+`stop_condition_codes` · `required_read_paths` · `authority_paths`. 자유서술을
+결정론적으로 채점하는 방법을 이미 풀어 놓은 형태다. gold 누출 차단
+(`security.py` 의 `hidden_gold`/`private_eval` 금지)과 **gold 없는 음성 난이도**
+(`NO_GOLD_DIFFICULTIES`)까지 딸려 있다.
+
+**베낄 실패 교훈 — 동결 대상과 기대값이 같은 출처면 공허하다.** `assert_9` 가
+렌더러 출력을 **같은 모듈 상수**에 대조했다(자기 동일성). 원문 재실측
+(`h1a_common_policy_block_v2.json` 의 `why`): *"compared render_policy_block's
+output against the same module constant the renderer emits — a self-identity
+check. This artifact is an INDEPENDENT source."* 새 골든셋을 만들 때 **첫 질문은
+"기대값의 출처가 피검체와 독립인가"** 다.
+
+### D7. 스키마는 **형태**를 강제하고 **필드 의미**는 강제하지 않는다
+
+2026-08-31 실측. 워크플로 `agent(prompt, {schema})` 로 회신 12건을 받았다.
+
+- **형태 준수 100%**: JSON 검증 통과 12/12, 스키마 실패 0. 지난 위임들이
+  마크다운·산문으로 와서 결정론 필터를 못 태운 문제는 이것으로 해결된다.
+- **필드 의미 준수는 나빴다**: "백틱 인용은 대상 파일에 실재하는 문자열만"을
+  필드 description 에 박았는데, agent 들이 **산문 요약과 실행 출력까지 백틱으로
+  감쌌다.** 그 결과 결정론 필터가 11/12 를 오탐 폐기했다.
+
+**그래서 스키마를 신뢰의 근거로 쓰지 않는다.** 모델 급(Sonnet·Opus 이상)이
+의미 준수를 올려 주지만 **보증은 아니고**, 그 위에 (1) 형태로 강제할 수 있는
+것은 스키마로, (2) 형태로 못 강제하는 것은 **결정론 필터**로, (3) 필터도 못
+가르는 것은 **arm 설계 실험**으로 내린다. 오늘 그 셋이 각각
+`schema` 옵션 · `uncheckable_kind()` · (미실행) 스키마 분리 실험이었다.
+
 ## C. 아직 1회 확인이라 승격 보류 (그러나 재발 감시)
 
 | 항목 | 1차 확인 |
