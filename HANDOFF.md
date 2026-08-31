@@ -26,6 +26,31 @@ authority: experiments/2026-08-23_e2e_v1_c_o1_cohort/stage2_fixture_manifest_v5.
 #   NO_FROZEN_SURFACE_EDITS         ← PREREGISTRATION_STAGE2_V4.md (D-19 §12; 개정은 D-24 §9 절차로만)
 ```
 
+## 0.5 목적 사다리 — 지금 하는 일이 무엇을 위한 것인가
+
+정본은 [[concept-gate-h1-wt/docs/obligation_layer_roadmap|obligation_layer_roadmap]] §목적 계층(`:16-18`)이다.
+여기 세 줄만 옮긴다(바뀌면 정본이 이긴다):
+
+```text
+L1 궁극   인간-LLM 협업 개념 지식을 형식 추론의 보증을 받아 신뢰 가능한 온톨로지로 누적
+L2 조건   "document ⊨ formal model" 을 기계가 보증
+L3 기술   obligation 시스템 (+ 필요 시 warm reasoner + content-addressed cache)
+```
+
+**열린 Task 가 사다리 어디에 걸리는가** — 이것이 이 절의 고유 내용이다:
+
+| Task (아래 절) | 사다리 | 왜 그 층인가 |
+|---|---|---|
+| `TWO_PASS_VERIFY1` (`next_action_code`) | **L2** | Verify₁ 없이는 "repair 가 obligation 을 해결했다"는 증거가 없다 — 보증이 아니라 주장이다(SURVEY §8.2) |
+| 코호트 실행 (§3, Q33 대기) | **L2 의 측정** | H1 실험은 L2 보증이 실제 corpus 에서 성립하는지 잰다 |
+| `invariant` 값 채움 (설계 판단 대기) | **L3** | 판정이 불변식을 지목해야 obligation 시스템이 감사 가능하다. 단 **L2 직결이 아니다** — 그래프 충실도가 아니라 검증 장치의 계보다(회고 2부 G261) |
+| 누계표 분리·P27 등재 (대기) | **사다리 밖** | 작업 위생이지 L1~L3 어디에도 안 걸린다. 그래서 우선순위가 낮은 것이 **맞다** |
+
+**쓰는 법**: 새 Task 를 이 문서에 넣을 때 이 표에도 건다. **어느 층에도 안 걸리면
+그 Task 의 우선순위를 의심하라** — 이 세션에서 FQN 작업을 L2 직결로 잘못 걸었다가
+사용자 질문으로 정정한 것이 그 사례다(G261: "상위목적으로 정당화하는 습관은
+정당화가 검증되지 않으면 합리화가 된다").
+
 ## 1. 현재 상태 한 줄
 
 **측정 도구는 완성됐고, 그 도구가 정의할 수 없는 것 하나에 막혀 있다.**
