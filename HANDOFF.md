@@ -13,8 +13,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 
 ```yaml
 updated: 2026-08-31            # 이 문서를 마지막으로 고친 날. 제목의 2026-08-23 은 **마일스톤**이지 갱신일이 아니다
-state_code: D37_RECEIVED__R4_IS_DOWNSTREAM_OF_M   # D-37 도착·검증·저장 완료(`VERBATIM_SHA256: 5274ece0…`). R4는 기제 동일성이 아니라 **M 상대적 qualification 동등성**이고 **R2와 독립인 축**이다. 그리고 R4는 **M 없이 평가 불가** — M은 D-34 3항 사슬(`semantic definition → qualification evidence → measurement implementation`)의 **비어 있는 첫 항**이다. 즉 **R4를 풀어 경계로 가려던 방향은 성립하지 않는다.** 우리 상신문 §4는 **기각**됐다(금지된 다리의 역방향 반복). **코호트 dispatch 누계 0건**
-next_action_code: TWO_PASS_VERIFY1   # **대안 B 완결**(G249~G257): ObligationResult.invariant + 문서군을 **생성물**(`conceptgate/_identifier_groups.py`)로 — 런타임 마크다운 파싱 제거, 배포에서도 동작. `INVARIANT_REGISTER_UNAVAILABLE` 은 그 상태가 사라져 삭제. 다음 = 2-pass Verify1 승격(SURVEY §8.3): `[6]` 의 손으로 쓴 `all_pass` 를 `results_from_normalizer` 실제 계산으로 — 생산자는 `cg_obligations.py:327,332` 에 이미 있다. 경우 A→B 로 올라가면 '한 단계 수렴' 증거가 생긴다(수렴 자체는 v0 로 불가, §8.2)
+state_code: D37_RECEIVED__TOOLING_HARDENED   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 Q33 회신 대기). 이 세션 갈래(08-31, 커밋 43): 식별자 분류기·FQN 래칫·축 지도·pre_compact 도구·ObligationResult.invariant(생성물 상수)·정리 6라운드 완결
+next_action_code: TWO_PASS_VERIFY1   # SURVEY §8.3: [6] 의 손으로 쓴 all_pass 를 results_from_normalizer 실제 계산으로 — 경우 A→B 로 올라가 '한 단계 수렴' 증거가 생긴다(수렴 자체는 v0 불가, §8.2). 생산자는 cg_obligations.py:341 에 이미 있다. **주의**: invariant 필드는 자리만 있고 값 채움은 설계 판단 대기(회고 2부 §미해결) — Verify1 을 먼저 해도 되나 그 판정은 불변식을 안 단다
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
@@ -53,6 +53,16 @@ Q36으로 상신했고 회신 대기다.
 **코호트 dispatch 누계 0건**이며 `dispatch: blocked` ·
 `immediate_projection: forbidden` · `operational_patch: forbidden`이 모두 유효하다.
 **`O1_SCOPE_PROJECTION_V3`을 만들지 마라** — D-35가 금지했다.
+
+**두 번째 갈래 (2026-08-31 세션, 커밋 43).** 코호트 갈래가 Q33 대기인 동안
+검증 기반을 굳혔다. 완결: `scripts/identifier_scan.py`(식별자 분류) ·
+`test_invariant_fqn_citation.py`(FQN 래칫, baseline 116) · SURVEY §14.1a(축 지도
+18행 — 통합 표는 만들지 않는다, G194) · `scripts/compaction_ledger.py` +
+`scripts/session_snapshot.py`(시점·진행 상태를 기억이 아니라 생성으로) ·
+`ObligationResult.invariant`(서명 본체 포함, 문서군은 `conceptgate/_identifier_groups.py`
+**생성물** — 런타임 docs 파싱 제거) · 정리 6라운드(캐시는 회수가 아니다, 순 0.2M).
+**대기**: invariant 값 채움(설계 판단) · 누계표 분리(표기 고정이 전제) · P27 등재.
+회고는 1·2·3부(`docs/feedback/session_retrospective_20260831*.md`), 이슈 G178~G268.
 
 ## 2. 정본 지도 (읽는 순서)
 
@@ -220,7 +230,7 @@ trials_raw 보존 + 결과는 동결과 **별도 커밋**(방법론 §1). 결과
 - **신규 기제 부채 3건**(§21.6): 수치 민감도 필수 보고 · **적대검증 대상 동결
   기록**(대상 sha256을 회신 요구에 넣고 불일치 시 회신 무효, ~30행) · 재고 목록
   단계. 기존 부채는 §19에서 0으로 상환됐다.
-- `.vault-harness` 처분 — **색인 부분은 종결, 나머지는 미제기.**
+- `.vault-harness` 처분 — **소관이 동료 세션으로 확정**(그쪽이 08-30 흡수, `f73f6eb`). 우리 탐색 영역 아님은 유지. 최상위 경로는 **심볼릭 링크**라 `du` 중복 계상 주의(6라운드 §5.6)
   색인: 동료 세션이 사용자 승인으로 `20260824_pre_rebuild` 83M 삭제(`e9230a0`),
   `live/` 82M은 삭제 불가 확정("쓰는 중"), `frozen/` 82M은 보존 확정
   (live와 바이트 동일 `39a75d98…`이지만 그것이 남길 이유 — 검색 결과가 싣는
