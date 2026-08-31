@@ -64,7 +64,7 @@ append-only 규약과 같은 형태다. 기존 문서의 `G164`·`I3` 는 그대
 | `h1-code` | `concept-gate-h1-wt/*.py` (루트 테스트·`conceptgate/`) | ✅ — **인용만** |
 | `h1a-scope-code` | `../concept-gate-h1a-scope-wt/*.py` | ❌ 다른 worktree |
 | `notes` | `../notes/**/*.md` (logical-revision 제외) | ❌ vault |
-| `vault-backlinks` · `vault-backlinks-code` | **`../evidence-evaluator/vault-backlinks-mcp/`**(작업본, br. `index-freshness-preflight`, 22py) — 최상위 `../vault-backlinks-mcp/` 는 **br. `main` 의 별도 체크아웃**(20py, 공유 파일 4개도 내용 상이). **같은 이름·다른 브랜치 둘이다**(2026-08-31 실측, 동료 회신이 계기) | ❌ 다른 저장소 |
+| `vault-backlinks` · `vault-backlinks-code` | **체크아웃 셋. 정본은 워크트리 안이다**(2026-08-31 실측, 동료 회신) — **정본** `../evidence-evaluator/.claude/worktrees/mcp-v01-backlinks/vault-backlinks-mcp`(br. `integrate-vbm`, 21py) **실행 중 MCP 서버가 여기를 쓴다**(`~/.claude/scripts/run_vault_backlinks_mcp.sh:8-15`) · `../evidence-evaluator/vault-backlinks-mcp`(br. `index-freshness-preflight`, 22py) · `../vault-backlinks-mcp`(br. `main`, 20py, **뒤처짐 — 2026-08-22 결정으로 기록된 부채**) | ❌ 다른 저장소 |
 | `archive` | `../archive/**/*.md` | ❌ **읽기 전용 역사 증거** — 인벤토리에는 넣고 권위에서는 뺀다 |
 | `vault-tool` | `vault_search` 가 붙이는 `authority_class` | ❌ 도구 산출 | `미분류` | ? (?) |
 
@@ -216,7 +216,7 @@ Q Question · O Oracle · E Exclusion · L Level · S Slot · Z Zoom · B Backli
 | `P` | `retro` | 패턴(반복되는 실패 형태) P1~P26. 정의는 표 첫 셀 `**P<n>**` 단독, 뒤 절 누계표는 `**P<n>**(설명)` 으로 **재기술** — 재기술만 있고 정의가 없으면 발행 아님(게이트 검사) | `패턴` | Pattern (initial) | `docs/H1A_PROBLEM_ANALYSIS.md:536` | `\*{0,2}P(\d+)\*{0,2}(?:\([^)]*\))?` | `retro:P` | `COLLIDES` |
 | `P` | `directive` | 구현 단계 P0~P4 (P0 architecture integrity · P4 oracle evaluation) | `단계` | Phase (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:1940` | — (verbatim, 형식 미강제) | `directive:P` | `COLLIDES` |
 | `P` | `vault-tool` | 권위 등급 `P0-active-experiment` · `P2-path-stable-worktree` | `등급` | Priority (initial) | — | — | `vault-tool:P` | `EXTERNAL` |
-| `P` | `ev-eval` | **셋이 겹쳐 있다**(2026-08-31 실측): **공유** `P24`(정정이 같은 결함을 실어 온다 — 뜻까지 동일) · **재정의** `P25`(그쪽 "계측기에 잰 범위를 함께 출력" 대 우리 "도구가 딴 것을 쟀다") · **충돌** 저번호대 `P0`~`P14`(그쪽 `P4`=게이트가 게이트를 가림, 우리 `P4`=문서가 자기 상태를 잘못 서술). 동료는 "공유 계열"이라 했으나 실측은 `P24` 에서만 참이다 | `등급` | Priority (initial) | — | — | `ev-eval:P` | `EXTERNAL` |
+| `P` | `ev-eval` | **공유** `P24`(정정이 같은 결함을 실어 온다 — 뜻까지 동일) · **충돌** `P4`(그쪽=게이트가 게이트를 가림, 우리=문서가 자기 상태를 잘못 서술) · **같은 저장소 안 두 뜻** `P0`~`P2`(패턴 / `AUDIT_CLAUDE_MD_VACUOUS_PATTERNS.md:80` 의 권위 등급) · `P25` 는 그쪽이 **`P26` 으로 이동하기로**(재정의였음, 동료 수용). **`P7`·`P8`·`P10`~`P14` 는 이 계열이 아니다** — `C-` 접두의 Codex 세션 계열(`docs/CODEX_SESSION_ISSUE_LOG_20260814.md`)이고 내 첫 실측이 **왼쪽 경계를 안 잡아** 오탐했다 | `등급` | Priority (initial) | — | — | `ev-eval:P` | `EXTERNAL` |
 | `I` | `directive` | 권한 경계 불변식 I1~I11 (I3 = Verify 는 graph 를 쓰지 않는다) | `불변식` | Invariant (initial) | `docs/DESIGN_DIRECTIVE_refine_verify_semantic_compilation.md:147` | — (verbatim) | `directive:I` | `COLLIDES` |
 | `I` | `mechspec` | 상태·갱신 허용성 불변식 I1~I7 (I3 = verified-region protection · I7 = safe abstention) | `불변식` | Invariant (initial) | — | — | `mechspec:I` | `EXTERNAL` |
 | `I` | `ev-eval` | 이슈 번호 **I136~I240**(2026-08-31 동료 회신, 그날 I240 까지 증가. 우리 `G` 와 같은 역할·append-only). **같은 저장소 안에서 `I1` 실패 코드와 공존** — 번호대가 안 겹쳐 아직 사고가 없을 뿐이다 | `문제` | Issue (initial) | — | — | `ev-eval:I` | `EXTERNAL` |
