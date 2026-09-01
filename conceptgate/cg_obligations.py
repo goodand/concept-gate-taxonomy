@@ -975,10 +975,16 @@ def issue_claim_certificate(claim: Dict[str, Any],
         body, key, domain=CERTIFICATE_DOMAIN)}
 
 
+def _key_source_name(key_path) -> str:
+    """진단용 키 **파일명**. 전체 경로가 아닌 이유는 위 분기 주석에 있다."""
+    return Path(key_path or cg_identity.default_key_path()).name
+
+
 def _assert_certificate_grants_verdicts(
         cert: Dict[str, Any], claim: Dict[str, Any], key: bytes,
         registry: Dict[str, ObligationSpec] | None = None,
-        expected_profile: "CertificationProfile | None" = None
+        expected_profile: "CertificationProfile | None" = None,
+        key_source: str | None = None
 ) -> Dict[str, Verdict]:
     """authenticity → schema → 결박 → 계약(profile) → 유효성 순서로 검사하고,
     통과 시에만 certificate가 나르는 {obligation: Verdict}를 돌려준다.
@@ -995,10 +1001,26 @@ def _assert_certificate_grants_verdicts(
     필드는 주석과 같은 지위다.
     """
     if not cg_identity.verify_signature(cert, key, domain=CERTIFICATE_DOMAIN):
+        # **원인을 두 가설로 병렬 제시한다** (2026-09-01). 이 분기가 나는
+        # 원인은 넷이고 전부 같은 문구를 냈다(실측): 서명 부재 · 서명 변조 ·
+        # 본문 변조 · **키 불일치(문서는 정당)**. 넷째만 성격이 다른데
+        # 초판은 "손으로 쓴 문서"를 단정해서 E2E 조립 시 원인을 못 찾게
+        # 했다 — 선례 `2c8df63`("오류 메시지가 자기 키를 말하게")의 형태로
+        # 검증부가 **읽은 것**(키 파일)을 말하게 한다.
+        #
+        # oracle 규율(아래 docstring)은 위반하지 않는다: 발원 커밋이 oracle 을
+        # "how far a forgery got" 으로 좁게 정의하고, 키 출처는 **문서의
+        # 함수가 아니라 호스트 설정의 함수**여서 어떤 위조 문서에도 같은
+        # 값이다 — 조작 진행도를 전달하지 않는다. `path.name` 만 쓴다:
+        # `str(exc)` 가 MCP client 로 나가므로(`server.py`) 절대경로를
+        # 흘리지 않기 위해서다(`cg_identity` 가 이미 그 선례).
+        where = f" (verified with key file {key_source!r})" if key_source else ""
         raise CertificateError(
-            "certificate signature is absent or does not verify -- a "
-            "hand-written or edited-after-signing document is refused "
-            "(host-only key; the caller cannot manufacture this)")
+            "certificate signature is absent or does not verify -- either a "
+            "hand-written or edited-after-signing document is refused, or the "
+            "issuer signed with a different key than this verifier holds"
+            f"{where}; if the document is legitimate, pass the issuer's "
+            "key_path (host-only key; the caller cannot manufacture this)")
     if cert.get("schema") != CERTIFICATE_SCHEMA:
         raise CertificateError(
             f"certificate schema {cert.get('schema')!r} != "
@@ -1119,7 +1141,8 @@ def certify_relation_claims(
                     f"certificate subject {cert.get('subject_fingerprint')!r} "
                     f"matches none of the presented claims (subject binding)")
             granted = _assert_certificate_grants_verdicts(
-                cert, subject, key, expected_profile=profile)
+                cert, subject, key, expected_profile=profile,
+                key_source=_key_source_name(key_path))
             authenticated.setdefault(subject["id"], {}).update(granted)
 
     anchoring = results_from_claim_anchoring(claims, evidence_texts)

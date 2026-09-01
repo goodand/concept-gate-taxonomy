@@ -14,7 +14,7 @@ from conceptgate import cg_identity as ci
 from conceptgate.cg_obligations import (
     Assurance, CertificateError, DeciderKind, LEGACY_RELATION_PROFILE,
     ObligationResult, Verdict, certify_relation_claims,
-    issue_claim_certificate,
+    issue_claim_certificate, _assert_certificate_grants_verdicts,
 )
 
 CLAIM = {"id": "c1", "claim_kind": "relation_assertion",
@@ -184,3 +184,105 @@ def test_the_certificate_guard_fires_when_called_directly(key_path):
     # revision 결박이 서명과 독립으로 검사됨을 증명
     with pytest.raises(CertificateError, match="revision"):
         _assert_certificate_grants_verdicts(resigned, CLAIM, key)
+
+
+# ---------------------------------------------------------------------------
+# 진단이 원인을 구별한다 — 2026-09-01, E2E MVP 가 드러낸 요구사항 #2
+# ---------------------------------------------------------------------------
+#
+# 이 문구를 내는 원인이 **4종**인데 전부 같은 말을 했다(실측): 서명 필드 부재 ·
+# 서명 변조 · 본문 변조 · **키 불일치(문서는 정당)**. 넷째만 성격이 다르다 —
+# 문서가 부정한 것이 아니라 **검증자가 다른 키를 들고 온 것**이다. E2E MVP 를
+# 조립할 때 이것 때문에 헤맸고, 그 사실이 이미 두 곳에 기록돼 있었는데
+# (`test_e2e_mvp_file_to_certified.py` docstring · `HANDOFF.md`) 처분이
+# "테스트로 요구를 고정"에서 멈춰 있었다.
+#
+# 선례를 따른다 — `2c8df63`("오류 메시지가 자기 키를 말하게")의 형태:
+# **읽은 것 + 받은 것 + 두 어휘층의 대응**을 넣고 값·시크릿은 넣지 않았다.
+# 여기서 검증부가 읽은 것은 **키 파일**이다.
+#
+# oracle 규율(`:986` "조작 진행도를 알려주는 oracle")은 **위반하지 않는다**:
+# 발원 커밋 원문이 oracle 을 "an oracle for how far a forgery got" 으로 좁게
+# 정의하고, 키 경로는 **문서의 함수가 아니라 호스트 설정의 함수**여서 어떤
+# 위조 문서에도 같은 값이 나온다 — 진행도를 한 비트도 전달하지 않는다.
+# 그리고 같은 모듈이 이미 키 파일명을 오류에 넣는다(`cg_identity.py:150`).
+# 전체 경로가 아니라 `path.name` 만 쓴다 — `str(exc)` 가 MCP client 로
+# 나가므로(`server.py:898`) 홈디렉터리·사용자명을 흘리지 않기 위해서다.
+
+
+def test_the_signature_failure_names_the_key_it_verified_with(tmp_path, key_path):
+    """문구가 **검증에 쓴 키 파일명**을 말한다 — 없으면 "손으로 쓴 문서"라는
+    단정만 남아서, 정당한 문서를 다른 키로 검증한 사람이 원인을 못 찾는다."""
+    cert = issue_claim_certificate(CLAIM, _gate_results(),
+                                   issuer_tool="run_pipeline",
+                                   key_path=key_path,
+                                   profile=LEGACY_RELATION_PROFILE)
+    other = tmp_path / "다른키.json"
+    with pytest.raises(CertificateError) as exc:
+        _assert_certificate_grants_verdicts(
+            cert, CLAIM, ci.load_or_create_key(other),
+            key_source=other.name)
+    assert other.name in str(exc.value)
+
+
+def test_the_signature_failure_offers_the_key_mismatch_hypothesis(tmp_path, key_path):
+    """원인을 **두 가설로 병렬 제시**해야 오진이 사라진다 — 경로만 붙이면
+    문구는 여전히 "손으로 쓴 문서"를 단정한다(선례의 `fix` 필드가 한 일)."""
+    cert = issue_claim_certificate(CLAIM, _gate_results(),
+                                   issuer_tool="run_pipeline",
+                                   key_path=key_path,
+                                   profile=LEGACY_RELATION_PROFILE)
+    with pytest.raises(CertificateError) as exc:
+        _assert_certificate_grants_verdicts(
+            cert, CLAIM, ci.load_or_create_key(tmp_path / "o.json"),
+            key_source="o.json")
+    msg = str(exc.value)
+    assert "different key" in msg or "다른 키" in msg
+    assert "signature" in msg            # 기존 계약 5건이 이 단어에 걸려 있다
+
+
+def test_the_diagnostic_does_not_leak_the_absolute_path(tmp_path, key_path):
+    """`str(exc)` 가 MCP client 로 나가므로(`server.py:898`) 홈디렉터리·
+    사용자명이 딸린 절대경로를 넣지 않는다 — `cg_identity.py:150` 이 이미
+    `path.name` 만 쓰는 그 선례를 따른다."""
+    cert = issue_claim_certificate(CLAIM, _gate_results(),
+                                   issuer_tool="run_pipeline",
+                                   key_path=key_path,
+                                   profile=LEGACY_RELATION_PROFILE)
+    other = tmp_path / "비밀디렉터리" / "k.json"
+    other.parent.mkdir(parents=True, exist_ok=True)
+    with pytest.raises(CertificateError) as exc:
+        _assert_certificate_grants_verdicts(
+            cert, CLAIM, ci.load_or_create_key(other),
+            key_source=other.name)
+    assert "비밀디렉터리" not in str(exc.value)
+    assert str(tmp_path) not in str(exc.value)
+
+
+def test_key_source_is_optional_so_existing_callers_keep_working(key_path):
+    """가산 도입 — `key_source` 를 주지 않는 호출자(19곳 계열)가 그대로
+    돈다. 없으면 문구에서 키 절만 빠진다."""
+    cert = issue_claim_certificate(CLAIM, _gate_results(),
+                                   issuer_tool="run_pipeline",
+                                   key_path=key_path,
+                                   profile=LEGACY_RELATION_PROFILE)
+    granted = _assert_certificate_grants_verdicts(
+        cert, CLAIM, ci.load_or_create_key(key_path))
+    assert granted["source.snapshot_hash"] is Verdict.PASS
+
+
+def test_the_authenticity_check_stays_first(tmp_path, key_path):
+    """**순서 계약 불변**(`:986` "authenticity 먼저"). 키 절을 더해도
+    서명 실패가 결박 검사보다 먼저 보고되어야 한다 — 다른 claim 의
+    인증서를 다른 키로 넣으면 subject 오류가 아니라 signature 오류다."""
+    cert = issue_claim_certificate(CLAIM, _gate_results(),
+                                   issuer_tool="run_pipeline",
+                                   key_path=key_path,
+                                   profile=LEGACY_RELATION_PROFILE)
+    other_claim = dict(CLAIM, claim_id="c2", id="c2")
+    with pytest.raises(CertificateError) as exc:
+        _assert_certificate_grants_verdicts(
+            cert, other_claim, ci.load_or_create_key(tmp_path / "o.json"),
+            key_source="o.json")
+    assert "signature" in str(exc.value)
+    assert "subject" not in str(exc.value)
