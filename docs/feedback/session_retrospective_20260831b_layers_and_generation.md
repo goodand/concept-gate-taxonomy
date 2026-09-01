@@ -1,5 +1,7 @@
 # 세션 회고 2부 — 두 층의 동일성, 생성물, 위임 하네스 (2026-08-31, Claude 세션)
 
+- 다음: [[concept-gate-h1-wt/docs/feedback/session_retrospective_20260901_d38_and_deployment|회고 4부 (2026-09-01)]]
+
 1부(`session_retrospective_20260831_identifier_gates.md`)의 뒤 구간이다. 1부가
 식별자 분류기·FQN 래칫·축 지도를 다뤘고, 이 문서는 그 뒤 — pre_compact 도구 ·
 대안 B · 생성물 전환 · **층1/층2 구별** 구간이다.
