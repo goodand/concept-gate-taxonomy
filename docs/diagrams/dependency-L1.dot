@@ -1,0 +1,41 @@
+digraph L1 {
+  rankdir=LR; bgcolor="white"; compound=true;
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+  label="L1 — conceptgate/ 실제 의존 그래프 (AST 실측 2026-09-01). 실선=최상위 import · 점선=함수 내 lazy"; fontsize=11;
+  // 정합성: 간선 14/14 · 행수 7/7 (cg_obligations 는 1,145→1,166 으로 정정, 정규화 수리로 증가)
+  subgraph cluster_deploy {
+    label="배포 도달 (Dockerfile CMD: python -m conceptgate.server)"; style=filled; color="#eaf2e3"; fontsize=10;
+    server [label="server\n(1,038행)" fillcolor="#d5e8d4"];
+    v7 [label="concept_gate_v7\n(2,426행 — 행수 중립이 계약)" fillcolor="#d5e8d4"];
+    graph_export [label="cg_graph_export" fillcolor="#d5e8d4"];
+    linter [label="cg_input_linter" fillcolor="#d5e8d4"];
+    oblig [label="cg_obligations\n(1,166행 · 책임군 7)" fillcolor="#d5e8d4"];
+    normalizer [label="cg_normalizer\n(977행)" fillcolor="#d5e8d4"];
+    owl [label="cg_owl" fillcolor="#d5e8d4"];
+    partwhole [label="cg_partwhole" fillcolor="#d5e8d4"];
+    gufo [label="cg_gufo" fillcolor="#d5e8d4"];
+    identity [label="cg_identity\n(해시·서명 — 공용 최하층)" fillcolor="#b5d6b2"];
+    idgroups [label="_identifier_groups\n(등록부 생성물)" fillcolor="#b5d6b2"];
+  }
+  subgraph cluster_exp {
+    label="실험 도달 (run_gates 가 폴더별 프로세스로) — 배포 이미지엔 들어가나 server 폐포 밖"; style=filled; color="#e3ecf7"; fontsize=10;
+    ir [label="cg_ir (382)" fillcolor="#dae8fc"]; ir_schema [label="cg_ir_schema (283)" fillcolor="#dae8fc"];
+    evaluate [label="cg_evaluate (214)" fillcolor="#dae8fc"]; fol [label="cg_fol_adapter (341)" fillcolor="#dae8fc"];
+    sbn [label="cg_sbn_adapter (684)" fillcolor="#dae8fc"]; oracle [label="cg_oracle_adapter (603)" fillcolor="#dae8fc"];
+    resolver [label="cg_fixture_resolver (156)" fillcolor="#dae8fc"];
+  }
+  subgraph cluster_other {
+    label="런처 / 테스트 전용"; style=filled; color="#f7f0e3"; fontsize=10;
+    o1 [label="server_o1_scope (366)\nMANUAL_TOOL 등재\n이미지 안에서 작동 불가" fillcolor="#ffe6b3"];
+    mrs [label="cg_mrs_reader (120)\n★ 테스트 import 1 · 호출 0\n= P21 문자적 일치 → 등재 완료" fillcolor="#f8cecc"];
+  }
+  server -> v7; server -> graph_export; server -> linter; server -> oblig; server -> normalizer;
+  server -> owl [style=dotted label="lazy"];
+  oblig -> identity; oblig -> idgroups; linter -> partwhole;
+  normalizer -> linter [style=dotted label="lazy"];
+  v7 -> partwhole [style=dotted label="lazy"]; v7 -> gufo [style=dotted label="lazy"];
+  evaluate -> ir; o1 -> identity [style=dotted label="lazy"];
+  GATE [label="격리 게이트가 지키는 것\n역방향 미import: evaluate·fol·sbn·oracle 을\nRefine/Verify 층이 import 하지 않는다\n닫힌 집합: cg_ir ⊆ {__future__, cg_identity, typing}" shape=note fillcolor="#e1d5e7"];
+  GATE -> ir [style=dashed color="#7b5aa6"]; GATE -> evaluate [style=dashed color="#7b5aa6"];
+}

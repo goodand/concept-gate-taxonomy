@@ -1,0 +1,26 @@
+digraph L0 {
+  rankdir=TB; bgcolor="white";
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11];
+  edge [fontname="Helvetica" fontsize=9];
+  // canonical source. SVG 는 mcp-kroki(graphviz) 렌더 산출물.
+  // 정합성 4/4 (2026-09-01): COPY 무필터 1 · lazy 4곳 · 미import 9모듈 ·
+  //   격리 게이트 2형 5파일 6테스트(초판이 "5개"라 적었다가 실측으로 정정)
+  subgraph cluster_inv {
+    label="(0) 절대 불변 — 개정 불가"; style=filled; color="#f0f0f0"; fontsize=10;
+    INV [label="정본 소스는 conceptgate/ 패키지 하나\n배포 사본·수동 목록 없음\n(COPY 무필터 = 설계, 대가 3,149행)" fillcolor="#e8e8f5"];
+  }
+  subgraph cluster_goal {
+    label="(1) 궁극 목적 — 상위 목적의 재귀"; style=filled; color="#f7f7f0"; fontsize=10;
+    G1 [label="한쪽만 고쳐 거짓 통과가 나는\n두 벌 상태가 생기지 않는다" fillcolor="#fff2cc"];
+    G2 [label="층이 자기 책임 밖을 판정하지 않는다\n(격리 = 판정의 신뢰 조건)" fillcolor="#ffe6b3"];
+    G3 [label="보증 사슬이 검사 가능하게 남는다 (L2/L1)" fillcolor="#ffd280"];
+    G1 -> G2 -> G3 [label="~을 위해"];
+  }
+  OUT [label="(2) expected_output\n의존 그래프가 DAG 이고\n각 층의 import 집합이 계약으로 닫혀 있다\n(순환 0 · 층 역전 0 — 실측)" fillcolor="#d5e8d4"];
+  COND [label="(3) possible_conditions\n배포 도달(server 폐포) vs 실험 도달 vs 테스트 전용\n— 셋은 다른 상태이고 같은 조치를 받지 않는다\nlazy import 는 순환 회피 수단(4곳: normalizer·v7 x2·server)" fillcolor="#dae8fc"];
+  CERT [label="(4) certainty\n격리 게이트 2형 · 5파일 6테스트 —\n  닫힌 집합형 2(cg_ir · cg_oracle_adapter)\n  역방향 미import형 4(evaluate x2 · fol · sbn)\n채택 등록부(무배선 표면 등재 강제)\nAST 실측 + 인터프리터 전건 import" fillcolor="#e1d5e7"];
+  ESC [label="남는 표면: 아무도 import 하지 않는 9모듈\n8은 실험·MCP 런처가 부른다\n1(cg_mrs_reader)만 테스트 전용 → 등재로 처리" shape=note fillcolor="#f8cecc"];
+  INV -> G1 [label="가 지킨다"]; G1 -> OUT [label="를 요구한다"];
+  COND -> OUT [label="를 층으로 나눈다"]; CERT -> OUT [label="을 검사한다"];
+  ESC -> G1 [label="가 오독을 부른다" style=dashed color="#b85450"];
+}

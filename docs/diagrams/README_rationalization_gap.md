@@ -14,7 +14,7 @@
 |---|---|---|---|
 | L0 | [`rationalization-gap-L0.dot`](rationalization-gap-L0.dot) → [svg](rationalization-gap-L0.svg) | (0)불변: 공백은 합리화가 채운다 · (1)목적 재귀 → L2 → L1 · (2)출력: 명시/판정/정직한 보류 · (3)채널 3종 · (4)집행 | **6/6** |
 | L1 | [`rationalization-gap-L1.dot`](rationalization-gap-L1.dot) → [svg](rationalization-gap-L1.svg) | 문제 P1~P7 × 채널 매핑. 핵심: P2 는 유도(자연어)/판정(규칙)으로 갈라진다 | **코드 실명 4/4 실재 + RB5 전제 probe 증명**(돌체/돌체린 위반 검출) |
-| L2 | [`rationalization-gap-L2.dot`](rationalization-gap-L2.dot) → [svg](rationalization-gap-L2.svg) | 단순화 S1~S4: 지금 배선 → 접힌 뒤 + 각각의 조건. S4 만 무조건(즉시) | 이중 경로 분기 2/2 · 3값 어휘 실재 확인 |
+| L2 | [`rationalization-gap-L2.dot`](rationalization-gap-L2.dot) → [svg](rationalization-gap-L2.svg) | 단순화 S1~S4: 지금 배선 → 접힌 뒤 + 각각의 조건. S4 만 무조건(즉시) | 이중 경로 분기 2/2 · 3값 어휘 실재 확인. **단 1차 평가에서 grep 이 0건을 냈고**(f-string 줄바꿈 아티팩트) 런타임 호출로 재확인해야 했다 — 정합성 도구가 딴 것을 잰 P25 형태, 이 표가 그 사실을 감추고 있었다(2026-09-01 정정) |
 
 핵심 발견(S4): E2.2.1 의 hidden contract A(전역 type 일관성)는 LLM decider
 없이 **결정론 obligation** 으로 등록 가능 — M1 재설계에서 semantic decider
