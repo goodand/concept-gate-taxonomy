@@ -28,7 +28,7 @@
 | `concept_gate_v6_3.py` | v6.3 추론기 본체 | `conceptgate/concept_gate_v7.py` | RETAINED | README가 "회귀 참고용"으로 지목한다. v7 거동이 의심될 때 대조 기준이 된다 — 테스트는 없다 |
 | `qa_v6_3.py` | v6.3 QA 33건 | `qa_v7.py` | RETAINED | 위와 짝. `run_gates.py`는 v7만 돈다 |
 | `docs/HANDOFF.md` | 2026-08-22 시점 handoff | `HANDOFF.md` (worktree 루트) | RETAINED | 스텁으로 남겨 리다이렉트한다. **지우면 안 된다** — `vault_search`가 이 경로를 반환하므로(2026-08-24 실측) 스텁이 없으면 검색자가 아무 안내도 못 받는다 |
-| `scripts/handoff_reachability.py` | Obsidian 인덱스 기반 backlink 도달성 검사 | `vault_backlinks` MCP 도구 | REMOVED | 인덱스 의존이라 인덱스가 없으면 **"backlink 0건"이라는 조용한 오답**을 냈다. MCP는 `error`+`backend_used:"none"`으로 거부한다. 복구: `git show 0c903f3^:scripts/handoff_reachability.py` |
+| `scripts/handoff_reachability.py` | Obsidian 인덱스 기반 backlink 도달성 검사 | `vault_backlinks` MCP 도구 | REMOVED | **P21 — 테스트는 도는데 배선 0·import 0**(삭제 커밋 `fc57228` 본문이 정본). 목적 전용 MCP 가 이미 우월했다(live-only·`error`+`backend_used:"none"` 보고·경로 모호성 탐지). ⚠️ 이 행의 초판 사유("인덱스 없으면 backlink 0건 조용한 오답")는 **그 커밋 자신이 철회한 논거**였고, 복구 명령도 깨진 것(`0c903f3^` 에 그 파일 없음)이었다 — 동료 세션이 이 행만 믿고 "판정 불가"로 멈췄다가 `git log -S` 로 갈린 실사용 피해 1건(2026-09-01 정정). 복구: `git show fc57228^:scripts/handoff_reachability.py` |
 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/stage2_fixture_manifest.json` | Stage 2 동결 V1 | `stage2_fixture_manifest_v5.json` | RETAINED | **감사 표면.** 게이트가 바이트 불변을 감시한다 — `V1–V4 = V1 semantics` 선언의 증인이라 지우면 그 선언이 검증 불가가 된다 |
 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/stage2_fixture_manifest_v2.json` | 동결 V2 | `stage2_fixture_manifest_v5.json` | RETAINED | 위와 같다 |
 | `experiments/2026-08-23_e2e_v1_c_o1_cohort/stage2_fixture_manifest_v4.json` | 동결 V4 | `stage2_fixture_manifest_v5.json` | RETAINED | 위와 같다. `test_stage2_freeze_v5.py`가 바이트 해시를 pin한다 |
