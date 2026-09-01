@@ -117,6 +117,18 @@ for idx in range(N):
 # 완전성은 증명 못 하나, (a) 0 이면 명시 실패, (b) 연산자별 내역을 출력해
 # 사람이 대상 함수 원문에서 분모를 재도출할 수 있게 한다.
 assert N > 0, "변이 지점 0 — 열거가 깨졌다. 100% 를 믿지 마라"
+# **분모 하한 — 리팩터링이 kill rate 를 조용히 부풀리는 것을 막는다.**
+# 구조 조사(2026-09-01)가 지목한 취약성: 이 러너는 `TARGETS` 함수명
+# 화이트리스트로 범위를 잡으므로, 그 함수에서 헬퍼로 빼낸 지점은 **분모에서
+# 사라진다**. 지점이 줄면 100% 가 유지되면서 검증 범위만 좁아진다 —
+# 동료 세션이 "생존 0 과 뮤턴트 못 만듦이 구별되는가"로 물었던 그 형태이고,
+# 판별자 3행의 **도출값 하한**(기계 파생의 바닥, 비면 측정기 고장)이다.
+# 33 은 2026-09-01 실측값. 대상 함수가 정당하게 줄면 이 수치를 내리되
+# **그 사실이 눈에 보여야** 한다.
+MIN_SITES = 33
+assert N >= MIN_SITES, (
+    f"변이 지점 {N} < {MIN_SITES} — 대상 함수에서 로직이 빠져나갔거나 열거가 "
+    f"좁아졌다. kill rate 를 보기 전에 분모를 먼저 설명하라")
 from collections import Counter
 by_kind = Counter(l[0].split(":")[0] if l else "?" for _, l, _ in killed + [(i, l, None) for i, l in survived])
 print(f"뮤턴트 {N} | killed {len(killed)} | survived {len(survived)} | exec실패 {len(execfail)}")
