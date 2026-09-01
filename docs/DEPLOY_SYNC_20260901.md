@@ -75,11 +75,21 @@ public 저장소이므로 "이미 공개 vs 신규 공개"를 축으로 감사�
   동기화 전 71/73 이었고 실패 2는 옛 테스트가 W2 판정이 복원시킨
   `REASONER_DEPENDENCY_UNAVAILABLE` 코드를 모르던 것.
 - (b) 로컬 MCP 표면: h1-wt 게이트의 `test_server.py` 가 커버.
-- (c) 배포 표면: **폴링 진행 중** — 두 서비스의 `tools/list` 를 90초 간격
-  관측. 판정 어휘: `NEW`(fail-closed Unauthorized 또는 `certify_claims`
-  존재) / `OLD` / `DOWN`. 새 코드는 fail-closed 인증(`b8156d8` 수리 포함)
-  이므로 **무토큰 호출의 Unauthorized 자체가 반영의 신호**다. 전체 도구
-  probe(인증서 `schema v2`·`profile commitment` 실측)에는
-  `MCP_API_TOKEN`(Render 대시보드, generateValue) 이 필요하다.
-- 직전 관측(배포 전): `-docker` 가 도구 0개 반환 — 코드 문제가 아니라
-  인프라 상태(잠듦/설정) 가능성. 폴링이 가른다.
+- (c) 배포 표면: **완결 (2026-09-01).** 2단 관측 —
+  1. 무토큰: `-docker` 가 `Unauthorized: missing Bearer token` — 이 문구는
+     이번 배포에 실린 fail-closed 인증(`b8156d8`)의 것이다(배포 전에는
+     도구 0개 무응답이었다). **오류의 종류가 바뀐 것이 반영의 첫 신호.**
+  2. 인증 probe(`render_cert_probe.py`, 토큰은 사용자 제공): 도구 **13개**,
+     인증 계열 `certify_claims`·`issue_claim_certificates` 존재,
+     `profile: legacy_relation_claim_v0`(D-38 — 기본값 `_v0` 유지 계약 그대로),
+     `profile_required` 6종 일치, anchoring verdict 계산 `pass`,
+     `authority: diagnostic_only`(전제 충족 전 인증 없음 — 정상).
+- 비-docker 서비스는 **구버전**(도구 6개, 3.4.3, 인증 계열 0) — auto-deploy
+  미설정으로 보인다. 정식 표면은 `-docker` 로 확정.
+- probe 하네스 승격: `.claude/skills/verify-conceptgate/scripts/render_cert_probe.py`.
+  함정 기록 포함 — 첫 폴링이 `new_session()` 튜플 반환을 세션 헤더에 통째로
+  넣어 "Session not found" 6라운드를 태웠다(P25 형태: 재배포 증상과 구별
+  불가한 오진).
+- **토큰 처리**: 사용자가 토큰을 채팅에 공유했다 — 검증 후
+  **Render 대시보드에서 재발급 권고**(전달 기록이 로그에 남으므로).
+  저장소 실측: `.env` 추적 0건, git 이력에 토큰 0건.
