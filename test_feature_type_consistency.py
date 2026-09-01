@@ -20,6 +20,27 @@ trial 3 원문: "a structural component in 돌체 and a functional role in
 - type 이 **의미적으로 옳은지** 재지 않는다 — 전역 일치만 본다. 전부
   틀린 type 으로 일치해도 PASS 다(그 판정은 semantic decider 의 몫).
 - 프로파일 `required` 에 넣지 않는다 — 편입은 D-38 절차(새 identity)다.
+
+## 배선 범위의 제약 — Risk More READ 가 확정한 것 (프로토콜 2단, 2026-09-01)
+
+**이 의무를 저장소 전역 게이트로 배선하면 안 된다.** 코퍼스 전수 실측:
+JSON 125개 중 **15개가 FAIL** 이고, 그것은 **오탐이 아니라 정탐**이다 —
+E2.2 계열 실험 fixture(`e2.2.1/e2.2.2/e2.2.3/bvsc` 의 `fixture.json`·
+`trials.json`)가 `'바퀴': essential_feature(돌체) vs functional(돌체린)`
+같은 불일치를 **의도적으로 심어 놓았다**. 모델이 발견해 repair 해야 하는
+문제 그 자체이기 때문이다.
+
+따라서:
+
+- **claim graph 판정용 obligation** 으로는 옳다 — 그것이 이 파일의 대상이다.
+- **전역 게이트로는 부적절하다** — 동결 fixture 는 수정 금지이므로 게이트가
+  영구히 빨갛거나 면제 목록이 커진다. CLAUDE.md 가 경고한 "게이트는 사람이
+  끄면 끝" 이 정확히 그 상황이다.
+- 실행 비용은 무해: 10,000 출현에 1.2ms(전수 실측).
+
+`Edge case` 쪽 수확은 아래 enum 계약 둘이다 — 코퍼스 지배 형태
+(`('evidence','feature','type')` 1,231건)가 dataclass 유래여서, 초판은
+실제 그래프에서 조용히 아무것도 검사하지 않았다.
 """
 from __future__ import annotations
 
@@ -92,6 +113,38 @@ def test_untyped_occurrences_do_not_join_the_comparison():
         {"name": "돌체", "features": [{"feature": "액체금속",
                                         "type": "structural_composition"}]},
         {"name": "돌체린", "features": [{"feature": "액체금속", "type": ""}]},
+    ]
+    assert _verdict(mixed).verdict is ob.Verdict.PASS
+
+
+def test_enum_typed_features_are_compared_not_skipped():
+    """**Edge case More READ 가 잡은 결함**(2026-09-01, 프로토콜 2단).
+
+    이 저장소의 정본 자료구조 `NormalizedFeature.type` 은 `FeatureType`
+    **enum** 이고, 코퍼스 전수(JSON 125개)에서 지배 형태가 그 유래다
+    (`('evidence','feature','type')` 1,231건). 초판은 `isinstance(str)` 만
+    요구해서 그 형태를 통째로 건너뛰었다 — 위반이 실재하는데 "검사 대상
+    없음(UNKNOWN)" 을 냈다. 빈 어휘가 PASS 를 받던 MAJOR-1 과 같은 부류:
+    **조용히 아무것도 검사하지 않는 상태.**"""
+    from conceptgate.concept_gate_v7 import FeatureType
+    a, b = list(FeatureType)[0], list(FeatureType)[1]
+    conflict = [
+        {"name": "돌체", "features": [{"feature": "액체금속", "type": a}]},
+        {"name": "돌체린", "features": [{"feature": "액체금속", "type": b}]},
+    ]
+    r = _verdict(conflict)
+    assert r.verdict is ob.Verdict.FAIL
+    assert a.value in r.reason and b.value in r.reason   # enum 이 아니라 값으로
+
+
+def test_enum_and_str_of_the_same_type_are_not_a_conflict():
+    """위 수리의 짝 — enum 과 그 `.value` 문자열은 **같은 type** 이다.
+    이것이 없으면 정규화가 과잉이어서 멀쩡한 그래프를 빨갛게 만든다."""
+    from conceptgate.concept_gate_v7 import FeatureType
+    a = list(FeatureType)[0]
+    mixed = [
+        {"name": "돌체", "features": [{"feature": "액체금속", "type": a}]},
+        {"name": "돌체린", "features": [{"feature": "액체금속", "type": a.value}]},
     ]
     assert _verdict(mixed).verdict is ob.Verdict.PASS
 

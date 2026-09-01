@@ -811,6 +811,13 @@ def results_from_feature_type_consistency(
                 unparsed += 1
                 continue
             fname, ftype = f.get("feature"), f.get("type")
+            # type 은 **enum 일 수 있다** — 이 저장소의 정본 자료구조
+            # `NormalizedFeature.type` 이 `FeatureType` enum 이고, 코퍼스 전수
+            # (2026-09-01, JSON 125개)에서 지배 형태가 그 유래다(1,231건).
+            # `isinstance(str)` 만 요구하면 실제 그래프에서 **조용히 아무것도
+            # 검사하지 않는다** — Edge case More READ 가 잡은 결함이고,
+            # 빈 어휘가 PASS 를 받던 MAJOR-1 과 같은 부류다.
+            ftype = getattr(ftype, "value", ftype)
             if not (isinstance(fname, str) and fname
                     and isinstance(ftype, str) and ftype):
                 continue                     # type 없는 출현은 비교에 안 들어간다
