@@ -82,6 +82,18 @@ Q36으로 상신했고 **회신은 이미 왔다** — D-36(`docs/DESIGN_DECISIO
 `immediate_projection: forbidden` · `operational_patch: forbidden`이 모두 유효하다.
 **`O1_SCOPE_PROJECTION_V3`을 만들지 마라** — D-35가 금지했다.
 
+**세 번째 갈래 (2026-09-01, 커밋 31).** L2 진입로를 조립으로 확정했다.
+**E2E MVP 도달** — 디스크의 파일에서 `certifying` 까지 손 verdict 0
+(`test_e2e_mvp_file_to_certified.py`, 의무 7종 계산·서명·인증). 그 조립이
+요구사항 4건을 드러내 계약으로 고정했고 **#2(키 진단)·#3(profile 선언 게이트)
+를 프로토콜 8단 전수로 수리**했다(#4 는 수정 불요). 남은 것은 **#1 문서 →
+claim 생산자** 하나 — 그 **추출 기준의 정본 유무를 조사 중**이다(사용자 질의).
+부수: D-38 수신·구현·배포 완결(main·claude 브랜치 통합 `80c8b34`, 배포 표면
+실측) · `graph.feature_type_consistency` 신설(E2.2.1 의 55% 를 만든 불변조건의
+결정론 판정) · 구조 조사 13후보 중 실행 1(`cg_mrs_reader` 등재, 나머지는
+"깨지는 것이 더 크다" — KNOWHOW §C-1) · 동료 왕복 5회로 판별자 3행 교차 검증 ·
+의존 구조 L0~L1 그래프(정합성 관문이 오차 3종 적발). 회고 4부 G269~G284.
+
 **두 번째 갈래 (2026-08-31 세션, 커밋 43).** 코호트 갈래가 Q33 대기인 동안
 검증 기반을 굳혔다. 완결: `scripts/identifier_scan.py`(식별자 분류) ·
 `test_invariant_fqn_citation.py`(FQN 래칫, baseline 116) · SURVEY §14.1a(축 지도
