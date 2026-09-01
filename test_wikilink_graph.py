@@ -347,7 +347,6 @@ def test_the_scanner_actually_finds_this_repo_s_links():
     실측 340건 · 자기 접두 66건 기준으로 하한을 둔다."""
     r = wg.scan(ROOT)
     assert r.total >= 300, f"링크를 {r.total}건밖에 못 찾았다 — 파서가 죽었다"
-    assert len({f.source for f in r.dead} | {f.source for f in r.ambiguous}) >= 0
     own = [l for l in wg.scan_links(ROOT) if l.target.startswith(f"{ROOT.name}/")]
     assert len(own) >= 60, f"자기 worktree 접두 링크 {len(own)}건 — 66건이어야 한다"
     assert all(wg.resolve(ROOT, l.source, l.target).status is wg.Status.OK for l in own)
