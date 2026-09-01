@@ -13,8 +13,8 @@ branch `codex/h1-source-authority`) · 실험 **E2E-v1 Stage 2** (O1 capability 
 
 ```yaml
 updated: 2026-09-01            # 이 문서를 마지막으로 고친 날. 제목의 2026-08-23 은 **마일스톤**이지 갱신일이 아니다
-state_code: D38_IMPLEMENTED__CERT_CHAIN_DEPLOYED_PENDING_VERIFY   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 회신 대기가 아니라 권한 부재 — 2026-09-01 전수 대조: 미회신 상신 0건). 이 세션 갈래(08-31): TWO_PASS_VERIFY1 완료 — test_two_pass_verify1.py(계약 8, 적대검증 채택·기각 반영)가 경우 B 를 계산으로 증명(SURVEY §8.5). 수렴 자체는 여전히 증명 밖(§8.2)
-next_action_code: M1_CERTIFICATE_REDESIGN   # 2026-09-01 복귀: DEPLOY_SURFACE_VERIFY 는 완결됐다(배포 표면 실측 — 도구 13종·인증 계열 존재·profile v0 유지·anchoring 계산 pass, docs/DEPLOY_SYNC_20260901.md §5). D-38 처분 3종도 구현·배포 완료. 따라서 L2 진입로가 다시 열렸다 — certificate 를 "경고 신호"에서 "전역 불변조건 + 출력 상태 계약을 명시하는 reasoning contract" 로 재설계(roadmap :64-66 착수 전 명시, 실증 레버는 E2.2.3 A_ONLY 20/20 자연어 불변조건). invariant 값 채움이 그 핵심 기제(자리·서명·검증부 대조까지 완비, 값 채움 규칙만 미정). 대기: (b) e2e 손 사전 치환(L3) (c) 누계표 (d) 기본 profile _v1 승격 판단(별도) (e) Q33 회신(외부)
+state_code: E2E_MVP_REACHED__FILE_TO_CERTIFYING   # 판정 사슬은 D-37 도착·검증·저장 그대로(코호트 갈래는 회신 대기가 아니라 권한 부재 — 2026-09-01 전수 대조: 미회신 상신 0건). 이 세션 갈래(08-31): TWO_PASS_VERIFY1 완료 — test_two_pass_verify1.py(계약 8, 적대검증 채택·기각 반영)가 경우 B 를 계산으로 증명(SURVEY §8.5). 수렴 자체는 여전히 증명 밖(§8.2)
+next_action_code: DOCUMENT_TO_CLAIM_PRODUCER   # 2026-09-01 E2E MVP 도달로 요구사항이 하나로 좁혀졌다: **실제 파일 → certifying 은 손 verdict 0 으로 돈다**(test_e2e_mvp_file_to_certified.py, 의무 7종 계산·서명·인증). 끊긴 곳은 단 하나 — **문서에서 claim 을 뽑는 생산자가 없다**(Refine 은 LLM, 저장소 생성기 0건, probe 실측). MVP 계약이 그 부재를 단언으로 고정했다(생산자가 생기면 그 계약이 실패 → 갱신 시점). 그 생산자가 L2 의 semantic 층이고 M1 certificate 재설계(자연어 불변조건 운반)가 그것을 유도하는 수단이다 — 두 작업이 한 지점에서 만난다. 부수 발견: 발급자·검증자 키 공유가 필수(fail-closed), relation.is_a 는 required 밖이라 unknown 이어도 인증됨. 대기: 배선 3건(provenance·feature_type 은 server 호출 0 — 정규화 완료로 선행조건은 해소) · 기본 profile _v1 승격(D-38 ㄷ) · Q33 회신
 stop_condition_codes:
   - NO_COHORT_WITHOUT_USER_APPROVAL      # §1·§3 — 실행은 별도 승인
   - NO_FROZEN_SURFACE_EDITS              # §4 — V1·V2 동결 표면 수정은 D-19 §12 외부 판정 사안
