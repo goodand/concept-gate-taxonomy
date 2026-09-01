@@ -151,6 +151,13 @@ OBLIGATION_REGISTRY: Dict[str, ObligationSpec] = {
     "claim.evidence_provenance": ObligationSpec(
         DeciderKind.LOCAL_RULE, Assurance.RULE_CHECKED,
         "cg_normalizer.resolve_cited_evidence", Verdict.UNKNOWN),
+    # 2026-09-01: E2.2.1 hidden contract A("같은 feature 이름은 전역 type
+    # 일치")의 **판정 절반** — 유도(사전 명시)는 M1 certificate 의 일이지만
+    # 판정(사후)은 결정론이다. wrong_direction 55% 를 만든 그 불변조건이
+    # LLM decider 없이 검사된다는 것이 채널 분석의 핵심 발견(S4).
+    "graph.feature_type_consistency": ObligationSpec(
+        DeciderKind.LOCAL_RULE, Assurance.RULE_CHECKED,
+        "cg_obligations.results_from_feature_type_consistency", Verdict.UNKNOWN),
 }
 
 
@@ -765,6 +772,79 @@ def results_from_cited_evidence(
                          f"에서 유도됨",
                 graph_revision=rev))
     return out
+
+
+def results_from_feature_type_consistency(
+        concepts: Any) -> List[ObligationResult]:
+    """graph.feature_type_consistency — 같은 feature 이름의 전역 type 일치.
+
+    E2.2.1 이 실증한 hidden contract A 의 판정 절반이다. 원문(roadmap):
+    같은 feature 이름이 concept 마다 다른 type 을 달고 있어도 모델은
+    "의미론적으로 정당하다"고 합리화했다(wrong_direction 55%). 이 검사는
+    그 위반을 산출 그래프 위에서 결정론으로 드러낸다 — 옳은 repair 를
+    만들어내지는 못한다(그것은 certificate 의 자연어 불변조건, A_ONLY 20/20).
+
+    판정:
+    - 같은 이름에 서로 다른 비어있지 않은 type 공존 → **FAIL**
+      (적극적 불일치 — provenance 의 QUOTE_MISMATCH 와 같은 논리)
+    - 형태가 깨진 항목 존재 & 위반 미검출 → UNKNOWN (파싱 불가를 통과로
+      세탁하지 않는다; 단 **검출된 위반은 깨진 항목보다 우선**한다 —
+      파싱 실패가 적극적 증거의 도피구가 되면 안 된다)
+    - 비교 가능한(typed) 출현 0 → UNKNOWN (없는 검사는 PASS 가 아니다)
+    - 그 외 → PASS
+    """
+    seen: Dict[str, Dict[str, List[str]]] = {}   # feature -> type -> [concept...]
+    unparsed = 0
+    typed = 0
+    if not isinstance(concepts, list):
+        return [ObligationResult(
+            "graph.feature_type_consistency", Verdict.UNKNOWN,
+            Assurance.PROPOSED, DeciderKind.LOCAL_RULE,
+            reason="concepts 가 리스트가 아니다 — 형태를 파싱할 수 없어 판정 불가")]
+    for c in concepts:
+        if not isinstance(c, dict) or not isinstance(c.get("features"), list):
+            unparsed += 1
+            continue
+        cname = str(c.get("name", "?"))
+        for f in c["features"]:
+            if not isinstance(f, dict):
+                unparsed += 1
+                continue
+            fname, ftype = f.get("feature"), f.get("type")
+            if not (isinstance(fname, str) and fname
+                    and isinstance(ftype, str) and ftype):
+                continue                     # type 없는 출현은 비교에 안 들어간다
+            typed += 1
+            seen.setdefault(fname, {}).setdefault(ftype, []).append(cname)
+    conflicts = {name: types for name, types in seen.items() if len(types) > 1}
+    if conflicts:
+        parts = []
+        for name in sorted(conflicts):
+            per_type = " vs ".join(
+                f"{t}({', '.join(sorted(cs))})"
+                for t, cs in sorted(conflicts[name].items()))
+            parts.append(f"'{name}': {per_type}")
+        return [ObligationResult(
+            "graph.feature_type_consistency", Verdict.FAIL,
+            Assurance.RULE_CHECKED, DeciderKind.LOCAL_RULE,
+            reason="같은 feature 이름에 서로 다른 type 이 공존 — "
+                   + " · ".join(parts)
+                   + (f" (파싱 불가 항목 {unparsed}건 별도)" if unparsed else ""))]
+    if unparsed:
+        return [ObligationResult(
+            "graph.feature_type_consistency", Verdict.UNKNOWN,
+            Assurance.PROPOSED, DeciderKind.LOCAL_RULE,
+            reason=f"파싱 불가 항목 {unparsed}건 — 전역 일치를 판정할 수 없다"
+                   f"(통과로 세탁하지 않는다)")]
+    if typed == 0:
+        return [ObligationResult(
+            "graph.feature_type_consistency", Verdict.UNKNOWN,
+            Assurance.PROPOSED, DeciderKind.LOCAL_RULE,
+            reason="typed feature 출현 0 — 검사 대상 없음(없는 검사는 PASS 가 아니다)")]
+    return [ObligationResult(
+        "graph.feature_type_consistency", Verdict.PASS,
+        Assurance.RULE_CHECKED, DeciderKind.LOCAL_RULE,
+        evidence=f"feature 이름 {len(seen)}종 · typed 출현 {typed}건 전역 일치")]
 
 
 def certify(results: List[ObligationResult],
