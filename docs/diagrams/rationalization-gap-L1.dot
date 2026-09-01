@@ -1,0 +1,45 @@
+digraph L1 {
+  rankdir=LR; bgcolor="white";
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+
+  subgraph cluster_p {
+    label="공백(문제) — 전부 실측"; style=filled; color="#f0f0f0"; fontsize=10;
+    P1 [label="P1 부분 상태 repair\n(destructive 30%)" fillcolor="#f8cecc"];
+    P3 [label="P3 회신 형식 이탈\n(산문 → 필터 무력)" fillcolor="#f8cecc"];
+    P4 [label="P4 인용 종류 혼재\n(11/12 오탐)" fillcolor="#f8cecc"];
+    P5 [label="P5 문서 미결박 evidence\n(날조 PASS)" fillcolor="#f8cecc"];
+    P6 [label="P6 매달림≠빈 본문 접힘" fillcolor="#f8cecc"];
+    P7 [label="P7 서명 필드 미대조\n(v0 인증서가 v1 통과)" fillcolor="#f8cecc"];
+    P2 [label="P2 전역 불변조건 무지\n(wrong_direction 55%)" fillcolor="#f5b7b1"];
+  }
+
+  subgraph cluster_so {
+    label="채널 1: structured output (형태)"; style=filled; color="#eaf2e3"; fontsize=10;
+    SO1 [label="complete-state 스키마\n(minItems·전체 상태)" fillcolor="#d5e8d4"];
+    SO2 [label="반환 스키마 강제\n(agent schema 옵션, 12/12)" fillcolor="#d5e8d4"];
+    SO3 [label="인용 종류 필드 분리\n(file_quote / exec_output)\n— arm 실험 대기" fillcolor="#d5e8d4" style="rounded,filled,dashed"];
+  }
+
+  subgraph cluster_rb {
+    label="채널 2: 규칙 기반 (지시대상 해소·결박·회계)"; style=filled; color="#e3ecf7"; fontsize=10;
+    RB1 [label="span/quote 유도\nresolve_cited_evidence" fillcolor="#dae8fc"];
+    RB2 [label="사건 분리 reason\n(매달림/빈 본문/어휘 없음)" fillcolor="#dae8fc"];
+    RB3 [label="commitment·schema 대조\n_assert_certificate_grants_verdicts" fillcolor="#dae8fc"];
+    RB4 [label="uncheckable_kind 판별\n+ is_grounded 수락" fillcolor="#dae8fc"];
+    RB5 [label="전역 type 일관성 검사\n(결정론 — 판정 절반)\n★ M1 에서 obligation 후보" fillcolor="#fff2cc"];
+  }
+
+  subgraph cluster_nl {
+    label="채널 3: 자연어 계약 (방향 — 유도)"; style=filled; color="#f7f0e3"; fontsize=10;
+    NL1 [label="전역 불변조건의 자연어 명시\nA_ONLY 20/20 (유일 실증 레버)\ncertificate 가 운반 — M1 재설계" fillcolor="#ffe6b3"];
+  }
+
+  SO1 -> P1 [label="60 trial 에서 0건으로"];
+  SO2 -> P3 [label="12/12"];
+  SO3 -> P4 [label="형태 절반" style=dashed];
+  RB4 -> P4 [label="판별 절반"];
+  RB1 -> P5; RB2 -> P6; RB3 -> P7;
+  NL1 -> P2 [label="유도 절반 (사전)"];
+  RB5 -> P2 [label="판정 절반 (사후)"];
+}

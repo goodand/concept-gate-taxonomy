@@ -1,0 +1,37 @@
+digraph L2 {
+  rankdir=TB; bgcolor="white";
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=10];
+  edge [fontname="Helvetica" fontsize=8];
+  label="L2 — 규칙 로직의 단순화 4건 (지금 배선 → 접힌 뒤)"; fontsize=11;
+
+  subgraph cluster_s1 {
+    label="S1 (조건: 스키마 인용 분리 arm 실험)"; style=filled; color="#f0f0f0"; fontsize=9;
+    S1A [label="지금: uncheckable_kind 4패턴\n(트레이스백·화살표·셸·생략)\n+ G134 방어 + 6자 하한" fillcolor="#dae8fc"];
+    S1B [label="접힌 뒤: file_quote 필드\n정확 대조 하나\n(G134 방어는 유지)" fillcolor="#d5e8d4"];
+    S1A -> S1B [label="스키마가 종류를 가르면"];
+  }
+
+  subgraph cluster_s2 {
+    label="S2 (조건: provenance 프로파일 편입 — D-38 ㄱ으로 길 열림)"; style=filled; color="#f0f0f0"; fontsize=9;
+    S2A [label="지금: evidence 이중 경로\n호출자 dict ─ anchoring '본문 없음' 분기\n문서 유도 ─ provenance '미시도' 분기" fillcolor="#dae8fc"];
+    S2B [label="접힌 뒤: 유도 단일 경로\nresolve → texts → anchoring\n(호출자 제공 분기 소멸)" fillcolor="#d5e8d4"];
+    S2A -> S2B [label="relation_claim_v1 이 기본이 되면"];
+  }
+
+  subgraph cluster_s3 {
+    label="S3 (조건: 반환형 수집기 — 양쪽 공동 부채)"; style=filled; color="#f0f0f0"; fontsize=9;
+    S3A [label="지금: 3값 어휘 3벌 병립\nPASS/FAIL/BLOCKED (게이트)\nFOUND/NOT_FOUND/NOT_CHECKABLE (필터)\nran/did_not_run (동료 audit)" fillcolor="#dae8fc"];
+    S3B [label="접힌 뒤: 판별자 1벌 공유\n+ 판정 채널 3종\n(raise·반환값·상태 필드)" fillcolor="#d5e8d4"];
+    S3A -> S3B [label="수집기가 어휘를 통일하면"];
+  }
+
+  subgraph cluster_s4 {
+    label="S4 (조건 없음 — M1 재설계에 즉시)"; style=filled; color="#fff8e8"; fontsize=9;
+    S4A [label="지금 가정: 비거울 obligation 은\n전부 LLM decider 필요\n(SOURCE_ANCHORED 상한)" fillcolor="#dae8fc"];
+    S4B [label="정정: 전역 type 일관성은\n결정론 obligation (probe 증명)\n→ 첫 비거울 결정론 검사\n→ semantic decider 필요 범위 축소" fillcolor="#fff2cc"];
+    S4A -> S4B [label="E2.2.1 hidden contract A 가\n기계 검사 가능하므로"];
+  }
+
+  NOTE [label="공통 형태: 단순화는 삭제가 아니라\n상류 계약이 강해질 때 하류 판별이 접히는 것\n— 조건 미충족 상태에서 먼저 접으면\n그 판별이 막던 실측 결함이 되돌아온다" shape=note fillcolor="#f8cecc"];
+  S1B -> NOTE [style=dashed]; S2B -> NOTE [style=dashed];
+}

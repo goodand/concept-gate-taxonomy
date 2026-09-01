@@ -1,0 +1,32 @@
+digraph L0 {
+  rankdir=TB; bgcolor="white";
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11];
+  edge [fontname="Helvetica" fontsize=9];
+
+  subgraph cluster_inv {
+    label="(0) 절대 불변"; style=filled; color="#f0f0f0"; fontsize=10;
+    INV [label="미명시 계약의 공백은\n비어 있지 않다 —\n합리화가 채운다\n(세 층 실측: 55% · 위임 사고 · G261 x3)" fillcolor="#e8e8f5"];
+  }
+
+  subgraph cluster_goal {
+    label="(1) 궁극 목적 — 상위 목적의 재귀"; style=filled; color="#f7f7f0"; fontsize=10;
+    G1 [label="합리화가 판정 사슬에\n들어오지 못한다" fillcolor="#fff2cc"];
+    G2 [label="document ⊨ formal model 을\n기계가 보증한다 (L2)" fillcolor="#ffe6b3"];
+    G3 [label="신뢰 가능한 온톨로지 누적 (L1)" fillcolor="#ffd280"];
+    G1 -> G2 -> G3 [label="~을 위해"];
+  }
+
+  OUT [label="(2) expected_output\n모든 공백이 셋 중 하나로 처리된다:\n사전 명시(계약) · 사후 판정(규칙) ·\n정직한 보류(BLOCKED, 자동 허용 아님)" fillcolor="#d5e8d4"];
+
+  COND [label="(3) possible_conditions\n채널이 층마다 다르다 —\n형태 공백 → structured output\n지시대상 공백 → 규칙(해소·결박·회계)\n방향 공백 → 자연어 불변조건(유일 실증 레버)" fillcolor="#dae8fc"];
+
+  CERT [label="(4) certainty\n형태: schema 검증(도구 층 강제)\n지시대상: 결정론 판정(초록/빨강)\n방향: 사전-사후 분업 —\n유도는 자연어, 판정은 규칙" fillcolor="#e1d5e7"];
+
+  ESC [label="어느 채널도 못 하는 것:\n의미 지지 판정 · 명제의 참\n(semantic decider 미등록 — L2 잔여)" shape=note fillcolor="#f8cecc"];
+
+  INV -> G1 [label="이 요구한다"];
+  G1 -> OUT [label="의 형태"];
+  COND -> OUT [label="를 채널로 나눈다"];
+  CERT -> COND [label="을 집행한다"];
+  ESC -> G2 [label="가 남는다" style=dashed color="#b85450"];
+}
