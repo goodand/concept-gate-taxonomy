@@ -38,6 +38,23 @@ E2.2 계열 실험 fixture(`e2.2.1/e2.2.2/e2.2.3/bvsc` 의 `fixture.json`·
   끄면 끝" 이 정확히 그 상황이다.
 - 실행 비용은 무해: 10,000 출현에 1.2ms(전수 실측).
 
+## 배선 미실행과 그 이유 — 적대검증 blocker (2026-09-01)
+
+**production 호출 0건**이고, 이 저장소에는 그 상태로 삭제된 선례가 있다
+(`docs/LEGACY_REGISTER.md:31` — P21 "테스트는 도는데 배선 0·import 0").
+그러나 지금 배선하지 않는 것은 태만이 아니라 **순서**다:
+
+- `certify([FAIL])` 는 프로파일 미편입이어도 집계 verdict 를 `fail` 로
+  뒤집는다(실측). 즉 배선 즉시 `run_pipeline` 인증서 동작이 바뀐다.
+- 그래서 **정규화가 배선의 선행조건**이었다(적대검증 지목, 채택·완료).
+  정규화 없이 붙이면 표기 차이에서 나온 거짓 FAIL 이 인증서에 실리고, 그
+  되돌림이 곧 P21 경로다.
+- 배선 지점 후보는 실측으로 지목돼 있다: `server.py:427`
+  (`_attach_lint(_serialize_pipeline_output(out, parsed), concepts)` — 인자가
+  정확히 `list[dict]` + feature/type 이고 parse 통과 후라 type 이 정규값) ·
+  `server.py:958`(assembled concepts). **배포된 도구의 관측 가능한 출력을
+  바꾸므로 D-38 ㄷ 이 지목한 backward-compatibility 사안**이고 별도 판단이다.
+
 `Edge case` 쪽 수확은 아래 enum 계약 둘이다 — 코퍼스 지배 형태
 (`('evidence','feature','type')` 1,231건)가 dataclass 유래여서, 초판은
 실제 그래프에서 조용히 아무것도 검사하지 않았다.
@@ -53,18 +70,22 @@ sys.path.insert(0, str(HERE))
 from conceptgate import cg_obligations as ob  # noqa: E402
 
 # E2.2.1 trial 3 의 그 사례 — 실측 원문에서 온 픽스처다.
+# 이름을 서로의 **부분문자열이 아닌** 값으로 둔다 — 초판은 '돌체'/'돌체린'
+# 이었고 `"돌체" in reason` 이 `"돌체린" in reason` 에 논리적으로 포섭되어
+# 한쪽만 보고하는 구현이 통과했다(적대검증 major, 채택). type 도 이 저장소의
+# 실유효값(`FeatureType`)만 쓴다 — `functional_role` 은 없는 값이었다.
 INCONSISTENT = [
-    {"name": "돌체", "features": [
+    {"name": "하론", "features": [
         {"feature": "액체금속", "type": "structural_composition"}]},
-    {"name": "돌체린", "features": [
-        {"feature": "액체금속", "type": "functional_role"}]},
+    {"name": "카론", "features": [
+        {"feature": "액체금속", "type": "essential_feature"}]},
 ]
 CONSISTENT = [
-    {"name": "돌체", "features": [
+    {"name": "하론", "features": [
         {"feature": "액체금속", "type": "structural_composition"}]},
-    {"name": "돌체린", "features": [
+    {"name": "카론", "features": [
         {"feature": "액체금속", "type": "structural_composition"},
-        {"feature": "가열", "type": "functional_role"}]},
+        {"feature": "가열", "type": "functional"}]},
 ]
 
 
@@ -81,7 +102,9 @@ def test_the_e221_case_is_detected_as_fail():
     assert r.verdict is ob.Verdict.FAIL
     assert r.obligation == "graph.feature_type_consistency"
     assert "액체금속" in r.reason
-    assert "돌체" in r.reason and "돌체린" in r.reason
+    # 양쪽 concept 이 **각각** 보고되어야 한다. 이름이 서로 부분문자열이
+    # 아니므로 이 두 단언은 서로를 포섭하지 않는다.
+    assert "하론" in r.reason and "카론" in r.reason
 
 
 def test_a_consistent_graph_passes():
@@ -101,7 +124,7 @@ def test_same_name_same_type_across_many_concepts_passes():
 def test_no_typed_features_is_unknown_not_pass():
     """검사할 대상이 없으면 통과가 아니라 판정 불가다 — "없는 검사는 PASS 가
     아니다"(is_certified 규약)와 같은 결."""
-    r = _verdict([{"name": "돌체", "features": []}])
+    r = _verdict([{"name": "하론", "features": []}])
     assert r.verdict is ob.Verdict.UNKNOWN
     assert "대상" in r.reason
 
@@ -110,9 +133,9 @@ def test_untyped_occurrences_do_not_join_the_comparison():
     """type 없는 출현은 비교에 안 들어간다 — 빈 값을 비교에 넣으면 부재가
     불일치로 오판된다(MAJOR-1 계열의 역방향)."""
     mixed = [
-        {"name": "돌체", "features": [{"feature": "액체금속",
+        {"name": "하론", "features": [{"feature": "액체금속",
                                         "type": "structural_composition"}]},
-        {"name": "돌체린", "features": [{"feature": "액체금속", "type": ""}]},
+        {"name": "카론", "features": [{"feature": "액체금속", "type": ""}]},
     ]
     assert _verdict(mixed).verdict is ob.Verdict.PASS
 
@@ -129,8 +152,8 @@ def test_enum_typed_features_are_compared_not_skipped():
     from conceptgate.concept_gate_v7 import FeatureType
     a, b = list(FeatureType)[0], list(FeatureType)[1]
     conflict = [
-        {"name": "돌체", "features": [{"feature": "액체금속", "type": a}]},
-        {"name": "돌체린", "features": [{"feature": "액체금속", "type": b}]},
+        {"name": "하론", "features": [{"feature": "액체금속", "type": a}]},
+        {"name": "카론", "features": [{"feature": "액체금속", "type": b}]},
     ]
     r = _verdict(conflict)
     assert r.verdict is ob.Verdict.FAIL
@@ -143,16 +166,58 @@ def test_enum_and_str_of_the_same_type_are_not_a_conflict():
     from conceptgate.concept_gate_v7 import FeatureType
     a = list(FeatureType)[0]
     mixed = [
-        {"name": "돌체", "features": [{"feature": "액체금속", "type": a}]},
-        {"name": "돌체린", "features": [{"feature": "액체금속", "type": a.value}]},
+        {"name": "하론", "features": [{"feature": "액체금속", "type": a}]},
+        {"name": "카론", "features": [{"feature": "액체금속", "type": a.value}]},
     ]
     assert _verdict(mixed).verdict is ob.Verdict.PASS
+
+
+def test_unicode_normalization_closes_the_bypass():
+    """**적대검증이 잡은 우회**(major, 채택). 같은 글자의 다른 코드점
+    (NFC/NFD)으로 이름을 쓰면 충돌이 `PASS` 로 빠져나갔다 — 실측 확인.
+    `cg_normalizer` 는 name·label 에 이미 NFC 를 적용한다(7곳)이므로 이
+    수리는 새 정책이 아니라 **두 층의 정책 불일치 시정**이다."""
+    import unicodedata
+    nfc = unicodedata.normalize("NFC", "액체금속")
+    nfd = unicodedata.normalize("NFD", "액체금속")
+    assert nfc != nfd                      # 전제: 코드점이 실제로 다르다
+    r = _verdict([
+        {"name": "하론", "features": [{"feature": nfc,
+                                       "type": "structural_composition"}]},
+        {"name": "카론", "features": [{"feature": nfd,
+                                       "type": "essential_feature"}]}])
+    assert r.verdict is ob.Verdict.FAIL
+
+
+def test_whitespace_and_case_do_not_bypass():
+    """같은 원인의 다른 표면 — 후행 공백·대소문자로도 우회됐다."""
+    for a, b in (("금속", "금속 "), ("Metal", "metal")):
+        r = _verdict([
+            {"name": "하론", "features": [{"feature": a,
+                                           "type": "structural_composition"}]},
+            {"name": "카론", "features": [{"feature": b,
+                                           "type": "essential_feature"}]}])
+        assert r.verdict is ob.Verdict.FAIL, (a, b)
+
+
+def test_type_spelling_variants_are_not_a_false_conflict():
+    """정규화의 **반대 방향** — 같은 원인이 거짓 FAIL 도 만들었다(실측:
+    `structural_composition` vs `structural composition` → FAIL). 이 계약이
+    없으면 정규화를 한쪽만 적용해 과잉 발화가 남는다."""
+    for variant in ("structural composition", "STRUCTURAL_COMPOSITION",
+                    "structural_composition "):
+        r = _verdict([
+            {"name": "하론", "features": [{"feature": "금속",
+                                           "type": "structural_composition"}]},
+            {"name": "카론", "features": [{"feature": "금속",
+                                           "type": variant}]}])
+        assert r.verdict is ob.Verdict.PASS, variant
 
 
 def test_malformed_entries_yield_unknown_not_crash_and_not_silent_pass():
     """신뢰 경계 — 형태가 깨진 입력은 죽지도, 조용히 통과하지도 않는다
     (비-str evidence 본문의 조용한 오판과 같은 부류를 사전에 막는다)."""
-    r = _verdict([{"name": "돌체", "features": "문자열이다"}])
+    r = _verdict([{"name": "하론", "features": "문자열이다"}])
     assert r.verdict is ob.Verdict.UNKNOWN
     assert "파싱" in r.reason or "형태" in r.reason
     r2 = _verdict("리스트가 아니다")

@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import unicodedata
 
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
@@ -821,8 +822,21 @@ def results_from_feature_type_consistency(
             if not (isinstance(fname, str) and fname
                     and isinstance(ftype, str) and ftype):
                 continue                     # type 없는 출현은 비교에 안 들어간다
+            # **비교 키 정규화 — 새 정책이 아니라 두 층의 정책 불일치 시정.**
+            # `cg_normalizer` 는 concept name·label 에 이미 NFC 를 적용한다
+            # (7곳, 실측). 이 층이 원문 그대로 비교하면 같은 글자의 다른
+            # 코드점(NFC/NFD)·후행 공백·대소문자 차이로 **위반이 우회**되고
+            # (실측: 충돌인데 PASS), 반대로 type 표기 변이가 **거짓 FAIL** 을
+            # 만든다(실측: structural_composition vs "structural composition").
+            # 한 원인이라 한 줄로 닫힌다 — 적대검증이 "배선의 선행조건"으로
+            # 지목한 것이고, 정규화 없이 배선하면 거짓 FAIL 이 인증서에 실려
+            # 되돌려지고 그 되돌림이 곧 P21 경로다.
+            fkey = unicodedata.normalize("NFC", fname).strip().casefold()
+            tkey = unicodedata.normalize("NFC", ftype).strip().casefold().replace(" ", "_")
+            if not (fkey and tkey):
+                continue
             typed += 1
-            seen.setdefault(fname, {}).setdefault(ftype, []).append(cname)
+            seen.setdefault(fkey, {}).setdefault(tkey, []).append(cname)
     conflicts = {name: types for name, types in seen.items() if len(types) > 1}
     if conflicts:
         parts = []
