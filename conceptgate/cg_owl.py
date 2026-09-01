@@ -14,10 +14,14 @@ reasoner가 subsumption을 '판정'한다.
 """
 from __future__ import annotations
 
+import os
+import shutil
+import subprocess
 import types
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import owlready2
 from owlready2 import (
     AllDisjoint,
     DataProperty,
@@ -57,6 +61,78 @@ _GUFO_STEREOTYPE_CLASSES = {
     "role": "Role",
     "category": "Category",
 }
+
+
+class ReasonerUnavailable(FileNotFoundError):
+    """HermiT 를 실행할 Java 런타임이 없다 — **실행 실패가 아니라 부재다.**
+
+    `FileNotFoundError` 를 상속하는 이유: `server.classify_owl` 이 이미
+    `except FileNotFoundError` 로 그것을 `REASONER_DEPENDENCY_UNAVAILABLE`
+    (판정 W2 §4 의 `execution=UNAVAILABLE` 축)로 분류한다. 상속하면 그 배선을
+    그대로 재사용하고, `conceptgate/server.py` 를 편집하지 않아도 된다 —
+    그 파일 380-382행은 E2.4 실험 fixture 의 `ev9` 에 원문 인용돼 있어 위쪽
+    편집이 행 번호를 밀어 실험을 깨뜨린다(실측으로 세 번 겪었다).
+    """
+
+
+# Java 해석 결과 캐시. `None` = 아직 안 봤다, `False` = 봤고 없다.
+_JAVA_PROBE: str | None | bool = None
+
+
+def _reset_java_probe() -> None:
+    """테스트 전용 — 캐시가 테스트 사이로 새면 뒤가 앞의 환경을 본다."""
+    global _JAVA_PROBE
+    _JAVA_PROBE = None
+
+
+def _java_candidates() -> list:
+    """우선순위: 명시 지정 → JAVA_HOME → PATH.
+
+    homebrew 경로 같은 기계별 값을 **코드에 박지 않는다** — 그런 것은
+    `CONCEPTGATE_JAVA` 로 밖에서 준다(문서: LOCAL_INSTALL_GUIDE).
+    """
+    home = os.environ.get("JAVA_HOME")
+    return [os.environ.get("CONCEPTGATE_JAVA"),
+            (str(Path(home) / "bin" / "java") if home else None),
+            shutil.which("java")]
+
+
+def _resolve_java() -> Optional[str]:
+    """실제로 **작동하는** java 실행 파일 경로. 없으면 None.
+
+    존재 검사로는 못 가른다 — macOS 는 `/usr/bin/java` 에 **stub** 을 두고,
+    그것은 실행되지만 `exit 1` 로 "Unable to locate a Java Runtime" 을 낸다
+    (실측 2026-08-29). 그래서 **실행해 exit code 를 본다.**
+
+    결과는 캐시한다 — `classify()` 마다 subprocess 를 띄우면 비용이 된다.
+
+    **캐시의 절충(적대검증 2026-08-29 지적):** 프로세스 수명 동안 기억하므로
+    도중에 java 를 설치·삭제하거나 `CONCEPTGATE_JAVA` 를 바꿔도 **반영되지
+    않는다.** 오래 뜬 서버에서는 재시작이 필요하다. 이 선택의 근거는
+    `classify()` 가 요청마다 불리는 경로라는 것이고, 대안(매번 프로브)은
+    요청마다 subprocess 를 띄운다.
+
+    다만 **캐시가 낡아도 오분류로 이어지지는 않는다** — 실측: 캐시된 경로가
+    사라진 뒤 분류하면 owlready2 가 `FileNotFoundError` 를 던지고 기존 분기가
+    `REASONER_DEPENDENCY_UNAVAILABLE` 로 잡는다. 즉 낡은 캐시는 "부재"로
+    수렴하지 "실행 실패"로 오분류되지 않는다.
+    """
+    global _JAVA_PROBE
+    if _JAVA_PROBE is not None:
+        return _JAVA_PROBE or None
+    for cand in _java_candidates():
+        if not cand:
+            continue
+        try:
+            proc = subprocess.run([cand, "-version"],
+                                  capture_output=True, timeout=10)
+        except Exception:                      # 경로 부재·권한·타임아웃
+            continue
+        if proc.returncode == 0:
+            _JAVA_PROBE = cand
+            return cand
+    _JAVA_PROBE = False
+    return None
 
 
 class SerializationError(ValueError):
@@ -375,6 +451,14 @@ def classify(world, onto) -> Dict[str, Any]:
     거기 섞으면 "Child ⊑ gufo:Phase"처럼 보여 subsumption과 meta-typing이
     혼동된다(punning 실험으로 확인).
     """
+    java = _resolve_java()
+    if java is None:
+        raise ReasonerUnavailable(
+            "작동하는 java 실행 파일을 찾지 못했다 — HermiT 실행 불가. "
+            "`CONCEPTGATE_JAVA` 또는 `JAVA_HOME` 으로 지정하라. "
+            f"확인한 후보: {[c for c in _java_candidates() if c]}")
+    # owlready2 의 공식 창구 — PATH 를 전역으로 바꾸지 않는다.
+    owlready2.JAVA_EXE = java
     with onto:
         sync_reasoner(world, infer_property_values=False, debug=0)
 

@@ -818,15 +818,165 @@ def classify_owl(owl: dict) -> dict:
                          "detail": str(exc)}]})
     try:
         result = cg_owl.classify(world, onto)
+    except FileNotFoundError as exc:
+        # W2 (판정 §4): 의존성 부재와 실행 실패를 한 코드로 잡지 않는다.
+        # `java` 바이너리 부재는 FileNotFoundError로 드러난다 — 예상 여부는
+        # 배포 선언(CONCEPTGATE_REASONER_REQUIREMENT)이 정하고, obligation의
+        # execution 축이 그 판정을 나른다. (이 코드 분리는 판정문이 명령한
+        # 계약 변경이다 — 이전 단일 코드 REASONER_UNAVAILABLE의 후신.)
+        return _attach_owl_obligations(
+            {"ok": False, "stage": "owl-classify",
+             "errors": [{"stage": "owl-classify",
+                         "code": "REASONER_DEPENDENCY_UNAVAILABLE",
+                         "detail": f"java 실행 파일 부재: {str(exc)[:200]}"}]})
     except Exception as exc:
         return _attach_owl_obligations(
             {"ok": False, "stage": "owl-classify",
              "errors": [{"stage": "owl-classify",
-                         "code": "REASONER_UNAVAILABLE",
-                         "detail": f"HermiT 실행 실패 (Java 필요): "
+                         "code": "REASONER_RUNTIME_FAILURE",
+                         "detail": f"HermiT 실행 중 실패(crash/timeout): "
                                    f"{str(exc)[:200]}"}]})
     return _attach_owl_obligations(
         {"ok": True, "stage": "owl-classify", **result})
+
+
+@mcp.tool
+def certify_claims(claims: list, evidence_texts: dict,
+                   prior_verdicts: dict | None = None,
+                   prior_certificates: list | None = None,
+                   current_revision: str | int | None = None) -> dict:
+    """relation claim들의 인증 사슬 실행 — Refine/Verify v0의 MCP 표면.
+
+    무엇을 하는가: claim별 `claim.evidence_anchoring`(결정론적 어휘 결박)을
+    계산하고, 호출자가 이전 도구 응답에서 가져온 `prior_verdicts`
+    (run_pipeline/assemble_concepts의 obligations certificate에 있는
+    check→verdict 문자열)와 합쳐, `legacy_relation_claim_v0` profile의
+    required 검사가 전부 pass인 claim만 `certified_claim_ids`로 반환한다.
+    claim fingerprint(정규화 표현의 identity — 진리값 아님)와, 
+    `current_revision`을 주면 stale 판정 목록도 함께.
+
+    무엇을 하지 않는가: 게이트를 재실행하지 않는다(같은 검사를 두 번
+    구현하면 검증된 기제가 두 벌이 된다). asserted claim을 수정하지 않는다
+    (projection은 view다). 그래서 `prior_verdicts` 없이 부르면 인증 0건이
+    **정상**이다 — '검사 안 됨'은 '통과'가 아니다.
+
+    입력: claims는 [{id, concept, feature, cited_evidence_ids, ...}],
+    evidence_texts는 {evidence_id: 본문}. prior_verdicts는
+    {claim_id: {check_name: "pass"|"fail"|"unknown"|"error"}} — enum 밖
+    문자열은 거부한다(오타가 조용한 인증 탈락이 되는 것을 막는다).
+
+    authority 두 경로 (W5 수정, 2026-08-22): `prior_certificates`(서버가
+    `issue_claim_certificate`로 발급한 서명 문서)만으로 구성된 호출은
+    `authority: certifying` — 서명·subject fingerprint·revision 결박·
+    decider/assurance 유효성이 전부 검증된 뒤에만이다. raw `prior_verdicts`
+    문자열이 하나라도 섞이면 `diagnostic_only` — 미인증 입력은 어떤 조합
+    으로도 권위를 얻지 못한다. 조작·변조·오결박 certificate는
+    INVALID_CERTIFICATE로 거부된다.
+    """
+    try:
+        if not isinstance(claims, list) or any(
+                not isinstance(c, dict) or "id" not in c for c in claims):
+            return {"ok": False, "stage": "certify-claims",
+                    "errors": [{"stage": "certify-claims",
+                                "code": "CLAIMS_NOT_OBJECT_LIST",
+                                "detail": "claims must be a list of dicts "
+                                          "each carrying an 'id'"}]}
+        if not isinstance(evidence_texts, dict):
+            return {"ok": False, "stage": "certify-claims",
+                    "errors": [{"stage": "certify-claims",
+                                "code": "EVIDENCE_NOT_OBJECT",
+                                "detail": "evidence_texts must be a dict of "
+                                          "evidence_id to text"}]}
+        return cg_obligations.certify_relation_claims(
+            claims, evidence_texts, prior_verdicts=prior_verdicts,
+            prior_certificates=prior_certificates,
+            current_revision=current_revision)
+    except cg_obligations.CertificateError as exc:
+        return {"ok": False, "stage": "certify-claims",
+                "errors": [{"stage": "certify-claims",
+                            "code": "INVALID_CERTIFICATE",
+                            "detail": str(exc)[:300]}]}
+    except ValueError as exc:
+        # 신뢰 경계 거부(prior_verdicts 오형 등)를 구조화 오류로 변환 —
+        # MCP 응답 계약은 raise가 아니라 {ok: False, errors}다.
+        return {"ok": False, "stage": "certify-claims",
+                "errors": [{"stage": "certify-claims",
+                            "code": "INVALID_PRIOR_VERDICTS",
+                            "detail": str(exc)[:300]}]}
+
+
+@mcp.tool
+def issue_claim_certificates(claims: list, bundle: dict) -> dict:
+    """relation claim들에 대한 서명 obligation certificate를 서버가 발급한다.
+
+    W5 수정의 발급 절반이자 P1이 남긴 마지막 공백의 해소. 클라이언트가
+    제공하는 것은 **원문 bundle과 claim**뿐이고, 모든 verdict는 서버
+    in-process 계산에서 나온다: `assemble_concepts`(cg_normalizer) →
+    source.snapshot_hash / source.span_evidence, `run_pipeline` →
+    relation.* / ufo. 클라이언트가 normalizer '응답'을 공급하는 설계는
+    받지 않는다 — 응답 조작이 곧 W5의 재판(laundering)이다.
+
+    발급된 certificate는 claim의 fingerprint와 graph_revision에 결박·서명
+    되며, `certify_claims`의 `prior_certificates`로 그대로 전달하면 된다.
+    검사 실패도 그대로 서명된다 — certificate는 "통과 증명"이 아니라
+    "이 게이트들이 이 판정을 냈다"의 증명이고, 인증 여부는 검증측 profile이
+    정한다. 단 bundle 자체가 조립 실패하면 아무것도 발급하지 않는다 —
+    실패 위에 서명하지 않는다.
+    """
+    if not isinstance(claims, list) or any(
+            not isinstance(c, dict) or "id" not in c for c in claims):
+        return {"ok": False, "stage": "issue-certificates",
+                "errors": [{"stage": "issue-certificates",
+                            "code": "CLAIMS_NOT_OBJECT_LIST",
+                            "detail": "claims must be a list of dicts "
+                                      "each carrying an 'id'"}],
+                "certificates": []}
+    if not isinstance(bundle, dict):
+        return {"ok": False, "stage": "issue-certificates",
+                "errors": [{"stage": "issue-certificates",
+                            "code": "BUNDLE_NOT_OBJECT",
+                            "detail": "bundle must be a dict "
+                                      "(assemble_concepts input shape)"}],
+                "certificates": []}
+
+    assembled = cg_normalizer.assemble_concepts(bundle)
+    if not assembled.get("ok"):
+        # 실패 위에 서명하지 않는다 — 원인 단계를 그대로 통과시킨다.
+        return {"ok": False, "stage": assembled.get("stage"),
+                "errors": assembled.get("errors", []),
+                "certificates": []}
+    source_results = cg_obligations.results_from_normalizer(assembled)
+
+    concepts = assembled["concepts_json"]["concepts"]
+    pipeline = run_pipeline(concepts)
+    # run_pipeline 응답의 obligations는 직렬화 dict다. 같은 in-process
+    # 신뢰 수준에서 live ObligationResult를 다시 계산한다 — server.py:320과
+    # 동일한 두 어댑터를 같은 직렬화 출력에 적용한다.
+    ontoclean_names = set()  # concepts_json 경로는 ontoclean 메타 미보유
+    relation_results = cg_obligations.results_from_pipeline(pipeline)
+    relation_results += cg_obligations.results_from_isa(
+        pipeline.get("dag", {}), ontoclean_names)
+
+    all_results = source_results + relation_results
+    certificates = [
+        cg_obligations.issue_claim_certificate(
+            claim, all_results, issuer_tool="issue_claim_certificates",
+            # D-38 적대검증 1c: 검증부가 commitment 를 대조하기 시작하므로
+            # 발급자가 계약을 명시해야 한다. 현재 암묵 동작(_v0)의 명시화이지
+            # 기본값 변경이 아니다 — V8 미결 판단을 건드리지 않는다.
+            profile=cg_obligations.LEGACY_RELATION_PROFILE)
+        for claim in claims]
+    return {
+        "ok": True,
+        "certificates": certificates,
+        # 발급 근거의 자기서술 — 어떤 게이트 판정 위에 서명했는지.
+        "gate_summary": {
+            "verdict": cg_obligations.certify(all_results)["verdict"],
+            "execution": cg_obligations.certify(all_results)["execution"],
+            "obligations": sorted({r.obligation for r in all_results}),
+        },
+        "issuer": "issue_claim_certificates",
+    }
 
 
 def _attach_owl_obligations(resp: dict) -> dict:
