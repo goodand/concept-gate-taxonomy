@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
 from . import cg_identity
+from . import cg_signing
 
 SCHEMA_VERSION = "0.1.0"
 VERIFIER = {"name": "cg_obligations", "version": SCHEMA_VERSION}
@@ -930,7 +931,12 @@ CERTIFICATE_DOMAIN = "obligation-certificate"
 # payload 정의 자체가 바뀐다면, 기존 v1과 새로운 payload를 동일 schema라고
 # 부르는 것은 위험하다." 수신 검증 V5 가 08-31 v0→v1 과 같은 종류의 변경임을
 # 실측했다.
-CERTIFICATE_SCHEMA = "obligation_certificate_v2"
+# v2 → v3 (2026-09-03): 서명을 HMAC→Ed25519, issuer 에 scheme·key_id 추가 —
+# D-38 "서명 payload shape 이 바뀌면 bump" 이행, W5 권고 봉투(`{scheme,
+# key_id, signature}`) 채택. 배포면(Render)이 발급한 인증서를 로컬 cg_store
+# 가 검증 키 불일치로 거부한 사고(D16: 대칭 키 영수증은 자기동일성과 검증
+# 불가 사이만 오간다)를 비대칭 서명 + 공개키 리소스 노출로 닫는다.
+CERTIFICATE_SCHEMA = "obligation_certificate_v3"
 
 
 class CertificateError(Exception):
@@ -951,11 +957,17 @@ def issue_claim_certificate(claim: Dict[str, Any],
     다른 claim·다른 revision으로의 재사용이 서명 검증 없이도 아니라
     **서명 검증으로** 막힌다.
     """
-    key = cg_identity.load_or_create_key(
+    seed = cg_identity.load_or_create_key(
         key_path or cg_identity.default_key_path())
+    pub = cg_signing.public_key_bytes(seed)
     body = {
         "schema": CERTIFICATE_SCHEMA,
-        "issuer": {"tool": issuer_tool, "verifier": VERIFIER},
+        # W5 수정(2026-09-03): scheme·key_id 추가 -- 검증자가 "이 인증서가
+        # 주장하는 키"와 "내가 검증에 쓴 키"를 독립적으로 대조할 수 있어야
+        # key_id 가 주석이 아니라 결박의 일부가 된다(아래
+        # _assert_certificate_grants_verdicts 의 key_id 대조 참조).
+        "issuer": {"tool": issuer_tool, "verifier": VERIFIER,
+                   "scheme": "ed25519", "key_id": cg_signing.key_id(pub)},
         # D-38 ㄴ: 어떤 인증 계약이 적용됐는지가 **서명 아래**에 있어야 한다.
         # 없으면 동일 results[] 를 가진 두 문서를 verifier 가 구별하지 못한다 —
         # 수신 검증 V3 이 그것을 실측했다(두 profile 의 payload 가 바이트 동일).
@@ -971,8 +983,8 @@ def issue_claim_certificate(claim: Dict[str, Any],
              "invariant": r.invariant}
             for r in results],
     }
-    return {**body, "signature": cg_identity.sign(
-        body, key, domain=CERTIFICATE_DOMAIN)}
+    return {**body, "signature": cg_signing.sign(
+        body, seed, domain=CERTIFICATE_DOMAIN)}
 
 
 def _key_source_name(key_path) -> str:
@@ -981,16 +993,25 @@ def _key_source_name(key_path) -> str:
 
 
 def _assert_certificate_grants_verdicts(
-        cert: Dict[str, Any], claim: Dict[str, Any], key: bytes,
+        cert: Dict[str, Any], claim: Dict[str, Any], public_key: bytes,
         registry: Dict[str, ObligationSpec] | None = None,
         expected_profile: "CertificationProfile | None" = None,
         key_source: str | None = None
 ) -> Dict[str, Verdict]:
-    """authenticity → schema → 결박 → 계약(profile) → 유효성 순서로 검사하고,
-    통과 시에만 certificate가 나르는 {obligation: Verdict}를 돌려준다.
+    """authenticity → issuer key_id → schema → 결박 → 계약(profile) →
+    유효성 순서로 검사하고, 통과 시에만 certificate가 나르는
+    {obligation: Verdict}를 돌려준다. `public_key`는 검증에 쓸 Ed25519
+    공개키 raw 32바이트다(cg_signing.public_key_bytes의 출력) — 개인키/seed
+    가 아니다. 비대칭 서명(2026-09-03)으로, 발급자와 검증자가 서로 다른
+    호스트여도(다른 키 파일) 공개키 바이트만 가지고 이 함수에 도달한다.
 
     순서가 계약이다: 서명이 깨진 문서의 '결박 오류'를 먼저 보고하면
     공격자에게 조작 진행도를 알려주는 oracle이 된다 — authenticity 먼저.
+
+    **key_id 를 서명 다음, schema 보다 먼저 읽는다 (2026-09-03, 적대검증
+    #4 채택).** `issuer.key_id`는 지금까지 아무도 읽지 않았다(판독 0곳) —
+    같은 seed 로 key_id 만 바꿔 재서명하면 서명은 유효하므로, 변조와
+    구별하려면 검증부가 key_id 를 **독립적으로** 대조해야 한다.
 
     **schema·profile 을 여기서 읽는다 (2026-09-01, D-38 구현 적대검증 채택).**
     v0→v1 때도 v1→v2 때도 "검증부는 지금 이 문자열을 대조하지 않는다"는
@@ -1000,7 +1021,7 @@ def _assert_certificate_grants_verdicts(
     서명 아래에 넣는 이유는 verifier 가 **읽기** 때문이다 — 읽지 않으면
     필드는 주석과 같은 지위다.
     """
-    if not cg_identity.verify_signature(cert, key, domain=CERTIFICATE_DOMAIN):
+    if not cg_signing.verify(cert, public_key, domain=CERTIFICATE_DOMAIN):
         # **원인을 두 가설로 병렬 제시한다** (2026-09-01). 이 분기가 나는
         # 원인은 넷이고 전부 같은 문구를 냈다(실측): 서명 부재 · 서명 변조 ·
         # 본문 변조 · **키 불일치(문서는 정당)**. 넷째만 성격이 다른데
@@ -1021,6 +1042,15 @@ def _assert_certificate_grants_verdicts(
             "issuer signed with a different key than this verifier holds"
             f"{where}; if the document is legitimate, pass the issuer's "
             "key_path (host-only key; the caller cannot manufacture this)")
+    presented_key_id = (cert.get("issuer") or {}).get("key_id")
+    verifying_key_id = cg_signing.key_id(public_key)
+    if presented_key_id != verifying_key_id:
+        raise CertificateError(
+            f"certificate issuer key_id {presented_key_id!r} != verifying "
+            f"key_id {verifying_key_id!r} -- the signature is valid but "
+            f"claims a different key than it was actually signed with; "
+            f"issuer.key_id is checked independently of the signature "
+            f"(a resign with the same key cannot launder a tampered key_id)")
     if cert.get("schema") != CERTIFICATE_SCHEMA:
         raise CertificateError(
             f"certificate schema {cert.get('schema')!r} != "
@@ -1097,7 +1127,8 @@ def certify_relation_claims(
         prior_certificates: List[Dict[str, Any]] | None = None,
         profile: CertificationProfile = LEGACY_RELATION_PROFILE,
         current_revision: "str | int | None" = None,
-        key_path=None) -> Dict[str, Any]:
+        key_path=None,
+        issuer_public_key: bytes | None = None) -> Dict[str, Any]:
     """v0 인증 사슬의 단일 진입점 (지시 §25 step 3~6의 배선형).
 
     이 함수가 **하지 않는 것**을 먼저: 게이트를 재실행하지 않는다.
@@ -1121,6 +1152,12 @@ def certify_relation_claims(
     호출이 `authority: certifying`이다. raw `prior_verdicts` 문자열은
     하위호환으로 받되 결과는 영구히 `diagnostic_only` — 미인증 입력이 섞인
     호출도 마찬가지다(가장 약한 입력이 전체 지위를 정한다).
+
+    **비대칭 서명 (2026-09-03).** `issuer_public_key`가 있으면 그 공개키
+    바이트만으로 검증한다 — 이 호스트의 개인키 파일을 **열지도 만들지도
+    않는다**(발급자와 검증자가 다른 호스트인 배포 경계를 닫는 지점). 없으면
+    기존처럼 `key_path`(또는 기본 경로)의 seed 를 로드해 공개키를 유도한다
+    — 같은 호스트가 발급·검증을 겸하던 하위 호출 형태 그대로 동작한다.
     """
     _assert_prior_verdicts_are_well_formed(prior_verdicts)
     prior_verdicts = prior_verdicts or {}
@@ -1131,8 +1168,16 @@ def certify_relation_claims(
     # 것만 남을 때까지 재시도한다).
     authenticated: Dict[str, Dict[str, Verdict]] = {}
     if prior_certificates:
-        key = cg_identity.load_or_create_key(
-            key_path or cg_identity.default_key_path())
+        if issuer_public_key is not None:
+            public_key = issuer_public_key
+            # 공개키가 주어지면 키 절은 "issuer public key <key_id 앞 12자>" —
+            # 파일명이 아니라 키 자체를 진단에 남긴다(호스트에 파일이 없다).
+            key_source = f"issuer public key {cg_signing.key_id(issuer_public_key)[:12]}"
+        else:
+            seed = cg_identity.load_or_create_key(
+                key_path or cg_identity.default_key_path())
+            public_key = cg_signing.public_key_bytes(seed)
+            key_source = _key_source_name(key_path)
         fp_to_claim = {cg_identity.claim_fingerprint(c): c for c in claims}
         for cert in prior_certificates:
             subject = fp_to_claim.get(cert.get("subject_fingerprint"))
@@ -1141,8 +1186,8 @@ def certify_relation_claims(
                     f"certificate subject {cert.get('subject_fingerprint')!r} "
                     f"matches none of the presented claims (subject binding)")
             granted = _assert_certificate_grants_verdicts(
-                cert, subject, key, expected_profile=profile,
-                key_source=_key_source_name(key_path))
+                cert, subject, public_key, expected_profile=profile,
+                key_source=key_source)
             authenticated.setdefault(subject["id"], {}).update(granted)
 
     anchoring = results_from_claim_anchoring(claims, evidence_texts)

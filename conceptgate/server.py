@@ -689,6 +689,27 @@ def client_guide() -> dict:
     }
 
 
+@mcp.resource("conceptgate://issuer-public-key")
+def issuer_public_key_resource() -> dict:
+    """이 서버가 obligation certificate 발급에 쓰는 Ed25519 공개키 (2026-09-03).
+
+    비대칭 서명으로 배포 경계를 닫는 절반 — 발급 절반은
+    `cg_obligations.issue_claim_certificate`(host-only seed로 서명), 이
+    리소스가 검증 절반을 연다: MCP client가 이 공개키를 읽어 **개인키 파일
+    없이** `cg_signing.verify` / `certify_relation_claims(issuer_public_key=…)`
+    로 이 서버가 발급한 인증서를 다른 호스트에서 검증할 수 있다. seed는
+    `cg_identity.default_key_path()`(또는 `CONCEPTGATE_KEY_HEX`)로 이
+    서버가 실제 발급에 쓰는 것과 동일한 소스에서 읽는다 — 별도 키를 만들면
+    이 리소스가 발급 키와 어긋난 공개키를 노출하게 된다.
+    """
+    from . import cg_identity
+    from . import cg_signing
+    seed = cg_identity.load_or_create_key(cg_identity.default_key_path())
+    pub = cg_signing.public_key_bytes(seed)
+    return {"scheme": "ed25519", "schema": cg_obligations.CERTIFICATE_SCHEMA,
+            "key_id": cg_signing.key_id(pub), "public_key_hex": pub.hex()}
+
+
 # ═══════════════════════════════════════════════════════
 # Normalizer — 자연어 → evidence-carrying concepts JSON 경계 어댑터
 # (cg_normalizer 위임. 서버는 LLM을 호출하지 않는다 — agent가 제안,

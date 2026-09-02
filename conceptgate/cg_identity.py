@@ -139,7 +139,29 @@ def load_or_create_key(path: Path) -> bytes:
     otherwise both pass the check and the second would overwrite the key the
     first had already signed with, invalidating a receipt nobody edited.
     (verbatim from _receipt.py)
+
+    CONCEPTGATE_KEY_HEX pins the seed across container restarts (2026-09-03).
+    A deployed container's filesystem can be wiped on every restart, so a
+    file-backed key changes on every restart -- every certificate issued
+    before that restart becomes unverifiable (its public key no longer
+    matches). When this env var (64 hex chars = 32 bytes) is set, it wins
+    over the file **and no file is opened or created** -- the key never
+    touches disk, matching the "verifier makes no key file" contract that
+    cross-host verification (cg_signing) depends on.
     """
+    env_hex = os.environ.get("CONCEPTGATE_KEY_HEX")
+    if env_hex:
+        try:
+            key = bytes.fromhex(env_hex)
+        except ValueError:
+            raise ValueError(
+                f"CONCEPTGATE_KEY_HEX is not valid hex ({len(env_hex)} "
+                "chars)") from None
+        if len(key) != KEY_BYTES:
+            raise ValueError(
+                f"CONCEPTGATE_KEY_HEX decodes to {len(key)} bytes, expected "
+                f"{KEY_BYTES}")
+        return key
     path.parent.mkdir(parents=True, exist_ok=True)
     try:
         fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
