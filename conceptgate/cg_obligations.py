@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import unicodedata
 
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
@@ -151,6 +152,13 @@ OBLIGATION_REGISTRY: Dict[str, ObligationSpec] = {
     "claim.evidence_provenance": ObligationSpec(
         DeciderKind.LOCAL_RULE, Assurance.RULE_CHECKED,
         "cg_normalizer.resolve_cited_evidence", Verdict.UNKNOWN),
+    # 2026-09-01: E2.2.1 hidden contract A("같은 feature 이름은 전역 type
+    # 일치")의 **판정 절반** — 유도(사전 명시)는 M1 certificate 의 일이지만
+    # 판정(사후)은 결정론이다. wrong_direction 55% 를 만든 그 불변조건이
+    # LLM decider 없이 검사된다는 것이 채널 분석의 핵심 발견(S4).
+    "graph.feature_type_consistency": ObligationSpec(
+        DeciderKind.LOCAL_RULE, Assurance.RULE_CHECKED,
+        "cg_obligations.results_from_feature_type_consistency", Verdict.UNKNOWN),
 }
 
 
@@ -767,6 +775,99 @@ def results_from_cited_evidence(
     return out
 
 
+def results_from_feature_type_consistency(
+        concepts: Any) -> List[ObligationResult]:
+    """graph.feature_type_consistency — 같은 feature 이름의 전역 type 일치.
+
+    E2.2.1 이 실증한 hidden contract A 의 판정 절반이다. 원문(roadmap):
+    같은 feature 이름이 concept 마다 다른 type 을 달고 있어도 모델은
+    "의미론적으로 정당하다"고 합리화했다(wrong_direction 55%). 이 검사는
+    그 위반을 산출 그래프 위에서 결정론으로 드러낸다 — 옳은 repair 를
+    만들어내지는 못한다(그것은 certificate 의 자연어 불변조건, A_ONLY 20/20).
+
+    판정:
+    - 같은 이름에 서로 다른 비어있지 않은 type 공존 → **FAIL**
+      (적극적 불일치 — provenance 의 QUOTE_MISMATCH 와 같은 논리)
+    - 형태가 깨진 항목 존재 & 위반 미검출 → UNKNOWN (파싱 불가를 통과로
+      세탁하지 않는다; 단 **검출된 위반은 깨진 항목보다 우선**한다 —
+      파싱 실패가 적극적 증거의 도피구가 되면 안 된다)
+    - 비교 가능한(typed) 출현 0 → UNKNOWN (없는 검사는 PASS 가 아니다)
+    - 그 외 → PASS
+    """
+    seen: Dict[str, Dict[str, List[str]]] = {}   # feature -> type -> [concept...]
+    unparsed = 0
+    typed = 0
+    if not isinstance(concepts, list):
+        return [ObligationResult(
+            "graph.feature_type_consistency", Verdict.UNKNOWN,
+            Assurance.PROPOSED, DeciderKind.LOCAL_RULE,
+            reason="concepts 가 리스트가 아니다 — 형태를 파싱할 수 없어 판정 불가")]
+    for c in concepts:
+        if not isinstance(c, dict) or not isinstance(c.get("features"), list):
+            unparsed += 1
+            continue
+        cname = str(c.get("name", "?"))
+        for f in c["features"]:
+            if not isinstance(f, dict):
+                unparsed += 1
+                continue
+            fname, ftype = f.get("feature"), f.get("type")
+            # type 은 **enum 일 수 있다** — 이 저장소의 정본 자료구조
+            # `NormalizedFeature.type` 이 `FeatureType` enum 이고, 코퍼스 전수
+            # (2026-09-01, JSON 125개)에서 지배 형태가 그 유래다(1,231건).
+            # `isinstance(str)` 만 요구하면 실제 그래프에서 **조용히 아무것도
+            # 검사하지 않는다** — Edge case More READ 가 잡은 결함이고,
+            # 빈 어휘가 PASS 를 받던 MAJOR-1 과 같은 부류다.
+            ftype = getattr(ftype, "value", ftype)
+            if not (isinstance(fname, str) and fname
+                    and isinstance(ftype, str) and ftype):
+                continue                     # type 없는 출현은 비교에 안 들어간다
+            # **비교 키 정규화 — 새 정책이 아니라 두 층의 정책 불일치 시정.**
+            # `cg_normalizer` 는 concept name·label 에 이미 NFC 를 적용한다
+            # (7곳, 실측). 이 층이 원문 그대로 비교하면 같은 글자의 다른
+            # 코드점(NFC/NFD)·후행 공백·대소문자 차이로 **위반이 우회**되고
+            # (실측: 충돌인데 PASS), 반대로 type 표기 변이가 **거짓 FAIL** 을
+            # 만든다(실측: structural_composition vs "structural composition").
+            # 한 원인이라 한 줄로 닫힌다 — 적대검증이 "배선의 선행조건"으로
+            # 지목한 것이고, 정규화 없이 배선하면 거짓 FAIL 이 인증서에 실려
+            # 되돌려지고 그 되돌림이 곧 P21 경로다.
+            fkey = unicodedata.normalize("NFC", fname).strip().casefold()
+            tkey = unicodedata.normalize("NFC", ftype).strip().casefold().replace(" ", "_")
+            if not (fkey and tkey):
+                continue
+            typed += 1
+            seen.setdefault(fkey, {}).setdefault(tkey, []).append(cname)
+    conflicts = {name: types for name, types in seen.items() if len(types) > 1}
+    if conflicts:
+        parts = []
+        for name in sorted(conflicts):
+            per_type = " vs ".join(
+                f"{t}({', '.join(sorted(cs))})"
+                for t, cs in sorted(conflicts[name].items()))
+            parts.append(f"'{name}': {per_type}")
+        return [ObligationResult(
+            "graph.feature_type_consistency", Verdict.FAIL,
+            Assurance.RULE_CHECKED, DeciderKind.LOCAL_RULE,
+            reason="같은 feature 이름에 서로 다른 type 이 공존 — "
+                   + " · ".join(parts)
+                   + (f" (파싱 불가 항목 {unparsed}건 별도)" if unparsed else ""))]
+    if unparsed:
+        return [ObligationResult(
+            "graph.feature_type_consistency", Verdict.UNKNOWN,
+            Assurance.PROPOSED, DeciderKind.LOCAL_RULE,
+            reason=f"파싱 불가 항목 {unparsed}건 — 전역 일치를 판정할 수 없다"
+                   f"(통과로 세탁하지 않는다)")]
+    if typed == 0:
+        return [ObligationResult(
+            "graph.feature_type_consistency", Verdict.UNKNOWN,
+            Assurance.PROPOSED, DeciderKind.LOCAL_RULE,
+            reason="typed feature 출현 0 — 검사 대상 없음(없는 검사는 PASS 가 아니다)")]
+    return [ObligationResult(
+        "graph.feature_type_consistency", Verdict.PASS,
+        Assurance.RULE_CHECKED, DeciderKind.LOCAL_RULE,
+        evidence=f"feature 이름 {len(seen)}종 · typed 출현 {typed}건 전역 일치")]
+
+
 def certify(results: List[ObligationResult],
             registry: Dict[str, ObligationSpec] | None = None) -> Dict[str, Any]:
     """검증 + 집계 단일 진입점. 불변조건 위반이 하나라도 있으면 FAIL.
@@ -874,10 +975,16 @@ def issue_claim_certificate(claim: Dict[str, Any],
         body, key, domain=CERTIFICATE_DOMAIN)}
 
 
+def _key_source_name(key_path) -> str:
+    """진단용 키 **파일명**. 전체 경로가 아닌 이유는 위 분기 주석에 있다."""
+    return Path(key_path or cg_identity.default_key_path()).name
+
+
 def _assert_certificate_grants_verdicts(
         cert: Dict[str, Any], claim: Dict[str, Any], key: bytes,
         registry: Dict[str, ObligationSpec] | None = None,
-        expected_profile: "CertificationProfile | None" = None
+        expected_profile: "CertificationProfile | None" = None,
+        key_source: str | None = None
 ) -> Dict[str, Verdict]:
     """authenticity → schema → 결박 → 계약(profile) → 유효성 순서로 검사하고,
     통과 시에만 certificate가 나르는 {obligation: Verdict}를 돌려준다.
@@ -894,10 +1001,26 @@ def _assert_certificate_grants_verdicts(
     필드는 주석과 같은 지위다.
     """
     if not cg_identity.verify_signature(cert, key, domain=CERTIFICATE_DOMAIN):
+        # **원인을 두 가설로 병렬 제시한다** (2026-09-01). 이 분기가 나는
+        # 원인은 넷이고 전부 같은 문구를 냈다(실측): 서명 부재 · 서명 변조 ·
+        # 본문 변조 · **키 불일치(문서는 정당)**. 넷째만 성격이 다른데
+        # 초판은 "손으로 쓴 문서"를 단정해서 E2E 조립 시 원인을 못 찾게
+        # 했다 — 선례 `2c8df63`("오류 메시지가 자기 키를 말하게")의 형태로
+        # 검증부가 **읽은 것**(키 파일)을 말하게 한다.
+        #
+        # oracle 규율(아래 docstring)은 위반하지 않는다: 발원 커밋이 oracle 을
+        # "how far a forgery got" 으로 좁게 정의하고, 키 출처는 **문서의
+        # 함수가 아니라 호스트 설정의 함수**여서 어떤 위조 문서에도 같은
+        # 값이다 — 조작 진행도를 전달하지 않는다. `path.name` 만 쓴다:
+        # `str(exc)` 가 MCP client 로 나가므로(`server.py`) 절대경로를
+        # 흘리지 않기 위해서다(`cg_identity` 가 이미 그 선례).
+        where = f" (verified with key file {key_source!r})" if key_source else ""
         raise CertificateError(
-            "certificate signature is absent or does not verify -- a "
-            "hand-written or edited-after-signing document is refused "
-            "(host-only key; the caller cannot manufacture this)")
+            "certificate signature is absent or does not verify -- either a "
+            "hand-written or edited-after-signing document is refused, or the "
+            "issuer signed with a different key than this verifier holds"
+            f"{where}; if the document is legitimate, pass the issuer's "
+            "key_path (host-only key; the caller cannot manufacture this)")
     if cert.get("schema") != CERTIFICATE_SCHEMA:
         raise CertificateError(
             f"certificate schema {cert.get('schema')!r} != "
@@ -1018,7 +1141,8 @@ def certify_relation_claims(
                     f"certificate subject {cert.get('subject_fingerprint')!r} "
                     f"matches none of the presented claims (subject binding)")
             granted = _assert_certificate_grants_verdicts(
-                cert, subject, key, expected_profile=profile)
+                cert, subject, key, expected_profile=profile,
+                key_source=_key_source_name(key_path))
             authenticated.setdefault(subject["id"], {}).update(granted)
 
     anchoring = results_from_claim_anchoring(claims, evidence_texts)

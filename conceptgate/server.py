@@ -279,11 +279,18 @@ def _serialize_warning(w):
     }
 
 
-def _serialize_pipeline_output(out, concepts=None):
+def _serialize_pipeline_output(out, concepts=None, raw_concepts=None):
     """파이프라인 출력을 JSON-직렬화 가능한 형태로 변환.
 
     concepts(파싱된 NormalizedConcept 목록)를 주면 relation.is_a obligation을
     함께 발급한다 — OntoClean 메타데이터 유무로 is-a 간선의 결정론 근거를 판정.
+
+    raw_concepts(파싱 **전** 입력 dict 목록)를 주면
+    graph.feature_type_consistency 도 함께 발급한다. 두 인자가 나뉘어 있는
+    이유는 판정자가 dict 를 요구하기 때문이다 — 파싱된 객체를 넘기면 그
+    의무가 전부 UNKNOWN 이 되어 "검사했다"는 신호만 남는다(실측). 판정
+    함수가 dict 를 요구하는 것은 파싱 실패를 PASS 로 세탁하지 않기 위한
+    설계이므로, 여기서 우회하지 않고 raw 를 그대로 전달한다.
     """
     r = out["result"]
     serialized = {
@@ -320,6 +327,15 @@ def _serialize_pipeline_output(out, concepts=None):
     obligations = cg_obligations.results_from_pipeline(serialized)
     obligations += cg_obligations.results_from_isa(
         serialized["dag"], ontoclean_names)
+    if raw_concepts is not None:
+        # E2.2.1 이 실증한 hidden contract A 의 판정 절반 — 같은 feature
+        # 이름의 전역 type 일치. 이 의무는 2026-09-01 까지 레지스트리에만
+        # 있고 배선이 0이었다(P21). 여기 한 곳에만 붙인다:
+        # issue_claim_certificates 가 run_pipeline 을 raw dict 로 부르므로
+        # 직접 호출과 인증 경로가 함께 덮인다. 두 지점에 각각 붙이면
+        # 두 벌이 갈린다. 계약: test_feature_type_wiring.py
+        obligations += cg_obligations.results_from_feature_type_consistency(
+            raw_concepts)
     serialized["obligations"] = cg_obligations.certify(obligations)
     return serialized
 
@@ -424,7 +440,9 @@ def run_pipeline(concepts: list[dict]) -> dict:
         return _attach_server_meta(err, concepts, started)
     pipe = ConceptPipeline()
     out = pipe.run([parsed])
-    result = _attach_lint(_serialize_pipeline_output(out, parsed), concepts)
+    result = _attach_lint(
+        _serialize_pipeline_output(out, parsed, raw_concepts=concepts),
+        concepts)
     return _attach_server_meta(result, concepts, started)
 
 
@@ -957,7 +975,20 @@ def issue_claim_certificates(claims: list, bundle: dict) -> dict:
     relation_results += cg_obligations.results_from_isa(
         pipeline.get("dag", {}), ontoclean_names)
 
-    all_results = source_results + relation_results
+    # 형식 추론의 보증을 인증서에 배선한다(2026-09-02) — 이전에는 HermiT
+    # 판정이 classify_owl 응답에만 실리고 서명 인증서에는 들어가지 않았다.
+    # map_owl이 실패하면(선택적 필드 부재 등) 그 실패 응답을 그대로
+    # results_from_classification에 먹인다 — UNKNOWN이 나온다('판정 안 됨'
+    # 이 '통과'로 세탁되지 않는다). classify_owl은 이미 존재하는 오류 코드
+    # 매핑(REASONER_DEPENDENCY_UNAVAILABLE 등, server.py:824-)을 갖고 있으므로
+    # cg_owl.classify를 직접 부르지 않고 그 tool 함수를 같은 방식으로
+    # 직접 호출한다(run_pipeline(concepts)를 이 함수 안에서 직접 부르는
+    # 위 기존 패턴과 동일).
+    owl_map = cg_normalizer.map_to_owl(bundle)
+    owl_resp = classify_owl(owl_map["owl"]) if owl_map.get("ok") else owl_map
+    owl_results = cg_obligations.results_from_classification(owl_resp)
+
+    all_results = source_results + relation_results + owl_results
     certificates = [
         cg_obligations.issue_claim_certificate(
             claim, all_results, issuer_tool="issue_claim_certificates",
